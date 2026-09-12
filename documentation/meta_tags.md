@@ -55,6 +55,11 @@ Tags hang off the owner in a `Map` under a module-private symbol.
   builder should call, since two layers may both want to describe one control.
 - `allMeta(owner)` — every tag on the owner, for a sweep that does not know the classes.
 
+`MetaTagSet` is the serialization container for the same map: an `array(abstract(pathux.UXMetaTag))`
+plus the owner it belongs to, whose `onAttach()` rebinds each loaded tag's `owner` and calls the
+tag's own. Nothing in path.ux constructs one today; a consumer that ships a whole tag set over the
+wire as one struct uses it.
+
 `UIBase` carries `getMeta`, `setMeta` and `ensureMeta` as methods. `UIBase.getMeta` walks
 `parentWidget` on a miss when the tag class sets `inherits` in its `metaDefine()`; no tag class
 shipped here sets it.
@@ -114,9 +119,16 @@ against it. A subclass narrows on `type`.
 identity(): string; // default: `${this.type}\0${this.toolPath}`
 ```
 
+`UXToolMeta` also carries an optional `requirements` string — why the control refuses right now,
+or the precondition that would produce that sentence. It serializes, is copied by `copyTo`, and is
+the second argument of `new PathToolMeta(toolPath, requirements?)`. A subclass with its own
+refusal machinery overrides it the way it would `identity()`.
+
 `identity()` states what tells two otherwise identical controls apart. Override it when the
 subclass carries a discriminator — a row key, a command's `on` target. The default is enough for
 `PathToolMeta`, the concrete subclass path.ux ships, which carries a tool path and nothing else.
+Hashing the result is how `widgetSegment` builds the segment; changing what `identity()` reads
+rewrites every committed `widgetPath` underneath it.
 
 nstructjs registers struct names globally and consumer save files depend on them, so a new
 subclass name is a permanent commitment.
