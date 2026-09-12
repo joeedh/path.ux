@@ -120,19 +120,159 @@ var init_polyfill = __esm({
     window.eventDebugModule = (function() {
       "use strict";
       const debugLists = () => window.debugEventLists;
-      return {
+      const wrappers = /* @__PURE__ */ new WeakMap();
+      let t0 = 0;
+      let uid = 0;
+      const describe = (n) => {
+        if (n === window) {
+          return "window";
+        }
+        if (n === document) {
+          return "document";
+        }
+        if (!(n instanceof Element)) {
+          return n === null || n === void 0 ? String(n) : Object.prototype.toString.call(n);
+        }
+        const el = n;
+        if (el.__dbgid === void 0) {
+          el.__dbgid = ++uid;
+        }
+        let s = el.tagName.toLowerCase() + "#" + el.__dbgid;
+        if (el.id) {
+          s += "[" + el.id + "]";
+        }
+        if (el.className && typeof el.className === "string") {
+          s += "." + el.className.trim().split(/\s+/).join(".");
+        }
+        const text2 = el.innerText;
+        if (text2 && el.tagName === "LI") {
+          s += '"' + text2.trim().slice(0, 24) + '"';
+        }
+        return s;
+      };
+      const captureFlag = (options) => {
+        if (typeof options === "boolean") {
+          return options;
+        }
+        return !!options?.capture;
+      };
+      const siteOf = () => {
+        const stack = (new Error().stack ?? "").split("\n").slice(3, 6);
+        return stack.map((line) => line.trim().replace(/^at\s+/, "")).join(" < ") || "?";
+      };
+      const eventFields = (e) => {
+        const ret = {
+          type: e.type,
+          target: describe(e.target),
+          defaultPrevented: e.defaultPrevented
+        };
+        if (e instanceof MouseEvent) {
+          ret.buttons = e.buttons;
+          ret.x = Math.round(e.clientX);
+          ret.y = Math.round(e.clientY);
+        }
+        if (e instanceof PointerEvent) {
+          ret.pointerId = e.pointerId;
+          ret.pointerType = e.pointerType;
+        }
+        return ret;
+      };
+      const phaseName = (e) => {
+        return ["none", "capture", "target", "bubble"][e.eventPhase] ?? String(e.eventPhase);
+      };
+      const mod = {
         _addEventListener: EventTarget.prototype.addEventListener,
         _removeEventListener: EventTarget.prototype.removeEventListener,
         _dispatchEvent: EventTarget.prototype.dispatchEvent,
+        traceTypes: /* @__PURE__ */ new Set([
+          "pointerdown",
+          "pointerup",
+          "pointercancel",
+          "gotpointercapture",
+          "lostpointercapture",
+          "mousedown",
+          "mouseup",
+          "click",
+          "dblclick",
+          "contextmenu",
+          "touchstart",
+          "touchend",
+          "touchcancel"
+        ]),
+        trace: [],
         start() {
           window.debugEventLists = {};
-          window.debugEventList = [];
+          window.debugEventList = this.trace;
+          t0 = performance.now();
           this._addEventListener = EventTarget.prototype.addEventListener;
           this._removeEventListener = EventTarget.prototype.removeEventListener;
           this._dispatchEvent = EventTarget.prototype.dispatchEvent;
           EventTarget.prototype.addEventListener = this.onadd;
           EventTarget.prototype.removeEventListener = this.onrem;
           EventTarget.prototype.dispatchEvent = this.ondispatch;
+          for (const type of this.traceTypes) {
+            this._addEventListener.call(
+              window,
+              type,
+              (e) => {
+                if (!this.traceTypes.has(e.type)) {
+                  return;
+                }
+                this.trace.push({
+                  t: performance.now() - t0,
+                  kind: "event",
+                  ...eventFields(e)
+                });
+              },
+              { capture: true, passive: true }
+            );
+          }
+          const proto = Event.prototype;
+          for (const method of ["preventDefault", "stopPropagation", "stopImmediatePropagation"]) {
+            const orig = proto[method];
+            proto[method] = function() {
+              if (mod.traceTypes.has(this.type)) {
+                mod.trace.push({
+                  t: performance.now() - t0,
+                  kind: "call",
+                  method,
+                  phase: phaseName(this),
+                  currentTarget: describe(this.currentTarget),
+                  listener: siteOf(),
+                  ...eventFields(this)
+                });
+              }
+              return orig.call(this);
+            };
+          }
+        },
+        clear() {
+          this.trace.length = 0;
+          t0 = performance.now();
+        },
+        dump(filter) {
+          const lines = [];
+          for (const e of this.trace) {
+            let s = e.t.toFixed(1).padStart(8) + " ";
+            if (e.kind === "event") {
+              s += "== " + e.type;
+              s += " id=" + e.pointerId + " " + (e.pointerType ?? "") + " buttons=" + e.buttons;
+              s += " at " + e.x + "," + e.y + " target=" + e.target;
+              if (e.defaultPrevented) {
+                s += " (defaultPrevented)";
+              }
+            } else if (e.kind === "listener") {
+              s += "   -> " + e.phase + " " + e.currentTarget + "  " + e.listener;
+            } else if (e.kind === "call") {
+              s += "      * " + e.method + " @" + e.currentTarget + "  " + e.listener;
+            } else {
+              s += "dispatchEvent " + e.type + " on " + e.target;
+            }
+            if (filter === void 0 || (typeof filter === "string" ? s.includes(filter) : filter.test(s))) {
+              lines.push(s);
+            }
+          }
+          return lines.join("\n");
         },
         add(type, data) {
           const lists = debugLists();
@@ -142,29 +282,69 @@ var init_polyfill = __esm({
           lists[type].push(data);
         },
         ondispatch(...args) {
-          const mod = window.eventDebugModule;
+          const e = args[0];
           mod.add("Dispatch", {
-            event: args[0],
+            event: e,
             thisvar: args[4],
             line: args[5],
             filename: String(args[6]).replace(/\\/g, "/"),
             filepath: location.origin + String(args[6]).replace(/\\/g, "/") + ":" + args[5],
             ownerpath: args[7]
           });
+          if (e && mod.traceTypes.has(e.type)) {
+            mod.trace.push({
+              t: performance.now() - t0,
+              kind: "dispatch",
+              type: e.type,
+              target: describe(this),
+              listener: siteOf()
+            });
+          }
           return mod._dispatchEvent.apply(this, args);
         },
         onadd(...args) {
-          const mod = window.eventDebugModule;
+          const [type, cb, options] = args;
           mod.add("Add", {
-            type: args[0],
-            cb: args[1],
-            args: args[2],
+            type,
+            cb,
+            args: options,
             thisvar: args[4],
             line: args[5],
             filename: String(args[6]).replace(/\\/g, "/"),
             filepath: location.origin + String(args[6]).replace(/\\/g, "/") + ":" + args[5],
             ownerpath: args[7]
           });
+          if (cb && (typeof cb === "function" || typeof cb === "object")) {
+            const capture = captureFlag(options);
+            let byCapture = wrappers.get(cb);
+            if (!byCapture) {
+              byCapture = /* @__PURE__ */ new Map();
+              wrappers.set(cb, byCapture);
+            }
+            let wrapper = byCapture.get(capture);
+            if (!wrapper) {
+              const site = siteOf();
+              const target = this;
+              wrapper = function(e) {
+                if (mod.traceTypes.has(e.type)) {
+                  mod.trace.push({
+                    t: performance.now() - t0,
+                    kind: "listener",
+                    phase: phaseName(e),
+                    currentTarget: describe(target),
+                    listener: site,
+                    ...eventFields(e)
+                  });
+                }
+                if (typeof cb === "function") {
+                  return cb.call(this, e);
+                }
+                return cb.handleEvent(e);
+              };
+              byCapture.set(capture, wrapper);
+            }
+            args[1] = wrapper;
+          }
           mod._addEventListener.apply(
             this,
             args
@@ -188,23 +368,30 @@ var init_polyfill = __esm({
           }
         },
         onrem(...args) {
-          const mod = window.eventDebugModule;
+          const [type, cb, options] = args;
           mod.add("Rem", {
-            type: args[0],
-            cb: args[1],
-            args: args[2],
+            type,
+            cb,
+            args: options,
             thisvar: args[4],
             line: args[5],
             filename: String(args[6]).replace(/\\/g, "/"),
             filepath: location.origin + String(args[6]).replace(/\\/g, "/") + ":" + args[5],
             ownerpath: args[7]
           });
+          if (cb && (typeof cb === "function" || typeof cb === "object")) {
+            const wrapper = wrappers.get(cb)?.get(captureFlag(options));
+            if (wrapper) {
+              args[1] = wrapper;
+            }
+          }
           mod._removeEventListener.apply(
             this,
             args
           );
         }
       };
+      return mod;
     })();
     if (typeof _debug_event_listeners !== "undefined" && _debug_event_listeners) {
       window.eventDebugModule.start();
@@ -51372,11 +51559,17 @@ var LastToolPanel = class extends ColumnFrame {
       if (tool.modalRunning) {
         return;
       }
+      if (ctx.toolstack.locked) {
+        return;
+      }
       const head = await ctx.toolstack.head;
       if (tool === head) {
         this.ignoreOnChange = true;
-        ctx.toolstack.rerun(tool);
-        this.ignoreOnChange = false;
+        try {
+          await ctx.toolstack.rerun(tool);
+        } finally {
+          this.ignoreOnChange = false;
+        }
       } else {
         this.unlinkEvents();
       }

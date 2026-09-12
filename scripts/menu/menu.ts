@@ -721,7 +721,20 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
           return;
         }
 
+        const selected = !this._was_clicked;
         this.click();
+
+        // A pen or touch press selects before its release and click arrive; those
+        // must not reach what the menu was covering (see swallowRelease)
+        if (
+          selected &&
+          this._was_clicked &&
+          e.type === "pointerdown" &&
+          e instanceof PointerEvent &&
+          e.pointerType !== "mouse"
+        ) {
+          menuWrangler.swallowRelease(e.pointerId);
+        }
       };
 
       li.addEventListener("contextmenu", (e) => e.preventDefault());

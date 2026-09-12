@@ -128,11 +128,22 @@ export class LastToolPanel<CTX extends IContextBase = IContextBase> extends Colu
         return;
       }
 
+      // A change fired while an operation holds the toolstack is the op writing
+      // its own inputs (exec, undo, redo), not a user edit, and must not rerun it
+      if (ctx.toolstack.locked) {
+        return;
+      }
+
       const head = await ctx.toolstack.head;
       if (tool === head) {
+        // The guard has to outlive the rerun: it is async now, and the rerun's
+        // own input updates would otherwise fire this handler again in a loop
         this.ignoreOnChange = true;
-        ctx.toolstack.rerun(tool);
-        this.ignoreOnChange = false;
+        try {
+          await ctx.toolstack.rerun(tool);
+        } finally {
+          this.ignoreOnChange = false;
+        }
       } else {
         this.unlinkEvents();
       }

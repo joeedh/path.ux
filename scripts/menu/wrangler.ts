@@ -214,6 +214,65 @@ export class MenuWrangler {
     }
   }
 
+  /**
+   * Eats the rest of a pen or touch tap whose `pointerdown` selected a menu item. The menu
+   * is gone by the time the rest arrives, so each event is hit-tested onto whatever the
+   * menu covered. The `pointerup` carrying `pointerId` is stopped (a Button acts on a
+   * non-mouse `pointerup` directly), and so is the tap's `click`, which Chromium's gesture
+   * recognizer fires a few milliseconds after the release, in a later task and with a new
+   * pointerId, so it can only be matched by pointer type and time: the first non-mouse
+   * `click` within `clickWindowMS` of the release.
+   */
+  swallowRelease(pointerId: number): void {
+    const opts = { capture: true } as const;
+    const clickWindowMS = 500;
+    let clickTimer = 0;
+
+    const eat = (e: Event) => {
+      e.stopPropagation();
+      e.preventDefault();
+    };
+
+    const stopClickWatch = () => {
+      window.clearTimeout(clickTimer);
+      window.removeEventListener("click", onClick, opts);
+    };
+
+    const onClick = (e: Event) => {
+      // A mouse click inside the window is a new input, not the tail of the tap
+      if (e instanceof PointerEvent && e.pointerType === "mouse") {
+        return;
+      }
+      stopClickWatch();
+      eat(e);
+    };
+
+    const stopReleaseWatch = () => {
+      window.removeEventListener("pointerup", onUp, opts);
+      window.removeEventListener("pointercancel", onCancel, opts);
+    };
+
+    const onUp = (e: PointerEvent) => {
+      if (e.pointerId !== pointerId) {
+        return;
+      }
+      stopReleaseWatch();
+      eat(e);
+
+      window.addEventListener("click", onClick, opts);
+      clickTimer = window.setTimeout(stopClickWatch, clickWindowMS);
+    };
+
+    const onCancel = (e: PointerEvent) => {
+      if (e.pointerId === pointerId) {
+        stopReleaseWatch();
+      }
+    };
+
+    window.addEventListener("pointerup", onUp, opts);
+    window.addEventListener("pointercancel", onCancel, opts);
+  }
+
   on_pointerup(e: PointerEvent) {
     const pick = this._pickPreamble(e);
     if (!pick) {

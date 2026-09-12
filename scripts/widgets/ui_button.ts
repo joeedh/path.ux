@@ -42,6 +42,7 @@ export class ButtonEventBase<
         e.preventDefault();
         e.stopPropagation();
 
+        // make sure we're left-clicking on mice
         if (util.isMobile() || (e.type === "pointerup" && (e as PointerEvent).button)) {
           return;
         }
