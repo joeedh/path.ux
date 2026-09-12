@@ -13126,13 +13126,13 @@ EnumKeyPair {
       checkMeta() {
         this._fire("meta", this);
       }
-      calcHash(digest = new HashDigest()) {
+      calcHash(digest2 = new HashDigest()) {
         this.checkMeta();
         for (const key in this.keys) {
-          digest.add(key);
-          digest.add(this.keys[key]);
+          digest2.add(key);
+          digest2.add(this.keys[key]);
         }
-        return digest.get();
+        return digest2.get();
       }
       updateDefinition(enumdef_or_prop) {
         const descriptions = this.descriptions;
@@ -14068,14 +14068,14 @@ var init_cssfont = __esm({
         this.variant = args.variant !== void 0 ? args.variant : "normal";
         this.color = args.color ?? "";
       }
-      calcHashUpdate(digest = _digest.reset()) {
-        digest.add(this._size || 0);
-        digest.add(this.font);
-        digest.add(this.style);
-        digest.add(this.weight);
-        digest.add(this.variant);
-        digest.add(this.color);
-        return digest.get();
+      calcHashUpdate(digest2 = _digest.reset()) {
+        digest2.add(this._size || 0);
+        digest2.add(this.font);
+        digest2.add(this.style);
+        digest2.add(this.weight);
+        digest2.add(this.variant);
+        digest2.add(this.color);
+        return digest2.get();
       }
       set size(val) {
         this._size = val;
@@ -14692,13 +14692,13 @@ var init_ui_theme = __esm({
         this.copyTo(b);
         return b;
       }
-      calcHashUpdate(digest = _digest2.reset()) {
-        digest.add(this.border || "");
-        digest.add(this.color || "");
-        digest.add(this.color2 || "");
-        digest.add(this.contrast || 0);
-        digest.add(this.width || 0);
-        return digest.get();
+      calcHashUpdate(digest2 = _digest2.reset()) {
+        digest2.add(this.border || "");
+        digest2.add(this.color || "");
+        digest2.add(this.color2 || "");
+        digest2.add(this.contrast || 0);
+        digest2.add(this.width || 0);
+        return digest2.get();
       }
     };
     BoxRecordProps = {
@@ -14767,14 +14767,14 @@ var init_ui_theme = __esm({
       loadSTRUCT(reader) {
         reader(this);
       }
-      calcHashUpdate(digest = _digest2.reset()) {
-        digest.add(this.radius || 0);
-        digest.add(this.color || "");
-        digest.add(this.width || 0);
-        digest.add(this.style || "");
-        digest.add(this.isOutline ? 1 : 0);
-        digest.add(this.offset ?? 0);
-        return digest.get();
+      calcHashUpdate(digest2 = _digest2.reset()) {
+        digest2.add(this.radius || 0);
+        digest2.add(this.color || "");
+        digest2.add(this.width || 0);
+        digest2.add(this.style || "");
+        digest2.add(this.isOutline ? 1 : 0);
+        digest2.add(this.offset ?? 0);
+        return digest2.get();
       }
     };
     compatMap = {
@@ -16002,7 +16002,7 @@ ${selector}::-webkit-scrollbar-thumb {
     `;
   return buf;
 }
-function calcThemeKey(digest = _digest3.reset()) {
+function calcThemeKey(digest2 = _digest3.reset()) {
   const anyTheme = theme;
   for (const k in anyTheme) {
     const obj = anyTheme[k];
@@ -16012,13 +16012,13 @@ function calcThemeKey(digest = _digest3.reset()) {
     for (const k2 in obj) {
       const v2 = obj[k2];
       if (typeof v2 === "number" || typeof v2 === "boolean" || typeof v2 === "string") {
-        digest.add(v2);
+        digest2.add(v2);
       } else if (typeof v2 === "object" && (v2 instanceof CSSFont || v2 instanceof BoxBorder || v2 instanceof ThemeScrollBars)) {
-        v2.calcHashUpdate(digest);
+        v2.calcHashUpdate(digest2);
       }
     }
   }
-  return digest.get();
+  return digest2.get();
 }
 function flagThemeUpdate() {
   _themeUpdateKey = calcThemeKey();
@@ -17998,8 +17998,8 @@ var init_curve1d_base = __esm({
           typeName: "CurveTypeData"
         };
       }
-      calcHashKey(digest = _udigest.reset()) {
-        const d = digest;
+      calcHashKey(digest2 = _udigest.reset()) {
+        const d = digest2;
         d.add(this.type);
         return d.get();
       }
@@ -19601,7 +19601,7 @@ function toolopRefusal(ctx, cls, toolop) {
   const answer = cls.canRun(ctx, toolop);
   return answer instanceof Promise ? answer.then(refusalOf) : refusalOf(answer);
 }
-var ToolClasses, REDO_PHASES, ToolFlags, UndoFlags, InheritFlag, modalstack2, defaultUndoHandlers, UNSPECIFIED_REFUSAL, ToolRefusedError, ToolOp, PropKey;
+var ToolClasses, REDO_PHASES, ToolFlags, UndoFlags, InheritFlag, modalstack2, defaultUndoHandlers, Refusal, UNSPECIFIED_REFUSAL, ToolRefusedError, ToolOp, PropKey;
 var init_toolop = __esm({
   "scripts/path-controller/toolsys/toolop.ts"() {
     "use strict";
@@ -19635,6 +19635,21 @@ var init_toolop = __esm({
       undo(_ctx) {
         throw new Error("implement me");
       }
+    };
+    Refusal = class {
+      static STRUCT = struct_default.inlineRegister(
+        this,
+        `
+toolsys.Refusal {
+  reason      : string;
+  description?: string;
+}
+`
+      );
+      /** One sentence, shown on the control itself. */
+      reason = "";
+      /** The longer explanation, shown behind the tooltip's expander. */
+      description;
     };
     UNSPECIFIED_REFUSAL = "the tool refused to run";
     ToolRefusedError = class extends Error {
@@ -21008,8 +21023,8 @@ curve1d.BSplineCurve {
           typeName: "BSplineCurve"
         };
       }
-      calcHashKey(digest = _udigest2.reset()) {
-        const d = digest;
+      calcHashKey(digest2 = _udigest2.reset()) {
+        const d = digest2;
         super.calcHashKey(d);
         d.add(this.deg);
         d.add(this.interpolating);
@@ -22075,8 +22090,8 @@ var init_curve1d = __esm({
           }
         }
       }
-      calcHashKey(digest = _udigest3.reset()) {
-        const d = digest;
+      calcHashKey(digest2 = _udigest3.reset()) {
+        const d = digest2;
         for (const g of this.generators) {
           g.calcHashKey(d);
         }
@@ -23410,8 +23425,8 @@ curve1d.EquationCurve {
           typeName: "EquationCurve"
         };
       }
-      calcHashKey(digest = _udigest4.reset()) {
-        const d = digest;
+      calcHashKey(digest2 = _udigest4.reset()) {
+        const d = digest2;
         super.calcHashKey(d);
         d.add(this.equation);
         d.add(this.parent.xRange[0]);
@@ -23648,9 +23663,9 @@ curve1d.GuassianCurve {
           typeName: "GuassianCurve"
         };
       }
-      calcHashKey(digest = _udigest4.reset()) {
-        super.calcHashKey(digest);
-        const d = digest;
+      calcHashKey(digest2 = _udigest4.reset()) {
+        super.calcHashKey(digest2);
+        const d = digest2;
         d.add(this.height);
         d.add(this.offset);
         d.add(this.deviation);
@@ -24228,12 +24243,12 @@ curve1d.SimpleCurveBase {
       get hasGUI() {
         return true;
       }
-      calcHashKey(digest = _udigest5.reset()) {
-        const d = digest;
+      calcHashKey(digest2 = _udigest5.reset()) {
+        const d = digest2;
         super.calcHashKey(d);
         for (const k in this.params) {
-          digest.add(k);
-          digest.add(this.params[k]);
+          digest2.add(k);
+          digest2.add(this.params[k]);
         }
         return d.get();
       }
@@ -33009,11 +33024,25 @@ var init_ui_icons = __esm({
 });
 
 // scripts/core/base/ui_meta_tags.ts
-var UXMetaTag, metaTag, getMeta, setMeta, ensureMeta, allMeta, MetaTagSet, UXToolMeta, StdUXMeta;
+function readMetaJSON(json, cls) {
+  const complaints = [];
+  const collect = (...args) => {
+    complaints.push(args.map((arg) => String(arg)).join(" "));
+  };
+  const name = cls.structName ?? cls.name ?? "(unnamed struct)";
+  if (!validateJSON2(json, cls, true, false, collect)) {
+    throw new Error(`${name}: malformed json
+${complaints.join("\n")}`);
+  }
+  return readJSON(json, cls);
+}
+var holdsAttributes, holdsProperty, UXMetaTag, metaTag, getMeta, setMeta, ensureMeta, allMeta, MetaTagSet, UXToolMeta, PathToolMeta, StdUXMeta, FNV_OFFSET_BASIS, FNV_PRIME, STEM_LIMIT, digest, flattenIndices, stemOf, widgetSegment;
 var init_ui_meta_tags = __esm({
   "scripts/core/base/ui_meta_tags.ts"() {
     "use strict";
     init_nstructjs();
+    holdsAttributes = (owner) => typeof owner?.getAttribute === "function" && typeof owner.setAttribute === "function" && typeof owner.removeAttribute === "function";
+    holdsProperty = (owner, key) => owner !== void 0 && key in owner;
     UXMetaTag = class {
       static STRUCT = inlineRegister(
         this,
@@ -33091,6 +33120,32 @@ var init_ui_meta_tags = __esm({
         b.requirements = this.requirements;
         return b;
       }
+      /**
+       * What tells this tool apart from another on a different control. Override it when the
+       * subclass carries anything two otherwise identical controls would differ in; the default
+       * reads `type` and `toolPath` alone. `widgetSegment` hashes the result, so changing what it
+       * reads rewrites every committed `widgetPath` underneath it.
+       */
+      identity() {
+        return `${this.type}\0${this.toolPath}`;
+      }
+    };
+    PathToolMeta = class _PathToolMeta extends UXToolMeta {
+      static STRUCT = inlineRegister(
+        this,
+        `
+    pathux.PathToolMeta {
+    }`
+      );
+      type = "path";
+      constructor(toolPath = "", requirements) {
+        super();
+        this.toolPath = toolPath;
+        this.requirements = requirements;
+      }
+      copy() {
+        return this.copyTo(new _PathToolMeta());
+      }
     };
     StdUXMeta = class _StdUXMeta extends UXMetaTag {
       static STRUCT = inlineRegister(
@@ -33100,6 +33155,8 @@ var init_ui_meta_tags = __esm({
       widgetPath?: string;
       description?: string;
       valuePath?: string;
+      enabled: bool;
+      refusal?: toolsys.Refusal;
       tools: array(abstract(pathux.UXToolMeta));
     }`
       );
@@ -33113,35 +33170,81 @@ var init_ui_meta_tags = __esm({
       // which lets a rules module build a record headlessly
       deserialHelper = {};
       /**
-       * Names the widget on the wire. Filled at serialize time from the same DOM-path scheme
-       * saveUIData uses for naming, without its ephemeral-data role.
+       * Names the widget on the wire, as `<scope>/<segment>`. Filled by the writer from
+       * `widgetPathOf`, which supplies the scope and computes the segment with `widgetSegment`.
+       * Deliberately not saveUIData's positional walk, which a single inserted widget rewrites.
        */
       widgetPath;
       // not a base UIBase property
       tools;
       get valuePath() {
-        return this.owner?.getAttribute?.("datapath") ?? this.deserialHelper.valuePath;
+        const owner = this.owner;
+        if (holdsAttributes(owner)) {
+          return owner.getAttribute("datapath") ?? void 0;
+        }
+        return this.deserialHelper.valuePath;
       }
       set valuePath(s) {
-        if (this.owner === void 0) {
+        const owner = this.owner;
+        if (!holdsAttributes(owner)) {
           this.deserialHelper.valuePath = s;
           return;
         }
         if (s === void 0) {
-          this.owner.removeAttribute("datapath");
+          owner.removeAttribute("datapath");
         } else {
-          this.owner.setAttribute("datapath", s);
+          owner.setAttribute("datapath", s);
         }
       }
       // tooltip
       get description() {
-        return this.owner?.description ?? this.deserialHelper.description;
+        const owner = this.owner;
+        return holdsProperty(owner, "description") ? owner.description : this.deserialHelper.description;
       }
       set description(s) {
-        if (this.owner === void 0) {
-          this.deserialHelper.description = s;
+        const owner = this.owner;
+        if (holdsProperty(owner, "description")) {
+          owner.description = s;
         } else {
-          this.owner.description = s;
+          this.deserialHelper.description = s;
+        }
+      }
+      /**
+       * Whether the control accepts a press. Buffered when the owner carries no `disabled`, and a
+       * tag nothing has written reads as enabled.
+       */
+      get enabled() {
+        const owner = this.owner;
+        return holdsProperty(owner, "disabled") ? !owner.disabled : this.deserialHelper.enabled ?? true;
+      }
+      set enabled(v) {
+        const owner = this.owner;
+        if (holdsProperty(owner, "disabled")) {
+          owner.disabled = !v;
+        } else {
+          this.deserialHelper.enabled = v;
+        }
+      }
+      /**
+       * The refusal the control carries, whether or not it is disabled. Deliberately ungated, so
+       * `resolveRefusal` is the wrong helper here: it answers undefined for an enabled control,
+       * which erases the case a record exists to catch — a rule that computes a refusal for a
+       * control the editor draws enabled. A display value is `enabled ? undefined : refusal`.
+       */
+      get refusal() {
+        const owner = this.owner;
+        if (!holdsProperty(owner, "refusalReason")) {
+          return this.deserialHelper.refusal;
+        }
+        const held = owner.refusalReason;
+        return typeof held === "function" ? held() : held;
+      }
+      set refusal(r) {
+        const owner = this.owner;
+        if (holdsProperty(owner, "refusalReason")) {
+          owner.refusalReason = r;
+        } else {
+          this.deserialHelper.refusal = r;
         }
       }
       constructor(initialize) {
@@ -33154,6 +33257,8 @@ var init_ui_meta_tags = __esm({
         b.widgetPath = this.widgetPath;
         b.description = this.description;
         b.valuePath = this.valuePath;
+        b.enabled = this.enabled;
+        b.refusal = this.refusal;
         b.tools = this.tools.map((t2) => t2.copy());
         return b;
       }
@@ -33161,11 +33266,46 @@ var init_ui_meta_tags = __esm({
         return this.copyTo(new _StdUXMeta());
       }
       onAttach = () => {
-        this.description = this.deserialHelper.description ?? this.description;
-        this.valuePath = this.deserialHelper.valuePath ?? this.valuePath;
-        this.deserialHelper.description = void 0;
-        this.deserialHelper.valuePath = void 0;
+        const buffered = this.deserialHelper;
+        if (buffered.description !== void 0 && holdsProperty(this.owner, "description")) {
+          this.description = buffered.description;
+          buffered.description = void 0;
+        }
+        if (buffered.valuePath !== void 0 && holdsAttributes(this.owner)) {
+          this.valuePath = buffered.valuePath;
+          buffered.valuePath = void 0;
+        }
+        if (buffered.enabled !== void 0 && holdsProperty(this.owner, "disabled")) {
+          this.enabled = buffered.enabled;
+          buffered.enabled = void 0;
+        }
+        if (buffered.refusal !== void 0 && holdsProperty(this.owner, "refusalReason")) {
+          this.refusal = buffered.refusal;
+          buffered.refusal = void 0;
+        }
       };
+    };
+    FNV_OFFSET_BASIS = 2166136261;
+    FNV_PRIME = 16777619;
+    STEM_LIMIT = 24;
+    digest = (s) => {
+      let h = FNV_OFFSET_BASIS;
+      for (let i = 0; i < s.length; i++) {
+        const c = s.charCodeAt(i);
+        h = Math.imul(h ^ c & 255, FNV_PRIME);
+        h = Math.imul(h ^ c >>> 8, FNV_PRIME);
+      }
+      return (h >>> 0).toString(16).padStart(8, "0");
+    };
+    flattenIndices = (path) => path.replace(/\[\d+\]/g, "[]");
+    stemOf = (source) => {
+      const slug = (source ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, STEM_LIMIT).replace(/-+$/, "");
+      return slug.length > 0 ? slug : "w";
+    };
+    widgetSegment = (tag) => {
+      const valuePath = flattenIndices(tag.valuePath ?? "");
+      const identity = [valuePath, ...tag.tools.map((tool) => tool.identity())].join("\0");
+      return `${stemOf(tag.tools[0]?.toolPath || valuePath)}~${digest(identity)}`;
     };
   }
 });
@@ -34983,6 +35123,10 @@ function createMenu(ctx, title, templ) {
       }
       menu.addItemExtra(def.uiname, id, hotkey, def.icon);
       applyRefusal(id, toolpathRefusal(ctx, item));
+      const row = menu.itemById(id);
+      if (row) {
+        ensureMeta(row, StdUXMeta).tools.push(new PathToolMeta(item));
+      }
       cbs[id] = () => {
         return ctx.api.execTool(ctx, item);
       };
@@ -35070,6 +35214,7 @@ var init_menu_ops = __esm({
     init_util();
     init_simple_events();
     init_toolop();
+    init_ui_meta_tags();
     init_menu();
     init_wrangler();
   }
@@ -38938,6 +39083,7 @@ init_menu_ops();
 init_toolop();
 init_toolsys2();
 init_ui_base();
+init_ui_meta_tags();
 function dynamicMenuImpl(self2, title, list5, packflag = 0) {
   return self2.menu(title, list5, packflag);
 }
@@ -39026,9 +39172,9 @@ function toolImpl(self2, path_or_cls, packflag_or_args = 0, createCb, label) {
   }
   packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
   if (createCb === void 0) {
-    const toolpath = typeof path_or_cls === "string" ? path_or_cls : path_or_cls.tooldef().toolpath;
+    const toolpath2 = typeof path_or_cls === "string" ? path_or_cls : path_or_cls.tooldef().toolpath;
     createCb = (cls2) => {
-      return self2.ctx.api.createTool(self2.ctx, toolpath);
+      return self2.ctx.api.createTool(self2.ctx, toolpath2);
     };
   }
   const cb = () => {
@@ -39063,6 +39209,8 @@ function toolImpl(self2, path_or_cls, packflag_or_args = 0, createCb, label) {
     ret.description = tooltip;
     ret.packflag |= packflag;
   }
+  const toolpath = def.toolpath ?? (typeof path_or_cls === "string" ? path_or_cls : "");
+  ret.ensureMeta(StdUXMeta).tools.push(new PathToolMeta(toolpath));
   return ret;
 }
 
@@ -43804,6 +43952,29 @@ function mount(ctx, parent, node) {
     }
   }
   return container;
+}
+
+// scripts/core/base/ui_meta_walk.ts
+init_ui_base();
+init_ui_meta_tags();
+function* walkWidgets(root) {
+  if (allMeta(root).length > 0) {
+    yield root;
+  }
+  for (const child of root.childNodes) {
+    yield* walkWidgets(child);
+  }
+  const shadow = root instanceof UIBase ? root.shadow : void 0;
+  if (!shadow) {
+    return;
+  }
+  for (const child of shadow.childNodes) {
+    yield* walkWidgets(child);
+  }
+}
+function widgetPathOf(owner, scope) {
+  const tag = getMeta(owner, StdUXMeta);
+  return tag === void 0 ? void 0 : `${scope}/${widgetSegment(tag)}`;
 }
 
 // scripts/widgets/ui_richedit.ts
@@ -63252,6 +63423,7 @@ __export(controller_exports, {
   Quat: () => Quat,
   QuatProperty: () => QuatProperty,
   RandCurve: () => RandCurve,
+  Refusal: () => Refusal,
   ReportProperty: () => ReportProperty,
   SQRT2: () => SQRT2,
   SavedToolDefaults: () => SavedToolDefaults,
@@ -69917,6 +70089,7 @@ init_menu();
 // scripts/pathux.ts
 init_polyfill();
 init_ui_base();
+init_ui_meta_tags();
 init_ui_base_props();
 init_ui_theme_utils();
 init_cssfont();
@@ -70072,6 +70245,7 @@ export {
   Matrix4UI,
   Menu,
   MenuWrangler,
+  MetaTagSet,
   MeterUnit,
   MileUnit,
   MillimeterUnit,
@@ -70113,6 +70287,7 @@ export {
   PanelState,
   ParamKey,
   Parser,
+  PathToolMeta,
   PercentUnit,
   PixelUnit,
   PlaneOps,
@@ -70128,6 +70303,7 @@ export {
   QuatProperty,
   RadianUnit,
   RandCurve,
+  Refusal,
   RegionMode,
   ReportProperty,
   RichEditor,
@@ -70152,6 +70328,7 @@ export {
   SplineTemplates,
   SquareFootUnit,
   StackMode,
+  StdUXMeta,
   StringProperty,
   StringPropertyBase,
   StringSetProperty,
@@ -70189,6 +70366,8 @@ export {
   TwoColumnFrame,
   UIBase,
   UIFlags,
+  UXMetaTag,
+  UXToolMeta,
   UndoFlags,
   Unit,
   Units,
@@ -70234,6 +70413,7 @@ export {
   addNodeMenuTemplate,
   addPopup,
   addVar,
+  allMeta,
   angle_between_vecs,
   barycentric_v2,
   bindSlot,
@@ -70304,6 +70484,7 @@ export {
   drawRoundBox2,
   drawText,
   electron_api_exports as electron_api,
+  ensureMeta,
   error,
   evalHermiteTable,
   eventWasMouseDown,
@@ -70332,6 +70513,7 @@ export {
   getHueField,
   getIconManager,
   getLastToolStruct,
+  getMeta,
   getMime,
   getNoteFrames,
   getPathStructureGen,
@@ -70447,6 +70629,7 @@ export {
   quadIsConvex,
   quad_bilinear,
   quad_uv_2d,
+  readMetaJSON,
   registerTool,
   registerToolStackGetter2 as registerToolStackGetter,
   registryOf,
@@ -70475,6 +70658,7 @@ export {
   setItemAt,
   setKeyboardDom,
   setKeyboardOpts,
+  setMeta,
   setMetric,
   setNotifier,
   setPropTypes,
@@ -70522,8 +70706,11 @@ export {
   validateWebColor,
   varSlots,
   vectormath_exports as vectormath,
+  walkWidgets,
   warning,
   web2color,
+  widgetPathOf,
+  widgetSegment,
   winding,
   winding_axis
 };

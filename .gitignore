@@ -1,7 +1,6 @@
 package
 **/node_modules/**
 .idea
-docs
 .eslintcache
 .eslintcache-d
 .quickbuild
