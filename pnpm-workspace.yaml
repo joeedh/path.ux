@@ -3,5 +3,8 @@ packages:
   - example
 
 onlyBuiltDependencies:
+  - comment-lint
+  - electron
   - esbuild
+  - nw
   - unrs-resolver

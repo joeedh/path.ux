@@ -83,7 +83,9 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "comment-lint",
+      "electron",
       "esbuild",
+      "nw",
       "unrs-resolver"
     ],
     "ignoredBuiltDependencies": [

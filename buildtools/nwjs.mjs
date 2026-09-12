@@ -58,6 +58,12 @@ const nwModule = await import("nw");
 const findpath = nwModule.findpath ?? nwModule.default.findpath;
 const nwPath = await findpath("nwjs", { flavor: "sdk" });
 
+if (!fs.existsSync(nwPath)) {
+  console.error(`NW.js binary missing: ${nwPath}`);
+  console.error("The nw package's postinstall did not run; run `pnpm rebuild nw`.");
+  process.exit(1);
+}
+
 const args = [appDir, `--remote-debugging-port=${port}`];
 if (devtools) {
   args.push("--auto-open-devtools-for-tabs");

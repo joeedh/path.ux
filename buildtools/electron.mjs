@@ -50,6 +50,12 @@ if (!fs.existsSync(path.join(appDir, "dist", "app.js"))) {
  * to the Electron binary. */
 const electronPath = (await import("electron")).default;
 
+if (typeof electronPath !== "string" || !fs.existsSync(electronPath)) {
+  console.error(`Electron binary missing: ${electronPath}`);
+  console.error("The electron package's postinstall did not run; run `pnpm rebuild electron`.");
+  process.exit(1);
+}
+
 const args = [
   path.join(appDir, "electron_app.cjs"),
   `--remote-debugging-port=${port}`,
