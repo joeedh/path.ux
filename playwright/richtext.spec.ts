@@ -239,6 +239,99 @@ test.describe("delete types with no target range", () => {
   }
 });
 
+test("copy takes the selection to the clipboard and paste puts it in another block", async ({
+  page,
+}) => {
+  const editor = await openEditor(page);
+
+  await selectIn(editor, 0, 0, 5);
+  await page.keyboard.press("Control+c");
+  await expect.poll(() => texts(editor)).toEqual(ORIGINAL);
+
+  await selectIn(editor, 1, 0);
+  await page.keyboard.press("Control+v");
+  await expect
+    .poll(() => texts(editor))
+    .toEqual([ORIGINAL[0], "HelloA second paragraph to edit.", ORIGINAL[2]]);
+  expect(await stackLength(editor)).toBe(1);
+});
+
+test("cut is one undo entry of its own", async ({ page }) => {
+  const editor = await openEditor(page);
+
+  await selectIn(editor, 1, 0, 8);
+  await page.keyboard.press("Control+x");
+  await expect.poll(() => texts(editor)).toEqual([ORIGINAL[0], " paragraph to edit.", ORIGINAL[2]]);
+  expect(await stackLength(editor)).toBe(1);
+
+  await page.keyboard.type("Q");
+  await expect
+    .poll(() => texts(editor))
+    .toEqual([ORIGINAL[0], "Q paragraph to edit.", ORIGINAL[2]]);
+  expect(await stackLength(editor)).toBe(2);
+
+  await page.keyboard.press("Control+z");
+  await expect.poll(() => texts(editor)).toEqual([ORIGINAL[0], " paragraph to edit.", ORIGINAL[2]]);
+  await page.keyboard.press("Control+z");
+  await expect.poll(() => texts(editor)).toEqual(ORIGINAL);
+
+  await selectIn(editor, 1, 12);
+  await page.keyboard.press("Control+v");
+  await expect
+    .poll(() => texts(editor))
+    .toEqual([ORIGINAL[0], "A second parA secondagraph to edit.", ORIGINAL[2]]);
+});
+
+test("pasting three lines makes three blocks with the pre-allocated ids", async ({ page }) => {
+  const editor = await openEditor(page);
+
+  await selectIn(editor, 0, 6);
+  await editor.evaluate((el) => {
+    const data = new DataTransfer();
+    data.setData("text/plain", ["one", "two", "three"].join(String.fromCharCode(10)));
+    (el as EditorProbe).root.dispatchEvent(
+      new InputEvent("beforeinput", {
+        inputType   : "insertFromPaste",
+        dataTransfer: data,
+        cancelable  : true,
+        bubbles     : true,
+      })
+    );
+  });
+
+  await expect
+    .poll(() => texts(editor))
+    .toEqual(["Hello,one", "two", "three world.", ORIGINAL[1], ORIGINAL[2]]);
+
+  const ids = await editor.evaluate((el) => {
+    const probe = el as EditorProbe & { session: { toolstack: { op: { newBlocks: string[] } }[] } };
+    return {
+      created: probe.session.toolstack[0].op.newBlocks,
+      blocks : probe.session.provider.blocks(probe.session.doc),
+    };
+  });
+  expect(ids.created).toEqual(ids.blocks.slice(1, 3));
+  await expect(editor.locator("[data-doc-block]")).toHaveCount(5);
+});
+
+test("the toolbar hides under no-toolbar and toggleMark still works", async ({ page }) => {
+  const editor = await openEditor(page);
+  const bold = editor.locator('[data-testid="richtext-mark-bold"]');
+  await expect(bold).toBeVisible();
+
+  await editor.evaluate((el) => el.setAttribute("no-toolbar", ""));
+  await expect(bold).toBeHidden();
+
+  await selectIn(editor, 0, 0, 5);
+  await editor.evaluate((el) =>
+    (el as EditorProbe & { toggleMark(m: string): void }).toggleMark("bold")
+  );
+  await expect(editor.locator("[data-doc-block] b").first()).toHaveText("Hello");
+
+  await editor.evaluate((el) => el.removeAttribute("no-toolbar"));
+  await expect(bold).toBeVisible();
+});
+
 test("Ctrl+Z with the pointer over the tab bar undoes the document, not the app", async ({
   page,
 }) => {

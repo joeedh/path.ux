@@ -89,7 +89,8 @@ function deleteBoundary(
  * Edits a document through a `DocumentProvider`. Every `beforeinput` is prevented and turned
  * into an `EditOp` run through the session's toolstack; the DOM changes only when a result
  * comes back. Composition is refused: the block is re-rendered at `compositionend` and a
- * `refused` event fires, as for any input the editor does not handle.
+ * `refused` event fires, as for any input the editor does not handle. The toolbar built from
+ * `provider.marks()` hides under a `no-toolbar` attribute; `toggleMark` works either way.
  */
 export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unknown> extends UIBase<
   CTX,
@@ -147,6 +148,8 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     root.addEventListener("compositionstart", () => this.onCompositionStart());
     root.addEventListener("compositionend", () => this.onCompositionEnd());
     root.addEventListener("blur", () => this.endRun());
+    root.addEventListener("copy", (e) => this.onCopy(e, false));
+    root.addEventListener("cut", (e) => this.onCopy(e, true));
 
     this.shadow.appendChild(root);
 
@@ -206,6 +209,9 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     super.update();
     if (this.needsRender) {
       this.renderAll();
+    }
+    if (this.toolbar !== undefined) {
+      this.toolbar.hidden = this.hasAttribute("no-toolbar");
     }
   }
 
@@ -305,6 +311,28 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     } else if (mod && !e.altKey && key === "y") {
       void this.redo();
       e.preventDefault();
+    }
+  }
+
+  /** Writes the selection through `toClipboard`; a cut then commits its deletion on its own. */
+  private onCopy(e: ClipboardEvent, cut: boolean): void {
+    const session = this._session;
+    const range = this.selectionThroughPending();
+    if (session === undefined || range === undefined || isCollapsed(range) || !e.clipboardData) {
+      return;
+    }
+
+    const content = session.provider.toClipboard(session.doc, range);
+    e.clipboardData.setData("text/plain", content.blocks.join("\n"));
+    if (content.html !== undefined) {
+      e.clipboardData.setData("text/html", content.html);
+    }
+    e.preventDefault();
+
+    if (cut && !session.disposed) {
+      // an entry of its own: neither joining a delete run nor starting one
+      this.submit({ type: "deleteRange", range });
+      this.endRun();
     }
   }
 

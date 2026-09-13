@@ -3,7 +3,7 @@
 Tasks for [`rich-text-provider.md`](rich-text-provider.md). Each stage is a commit, and each
 stage's status is recorded here when it lands.
 
-Status: task 1 done; task 3 stages 1 to 3 done; task 2 stages 1 to 5 done.
+Status: task 1 done; task 3 stages 1 to 3 done; task 2 stages 1 to 6 done.
 
 <!-- toc -->
 
@@ -32,7 +32,7 @@ optional for European layouts).
 
 ## Task 2 — implementation
 
-Stages 1 to 5 done. Seven stages, in order; each is green on `pnpm run typecheck`, `pnpm run test` and
+Stages 1 to 6 done. Seven stages, in order; each is green on `pnpm run typecheck`, `pnpm run test` and
 `pnpm run lint:check` before the next begins.
 
 ### Stage 1 — interfaces and the reference provider
@@ -276,6 +276,25 @@ Departures from the text above:
 - Toolbar from `provider.marks()`, hidden by attribute, `editor.toggleMark(name)`.
 - Playwright: copy a range and paste it into a second block; cut is one undo entry; paste of
   three lines makes three blocks with the pre-allocated ids.
+
+Done. Four more Playwright tests in `playwright/richtext.spec.ts`, twenty-one there in all.
+Notes:
+
+- `copy` and `cut` are handled on the editable root as the design says: the selection goes
+  through `toClipboard` as `text/plain` joined by newlines, plus `text/html` when the provider
+  gives it, and the event's default is prevented. A cut then commits a `deleteRange` bracketed
+  by run breaks, so it neither joins a backspace run in progress nor starts one; the design's
+  "one undo entry" is stated as an entry of its own. Preventing the `cut` event's default keeps
+  Chromium from also sending `deleteByCut`, whose mapping in `mapInput` stays for a browser
+  that sends it alone.
+- Paste was already in place from stage 4 through `insertFromPaste`. The three-line test
+  dispatches a synthetic `beforeinput` carrying a `DataTransfer`, and reads the pre-allocated
+  ids off the op at the head of the stack to compare with the blocks created.
+- Headless Chromium has a working clipboard, so the copy, cut and paste tests use the real
+  Ctrl+C, Ctrl+X and Ctrl+V keys; the first probe showed `copy` fires with writable
+  `clipboardData` and Ctrl+V arrives as `insertFromPaste` with `text/plain` and `text/html`.
+- The attribute that hides the toolbar is `no-toolbar`, read in `update()` since `UIBase`
+  observes no attributes; `toggleMark(name)` works with it hidden.
 
 ### Stage 7 — the example app and the docs
 

@@ -74414,6 +74414,8 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     root.addEventListener("compositionstart", () => this.onCompositionStart());
     root.addEventListener("compositionend", () => this.onCompositionEnd());
     root.addEventListener("blur", () => this.endRun());
+    root.addEventListener("copy", (e) => this.onCopy(e, false));
+    root.addEventListener("cut", (e) => this.onCopy(e, true));
     this.shadow.appendChild(root);
     if (_RichTextEditor.observeMutations) {
       this.observer = new MutationObserver((records) => {
@@ -74462,6 +74464,9 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     super.update();
     if (this.needsRender) {
       this.renderAll();
+    }
+    if (this.toolbar !== void 0) {
+      this.toolbar.hidden = this.hasAttribute("no-toolbar");
     }
   }
   _ondestroy() {
@@ -74544,6 +74549,24 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     } else if (mod && !e.altKey && key === "y") {
       void this.redo();
       e.preventDefault();
+    }
+  }
+  /** Writes the selection through `toClipboard`; a cut then commits its deletion on its own. */
+  onCopy(e, cut) {
+    const session = this._session;
+    const range = this.selectionThroughPending();
+    if (session === void 0 || range === void 0 || isCollapsed(range) || !e.clipboardData) {
+      return;
+    }
+    const content = session.provider.toClipboard(session.doc, range);
+    e.clipboardData.setData("text/plain", content.blocks.join("\n"));
+    if (content.html !== void 0) {
+      e.clipboardData.setData("text/html", content.html);
+    }
+    e.preventDefault();
+    if (cut && !session.disposed) {
+      this.submit({ type: "deleteRange", range });
+      this.endRun();
     }
   }
   onCompositionStart() {
