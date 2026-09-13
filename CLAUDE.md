@@ -2,6 +2,10 @@
 
 HTML5 UI library with Blender RNA-style data binding.
 
+## Debugging
+
+- Keep a running debugging guide/lessons-learned in documentation/debugging.md
+
 ## Plans
 
 - plans live in documentation/plans
