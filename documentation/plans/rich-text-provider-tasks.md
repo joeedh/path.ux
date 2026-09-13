@@ -165,12 +165,16 @@ What is there today:
   (which `pnpm serv` runs, and which Playwright's `webServer` starts), `servers/serv_simple.js:4`
   and `servers/http2.js:9`. Deleting `simple_docsys` alone breaks the dev server and the
   Playwright suite, so `rpc.js` and its wiring go in the same commit.
-- `scripts/docbrowser/docbrowser.ts` (plus a stale `docbrowser.ts.bak`), the
-  `scripts/pathux_with_docbrowser.ts` entry, the root `pathux_with_docbrowser.js` shim, the
-  tracked `dist/pathux_with_docbrowser.{js,js.map,d.ts}`, the second entry point in
-  `buildtools/esbuild.mjs:38`, and the `files` lists in `tsconfigDecl.json:24` and
-  `tsconfigDeclTmp.json:30`. The Electron path (`docbrowser.ts:180-195`) is the only user of
-  the root `parse5`, `@types/parse5` and `diff` devDependencies.
+- `scripts/docbrowser/docbrowser.ts` (plus a stale `docbrowser.ts.bak`). The Electron path
+  (`docbrowser.ts:180-195`) is the only user of the root `parse5`, `@types/parse5` and `diff`
+  devDependencies.
+- The second barrel and the second bundle, which exist only to carry the widget:
+  `scripts/pathux_with_docbrowser.ts` (two `export *` lines), the root
+  `pathux_with_docbrowser.js` shim over `dist/`, the tracked
+  `dist/pathux_with_docbrowser.{js,js.map,d.ts}`, the second entry point in
+  `buildtools/esbuild.mjs:38`, the `marked`/`parse5`/`diff` entries in that file's `external`
+  list (`:7`), and the second entry in `tsconfigDecl.json:24`, which `pnpm run emitTypes` reads.
+  After this, `scripts/pathux.ts` is the one barrel and `dist/pathux.js` the one library bundle.
 - `example/editors/docbrowser/docbrowser.ts`, imported by `example/core/app.ts:1`; the
   `docsbrowser` getter and field in `example/core/context.ts:12`, `:34` and `:119`;
   `DocEditorPath` in `example/core/const.ts:56` and `:78`.
@@ -182,9 +186,9 @@ What is there today:
   `example/` copy is referenced by nothing.
 - Config that exists only for the above: `tsconfig.json:29-32` (`simple_docsys` and `servers`
   includes), `eslint.config.js:26`, `:31`, `:33`, `:34` and `:129`, `.claudeignore:3`,
-  `tsconfigDecl.json:30`, `tsconfigDeclTmp.json:37`, and the `simple_docsys` copy in
-  `buildtools/build_package_new.sh:20`. The `pathux_with_docbrowser.js` line in `CLAUDE.md`'s
-  build section.
+  `tsconfigDecl.json:30`, and the `simple_docsys` copy in `buildtools/build_package_new.sh:20`.
+  The `pathux_with_docbrowser.js` line in `CLAUDE.md`'s build section. (`tsconfigDeclTmp.json`
+  and `tsconfigExampleDecl.json` at the root are untracked scratch and are not part of this.)
 
 Stages:
 
@@ -193,8 +197,10 @@ Stages:
   the Playwright suite still starts.
 - **Stage 2 — the example pane and the widget.** Delete `example/editors/docbrowser/`, its
   import in `app.ts`, the `docsbrowser` accessor in `context.ts` and `DocEditorPath` in
-  `const.ts`. Delete `scripts/docbrowser/`, the `pathux_with_docbrowser` entry, shim and dist
-  files, and the esbuild entry point. Remove the `doc*Path` constants, the `PATHUX_DOC*`,
+  `const.ts`. Delete `scripts/docbrowser/`, the `pathux_with_docbrowser` barrel, shim and dist
+  files, the esbuild entry point and its three externals, and the `tsconfigDecl.json` entry;
+  `pnpm run build` and `pnpm run emitTypes` then produce `pathux.*` only. Remove the
+  `doc*Path` constants, the `PATHUX_DOC*`,
   `_relative` and TinyMCE declarations from `global.d.ts`, and `parse5`, `@types/parse5` and
   `diff` from the root devDependencies (grep first; only `docbrowser.ts` uses them today).
   Check that a saved layout in localStorage naming `docs-browser-editor-x` loads without
