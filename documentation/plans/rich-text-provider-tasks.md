@@ -3,7 +3,7 @@
 Tasks for [`rich-text-provider.md`](rich-text-provider.md). Each stage is a commit, and each
 stage's status is recorded here when it lands.
 
-Status: task 1 done; task 3 stages 1 to 3 done; task 2 not started.
+Status: task 1 done; task 3 stages 1 to 3 done; task 2 stage 1 done.
 
 <!-- toc -->
 
@@ -32,7 +32,7 @@ optional for European layouts).
 
 ## Task 2 — implementation
 
-Not started. Seven stages, in order; each is green on `pnpm run typecheck`, `pnpm run test` and
+Stage 1 done. Seven stages, in order; each is green on `pnpm run typecheck`, `pnpm run test` and
 `pnpm run lint:check` before the next begins.
 
 ### Stage 1 — interfaces and the reference provider
@@ -48,6 +48,30 @@ Not started. Seven stages, in order; each is green on `pnpm run typecheck`, `pnp
 - Tests in `tests/richtext/plainProvider.test.ts`: every `EditOp` against a fixture document,
   the expected `dirtyBlocks` and `selection` for each, a `deleteRange` across three blocks
   joining the outer two, and `inverse` round-tripping every op back to the fixture.
+
+Done. Fifty tests pass. Decisions the design left to the provider, recorded so the editor and
+the example do not rediscover them:
+
+- Typing extends a mark the caret is inside of or at the end of, and a mark starting at the
+  caret moves right, so text typed at the start of a bold run is not bold. Pasted text
+  (`insertContent`) never inherits a mark; a mark spanning the paste is split around it.
+- Marks are half-open offset ranges; the provider drops empty ones and merges same-named ones
+  that touch after every edit, so a `toggleMark` over a sub-range splits and over an
+  overlapping range merges.
+- `toggleMark` removes the mark only when every non-empty segment of the range already has it.
+- `inverse` snapshots every block the op's range covers plus the ids it will create, with the
+  block before the first of them as `after`; the touched blocks are contiguous for every op
+  type, which is what lets one anchor place them all.
+- A `replaceBlocks` result puts the caret at the end of the last restored block, or at the
+  start of the block following `after` when it only removes. The editor keeps its own caret on
+  undo, so this is a fallback.
+- `provider.ts` also carries `ATOM_CHAR` and `CARET_SLOT` (the object replacement character
+  and the zero-width space of the render contract, built with `String.fromCharCode`) and
+  `newBlockId()`; `plain.ts` carries `plainDocFromLines` for fixtures and the example, and a
+  public `notifyChange(doc, change)` outside the interface so a direct write to a `PlainDoc` can
+  reach `onChange` listeners.
+- Nothing is exported from the barrel yet; stage 7 adds the exports against the `Object.keys`
+  baseline.
 
 ### Stage 2 — position mapping
 
