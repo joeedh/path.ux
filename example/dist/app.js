@@ -75079,6 +75079,9 @@ var PropsEditor = class extends Editor2 {
     editor.setAttribute("data-testid", "richtext-editor");
     editor.style.width = "420px";
     editor.session = session;
+    editor.addEventListener("refused", (e) => {
+      console.warn("rich text input refused:", e.detail.inputType);
+    });
     tab2.add(editor);
   }
   exportTheme() {

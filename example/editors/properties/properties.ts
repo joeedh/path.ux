@@ -33,6 +33,7 @@ import {
   plainDocFromLines,
 } from "../../../scripts/widgets/richtext/providers/plain.js";
 import { RichTextEditor } from "../../../scripts/widgets/richtext/editor.js";
+import type { RefusedDetail } from "../../../scripts/widgets/richtext/editor.js";
 import { PropsPage } from "../../page.js";
 import { theme, themeVars } from "../../theme.js";
 
@@ -145,6 +146,9 @@ export class PropsEditor extends Editor {
     editor.setAttribute("data-testid", "richtext-editor");
     editor.style.width = "420px";
     editor.session = session;
+    editor.addEventListener("refused", (e) => {
+      console.warn("rich text input refused:", (e as CustomEvent<RefusedDetail>).detail.inputType);
+    });
 
     tab.add(editor);
   }

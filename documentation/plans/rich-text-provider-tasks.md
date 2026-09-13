@@ -3,7 +3,7 @@
 Tasks for [`rich-text-provider.md`](rich-text-provider.md). Each stage is a commit, and each
 stage's status is recorded here when it lands.
 
-Status: task 1 done; task 3 stages 1 to 3 done; task 2 stages 1 to 4 done.
+Status: task 1 done; task 3 stages 1 to 3 done; task 2 stages 1 to 5 done.
 
 <!-- toc -->
 
@@ -32,7 +32,7 @@ optional for European layouts).
 
 ## Task 2 — implementation
 
-Stages 1 to 4 done. Seven stages, in order; each is green on `pnpm run typecheck`, `pnpm run test` and
+Stages 1 to 5 done. Seven stages, in order; each is green on `pnpm run typecheck`, `pnpm run test` and
 `pnpm run lint:check` before the next begins.
 
 ### Stage 1 — interfaces and the reference provider
@@ -244,6 +244,31 @@ commit)` function that sends one `Input.imeSetComposition` per step and `Input.i
 - Firefox is manual only (no synthetic IME path); the manual steps in
   `documentation/richtext.md` list the Windows language packs to install (Japanese and
   Chinese Microsoft IMEs, Korean, and the United States-International keyboard for dead keys).
+
+Done. Six Playwright tests pass, three on a bare `contenteditable` div and three on
+`rich-text-x`. What Chromium does, recorded at the top of the spec:
+
+- The commit never arrives as `insertText`. `Input.insertText` after a composition produces one
+  more `compositionupdate` and a `beforeinput` of `insertCompositionText` carrying the committed
+  text, then `compositionend` whose `data` repeats it.
+- An abandoned composition never produces `deleteCompositionText`. It is an
+  `insertCompositionText` with empty `data`, whose `input` event carries `null`, then
+  `compositionend` with `data: ""`.
+- Every `beforeinput` during a composition has `isComposing` true and is not cancelable, on
+  the bare div and on the editor alike; the editor's DOM shows the composed text until
+  `compositionend` re-renders the block.
+- On `rich-text-x` each scenario leaves the document and the caret unchanged and dispatches
+  exactly one `refused` event, at `compositionend`.
+
+Departures from the text above:
+
+- `tsconfig.json` now includes `playwright/**/*.ts` rather than `playwright/*.ts`, so the new
+  subdirectory is typechecked and eslint's project service accepts it.
+- `documentation/richtext.md` exists from this stage with the composition section and the
+  manual Firefox steps only; stage 7 writes the rest. The example logs every `refused` event
+  to the console so the manual steps have something to watch.
+- The helper's `compose` abandons a composition by sending an empty `Input.imeSetComposition`
+  when `commit` is `undefined`, since CDP has no separate cancel call.
 
 ### Stage 6 — clipboard and the toolbar
 

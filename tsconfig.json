@@ -23,7 +23,7 @@
     "scripts/**/*.ts",
     "scripts/**/*.tsx",
     "scripts/**/*.js",
-    "playwright/*.ts",
+    "playwright/**/*.ts",
     "simple_example/**/*.js",
     "simple_example/**/*.ts",
     "servers/**/*.ts",
