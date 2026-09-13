@@ -16,7 +16,8 @@ Status: task 1 done; task 2 not started.
   - [Stage 5 — composition events over CDP](#stage-5--composition-events-over-cdp)
   - [Stage 6 — clipboard and the toolbar](#stage-6--clipboard-and-the-toolbar)
   - [Stage 7 — the example app and the docs](#stage-7--the-example-app-and-the-docs)
-- [Task 3 — the IME plan](#task-3--the-ime-plan)
+- [Task 3 — remove TinyMCE from the repo](#task-3--remove-tinymce-from-the-repo)
+- [Task 4 — the IME plan](#task-4--the-ime-plan)
 
 <!-- tocstop -->
 
@@ -93,7 +94,7 @@ Not started. Seven stages, in order; each is green on `pnpm run typecheck`, `pnp
 
 ### Stage 5 — composition events over CDP
 
-Ground truth for the refusal path in stage 4 and for the IME plan in task 3. Playwright's
+Ground truth for the refusal path in stage 4 and for the IME plan in task 4. Playwright's
 keyboard API cannot compose, so the test drives Chromium's IME through a CDP session
 (`page.context().newCDPSession(page)`), which is also what `connectApp()` in
 `buildtools/cdp.mjs` hands back for the running example app.
@@ -139,7 +140,44 @@ commit)` function that sends one `Input.imeSetComposition` per step and `Input.i
 - Barrel exports verified against a pre-change `Object.keys` baseline of `dist/pathux.js`.
 - Mark `RichEditor` `@deprecated` pointing at `RichTextEditor`.
 
-## Task 3 — the IME plan
+## Task 3 — remove TinyMCE from the repo
+
+Not started. Waits on task 2, because the docs browser's edit mode is TinyMCE's only consumer
+and needs `rich-text-x` to replace it.
+
+What is there today:
+
+- `scripts/lib/tinymce/` and `example/lib/tinymce/`, 146 tracked files and 8.1 MB each. The
+  `example/` copy is referenced by nothing.
+- `scripts/docbrowser/docbrowser.ts` dynamic-imports `../lib/tinymce/tinymce.cjs` at module
+  load (`:18`), gates `initDoc` on it (`:776`), and in edit mode runs a TinyMCE instance inside
+  the docs iframe (`:826-870`) with an image-upload handler. The whole library is bundled into
+  `dist/pathux_with_docbrowser.js` as a result.
+- `scripts/global.d.ts:11-36` declares the minimal TinyMCE types and `Window.tinymce`
+  (`:131`), and `Window._tinymce`.
+- Exclusions that exist only because of it: `tsconfigDecl.json:30`, `tsconfigDeclTmp.json:37`,
+  `eslint.config.js:26` and `:34`, `.claudeignore:3`.
+
+Stages:
+
+- **Stage 1 — decide what the docs browser's edit mode becomes.** The default is a port: an
+  HTML-block provider (one block per top-level element of the docs page's `.contents` div,
+  `renderBlock` returning that element's clone, edits applied to the element's text) and
+  `rich-text-x` hosted in the iframe's document. The alternative is to drop edit mode from
+  the docs browser and keep it a viewer, which is a one-line decision if nobody edits docs
+  in-app any more. This is the one decision the tasklist cannot make; record it here when made.
+- **Stage 2 — port or remove edit mode** per stage 1, including the image-upload path if the
+  port is chosen (it becomes an atom the provider renders).
+- **Stage 3 — delete.** Remove both `lib/tinymce` trees, the TinyMCE section of
+  `scripts/global.d.ts`, the `TINYMCE_PATH` note at the top of `docbrowser.ts`, and the five
+  exclusion entries. Rebuild and confirm `dist/pathux_with_docbrowser.js` no longer contains
+  the `require_tinymce` chunk.
+- **Stage 4 — delete `RichEditor`.** Task 2's stage 7 deprecates it. Its remaining users are
+  the container's rich `textarea` builder (`core/utils/container_widgets.ts:346`) and the
+  matching overload in `core/ui.ts:1327`; both switch to `rich-text-x` over the plain provider,
+  after which `ui_richedit.ts` keeps `RichViewer` only.
+
+## Task 4 — the IME plan
 
 Not started. Waits on task 2 being complete and exercised in `example/`.
 
@@ -155,4 +193,4 @@ Not started. Waits on task 2 being complete and exercised in `example/`.
   while one is open); how the `MutationObserver` distinguishes composition mutations from
   missed input types; what Android does, where every keystroke is a composition; and what the
   reference provider's `replaceBlockText` does with atoms inside the composed block.
-- Pressure test it the same way as task 1 before it becomes task 4.
+- Pressure test it the same way as task 1 before it becomes task 5.
