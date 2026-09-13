@@ -110,6 +110,11 @@ export interface DocumentProvider<Doc> {
   isOpaque(doc: Doc, block: BlockId): boolean;
   /** The marks a `toggleMark` edit may name; the editor builds its toolbar from this list. */
   marks(): readonly MarkInfo[];
+  /**
+   * The marks the toolbar shows as on for `range`: those a `toggleMark` there would remove,
+   * or those typing at a collapsed range would extend. Without it the toolbar never lights.
+   */
+  activeMarks?(doc: Doc, range: DocRange): readonly string[];
 
   /**
    * A fresh element for the block, replaced wholesale on every re-render. The root carries

@@ -38500,7 +38500,7 @@ function checkForTextBox(screen, x, y) {
     return elem;
   };
   const active = getActive(document.activeElement);
-  if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) {
+  if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement || active instanceof HTMLElement && active.isContentEditable) {
     return true;
   }
   while (p) {

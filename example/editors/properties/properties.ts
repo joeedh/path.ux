@@ -11,6 +11,7 @@ import {
   mount,
   Container,
   TabContainer,
+  ToolStack,
   pickAssetPopup,
 } from "../../pathux.js";
 import type {
@@ -25,6 +26,13 @@ import type {
 } from "../../pathux.js";
 
 import { Editor } from "../editor_base.js";
+import { DocumentSession } from "../../../scripts/widgets/richtext/context.js";
+import { newBlockId } from "../../../scripts/widgets/richtext/provider.js";
+import {
+  PlainProvider,
+  plainDocFromLines,
+} from "../../../scripts/widgets/richtext/providers/plain.js";
+import { RichTextEditor } from "../../../scripts/widgets/richtext/editor.js";
 import { PropsPage } from "../../page.js";
 import { theme, themeVars } from "../../theme.js";
 
@@ -95,6 +103,7 @@ export class PropsEditor extends Editor {
           lb.itemNames((obj) => "Path " + (obj as { id: number }).id);
         },
         galleryTab  : (tab) => this.buildGallery(tab),
+        richTextTab : (tab) => this.buildRichText(tab),
         eventStrip: (con) => {
           con.dataPrefix = "";
           const bval = con.prop("data.boolval");
@@ -114,6 +123,30 @@ export class PropsEditor extends Editor {
       this._pageUIData = undefined;
       this.container.flushUpdate();
     }
+  }
+
+  /**
+   * Fills the Rich Text tab with an editor over the plain reference provider, on a toolstack
+   * of its own so Ctrl+Z inside the editor undoes the document rather than the app.
+   */
+  buildRichText(tab: Container) {
+    const provider = new PlainProvider();
+    const doc = plainDocFromLines(["Hello, world.", "A second paragraph to edit.", ""], () =>
+      newBlockId()
+    );
+    const session = new DocumentSession(doc, provider, new ToolStack());
+
+    tab.label("Composition (IME and dead-key input) is refused in this build.");
+
+    const editor = UIBase.constructElement<RichTextEditor>(
+      RichTextEditor.define().tagname,
+      this.ctx
+    );
+    editor.setAttribute("data-testid", "richtext-editor");
+    editor.style.width = "420px";
+    editor.session = session;
+
+    tab.add(editor);
   }
 
   exportTheme() {

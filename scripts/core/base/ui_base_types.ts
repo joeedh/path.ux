@@ -61,6 +61,8 @@ export interface UIBaseDefinition {
   pasteForAllChildren?: boolean;
   copyForAllChildren?: boolean;
   parentStyle?: string;
+  /** Keeps the screen keymap off keys pressed while the pointer is over this element. */
+  modalKeyEvents?: boolean;
   /**
    * Theme keys this element consumes, mapped to `t.*` schema tokens (see
    * theme_schema.ts). Read by the `gen:themes` build step; an element inherits

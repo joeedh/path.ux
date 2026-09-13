@@ -162,6 +162,40 @@ export class PlainProvider implements DocumentProvider<PlainDoc> {
     return PLAIN_MARKS;
   }
 
+  activeMarks(doc: PlainDoc, range: DocRange): readonly string[] {
+    const r = this.order(doc, range);
+    const names = new Set(PLAIN_MARKS.map((m) => m.name));
+
+    // a caret extends a mark it sits inside or at the end of, as marksAfterTyping does
+    if (r.startIndex === r.endIndex && r.start.offset === r.end.offset) {
+      const { marks } = doc.blocks[r.startIndex];
+      const pos = r.start.offset;
+      return [...names].filter((name) =>
+        marks.some((m) => m.name === name && m.from < pos && pos <= m.to)
+      );
+    }
+
+    const segments: { marks: readonly PlainMark[]; from: number; to: number }[] = [];
+    for (let i = r.startIndex; i <= r.endIndex; i++) {
+      const block = doc.blocks[i];
+      const from = i === r.startIndex ? r.start.offset : 0;
+      const to = i === r.endIndex ? r.end.offset : block.text.length;
+      if (from < to) {
+        segments.push({ marks: block.marks, from, to });
+      }
+    }
+
+    if (segments.length === 0) {
+      return [];
+    }
+
+    return [...names].filter((name) =>
+      segments.every(({ marks, from, to }) =>
+        marks.some((m) => m.name === name && m.from <= from && m.to >= to)
+      )
+    );
+  }
+
   renderBlock(doc: PlainDoc, block: BlockId, ctx: IContextBase): HTMLElement {
     const b = this.block(doc, block);
     const el = document.createElement("p");

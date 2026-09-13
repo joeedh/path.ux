@@ -20787,7 +20787,7 @@ var init_curve1d_bspline = __esm({
         const curve1d = this.getCurve1d(ctx);
         if (curve1d) {
           const bspline = curve1d.generators.active;
-          const { point, state, unique } = this.getInputs();
+          const { point, state, unique: unique2 } = this.getInputs();
           for (const p of bspline.points) {
             if (p.eid === point) {
               if (state) {
@@ -20795,7 +20795,7 @@ var init_curve1d_bspline = __esm({
               } else {
                 p.flag &= ~CurveFlags.SELECT;
               }
-            } else if (unique) {
+            } else if (unique2) {
               p.flag &= ~CurveFlags.SELECT;
             }
           }
@@ -38500,7 +38500,7 @@ function checkForTextBox(screen, x, y) {
     return elem;
   };
   const active = getActive(document.activeElement);
-  if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) {
+  if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement || active instanceof HTMLElement && active.isContentEditable) {
     return true;
   }
   while (p) {
@@ -61778,12 +61778,12 @@ ${body}}
     } else {
       c.setAttribute("data-dock-hidden", "1");
     }
-    const collapsed = r.mode === RegionMode.RAIL && r.railCollapsed || this._allPanelsCollapsed(r);
+    const collapsed3 = r.mode === RegionMode.RAIL && r.railCollapsed || this._allPanelsCollapsed(r);
     if (r.side === "left" || r.side === "right") {
-      c.style.setProperty("width", collapsed ? "auto" : r.size + "px", "important");
+      c.style.setProperty("width", collapsed3 ? "auto" : r.size + "px", "important");
       c.style.removeProperty("height");
     } else {
-      c.style.setProperty("height", collapsed ? "auto" : r.size + "px", "important");
+      c.style.setProperty("height", collapsed3 ? "auto" : r.size + "px", "important");
       c.style.setProperty("width", "100%", "important");
     }
   }
@@ -73365,9 +73365,1634 @@ MenuBarEditor2.STRUCT = struct_default.STRUCT.inherit(MenuBarEditor2, Editor2) +
 `;
 struct_default.register(MenuBarEditor2);
 
+// scripts/widgets/richtext/context.ts
+var sessionCounter = 0;
+var DocumentSession = class {
+  constructor(doc, provider, toolstack, id = `doc${++sessionCounter}`) {
+    this.doc = doc;
+    this.provider = provider;
+    this.toolstack = toolstack;
+    this.id = id;
+    this.unsubscribe = provider.onChange(doc, (change) => this.deliver(change));
+  }
+  doc;
+  provider;
+  toolstack;
+  id;
+  disposed = false;
+  listeners = /* @__PURE__ */ new Set();
+  unsubscribe;
+  /** Hears every change delivered through the session, provider changes included. */
+  onChange(listener) {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+  /** Forwards a change to every listener. Undo and redo of a `DocEditOp` arrive this way. */
+  deliver(change) {
+    if (this.disposed) {
+      return;
+    }
+    for (const listener of [...this.listeners]) {
+      listener(change);
+    }
+  }
+  /** Marks the document closed: its ops on any stack become no-ops and nothing is delivered. */
+  dispose() {
+    if (this.disposed) {
+      return;
+    }
+    this.disposed = true;
+    this.unsubscribe();
+    this.listeners.clear();
+  }
+};
+var RichTextContext = class _RichTextContext {
+  constructor(parent, session) {
+    this.parent = parent;
+    this.session = session;
+  }
+  parent;
+  session;
+  get state() {
+    return this.parent.state;
+  }
+  // The api and screen resolve against whichever context they are handed, so the parent's
+  // serve this context as well; the self type on ContextLike is what the casts bridge
+  get api() {
+    return this.parent.api;
+  }
+  get screen() {
+    return this.parent.screen;
+  }
+  get toolstack() {
+    return this.session.toolstack;
+  }
+  /** Locks the parent; the session and its toolstack are not state and stay live. */
+  toLocked() {
+    const parent = this.parent.toLocked ? this.parent.toLocked() : toLockedImpl.call(this.parent);
+    return new _RichTextContext(parent, this.session);
+  }
+};
+
+// scripts/widgets/richtext/provider.ts
+var ATOM_CHAR = String.fromCharCode(65532);
+var CARET_SLOT = String.fromCharCode(8203);
+var blockIdCounter = 0;
+function newBlockId() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `b${Date.now().toString(36)}-${blockIdCounter++}`;
+}
+
+// scripts/widgets/richtext/providers/plain.ts
+init_icon_enum();
+var MARK_TAGS = {
+  bold: "b",
+  italic: "i",
+  underline: "u",
+  strikethrough: "s"
+};
+var PLAIN_MARKS = [
+  { name: "bold", label: "Bold", icon: Icons.BOLD },
+  { name: "italic", label: "Italic", icon: Icons.ITALIC },
+  { name: "underline", label: "Underline", icon: Icons.UNDERLINE },
+  { name: "strikethrough", label: "Strikethrough", icon: Icons.STRIKETHRU }
+];
+var collapsed = (block, offset) => ({
+  anchor: { block, offset },
+  head: { block, offset }
+});
+var cloneBlock = (b) => ({
+  id: b.id,
+  text: b.text,
+  marks: b.marks.map((m) => ({ ...m }))
+});
+var unique = (ids) => [...new Set(ids)];
+function normalizeMarks(marks) {
+  const sorted = marks.filter((m) => m.from < m.to).map((m) => ({ ...m })).sort((a2, b) => a2.from - b.from || a2.name.localeCompare(b.name));
+  const out = [];
+  for (const m of sorted) {
+    const prev = out.find((o) => o.name === m.name && o.to >= m.from);
+    if (prev) {
+      prev.to = Math.max(prev.to, m.to);
+    } else {
+      out.push(m);
+    }
+  }
+  return out.sort((a2, b) => a2.from - b.from || a2.name.localeCompare(b.name));
+}
+function clipMarks(marks, from, to, base) {
+  return normalizeMarks(
+    marks.map((m) => ({
+      from: Math.max(m.from, from) - from + base,
+      to: Math.min(m.to, to) - from + base,
+      name: m.name
+    }))
+  );
+}
+function marksAfterTyping(marks, pos, len) {
+  return normalizeMarks(
+    marks.map((m) => ({
+      from: m.from < pos ? m.from : m.from + len,
+      to: m.to < pos ? m.to : m.to + len,
+      name: m.name
+    }))
+  );
+}
+function marksAroundInsert(marks, pos, len) {
+  const out = [];
+  for (const m of marks) {
+    if (m.to <= pos) {
+      out.push({ ...m });
+    } else if (m.from >= pos) {
+      out.push({ from: m.from + len, to: m.to + len, name: m.name });
+    } else {
+      out.push({ from: m.from, to: pos, name: m.name });
+      out.push({ from: pos + len, to: m.to + len, name: m.name });
+    }
+  }
+  return normalizeMarks(out);
+}
+function marksAfterDelete(marks, from, to) {
+  const map3 = (x) => x <= from ? x : x >= to ? x - (to - from) : from;
+  return normalizeMarks(marks.map((m) => ({ from: map3(m.from), to: map3(m.to), name: m.name })));
+}
+var PlainProvider = class {
+  listeners = /* @__PURE__ */ new WeakMap();
+  blocks(doc) {
+    return doc.blocks.map((b) => b.id);
+  }
+  blockText(doc, block) {
+    return this.block(doc, block).text;
+  }
+  isOpaque(doc, block) {
+    return false;
+  }
+  marks() {
+    return PLAIN_MARKS;
+  }
+  activeMarks(doc, range) {
+    const r = this.order(doc, range);
+    const names = new Set(PLAIN_MARKS.map((m) => m.name));
+    if (r.startIndex === r.endIndex && r.start.offset === r.end.offset) {
+      const { marks } = doc.blocks[r.startIndex];
+      const pos = r.start.offset;
+      return [...names].filter(
+        (name) => marks.some((m) => m.name === name && m.from < pos && pos <= m.to)
+      );
+    }
+    const segments = [];
+    for (let i2 = r.startIndex; i2 <= r.endIndex; i2++) {
+      const block = doc.blocks[i2];
+      const from = i2 === r.startIndex ? r.start.offset : 0;
+      const to = i2 === r.endIndex ? r.end.offset : block.text.length;
+      if (from < to) {
+        segments.push({ marks: block.marks, from, to });
+      }
+    }
+    if (segments.length === 0) {
+      return [];
+    }
+    return [...names].filter(
+      (name) => segments.every(
+        ({ marks, from, to }) => marks.some((m) => m.name === name && m.from <= from && m.to >= to)
+      )
+    );
+  }
+  renderBlock(doc, block, ctx) {
+    const b = this.block(doc, block);
+    const el = document.createElement("p");
+    el.setAttribute("data-doc-block", b.id);
+    if (b.text.length === 0) {
+      el.append(document.createTextNode(CARET_SLOT));
+      return el;
+    }
+    const bounds = /* @__PURE__ */ new Set([0, b.text.length]);
+    for (const m of b.marks) {
+      bounds.add(m.from);
+      bounds.add(m.to);
+    }
+    const edges = [...bounds].sort((a2, b2) => a2 - b2);
+    for (let i2 = 0; i2 + 1 < edges.length; i2++) {
+      const from = edges[i2];
+      const to = edges[i2 + 1];
+      let node = document.createTextNode(b.text.slice(from, to));
+      const active = b.marks.filter((m) => m.from <= from && m.to >= to).reverse();
+      for (const m of active) {
+        const tag = MARK_TAGS[m.name];
+        const wrap = document.createElement(tag ?? "span");
+        if (tag === void 0) {
+          wrap.setAttribute("data-doc-mark", m.name);
+        }
+        wrap.append(node);
+        node = wrap;
+      }
+      el.append(node);
+    }
+    return el;
+  }
+  applyEdit(doc, op) {
+    switch (op.type) {
+      case "insertText": {
+        const cut = this.deleteRangeImpl(doc, op.at);
+        const b = this.block(doc, cut.start.block);
+        const pos = cut.start.offset;
+        b.text = b.text.slice(0, pos) + op.text + b.text.slice(pos);
+        b.marks = marksAfterTyping(b.marks, pos, op.text.length);
+        return {
+          dirtyBlocks: unique([b.id, ...cut.dirty]),
+          removedBlocks: cut.removed,
+          selection: collapsed(b.id, pos + op.text.length)
+        };
+      }
+      case "deleteRange": {
+        const cut = this.deleteRangeImpl(doc, op.range);
+        return {
+          dirtyBlocks: cut.dirty,
+          removedBlocks: cut.removed,
+          selection: collapsed(cut.start.block, cut.start.offset)
+        };
+      }
+      case "splitBlock": {
+        if (doc.blocks.some((b2) => b2.id === op.newBlock)) {
+          throw new Error(`splitBlock: block id ${op.newBlock} is already in use`);
+        }
+        const index = this.index(doc, op.at.block);
+        const b = doc.blocks[index];
+        const pos = Math.min(op.at.offset, b.text.length);
+        const tail = {
+          id: op.newBlock,
+          text: b.text.slice(pos),
+          marks: clipMarks(b.marks, pos, b.text.length, 0)
+        };
+        b.text = b.text.slice(0, pos);
+        b.marks = clipMarks(b.marks, 0, pos, 0);
+        doc.blocks.splice(index + 1, 0, tail);
+        return {
+          dirtyBlocks: [b.id, tail.id],
+          removedBlocks: [],
+          selection: collapsed(tail.id, 0)
+        };
+      }
+      case "joinWithPrevious": {
+        const index = this.index(doc, op.block);
+        if (index === 0) {
+          return { dirtyBlocks: [], removedBlocks: [], selection: collapsed(op.block, 0) };
+        }
+        const prev = doc.blocks[index - 1];
+        const b = doc.blocks[index];
+        const seam = prev.text.length;
+        prev.text += b.text;
+        prev.marks = normalizeMarks([
+          ...prev.marks,
+          ...b.marks.map((m) => ({ from: m.from + seam, to: m.to + seam, name: m.name }))
+        ]);
+        doc.blocks.splice(index, 1);
+        return {
+          dirtyBlocks: [prev.id],
+          removedBlocks: [b.id],
+          selection: collapsed(prev.id, seam)
+        };
+      }
+      case "toggleMark":
+        return this.toggleMark(doc, op.range, op.mark);
+      case "insertContent":
+        return this.insertContent(doc, op.at, op.content.blocks, op.newBlocks);
+      case "replaceBlocks":
+        return this.replaceBlocks(doc, op.after, op.blocks, op.remove);
+    }
+  }
+  inverse(doc, op) {
+    let touched = [];
+    let created = [];
+    let after;
+    switch (op.type) {
+      case "insertText":
+        touched = this.rangeBlocks(doc, op.at);
+        break;
+      case "deleteRange":
+      case "toggleMark":
+        touched = this.rangeBlocks(doc, op.range);
+        break;
+      case "insertContent":
+        touched = this.rangeBlocks(doc, op.at);
+        created = op.newBlocks;
+        break;
+      case "splitBlock":
+        touched = [op.at.block];
+        created = [op.newBlock];
+        break;
+      case "joinWithPrevious": {
+        const index = this.index(doc, op.block);
+        touched = index === 0 ? [op.block] : [doc.blocks[index - 1].id, op.block];
+        break;
+      }
+      case "replaceBlocks": {
+        const removing = new Set(op.remove);
+        touched = doc.blocks.filter((b) => removing.has(b.id)).map((b) => b.id);
+        created = op.blocks.map((b) => b.id);
+        if (touched.length === 0) {
+          after = op.after;
+        }
+        break;
+      }
+    }
+    if (after === void 0) {
+      const first2 = touched.length > 0 ? this.index(doc, touched[0]) : 0;
+      after = first2 > 0 ? doc.blocks[first2 - 1].id : null;
+    }
+    return {
+      type: "replaceBlocks",
+      after,
+      blocks: touched.map((id) => this.snapshot(doc, id)),
+      remove: unique([...touched, ...created])
+    };
+  }
+  toClipboard(doc, range) {
+    const r = this.order(doc, range);
+    const blocks = [];
+    for (let i2 = r.startIndex; i2 <= r.endIndex; i2++) {
+      const text2 = doc.blocks[i2].text;
+      const from = i2 === r.startIndex ? r.start.offset : 0;
+      const to = i2 === r.endIndex ? r.end.offset : text2.length;
+      blocks.push(text2.slice(from, to));
+    }
+    return { blocks };
+  }
+  fromClipboard(data) {
+    if (!data.types.includes("text/plain")) {
+      return void 0;
+    }
+    return { blocks: data.getData("text/plain").split(/\r\n|\r|\n/) };
+  }
+  onChange(doc, listener) {
+    let set2 = this.listeners.get(doc);
+    if (set2 === void 0) {
+      set2 = /* @__PURE__ */ new Set();
+      this.listeners.set(doc, set2);
+    }
+    set2.add(listener);
+    return () => {
+      set2.delete(listener);
+    };
+  }
+  /** Reports a change made to `doc` outside `applyEdit` to every `onChange` listener. */
+  notifyChange(doc, change) {
+    const set2 = this.listeners.get(doc);
+    if (set2 === void 0) {
+      return;
+    }
+    for (const listener of [...set2]) {
+      listener(change);
+    }
+  }
+  block(doc, id) {
+    return doc.blocks[this.index(doc, id)];
+  }
+  index(doc, id) {
+    const index = doc.blocks.findIndex((b) => b.id === id);
+    if (index < 0) {
+      throw new Error(`unknown block ${id}`);
+    }
+    return index;
+  }
+  snapshot(doc, id) {
+    return { id, state: cloneBlock(this.block(doc, id)) };
+  }
+  /** The range in document order, offsets clamped to their block's text. */
+  order(doc, range) {
+    const ai = this.index(doc, range.anchor.block);
+    const hi = this.index(doc, range.head.block);
+    const clamp = (pos, i2) => ({
+      block: pos.block,
+      offset: Math.max(0, Math.min(pos.offset, doc.blocks[i2].text.length))
+    });
+    const anchor = clamp(range.anchor, ai);
+    const head = clamp(range.head, hi);
+    if (ai < hi || ai === hi && anchor.offset <= head.offset) {
+      return { start: anchor, end: head, startIndex: ai, endIndex: hi };
+    }
+    return { start: head, end: anchor, startIndex: hi, endIndex: ai };
+  }
+  rangeBlocks(doc, range) {
+    const r = this.order(doc, range);
+    return doc.blocks.slice(r.startIndex, r.endIndex + 1).map((b) => b.id);
+  }
+  /** Removes the range's text, joining its outer blocks; a collapsed range changes nothing. */
+  deleteRangeImpl(doc, range) {
+    const r = this.order(doc, range);
+    const first2 = doc.blocks[r.startIndex];
+    if (r.startIndex === r.endIndex) {
+      if (r.start.offset === r.end.offset) {
+        return { start: r.start, dirty: [], removed: [] };
+      }
+      first2.text = first2.text.slice(0, r.start.offset) + first2.text.slice(r.end.offset);
+      first2.marks = marksAfterDelete(first2.marks, r.start.offset, r.end.offset);
+      return { start: r.start, dirty: [first2.id], removed: [] };
+    }
+    const last = doc.blocks[r.endIndex];
+    const removed = doc.blocks.slice(r.startIndex + 1, r.endIndex + 1).map((b) => b.id);
+    first2.marks = normalizeMarks([
+      ...clipMarks(first2.marks, 0, r.start.offset, 0),
+      ...clipMarks(last.marks, r.end.offset, last.text.length, r.start.offset)
+    ]);
+    first2.text = first2.text.slice(0, r.start.offset) + last.text.slice(r.end.offset);
+    doc.blocks.splice(r.startIndex + 1, r.endIndex - r.startIndex);
+    return { start: r.start, dirty: [first2.id], removed };
+  }
+  /** Removes the mark when every character of the range already has it, adds it otherwise. */
+  toggleMark(doc, range, mark2) {
+    const r = this.order(doc, range);
+    const segments = [];
+    for (let i2 = r.startIndex; i2 <= r.endIndex; i2++) {
+      const block = doc.blocks[i2];
+      const from = i2 === r.startIndex ? r.start.offset : 0;
+      const to = i2 === r.endIndex ? r.end.offset : block.text.length;
+      if (from < to) {
+        segments.push({ block, from, to });
+      }
+    }
+    if (segments.length === 0) {
+      return { dirtyBlocks: [], removedBlocks: [], selection: range };
+    }
+    const covered = segments.every(
+      ({ block, from, to }) => block.marks.some((m) => m.name === mark2 && m.from <= from && m.to >= to)
+    );
+    for (const { block, from, to } of segments) {
+      if (covered) {
+        const kept = [];
+        for (const m of block.marks) {
+          if (m.name !== mark2) {
+            kept.push(m);
+          } else {
+            kept.push({ from: m.from, to: Math.min(m.to, from), name: m.name });
+            kept.push({ from: Math.max(m.from, to), to: m.to, name: m.name });
+          }
+        }
+        block.marks = normalizeMarks(kept);
+      } else {
+        block.marks = normalizeMarks([...block.marks, { from, to, name: mark2 }]);
+      }
+    }
+    return {
+      dirtyBlocks: segments.map((s) => s.block.id),
+      removedBlocks: [],
+      selection: range
+    };
+  }
+  insertContent(doc, at, lines, newBlocks) {
+    if (lines.length === 0 || newBlocks.length !== lines.length - 1) {
+      throw new Error(`insertContent: ${lines.length} lines need ${lines.length - 1} new ids`);
+    }
+    for (const id of newBlocks) {
+      if (doc.blocks.some((b2) => b2.id === id)) {
+        throw new Error(`insertContent: block id ${id} is already in use`);
+      }
+    }
+    const cut = this.deleteRangeImpl(doc, at);
+    const index = this.index(doc, cut.start.block);
+    const b = doc.blocks[index];
+    const pos = cut.start.offset;
+    if (lines.length === 1) {
+      b.text = b.text.slice(0, pos) + lines[0] + b.text.slice(pos);
+      b.marks = marksAroundInsert(b.marks, pos, lines[0].length);
+      return {
+        dirtyBlocks: unique([b.id, ...cut.dirty]),
+        removedBlocks: cut.removed,
+        selection: collapsed(b.id, pos + lines[0].length)
+      };
+    }
+    const tailText = lines[lines.length - 1];
+    const tail = {
+      id: newBlocks[newBlocks.length - 1],
+      text: tailText + b.text.slice(pos),
+      marks: clipMarks(b.marks, pos, b.text.length, tailText.length)
+    };
+    const middle = lines.slice(1, -1).map((text2, i2) => ({ id: newBlocks[i2], text: text2, marks: [] }));
+    b.marks = clipMarks(b.marks, 0, pos, 0);
+    b.text = b.text.slice(0, pos) + lines[0];
+    doc.blocks.splice(index + 1, 0, ...middle, tail);
+    return {
+      dirtyBlocks: unique([b.id, ...newBlocks, ...cut.dirty]),
+      removedBlocks: cut.removed,
+      selection: collapsed(tail.id, tailText.length)
+    };
+  }
+  replaceBlocks(doc, after, snapshots, remove2) {
+    const removing = new Set(remove2);
+    const removed = doc.blocks.filter((b) => removing.has(b.id)).map((b) => b.id);
+    doc.blocks = doc.blocks.filter((b) => !removing.has(b.id));
+    const restored = snapshots.map((s) => this.fromSnapshot(s));
+    const index = after === null ? 0 : this.index(doc, after) + 1;
+    doc.blocks.splice(index, 0, ...restored);
+    const inserted = new Set(restored.map((b) => b.id));
+    const last = restored[restored.length - 1];
+    let selection;
+    if (last !== void 0) {
+      selection = collapsed(last.id, last.text.length);
+    } else if (index < doc.blocks.length) {
+      selection = collapsed(doc.blocks[index].id, 0);
+    } else if (index > 0) {
+      const prev = doc.blocks[index - 1];
+      selection = collapsed(prev.id, prev.text.length);
+    } else {
+      selection = collapsed("", 0);
+    }
+    return {
+      dirtyBlocks: restored.map((b) => b.id),
+      removedBlocks: removed.filter((id) => !inserted.has(id)),
+      selection
+    };
+  }
+  fromSnapshot(snapshot) {
+    const state = snapshot.state;
+    if (typeof state?.text !== "string" || !Array.isArray(state.marks)) {
+      throw new Error(`replaceBlocks: snapshot of ${snapshot.id} is not a PlainBlock`);
+    }
+    return cloneBlock({ id: snapshot.id, text: state.text, marks: state.marks });
+  }
+};
+function plainDocFromLines(lines, makeId) {
+  return { blocks: lines.map((text2, i2) => ({ id: makeId(i2), text: text2, marks: [] })) };
+}
+
+// scripts/widgets/richtext/ops.ts
+init_toolop();
+init_toolprop();
+var uniqueRun = 0;
+function foldBlock(op) {
+  const range = op.type === "insertText" ? op.at : op.type === "deleteRange" ? op.range : void 0;
+  if (range === void 0 || range.anchor.block !== range.head.block) {
+    return void 0;
+  }
+  return range.anchor.block;
+}
+var DocEditOp = class extends ToolOp {
+  static tooldef() {
+    return {
+      uiname: "Edit Document",
+      toolpath: "richtext.edit",
+      inputs: {
+        op: new StringProperty().ignoreLastValue(),
+        inverse: new StringProperty().ignoreLastValue()
+      }
+    };
+  }
+  key;
+  resolve;
+  /**
+   * `run` is the submitting editor's `pathUndoGen`; two `insertText` or `deleteRange` ops on
+   * one block with the same run fold, and the editor bumps it whenever the next op is not
+   * contiguous with the run in progress.
+   */
+  constructor(op, inverse, sessionId = "", run = 0) {
+    super();
+    if (op !== void 0) {
+      this.inputs.op.setValue(JSON.stringify(op));
+    }
+    if (inverse !== void 0) {
+      this.inputs.inverse.setValue(JSON.stringify(inverse));
+    }
+    const type = op?.type ?? "";
+    const block = op === void 0 ? void 0 : foldBlock(op);
+    this.key = block === void 0 ? `${sessionId}:${type}:#${++uniqueRun}` : `${sessionId}:${type}:${block}:${run}`;
+  }
+  get op() {
+    return JSON.parse(this.inputs.op.getValue());
+  }
+  get inverse() {
+    return JSON.parse(this.inputs.inverse.getValue());
+  }
+  /**
+   * The `EditResult` of applying this op, whether it pushes or folds into the head. Call
+   * before submitting; the promise is settled by the phase that applies the op.
+   */
+  result() {
+    return new Promise((resolve) => {
+      this.resolve = resolve;
+    });
+  }
+  settle(session, result) {
+    const resolve = this.resolve;
+    this.resolve = void 0;
+    if (resolve !== void 0) {
+      resolve(result);
+    } else {
+      session.deliver(result);
+    }
+  }
+  /** The inverse was computed by the editor before submission; there is nothing to record. */
+  undoPre(_ctx) {
+  }
+  exec(ctx) {
+    const { session } = ctx;
+    if (session.disposed) {
+      return;
+    }
+    this.settle(session, session.provider.applyEdit(session.doc, this.op));
+  }
+  undo(ctx) {
+    const { session } = ctx;
+    if (session.disposed) {
+      return;
+    }
+    session.deliver(session.provider.applyEdit(session.doc, this.inverse));
+  }
+  foldKey() {
+    return this.key;
+  }
+  /**
+   * Applies `next`'s edit and widens this op to cover it, so a redo replays the whole run.
+   * The inverse stored when the run began stays: it covers the block, not the keystroke.
+   */
+  foldFrom(next, ctx) {
+    const { session } = ctx;
+    if (session.disposed) {
+      return;
+    }
+    const head = this.op;
+    const delta = next.op;
+    if (head.type === "insertText" && delta.type === "insertText") {
+      this.inputs.op.setValue(JSON.stringify({ ...head, text: head.text + delta.text }));
+    } else if (head.type === "deleteRange" && delta.type === "deleteRange") {
+      const block = head.range.anchor.block;
+      const start2 = Math.min(
+        head.range.anchor.offset,
+        head.range.head.offset,
+        delta.range.anchor.offset,
+        delta.range.head.offset
+      );
+      const length = Math.abs(head.range.head.offset - head.range.anchor.offset) + Math.abs(delta.range.head.offset - delta.range.anchor.offset);
+      const range = { anchor: { block, offset: start2 }, head: { block, offset: start2 + length } };
+      this.inputs.op.setValue(JSON.stringify({ ...head, range }));
+    }
+    next.settle(session, session.provider.applyEdit(session.doc, delta));
+  }
+};
+ToolOp.register(DocEditOp);
+
+// scripts/widgets/richtext/positions.ts
+var BLOCK_ATTR = "data-doc-block";
+var ATOM_ATTR = "data-doc-atom";
+var isElement = (node) => node.nodeType === 1;
+var isText = (node) => node.nodeType === 3;
+var isAtom = (node) => isElement(node) && node.hasAttribute(ATOM_ATTR);
+var isOpaqueBlock = (el) => el.getAttribute("contenteditable") === "false";
+function textLength(data) {
+  let len = 0;
+  for (let i2 = 0; i2 < data.length; i2++) {
+    if (data[i2] !== CARET_SLOT) {
+      len++;
+    }
+  }
+  return len;
+}
+function domOffsetIn(data, offset) {
+  let seen = 0;
+  for (let i2 = 0; i2 < data.length; i2++) {
+    if (seen === offset) {
+      return i2;
+    }
+    if (data[i2] !== CARET_SLOT) {
+      seen++;
+    }
+  }
+  return data.length;
+}
+function nodeLength(node) {
+  if (isText(node)) {
+    return textLength(node.data);
+  }
+  if (isAtom(node)) {
+    return 1;
+  }
+  let len = 0;
+  for (const child of node.childNodes) {
+    len += nodeLength(child);
+  }
+  return len;
+}
+function prefixLength(parent, count2) {
+  const kids = parent.childNodes;
+  let len = 0;
+  for (let i2 = 0; i2 < Math.min(count2, kids.length); i2++) {
+    len += nodeLength(kids[i2]);
+  }
+  return len;
+}
+function blockElement(root, block) {
+  for (const child of root.children) {
+    if (child.getAttribute(BLOCK_ATTR) === block) {
+      return child;
+    }
+  }
+  return void 0;
+}
+function toDocPos(root, node, domOffset) {
+  const from = isElement(node) ? node : node.parentElement;
+  const blockEl = from?.closest(`[${BLOCK_ATTR}]`);
+  if (!blockEl || blockEl.parentNode !== root) {
+    return void 0;
+  }
+  const block = blockEl.getAttribute(BLOCK_ATTR) ?? "";
+  if (isOpaqueBlock(blockEl)) {
+    if (node === blockEl) {
+      return { block, offset: domOffset >= blockEl.childNodes.length ? 1 : 0 };
+    }
+    let top = node;
+    while (top.parentNode !== blockEl && top.parentNode !== null) {
+      top = top.parentNode;
+    }
+    return { block, offset: top === blockEl.lastChild ? 1 : 0 };
+  }
+  if (node === blockEl) {
+    return { block, offset: prefixLength(blockEl, domOffset) };
+  }
+  let acc = 0;
+  const walk = (parent) => {
+    for (const child of parent.childNodes) {
+      if (child === node) {
+        if (isText(child)) {
+          return acc + textLength(child.data.slice(0, domOffset));
+        }
+        return acc + prefixLength(child, domOffset);
+      }
+      if (isAtom(child)) {
+        if (child.contains(node)) {
+          return acc;
+        }
+        acc += 1;
+      } else if (isText(child)) {
+        acc += nodeLength(child);
+      } else {
+        const found = walk(child);
+        if (found !== void 0) {
+          return found;
+        }
+      }
+    }
+    return void 0;
+  };
+  const offset = walk(blockEl);
+  return offset === void 0 ? void 0 : { block, offset };
+}
+function fromDocPos(root, pos) {
+  const blockEl = blockElement(root, pos.block);
+  if (blockEl === void 0) {
+    return void 0;
+  }
+  if (isOpaqueBlock(blockEl)) {
+    return { node: blockEl, offset: pos.offset <= 0 ? 0 : blockEl.childNodes.length };
+  }
+  let remaining = Math.max(0, pos.offset);
+  let lastText;
+  const walk = (parent) => {
+    const kids = parent.childNodes;
+    for (let i2 = 0; i2 < kids.length; i2++) {
+      const child = kids[i2];
+      if (isText(child)) {
+        const len = nodeLength(child);
+        lastText = child;
+        if (remaining <= len) {
+          return { node: child, offset: domOffsetIn(child.data, remaining) };
+        }
+        remaining -= len;
+      } else if (isAtom(child)) {
+        if (remaining === 0) {
+          return { node: parent, offset: i2 };
+        }
+        remaining -= 1;
+      } else {
+        const found2 = walk(child);
+        if (found2 !== void 0) {
+          return found2;
+        }
+      }
+    }
+    return void 0;
+  };
+  const found = walk(blockEl);
+  if (found !== void 0) {
+    return found;
+  }
+  if (lastText !== void 0) {
+    return { node: lastText, offset: lastText.data.length };
+  }
+  return { node: blockEl, offset: blockEl.childNodes.length };
+}
+var PendingMapper = class {
+  constructor(pos, doc) {
+    this.doc = doc;
+    this.pos = { ...pos };
+    this.order = [...doc.blocks];
+  }
+  doc;
+  order;
+  lengths = /* @__PURE__ */ new Map();
+  pos;
+  apply(op) {
+    switch (op.type) {
+      case "insertText":
+        this.insertAt(this.delete(op.at), op.text.length);
+        break;
+      case "deleteRange":
+        this.delete(op.range);
+        break;
+      case "splitBlock":
+        this.split(op.at, op.newBlock);
+        break;
+      case "joinWithPrevious":
+        this.join(op.block);
+        break;
+      case "insertContent":
+        this.insertContent(this.delete(op.at), op.content.blocks, op.newBlocks);
+        break;
+      case "toggleMark":
+      case "replaceBlocks":
+        break;
+    }
+  }
+  length(block) {
+    let len = this.lengths.get(block);
+    if (len === void 0) {
+      len = this.doc.blockText(block).length;
+      this.lengths.set(block, len);
+    }
+    return len;
+  }
+  index(block) {
+    const index = this.order.indexOf(block);
+    if (index < 0) {
+      throw new Error(`unknown block ${block}`);
+    }
+    return index;
+  }
+  orderRange(range) {
+    const ai = this.index(range.anchor.block);
+    const hi = this.index(range.head.block);
+    const forward = ai < hi || ai === hi && range.anchor.offset <= range.head.offset;
+    return forward ? { start: range.anchor, end: range.head, si: ai, ei: hi } : { start: range.head, end: range.anchor, si: hi, ei: ai };
+  }
+  /** Maps the position through a deletion and returns the deletion's start. */
+  delete(range) {
+    const { start: start2, end, si, ei } = this.orderRange(range);
+    const pos = this.pos;
+    if (si === ei) {
+      if (pos.block === start2.block && pos.offset > start2.offset) {
+        pos.offset = pos.offset >= end.offset ? pos.offset - (end.offset - start2.offset) : start2.offset;
+      }
+      this.lengths.set(start2.block, this.length(start2.block) - (end.offset - start2.offset));
+      return start2;
+    }
+    const removed = this.order.slice(si + 1, ei + 1);
+    if (pos.block === start2.block && pos.offset > start2.offset) {
+      pos.offset = start2.offset;
+    } else if (pos.block === end.block) {
+      pos.block = start2.block;
+      pos.offset = pos.offset >= end.offset ? start2.offset + pos.offset - end.offset : start2.offset;
+    } else if (removed.includes(pos.block)) {
+      pos.block = start2.block;
+      pos.offset = start2.offset;
+    }
+    this.lengths.set(start2.block, start2.offset + this.length(end.block) - end.offset);
+    this.order.splice(si + 1, ei - si);
+    return start2;
+  }
+  insertAt(at, len) {
+    if (this.pos.block === at.block && this.pos.offset >= at.offset) {
+      this.pos.offset += len;
+    }
+    this.lengths.set(at.block, this.length(at.block) + len);
+  }
+  split(at, newBlock) {
+    if (this.pos.block === at.block && this.pos.offset >= at.offset) {
+      this.pos = { block: newBlock, offset: this.pos.offset - at.offset };
+    }
+    this.lengths.set(newBlock, this.length(at.block) - at.offset);
+    this.lengths.set(at.block, at.offset);
+    this.order.splice(this.index(at.block) + 1, 0, newBlock);
+  }
+  join(block) {
+    const index = this.index(block);
+    if (index === 0) {
+      return;
+    }
+    const prev = this.order[index - 1];
+    const seam = this.length(prev);
+    if (this.pos.block === block) {
+      this.pos = { block: prev, offset: this.pos.offset + seam };
+    }
+    this.lengths.set(prev, seam + this.length(block));
+    this.order.splice(index, 1);
+  }
+  insertContent(at, lines, newBlocks) {
+    if (lines.length <= 1) {
+      this.insertAt(at, lines[0]?.length ?? 0);
+      return;
+    }
+    const last = newBlocks[newBlocks.length - 1];
+    const lastLen = lines[lines.length - 1].length;
+    const oldLen = this.length(at.block);
+    if (this.pos.block === at.block && this.pos.offset >= at.offset) {
+      this.pos = { block: last, offset: this.pos.offset - at.offset + lastLen };
+    }
+    this.lengths.set(at.block, at.offset + lines[0].length);
+    for (let i2 = 0; i2 + 1 < newBlocks.length; i2++) {
+      this.lengths.set(newBlocks[i2], lines[i2 + 1].length);
+    }
+    this.lengths.set(last, lastLen + oldLen - at.offset);
+    this.order.splice(this.index(at.block) + 1, 0, ...newBlocks);
+  }
+};
+function mapThroughPending(pos, pending, doc) {
+  const mapper = new PendingMapper(pos, doc);
+  for (const op of pending) {
+    mapper.apply(op);
+  }
+  return mapper.pos;
+}
+
+// scripts/widgets/richtext/editor.ts
+init_ui_base();
+init_theme_schema();
+var FORMAT_MARKS = {
+  formatBold: "bold",
+  formatItalic: "italic",
+  formatUnderline: "underline",
+  formatStrikeThrough: "strikethrough"
+};
+var BACKWARD_DELETES = /* @__PURE__ */ new Set([
+  "deleteContentBackward",
+  "deleteWordBackward",
+  "deleteSoftLineBackward"
+]);
+var FORWARD_DELETES = /* @__PURE__ */ new Set([
+  "deleteContentForward",
+  "deleteWordForward",
+  "deleteSoftLineForward"
+]);
+var WORD_DELETES = /* @__PURE__ */ new Set(["deleteWordBackward", "deleteWordForward"]);
+var samePos = (a2, b) => a2.block === b.block && a2.offset === b.offset;
+var isCollapsed = (range) => samePos(range.anchor, range.head);
+var collapsed2 = (pos) => ({ anchor: pos, head: pos });
+function deleteBoundary(text2, offset, granularity, backward) {
+  if (typeof Intl.Segmenter !== "function") {
+    return backward ? Math.max(0, offset - 1) : Math.min(text2.length, offset + 1);
+  }
+  const segments = [...new Intl.Segmenter(void 0, { granularity }).segment(text2)];
+  const wordLike = (i3) => segments[i3].segment === ATOM_CHAR || segments[i3].isWordLike !== false;
+  if (backward) {
+    let i3 = segments.findLastIndex((s) => s.index < offset);
+    if (i3 < 0) {
+      return 0;
+    }
+    if (granularity === "word") {
+      while (i3 > 0 && !wordLike(i3)) {
+        i3--;
+      }
+    }
+    return segments[i3].index;
+  }
+  let i2 = segments.findIndex((s) => s.index + s.segment.length > offset);
+  if (i2 < 0) {
+    return text2.length;
+  }
+  if (granularity === "word") {
+    while (i2 + 1 < segments.length && !wordLike(i2)) {
+      i2++;
+    }
+  }
+  return segments[i2].index + segments[i2].segment.length;
+}
+var RichTextEditor = class _RichTextEditor extends UIBase {
+  /** Logs any DOM mutation the editor did not make, so a missed inputType shows up. */
+  static observeMutations = true;
+  root;
+  styletag;
+  toolbar;
+  markButtons = /* @__PURE__ */ new Map();
+  _session;
+  rctx;
+  unsubscribe;
+  needsRender = false;
+  /** Ops submitted whose results have not been applied, oldest first. */
+  pending = [];
+  /** Where the next op must act to stay in the typing run in progress. */
+  runAnchor;
+  composing = false;
+  composeAt;
+  observer;
+  syncingToolbar = false;
+  onSelectionChange = () => this.selectionChanged();
+  constructor() {
+    super();
+    this.styletag = document.createElement("style");
+    this.styletag.textContent = `
+      :host {
+        display        : flex;
+        flex-direction : column;
+      }
+
+      .rich-text-root {
+        min-height    : 6em;
+        padding       : 5px;
+        outline       : none;
+        white-space   : pre-wrap;
+        overflow-wrap : anywhere;
+      }
+    `;
+    this.shadow.appendChild(this.styletag);
+    const root = this.root = document.createElement("div");
+    root.className = "rich-text-root";
+    root.contentEditable = "true";
+    root.spellcheck = false;
+    root.addEventListener("beforeinput", (e) => this.onBeforeInput(e));
+    root.addEventListener("keydown", (e) => this.onKeyDown(e));
+    root.addEventListener("compositionstart", () => this.onCompositionStart());
+    root.addEventListener("compositionend", () => this.onCompositionEnd());
+    root.addEventListener("blur", () => this.endRun());
+    this.shadow.appendChild(root);
+    if (_RichTextEditor.observeMutations) {
+      this.observer = new MutationObserver((records) => {
+        if (!this.composing) {
+          console.error("rich-text-x: the DOM changed outside the editor", records);
+        }
+      });
+      this.observer.observe(root, { childList: true, characterData: true, subtree: true });
+    }
+  }
+  get session() {
+    return this._session;
+  }
+  /** The document shown. Setting it drops any run in progress and renders from scratch. */
+  set session(session) {
+    if (session === this._session) {
+      return;
+    }
+    this.unsubscribe?.();
+    this._session = session;
+    this.rctx = void 0;
+    this.pending.length = 0;
+    this.runAnchor = void 0;
+    this.unsubscribe = session?.onChange((change) => this.docChanged(change));
+    this.buildToolbar();
+    this.renderAll();
+  }
+  /** The context the document's UI is built under, rebuilt when the parent context changes. */
+  get richCtx() {
+    const session = this._session;
+    if (session === void 0 || this.ctx === void 0) {
+      return void 0;
+    }
+    if (this.rctx?.parent !== this.ctx || this.rctx.session !== session) {
+      this.rctx = new RichTextContext(this.ctx, session);
+    }
+    return this.rctx;
+  }
+  init() {
+    super.init();
+    document.addEventListener("selectionchange", this.onSelectionChange);
+    this.setCSS();
+    this.renderAll();
+  }
+  update() {
+    super.update();
+    if (this.needsRender) {
+      this.renderAll();
+    }
+  }
+  _ondestroy() {
+    document.removeEventListener("selectionchange", this.onSelectionChange);
+    this.observer?.disconnect();
+    this.unsubscribe?.();
+    this.unsubscribe = void 0;
+    super._ondestroy();
+  }
+  setCSS() {
+    super.setCSS();
+    const font = this.getDefault("DefaultText");
+    this.root.style.font = font.genCSS();
+    this.root.style.color = font.color;
+    this.root.style.backgroundColor = this.getDefault("background-color");
+  }
+  /** Focuses the editable root and places the selection. */
+  select(range) {
+    this.root.focus();
+    this.setSelection(range);
+  }
+  /** The current selection as document positions, or `undefined` when it is elsewhere. */
+  selection() {
+    return this.domRange();
+  }
+  async undo() {
+    const session = this._session;
+    if (session === void 0) {
+      return;
+    }
+    this.endRun();
+    await session.toolstack.undo();
+    this.endRun();
+  }
+  async redo() {
+    const session = this._session;
+    if (session === void 0) {
+      return;
+    }
+    this.endRun();
+    await session.toolstack.redo();
+    this.endRun();
+  }
+  /** Toggles `mark` over the selection; nothing happens on a collapsed one. */
+  toggleMark(mark2) {
+    const range = this.selectionThroughPending();
+    if (range === void 0 || isCollapsed(range)) {
+      return;
+    }
+    this.submit({ type: "toggleMark", range, mark: mark2 });
+  }
+  refuse(inputType) {
+    this.dispatchEvent(new CustomEvent("refused", { detail: { inputType } }));
+    return [];
+  }
+  onBeforeInput(e) {
+    e.preventDefault();
+    if (this.composing || this._session === void 0 || this._session.disposed) {
+      return;
+    }
+    for (const op of this.mapInput(e)) {
+      this.submit(op);
+    }
+  }
+  onKeyDown(e) {
+    const mod = e.ctrlKey || e.metaKey;
+    const key = e.key.toLowerCase();
+    if (e.key === "Escape") {
+      this.root.blur();
+      e.preventDefault();
+    } else if (e.key === "Tab") {
+      this.refuse("insertTab");
+      e.preventDefault();
+    } else if (mod && e.shiftKey && key === "s") {
+      this.toggleMark("strikethrough");
+      e.preventDefault();
+    } else if (mod && !e.altKey && key === "z") {
+      void (e.shiftKey ? this.redo() : this.undo());
+      e.preventDefault();
+    } else if (mod && !e.altKey && key === "y") {
+      void this.redo();
+      e.preventDefault();
+    }
+  }
+  onCompositionStart() {
+    this.composing = true;
+    this.composeAt = this.selectionThroughPending()?.head;
+    this.endRun();
+  }
+  onCompositionEnd() {
+    this.composing = false;
+    const at = this.composeAt;
+    this.composeAt = void 0;
+    if (at !== void 0 && this.view() !== void 0) {
+      this.applyResult({ dirtyBlocks: [at.block], removedBlocks: [], selection: collapsed2(at) });
+    } else {
+      this.observer?.takeRecords();
+    }
+    this.refuse("insertCompositionText");
+  }
+  /** The `EditOp`s one input event asks for: none when it is refused or handled directly. */
+  mapInput(e) {
+    const session = this._session;
+    const view = this.view();
+    if (session === void 0 || view === void 0) {
+      return [];
+    }
+    const type = e.inputType;
+    if (type === "historyUndo") {
+      void this.undo();
+      return [];
+    }
+    if (type === "historyRedo") {
+      void this.redo();
+      return [];
+    }
+    const mark2 = FORMAT_MARKS[type];
+    if (mark2 !== void 0) {
+      if (!session.provider.marks().some((m) => m.name === mark2)) {
+        return this.refuse(type);
+      }
+      const range = this.inputRange(e);
+      return range === void 0 || isCollapsed(range) ? [] : [{ type: "toggleMark", range, mark: mark2 }];
+    }
+    if (type === "insertText") {
+      const range = this.inputRange(e);
+      if (typeof e.data !== "string" || range === void 0) {
+        return this.refuse(type);
+      }
+      return [{ type: "insertText", at: range, text: e.data }];
+    }
+    if (type === "insertParagraph" || type === "insertLineBreak") {
+      const range = this.inputRange(e);
+      if (range === void 0) {
+        return this.refuse(type);
+      }
+      const ops = [];
+      const start2 = this.orderRange(range, view).start;
+      if (!isCollapsed(range)) {
+        ops.push({ type: "deleteRange", range });
+      }
+      ops.push({ type: "splitBlock", at: start2, newBlock: newBlockId() });
+      return ops;
+    }
+    if (type === "insertFromPaste" || type === "insertFromDrop") {
+      const range = this.inputRange(e);
+      const content = e.dataTransfer ? session.provider.fromClipboard(e.dataTransfer) : void 0;
+      if (range === void 0 || content === void 0 || content.blocks.length === 0) {
+        return this.refuse(type);
+      }
+      const newBlocks = content.blocks.slice(1).map(() => newBlockId());
+      return [{ type: "insertContent", at: range, content, newBlocks }];
+    }
+    if (BACKWARD_DELETES.has(type) || FORWARD_DELETES.has(type) || type === "deleteByCut") {
+      return this.mapDelete(e, type, view);
+    }
+    return this.refuse(type);
+  }
+  mapDelete(e, type, view) {
+    const range = this.inputRange(e);
+    if (range === void 0) {
+      return this.refuse(type);
+    }
+    let { start: start2, end } = this.orderRange(range, view);
+    if (samePos(start2, end)) {
+      if (type === "deleteByCut" || e.getTargetRanges().length > 0) {
+        return [];
+      }
+      const text2 = view.blockText(start2.block);
+      const index = view.blocks.indexOf(start2.block);
+      const granularity = WORD_DELETES.has(type) ? "word" : "grapheme";
+      if (BACKWARD_DELETES.has(type)) {
+        if (start2.offset === 0) {
+          return index > 0 ? [{ type: "joinWithPrevious", block: start2.block }] : [];
+        }
+        start2 = {
+          block: start2.block,
+          offset: deleteBoundary(text2, start2.offset, granularity, true)
+        };
+      } else {
+        if (end.offset >= text2.length) {
+          const next = view.blocks[index + 1];
+          return next === void 0 ? [] : [{ type: "joinWithPrevious", block: next }];
+        }
+        end = { block: end.block, offset: deleteBoundary(text2, end.offset, granularity, false) };
+      }
+    }
+    const si = view.blocks.indexOf(start2.block);
+    const ei = view.blocks.indexOf(end.block);
+    const boundaryOnly = ei === si + 1 && start2.offset >= view.blockText(start2.block).length && end.offset === 0;
+    if (boundaryOnly) {
+      return [{ type: "joinWithPrevious", block: end.block }];
+    }
+    return [{ type: "deleteRange", range: { anchor: start2, head: end } }];
+  }
+  /** Ends the run in progress unless `op` continues it, then commits `op`. */
+  submit(op) {
+    const anchor = this.runAnchor;
+    if (op.type === "insertText" && isCollapsed(op.at)) {
+      if (anchor === void 0 || !samePos(op.at.head, anchor)) {
+        this.undoBreakPoint();
+      }
+      this.runAnchor = { block: op.at.head.block, offset: op.at.head.offset + op.text.length };
+    } else if (op.type === "deleteRange" && op.range.anchor.block === op.range.head.block) {
+      const { anchor: a2, head: h } = op.range;
+      const start2 = a2.offset <= h.offset ? a2 : h;
+      const end = a2.offset <= h.offset ? h : a2;
+      if (anchor === void 0 || !(samePos(start2, anchor) || samePos(end, anchor))) {
+        this.undoBreakPoint();
+      }
+      this.runAnchor = start2;
+    } else {
+      this.endRun();
+    }
+    void this.commit(op);
+  }
+  /** Runs `op` through the toolstack and applies its result once it has run. */
+  async commit(op) {
+    const session = this._session;
+    const ctx = this.richCtx;
+    if (session === void 0 || ctx === void 0) {
+      return;
+    }
+    const toolop = new DocEditOp(
+      op,
+      session.provider.inverse(session.doc, op),
+      session.id,
+      this.pathUndoGen
+    );
+    const result = toolop.result();
+    this.pending.push(op);
+    let applied;
+    try {
+      const run = ctx.toolstack.foldOrExec(ctx, toolop);
+      applied = await Promise.race([result, run.then(() => result)]);
+    } catch (error2) {
+      this.dropPending(op);
+      this.endRun();
+      console.error("rich-text-x: edit failed", error2);
+      return;
+    }
+    if (this._session !== session) {
+      return;
+    }
+    this.dropPending(op);
+    this.applyResult(applied);
+  }
+  dropPending(op) {
+    const index = this.pending.indexOf(op);
+    if (index >= 0) {
+      this.pending.splice(index, 1);
+    }
+  }
+  docChanged(change) {
+    const own = this.domRange();
+    const view = this.view();
+    this.applyResult({ ...change, selection: own === void 0 ? change.selection : void 0 });
+    if (own !== void 0 && view !== void 0) {
+      this.setSelection({
+        anchor: this.clampPos(own.anchor, view),
+        head: this.clampPos(own.head, view)
+      });
+    }
+    this.endRun();
+  }
+  clampPos(pos, view) {
+    if (!view.blocks.includes(pos.block)) {
+      const block = view.blocks[0];
+      return block === void 0 ? pos : { block, offset: 0 };
+    }
+    return { block: pos.block, offset: Math.min(pos.offset, view.blockText(pos.block).length) };
+  }
+  endRun() {
+    this.undoBreakPoint();
+    this.runAnchor = void 0;
+  }
+  selectionChanged() {
+    if (this.composing || this._session === void 0) {
+      return;
+    }
+    this.syncToolbar();
+    if (this.runAnchor === void 0 || this.pending.length > 0) {
+      return;
+    }
+    const range = this.domRange();
+    if (range === void 0 || !isCollapsed(range) || !samePos(range.head, this.runAnchor)) {
+      this.endRun();
+    }
+  }
+  /** The document as the position mapper reads it, or `undefined` before there is one. */
+  view() {
+    const session = this._session;
+    if (session === void 0) {
+      return void 0;
+    }
+    const { provider, doc } = session;
+    return { blocks: provider.blocks(doc), blockText: (block) => provider.blockText(doc, block) };
+  }
+  orderRange(range, view) {
+    const ai = view.blocks.indexOf(range.anchor.block);
+    const hi = view.blocks.indexOf(range.head.block);
+    const forward = ai < hi || ai === hi && range.anchor.offset <= range.head.offset;
+    return forward ? { start: range.anchor, end: range.head } : { start: range.head, end: range.anchor };
+  }
+  renderAll() {
+    const session = this._session;
+    const ctx = this.richCtx;
+    if (session === void 0) {
+      this.root.replaceChildren();
+      this.observer?.takeRecords();
+      this.needsRender = false;
+      return;
+    }
+    if (ctx === void 0) {
+      this.needsRender = true;
+      return;
+    }
+    const { provider, doc } = session;
+    this.root.replaceChildren(
+      ...provider.blocks(doc).map((id) => provider.renderBlock(doc, id, ctx))
+    );
+    this.observer?.takeRecords();
+    this.needsRender = false;
+  }
+  /** Re-renders the dirty blocks, drops the removed ones and places the selection. */
+  applyResult(result) {
+    const session = this._session;
+    const ctx = this.richCtx;
+    if (session === void 0 || ctx === void 0) {
+      return;
+    }
+    const { provider, doc } = session;
+    const root = this.root;
+    for (const id of result.removedBlocks) {
+      blockElement(root, id)?.remove();
+    }
+    const order = provider.blocks(doc);
+    const dirty2 = result.dirtyBlocks.map((id) => ({ id, index: order.indexOf(id) })).filter((entry) => entry.index >= 0).sort((a2, b) => a2.index - b.index);
+    for (const { id, index } of dirty2) {
+      const fresh = provider.renderBlock(doc, id, ctx);
+      const old = blockElement(root, id);
+      if (old !== void 0) {
+        old.replaceWith(fresh);
+      } else if (index === 0) {
+        root.prepend(fresh);
+      } else {
+        const prev = blockElement(root, order[index - 1]);
+        if (prev !== void 0) {
+          prev.after(fresh);
+        } else {
+          root.append(fresh);
+        }
+      }
+    }
+    this.observer?.takeRecords();
+    if (result.selection !== void 0) {
+      this.setSelection(result.selection);
+    }
+    this.syncToolbar();
+  }
+  setSelection(range) {
+    const anchor = fromDocPos(this.root, range.anchor);
+    const head = fromDocPos(this.root, range.head);
+    const sel = this.domSelection();
+    if (anchor === void 0 || head === void 0 || sel === null) {
+      return;
+    }
+    sel.setBaseAndExtent(anchor.node, anchor.offset, head.node, head.offset);
+  }
+  domSelection() {
+    const shadow = this.shadow;
+    return shadow.getSelection?.() ?? document.getSelection();
+  }
+  /** The selection's endpoints as DOM positions inside the root, if it is there. */
+  selectionEndpoints() {
+    const sel = this.domSelection();
+    if (sel === null || sel.rangeCount === 0) {
+      return void 0;
+    }
+    const composed = sel.getComposedRanges?.({ shadowRoots: [this.shadow] });
+    if (composed !== void 0 && composed.length > 0) {
+      const r = composed[0];
+      const backward = this.isBackward(sel, r);
+      const start2 = { node: r.startContainer, offset: r.startOffset };
+      const end = { node: r.endContainer, offset: r.endOffset };
+      return backward ? { anchor: end, head: start2 } : { anchor: start2, head: end };
+    }
+    if (sel.anchorNode === null || sel.focusNode === null) {
+      return void 0;
+    }
+    return {
+      anchor: { node: sel.anchorNode, offset: sel.anchorOffset },
+      head: { node: sel.focusNode, offset: sel.focusOffset }
+    };
+  }
+  isBackward(sel, range) {
+    if (sel.anchorNode === null || sel.focusNode === null) {
+      return false;
+    }
+    if (sel.anchorNode === sel.focusNode) {
+      return sel.anchorOffset > sel.focusOffset;
+    }
+    return sel.anchorNode === range.endContainer && sel.anchorOffset === range.endOffset;
+  }
+  /** A DOM position to a document one; a position on the root itself lands on a block edge. */
+  docPos(node, offset) {
+    const view = this.view();
+    if (view === void 0) {
+      return void 0;
+    }
+    if (node === this.root) {
+      const kids = this.root.children;
+      if (offset < kids.length) {
+        const block = kids[offset].getAttribute("data-doc-block");
+        return block === null ? void 0 : { block, offset: 0 };
+      }
+      const last = view.blocks[view.blocks.length - 1];
+      return last === void 0 ? void 0 : { block: last, offset: view.blockText(last).length };
+    }
+    return toDocPos(this.root, node, offset);
+  }
+  domRange() {
+    const ends = this.selectionEndpoints();
+    if (ends === void 0) {
+      return void 0;
+    }
+    const anchor = this.docPos(ends.anchor.node, ends.anchor.offset);
+    const head = this.docPos(ends.head.node, ends.head.offset);
+    return anchor !== void 0 && head !== void 0 ? { anchor, head } : void 0;
+  }
+  throughPending(range) {
+    const view = this.view();
+    if (view === void 0) {
+      return void 0;
+    }
+    if (this.pending.length === 0) {
+      return range;
+    }
+    return {
+      anchor: mapThroughPending(range.anchor, this.pending, view),
+      head: mapThroughPending(range.head, this.pending, view)
+    };
+  }
+  selectionThroughPending() {
+    const range = this.domRange();
+    return range === void 0 ? void 0 : this.throughPending(range);
+  }
+  /** The range an input event works on: its first target range, else the selection. */
+  inputRange(e) {
+    const targets = e.getTargetRanges();
+    if (targets.length === 0) {
+      return this.selectionThroughPending();
+    }
+    const r = targets[0];
+    const anchor = this.docPos(r.startContainer, r.startOffset);
+    const head = this.docPos(r.endContainer, r.endOffset);
+    if (anchor === void 0 || head === void 0) {
+      return void 0;
+    }
+    return this.throughPending({ anchor, head });
+  }
+  buildToolbar() {
+    this.toolbar?.remove();
+    this.toolbar = void 0;
+    this.markButtons.clear();
+    const session = this._session;
+    if (session === void 0) {
+      return;
+    }
+    const marks = session.provider.marks();
+    if (marks.length === 0) {
+      return;
+    }
+    const row = UIBase.createElement("rowframe-x");
+    Object.defineProperty(row, "ctx", {
+      configurable: true,
+      get: () => this.richCtx ?? this.ctx,
+      set: () => {
+      }
+    });
+    for (const mark2 of marks) {
+      const btn = UIBase.createElement("iconcheck-x");
+      btn.icon = mark2.icon;
+      btn.description = mark2.label;
+      btn.iconsheet = 1;
+      btn.drawCheck = false;
+      btn.setAttribute("data-testid", `richtext-mark-${mark2.name}`);
+      btn.on_change = () => {
+        if (!this.syncingToolbar) {
+          this.toggleMark(mark2.name);
+        }
+      };
+      row.add(btn);
+      this.markButtons.set(mark2.name, btn);
+    }
+    row.checkInit();
+    this.shadow.insertBefore(row, this.root);
+    this.toolbar = row;
+  }
+  syncToolbar() {
+    const session = this._session;
+    if (session === void 0 || this.markButtons.size === 0 || this.pending.length > 0) {
+      return;
+    }
+    const range = this.domRange();
+    const active = new Set(
+      range !== void 0 && session.provider.activeMarks !== void 0 ? session.provider.activeMarks(session.doc, range) : []
+    );
+    this.syncingToolbar = true;
+    for (const [name, btn] of this.markButtons) {
+      btn.checked = active.has(name);
+    }
+    this.syncingToolbar = false;
+  }
+  static define() {
+    return {
+      tagname: "rich-text-x",
+      style: "richtext",
+      modalKeyEvents: true,
+      theme: {
+        DefaultText: t.font,
+        "background-color": t.color
+      }
+    };
+  }
+};
+UIBase.internalRegister(RichTextEditor);
+
 // example/page.tsx
 function PropsPage(refs = {}) {
-  return /* @__PURE__ */ jsx("tabs", { pos: "left", style: "overflow-y : scroll" }, /* @__PURE__ */ jsx("tab", { label: "Theme", "data-testid": "tab-theme" }, /* @__PURE__ */ jsx("button", { ref: refs.exportButton }, "Export Theme"), /* @__PURE__ */ jsx("theme-editor-x", { ref: refs.themeEditor })), /* @__PURE__ */ jsx("tab", { label: "Tab", "data-testid": "tab-tab", showLabel: "true" }, /* @__PURE__ */ jsx("tool", { path: "canvas.draw()", useIcons: "false" }, "Exec Draw"), /* @__PURE__ */ jsx("panel", { label: "Panel", closed: "false", path: "data", showLabel: "true" }, /* @__PURE__ */ jsx("strip", { mode: "vertical", showLabel: "true" }, /* @__PURE__ */ jsx("prop", { path: "angle1" }), /* @__PURE__ */ jsx("prop", { path: "angle2" })), /* @__PURE__ */ jsx("prop", { path: "vector_test" }), /* @__PURE__ */ jsx("column", null, /* @__PURE__ */ jsx("pathlabel", { path: "vector_test[0]" }), /* @__PURE__ */ jsx("pathlabel", { path: "vector_test[1]" })), /* @__PURE__ */ jsx("row", null, /* @__PURE__ */ jsx("pathlabel", { path: "vector_test[2]" }), /* @__PURE__ */ jsx("pathlabel", { path: "vector_test[3]" })), /* @__PURE__ */ jsx("strip", { ref: refs.eventStrip })), /* @__PURE__ */ jsx("panel", { label: "Canvas", path: "canvas" }, /* @__PURE__ */ jsx("prop", { path: "drawflag[BLUR]", useIcons: "false" }))), /* @__PURE__ */ jsx("tab", { label: "Graph Packing", ref: refs.graphTab, "data-testid": "tab-graph-packing" }), /* @__PURE__ */ jsx("tab", { label: "Curve Mapping", "data-testid": "tab-curve-mapping" }, /* @__PURE__ */ jsx("prop", { path: "data.curvemap" })), /* @__PURE__ */ jsx("tab", { label: "ListBox", "data-testid": "tab-listbox" }, /* @__PURE__ */ jsx("label", null, "Canvas paths (DataList-backed listbox):"), /* @__PURE__ */ jsx("listbox", { path: "canvas.paths", ref: refs.listbox, height: "220", "resize-axes": "xy" }), /* @__PURE__ */ jsx("panel", { label: "Active Path", path: "canvas.paths.active" }, /* @__PURE__ */ jsx("colorfield", { path: "material.color" }))), /* @__PURE__ */ jsx("tab", { label: "Gallery", ref: refs.galleryTab, "data-testid": "tab-gallery" }), /* @__PURE__ */ jsx("tab", { label: "Last Command", "data-testid": "tab-last-command" }, /* @__PURE__ */ jsx("last-tool-panel-x", null)));
+  return /* @__PURE__ */ jsx("tabs", { pos: "left", style: "overflow-y : scroll" }, /* @__PURE__ */ jsx("tab", { label: "Theme", "data-testid": "tab-theme" }, /* @__PURE__ */ jsx("button", { ref: refs.exportButton }, "Export Theme"), /* @__PURE__ */ jsx("theme-editor-x", { ref: refs.themeEditor })), /* @__PURE__ */ jsx("tab", { label: "Tab", "data-testid": "tab-tab", showLabel: "true" }, /* @__PURE__ */ jsx("tool", { path: "canvas.draw()", useIcons: "false" }, "Exec Draw"), /* @__PURE__ */ jsx("panel", { label: "Panel", closed: "false", path: "data", showLabel: "true" }, /* @__PURE__ */ jsx("strip", { mode: "vertical", showLabel: "true" }, /* @__PURE__ */ jsx("prop", { path: "angle1" }), /* @__PURE__ */ jsx("prop", { path: "angle2" })), /* @__PURE__ */ jsx("prop", { path: "vector_test" }), /* @__PURE__ */ jsx("column", null, /* @__PURE__ */ jsx("pathlabel", { path: "vector_test[0]" }), /* @__PURE__ */ jsx("pathlabel", { path: "vector_test[1]" })), /* @__PURE__ */ jsx("row", null, /* @__PURE__ */ jsx("pathlabel", { path: "vector_test[2]" }), /* @__PURE__ */ jsx("pathlabel", { path: "vector_test[3]" })), /* @__PURE__ */ jsx("strip", { ref: refs.eventStrip })), /* @__PURE__ */ jsx("panel", { label: "Canvas", path: "canvas" }, /* @__PURE__ */ jsx("prop", { path: "drawflag[BLUR]", useIcons: "false" }))), /* @__PURE__ */ jsx("tab", { label: "Graph Packing", ref: refs.graphTab, "data-testid": "tab-graph-packing" }), /* @__PURE__ */ jsx("tab", { label: "Curve Mapping", "data-testid": "tab-curve-mapping" }, /* @__PURE__ */ jsx("prop", { path: "data.curvemap" })), /* @__PURE__ */ jsx("tab", { label: "ListBox", "data-testid": "tab-listbox" }, /* @__PURE__ */ jsx("label", null, "Canvas paths (DataList-backed listbox):"), /* @__PURE__ */ jsx("listbox", { path: "canvas.paths", ref: refs.listbox, height: "220", "resize-axes": "xy" }), /* @__PURE__ */ jsx("panel", { label: "Active Path", path: "canvas.paths.active" }, /* @__PURE__ */ jsx("colorfield", { path: "material.color" }))), /* @__PURE__ */ jsx("tab", { label: "Gallery", ref: refs.galleryTab, "data-testid": "tab-gallery" }), /* @__PURE__ */ jsx("tab", { label: "Rich Text", ref: refs.richTextTab, "data-testid": "tab-richtext" }), /* @__PURE__ */ jsx("tab", { label: "Last Command", "data-testid": "tab-last-command" }, /* @__PURE__ */ jsx("last-tool-panel-x", null)));
 }
 
 // example/editors/properties/properties.ts
@@ -73418,6 +75043,7 @@ var PropsEditor = class extends Editor2 {
           lb.itemNames((obj) => "Path " + obj.id);
         },
         galleryTab: (tab2) => this.buildGallery(tab2),
+        richTextTab: (tab2) => this.buildRichText(tab2),
         eventStrip: (con) => {
           con.dataPrefix = "";
           const bval = con.prop("data.boolval");
@@ -73433,6 +75059,27 @@ var PropsEditor = class extends Editor2 {
       this._pageUIData = void 0;
       this.container.flushUpdate();
     }
+  }
+  /**
+   * Fills the Rich Text tab with an editor over the plain reference provider, on a toolstack
+   * of its own so Ctrl+Z inside the editor undoes the document rather than the app.
+   */
+  buildRichText(tab2) {
+    const provider = new PlainProvider();
+    const doc = plainDocFromLines(
+      ["Hello, world.", "A second paragraph to edit.", ""],
+      () => newBlockId()
+    );
+    const session = new DocumentSession(doc, provider, new ToolStack());
+    tab2.label("Composition (IME and dead-key input) is refused in this build.");
+    const editor = UIBase.constructElement(
+      RichTextEditor.define().tagname,
+      this.ctx
+    );
+    editor.setAttribute("data-testid", "richtext-editor");
+    editor.style.width = "420px";
+    editor.session = session;
+    tab2.add(editor);
   }
   exportTheme() {
     if (!this.themeEditor) {

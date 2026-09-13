@@ -21,6 +21,7 @@ export interface PropsPageRefs {
   listbox?: (lb: ListBox) => void;
   eventStrip?: (con: Container) => void;
   galleryTab?: (tab: Container) => void;
+  richTextTab?: (tab: Container) => void;
 }
 
 export function PropsPage(refs: PropsPageRefs = {}) {
@@ -66,6 +67,7 @@ export function PropsPage(refs: PropsPageRefs = {}) {
         </panel>
       </tab>
       <tab label="Gallery" ref={refs.galleryTab} data-testid="tab-gallery" />
+      <tab label="Rich Text" ref={refs.richTextTab} data-testid="tab-richtext" />
       <tab label="Last Command" data-testid="tab-last-command">
         <last-tool-panel-x />
       </tab>

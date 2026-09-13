@@ -3,7 +3,7 @@
 Tasks for [`rich-text-provider.md`](rich-text-provider.md). Each stage is a commit, and each
 stage's status is recorded here when it lands.
 
-Status: task 1 done; task 3 stages 1 to 3 done; task 2 stages 1 to 3 done.
+Status: task 1 done; task 3 stages 1 to 3 done; task 2 stages 1 to 4 done.
 
 <!-- toc -->
 
@@ -32,7 +32,7 @@ optional for European layouts).
 
 ## Task 2 — implementation
 
-Stages 1 to 3 done. Seven stages, in order; each is green on `pnpm run typecheck`, `pnpm run test` and
+Stages 1 to 4 done. Seven stages, in order; each is green on `pnpm run typecheck`, `pnpm run test` and
 `pnpm run lint:check` before the next begins.
 
 ### Stage 1 — interfaces and the reference provider
@@ -174,6 +174,47 @@ submitter.
   that delays `protect`) land in order; every delete type with `getTargetRanges` stubbed to
   return `[]`. Composition is covered by stage 5 with real IME events rather than dispatched
   ones.
+
+Done. Seventeen Playwright tests pass alongside the twenty from before, with the one
+pre-existing `theme_vars` failure unchanged. Departures from the text above, and from the
+design:
+
+- The spec is `playwright/richtext.spec.ts`, not `tests/richtext/editor.spec.ts`. The
+  Playwright config's `testDir` is `playwright/` and vitest's glob is `tests/**/*.test.ts`, so
+  a `.spec.ts` under `tests/` would have run under neither.
+- The tests need a page hosting the widget, so the example's Rich Text tab arrives here
+  rather than in stage 7: `example/page.tsx` declares it and `properties.ts` builds an editor
+  over the plain provider on a toolstack of its own, with the composition notice the design
+  asks for. The example deep-imports the richtext modules for now; stage 7 switches it to the
+  barrel when the exports land. The import has to be a value import, since a type-only one is
+  elided and the tag then never registers.
+- `mapInput` returns an array of ops. Enter on a non-collapsed selection is a `deleteRange`
+  followed by a `splitBlock`, and refused or directly handled input is an empty array.
+- Ctrl+Z, Ctrl+Y and Ctrl+Shift+Z are handled on `keydown`, with `historyUndo` and
+  `historyRedo` still mapped. Chrome only emits those input types when its own undo history
+  has entries, and an editor that prevents every input never gives it any.
+- The toolbar needs to know which marks are on at the selection, and the provider interface
+  had no query for it. `DocumentProvider` gains an optional `activeMarks(doc, range)`, which
+  the plain provider answers with the marks a `toggleMark` there would remove, or for a caret
+  the marks typing would extend. Without it the toolbar never lights.
+- The toolbar is built from `iconcheck-x` buttons so the state shows, with `on_change` driving
+  `toggleMark` and a guard so the editor's own syncing does not re-toggle. Each carries
+  `data-testid="richtext-mark-<name>"`.
+- `UIBaseDefinition` gains `modalKeyEvents?: boolean`. `checkForTextBox` already read it off
+  `define()`, but the typed return the theme declaration needs did not admit it.
+- Every refused input dispatches a `refused` event with `{ inputType }`, not only composition,
+  and Tab is refused on `keydown`. The mutation observer is gated by a static
+  `RichTextEditor.observeMutations`, on by default.
+- On a change delivered through the session the editor keeps its own caret when the selection
+  is inside it, clamped to the new block lengths, and takes the change's selection otherwise.
+- Word deletes use `Intl.Segmenter` and treat an atom as a word of its own, so a word delete
+  stops at it rather than removing an embedded widget with the next word.
+- Public surface beyond the design: `select(range)` focuses and places the selection,
+  `selection()` reads it, `richCtx` exposes the document's context, and `root` is the editable
+  element, all of which the spec drives.
+- The Ctrl+Z gate test was run once with the `checkForTextBox` change stashed and fails there,
+  so it is load-bearing.
+- Both `dist/` bundles are rebuilt and committed, as the earlier stages did.
 
 ### Stage 5 — composition events over CDP
 
