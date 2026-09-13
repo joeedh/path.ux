@@ -408,6 +408,10 @@ leaving the old callback in place and `@deprecated`.
 - [Asset gallery](documentation/gallery.md) — searchable, virtualized grid of
   thumbnails (`AssetGallery`, `AssetGalleryGrid`, `AssetThumb`), the shared
   `ThumbnailCache` behind it, and `pickAssetPopup` for choosing one item.
+- [Rich text](documentation/richtext.md) — `rich-text-x` edits a document through a
+  `DocumentProvider` (`scripts/widgets/richtext/`): the provider contract, `DocumentSession`
+  and the per-document or shared toolstack, the editing loop over `beforeinput`, and what is
+  refused (composition) until the IME plan lands. `RichEditor` is deprecated in its favour.
 - [Dock panels](documentation/dock_panels.md) — dockable/floatable editor
   panels (`PanelManager` in `scripts/screen/dock_panels.ts`): editors declare
   panels in `definePanels()`, users drag them between edge regions, float

@@ -178,7 +178,11 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     this.rctx = undefined;
     this.pending.length = 0;
     this.runAnchor = undefined;
-    this.unsubscribe = session?.onChange((change) => this.docChanged(change));
+    this.unsubscribe = session?.onChange((change, source) => {
+      if (source !== this) {
+        this.docChanged(change);
+      }
+    });
 
     this.buildToolbar();
     this.renderAll();
@@ -512,7 +516,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
       session.id,
       this.pathUndoGen
     );
-    const result = toolop.result();
+    const result = toolop.result(this);
     this.pending.push(op);
 
     let applied: EditResult;
@@ -543,11 +547,14 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     }
   }
 
+  /** A change from elsewhere: another editor, an undo, the provider. The caret stays put. */
   private docChanged(change: DocChange): void {
     const own = this.domRange();
     const view = this.view();
 
-    this.applyResult({ ...change, selection: own === undefined ? change.selection : undefined });
+    // the change's selection is not taken: an editor that does not hold the selection must
+    // not pull it away from the one that does
+    this.applyResult({ ...change, selection: undefined });
 
     if (own !== undefined && view !== undefined) {
       this.setSelection({

@@ -24,7 +24,7 @@ function foldBlock(op: EditOp) {
 /**
  * One `EditOp` on the undo stack. The document comes from `ctx.session`, and both phases
  * are no-ops once that session is disposed. An editor reads the `EditResult` of the op it
- * submitted through `result()`; a result nobody waits for goes to the session's listeners.
+ * submitted through `result()`; every result also reaches the session's listeners.
  */
 export class DocEditOp extends ToolOp<EditInputs, {}, RichTextContext> implements FoldableToolOp {
   static tooldef() {
@@ -40,6 +40,7 @@ export class DocEditOp extends ToolOp<EditInputs, {}, RichTextContext> implement
 
   private readonly key: string;
   private resolve?: (result: EditResult) => void;
+  private source?: unknown;
 
   /**
    * `run` is the submitting editor's `pathUndoGen`; two `insertText` or `deleteRange` ops on
@@ -74,9 +75,12 @@ export class DocEditOp extends ToolOp<EditInputs, {}, RichTextContext> implement
 
   /**
    * The `EditResult` of applying this op, whether it pushes or folds into the head. Call
-   * before submitting; the promise is settled by the phase that applies the op.
+   * before submitting; the promise is settled by the phase that applies the op, which also
+   * delivers the result to the session's listeners with `source` attached.
    */
-  result(): Promise<EditResult> {
+  result(source?: unknown): Promise<EditResult> {
+    this.source = source;
+
     return new Promise((resolve) => {
       this.resolve = resolve;
     });
@@ -84,13 +88,12 @@ export class DocEditOp extends ToolOp<EditInputs, {}, RichTextContext> implement
 
   private settle(session: DocumentSession, result: EditResult): void {
     const resolve = this.resolve;
+    const source = this.source;
     this.resolve = undefined;
+    this.source = undefined;
 
-    if (resolve !== undefined) {
-      resolve(result);
-    } else {
-      session.deliver(result);
-    }
+    session.deliver(result, source);
+    resolve?.(result);
   }
 
   /** The inverse was computed by the editor before submission; there is nothing to record. */

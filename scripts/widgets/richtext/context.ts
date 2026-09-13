@@ -5,7 +5,8 @@ import type { ToolStack } from "../../path-controller/toolsys/toolstack";
 import type { IContextBase } from "../../core/context_base";
 import type { DocChange, DocumentProvider } from "./provider";
 
-export type DocChangeListener = (change: DocChange) => void;
+/** `source` is whatever the submitter of an edit passed to `DocEditOp.result`; undo and redo carry none. */
+export type DocChangeListener = (change: DocChange, source?: unknown) => void;
 
 let sessionCounter = 0;
 
@@ -40,14 +41,17 @@ export class DocumentSession<Doc = unknown> {
     };
   }
 
-  /** Forwards a change to every listener. Undo and redo of a `DocEditOp` arrive this way. */
-  deliver(change: DocChange): void {
+  /**
+   * Forwards a change to every listener. Every `DocEditOp` phase arrives this way, with
+   * `source` naming the submitter so an editor can skip a change it already applied.
+   */
+  deliver(change: DocChange, source?: unknown): void {
     if (this.disposed) {
       return;
     }
 
     for (const listener of [...this.listeners]) {
-      listener(change);
+      listener(change, source);
     }
   }
 

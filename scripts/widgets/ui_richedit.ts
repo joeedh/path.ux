@@ -6,6 +6,7 @@ import { TextBoxBase } from "./ui_textbox";
 import { keymap } from "../path-controller/util/simple_events";
 import type { PathWatchInfo } from "../path-controller/controller/pathwatch";
 
+/** @deprecated Use `RichTextEditor` (`rich-text-x`) with a `DocumentSession`; see documentation/richtext.md. */
 export class RichEditor<CTX extends IContextBase = IContextBase> extends TextBoxBase<
   CTX,
   "RichEditor"

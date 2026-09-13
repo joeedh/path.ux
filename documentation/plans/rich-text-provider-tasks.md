@@ -3,7 +3,7 @@
 Tasks for [`rich-text-provider.md`](rich-text-provider.md). Each stage is a commit, and each
 stage's status is recorded here when it lands.
 
-Status: task 1 done; task 3 stages 1 to 3 done; task 2 stages 1 to 6 done.
+Status: task 1 done; task 3 stages 1 to 3 done; task 2 done (all seven stages).
 
 <!-- toc -->
 
@@ -32,7 +32,7 @@ optional for European layouts).
 
 ## Task 2 — implementation
 
-Stages 1 to 6 done. Seven stages, in order; each is green on `pnpm run typecheck`, `pnpm run test` and
+All seven stages done. Seven stages, in order; each is green on `pnpm run typecheck`, `pnpm run test` and
 `pnpm run lint:check` before the next begins.
 
 ### Stage 1 — interfaces and the reference provider
@@ -150,11 +150,11 @@ from the text above, and from the design:
 - Registration is confirmed through `defaultRegistry.ensurePaths()` rather than `ToolPaths`,
   which is only filled once something has walked the registry.
 
-One thing for stage 4 to settle, found while writing the tests: `exec` answers the submitting
-editor alone, so a second editor on the same session does not hear an edit made in the first.
-Delivering every result to the session as well is not the fix as the design stands, because
-the editor's `onChange` handler ends the typing run, which would break folding for the
-submitter.
+One thing found while writing the tests, settled in stage 7: `exec` answered the submitting
+editor alone, so a second editor on the same session did not hear an edit made in the first.
+Every result now also goes to the session's listeners, tagged with the `source` the submitter
+passed to `result()`, and an editor skips the changes it made itself, so its typing run stays
+intact while the other editor re-renders.
 
 ### Stage 4 — the editor widget
 
@@ -307,6 +307,28 @@ Notes:
   `CLAUDE.md` under Widgets.
 - Barrel exports verified against a pre-change `Object.keys` baseline of `dist/pathux.js`.
 - Mark `RichEditor` `@deprecated` pointing at `RichTextEditor`.
+
+Done. Two more Playwright tests, twenty-three in `playwright/richtext.spec.ts` and
+twenty-nine for rich text in all. Notes and departures:
+
+- The example's Rich Text tab, begun in stage 4, now holds the three editors the text asks for:
+  two over one `DocumentSession` on a toolstack of its own and a third over a second document on
+  `_appstate.toolstack`. The example imports from the barrel. The third editor uses
+  `_appstate.toolstack` rather than `this.ctx.toolstack`, since `ContextLike` types the latter
+  as `IToolStack`, which `DocumentSession` does not accept.
+- Two editors over one session needed the delivery change recorded under stage 3:
+  `DocEditOp.result(source)` takes the submitter, `DocumentSession.deliver(change, source)`
+  passes it on, and the editor ignores its own. A change from elsewhere never moves the DOM
+  selection: the first run of the two-editor page showed the unfocused editor pulling the
+  selection into itself on every keystroke and breaking the other's typing run.
+- The barrel exports `provider.ts`, `context.ts`, `ops.ts`, `editor.ts` and `providers/plain.ts`;
+  `positions.ts` stays internal. Checked two ways: the esbuild metafile's export list for
+  `dist/pathux.js` gained exactly `ATOM_CHAR`, `CARET_SLOT`, `DocEditOp`, `DocumentSession`,
+  `PlainProvider`, `RichTextContext`, `RichTextEditor`, `newBlockId` and `plainDocFromLines`
+  over the pre-change build, and `tests/barrelSurface.test.ts` (which also sees type exports)
+  gained those nine values and fifteen types, with nothing removed; its fixture is regenerated.
+- `documentation/richtext.md` is written in full and linked from `CLAUDE.md` under Widgets.
+  `RichEditor` carries `@deprecated` pointing at `RichTextEditor`.
 
 ## Task 3 — remove the docs system: `simple_docsys`, `DocsBrowser` and TinyMCE
 

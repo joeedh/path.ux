@@ -13,8 +13,14 @@ import {
   TabContainer,
   ToolStack,
   pickAssetPopup,
+  DocumentSession,
+  PlainProvider,
+  RichTextEditor,
+  newBlockId,
+  plainDocFromLines,
 } from "../../pathux.js";
 import type {
+  RefusedDetail,
   ThemeEditor,
   AssetGallery,
   AssetGalleryGrid,
@@ -26,14 +32,6 @@ import type {
 } from "../../pathux.js";
 
 import { Editor } from "../editor_base.js";
-import { DocumentSession } from "../../../scripts/widgets/richtext/context.js";
-import { newBlockId } from "../../../scripts/widgets/richtext/provider.js";
-import {
-  PlainProvider,
-  plainDocFromLines,
-} from "../../../scripts/widgets/richtext/providers/plain.js";
-import { RichTextEditor } from "../../../scripts/widgets/richtext/editor.js";
-import type { RefusedDetail } from "../../../scripts/widgets/richtext/editor.js";
 import { PropsPage } from "../../page.js";
 import { theme, themeVars } from "../../theme.js";
 
@@ -127,30 +125,47 @@ export class PropsEditor extends Editor {
   }
 
   /**
-   * Fills the Rich Text tab with an editor over the plain reference provider, on a toolstack
-   * of its own so Ctrl+Z inside the editor undoes the document rather than the app.
+   * Fills the Rich Text tab: two editors over one document on a toolstack of its own, so
+   * Ctrl+Z inside either undoes the document rather than the app and each shows the other's
+   * edits, and a third over a second document on the app's toolstack.
    */
   buildRichText(tab: Container) {
     const provider = new PlainProvider();
-    const doc = plainDocFromLines(["Hello, world.", "A second paragraph to edit.", ""], () =>
-      newBlockId()
+    const makeEditor = (session: DocumentSession, testid: string) => {
+      const editor = UIBase.constructElement<RichTextEditor>(
+        RichTextEditor.define().tagname,
+        this.ctx
+      );
+      editor.setAttribute("data-testid", testid);
+      editor.style.width = "420px";
+      editor.session = session;
+      editor.addEventListener("refused", (e) => {
+        const { inputType } = (e as CustomEvent<RefusedDetail>).detail;
+        console.warn("rich text input refused:", inputType);
+      });
+
+      tab.add(editor);
+      return editor;
+    };
+
+    tab.label("Composition (IME and dead-key input, including accents) is refused in this build.");
+
+    const shared = new DocumentSession(
+      plainDocFromLines(["Hello, world.", "A second paragraph to edit.", ""], () => newBlockId()),
+      provider,
+      new ToolStack()
     );
-    const session = new DocumentSession(doc, provider, new ToolStack());
+    tab.label("Two editors over one document, on the document's own toolstack:");
+    makeEditor(shared, "richtext-editor");
+    makeEditor(shared, "richtext-editor-2");
 
-    tab.label("Composition (IME and dead-key input) is refused in this build.");
-
-    const editor = UIBase.constructElement<RichTextEditor>(
-      RichTextEditor.define().tagname,
-      this.ctx
+    const appDoc = new DocumentSession(
+      plainDocFromLines(["On the app's toolstack.", ""], () => newBlockId()),
+      provider,
+      _appstate.toolstack
     );
-    editor.setAttribute("data-testid", "richtext-editor");
-    editor.style.width = "420px";
-    editor.session = session;
-    editor.addEventListener("refused", (e) => {
-      console.warn("rich text input refused:", (e as CustomEvent<RefusedDetail>).detail.inputType);
-    });
-
-    tab.add(editor);
+    tab.label("One editor on the app's toolstack, so Edit > Undo undoes it too:");
+    makeEditor(appDoc, "richtext-editor-app");
   }
 
   exportTheme() {

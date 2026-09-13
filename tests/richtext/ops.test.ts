@@ -73,6 +73,11 @@ let doc: PlainDoc;
 let session: DocumentSession<PlainDoc>;
 let ctx: RichTextContext<AppCtx, PlainDoc>;
 let changes: DocChange[];
+/** Every change and source the session delivered, submitter's own included. */
+let delivered: { change: DocChange; source: unknown }[];
+
+/** Stands in for the editor: the token it hands `result()` and skips in its own listener. */
+const SUBMITTER = { name: "editor" };
 
 const texts = () => doc.blocks.map((b) => b.text);
 
@@ -82,7 +87,7 @@ const edit = (op: EditOp, run = 0) => new DocEditOp(op, provider.inverse(doc, op
 /** Submits `op` through the fold path and returns its result together with whether it pushed. */
 async function submit(op: EditOp, run = 0) {
   const toolop = edit(op, run);
-  const result = toolop.result();
+  const result = toolop.result(SUBMITTER);
   const pushed = await ctx.toolstack.foldOrExec(ctx, toolop);
 
   return { result: await result, pushed };
@@ -95,7 +100,13 @@ function openDocument(toolstack = new ToolStack()) {
   session = new DocumentSession(doc, provider, toolstack);
   ctx = new RichTextContext(app, session);
   changes = [];
-  session.onChange((change) => changes.push(change));
+  delivered = [];
+  session.onChange((change, source) => {
+    delivered.push({ change, source });
+    if (source !== SUBMITTER) {
+      changes.push(change);
+    }
+  });
 }
 
 beforeEach(() => {
@@ -178,7 +189,7 @@ describe("DocEditOp", () => {
     expect(op.inputs.inverse.flag & 256).toBe(0);
   });
 
-  test("exec applies the edit and answers the submitter, not the listeners", async () => {
+  test("exec applies the edit, answers the submitter and names it to the listeners", async () => {
     const { result, pushed } = await submit(insert("a", 5, ","));
 
     expect(pushed).toBe(true);
@@ -186,10 +197,23 @@ describe("DocEditOp", () => {
     expect(result.selection).toEqual(collapsed("a", 6));
     expect(result.dirtyBlocks).toEqual(["a"]);
     expect(changes).toEqual([]);
+    expect(delivered).toEqual([{ change: result, source: SUBMITTER }]);
     expect(ctx.toolstack).toHaveLength(1);
   });
 
-  test("undo applies the inverse and delivers through the session", async () => {
+  test("a folded op's result reaches the listeners with its own source", async () => {
+    await submit(insert("a", 11, "!"));
+    const other = {};
+    const toolop = edit(insert("a", 12, "?"));
+    const result = toolop.result(other);
+    await ctx.toolstack.foldOrExec(ctx, toolop);
+
+    expect(delivered).toHaveLength(2);
+    expect(delivered[1]).toEqual({ change: await result, source: other });
+    expect(changes).toHaveLength(1);
+  });
+
+  test("undo applies the inverse and delivers through the session without a source", async () => {
     await submit(insert("a", 5, ","));
     await ctx.toolstack.undo();
 
@@ -197,6 +221,7 @@ describe("DocEditOp", () => {
     expect(changes).toHaveLength(1);
     expect(changes[0].dirtyBlocks).toEqual(["a"]);
     expect(changes[0].selection).toEqual(collapsed("a", 11));
+    expect(delivered[1].source).toBeUndefined();
   });
 
   test("redo reapplies the edit and delivers through the session", async () => {

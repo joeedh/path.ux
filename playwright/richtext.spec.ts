@@ -35,7 +35,7 @@ declare global {
   interface Window {
     __release?: () => void;
     __globalUndos?: number;
-    _appstate: { toolstack: { undo(): Promise<void> } };
+    _appstate: { toolstack: { length: number; undo(): Promise<void> } };
   }
 }
 
@@ -330,6 +330,44 @@ test("the toolbar hides under no-toolbar and toggleMark still works", async ({ p
 
   await editor.evaluate((el) => el.removeAttribute("no-toolbar"));
   await expect(bold).toBeVisible();
+});
+
+test("a second editor over the same session shows the first one's edits", async ({ page }) => {
+  const editor = await openEditor(page);
+  const second = page.locator('[data-testid="richtext-editor-2"]');
+  await expect(second.locator("[data-doc-block]").first()).toHaveText(ORIGINAL[0]);
+
+  await selectIn(editor, 0, 13);
+  await page.keyboard.type("!!");
+  await expect(second.locator("[data-doc-block]").first()).toHaveText("Hello, world.!!");
+  expect(await stackLength(second)).toBe(1);
+
+  await selectIn(second, 1, 0);
+  await page.keyboard.type("Z");
+  await expect(editor.locator("[data-doc-block]").nth(1)).toHaveText(
+    "ZA second paragraph to edit."
+  );
+  expect(await stackLength(editor)).toBe(2);
+
+  await page.keyboard.press("Control+z");
+  await page.keyboard.press("Control+z");
+  await expect(editor.locator("[data-doc-block]").first()).toHaveText(ORIGINAL[0]);
+  await expect(second.locator("[data-doc-block]").nth(1)).toHaveText(ORIGINAL[1]);
+});
+
+test("an editor on the app's toolstack puts its edits there", async ({ page }) => {
+  await openEditor(page);
+  const editor = page.locator('[data-testid="richtext-editor-app"]');
+  const appLength = () => page.evaluate(() => window._appstate.toolstack.length);
+  const before = await appLength();
+
+  await selectIn(editor, 0, 0);
+  await page.keyboard.type("Q");
+  await expect.poll(() => texts(editor)).toEqual(["QOn the app's toolstack.", ""]);
+  expect(await appLength()).toBe(before + 1);
+
+  await page.keyboard.press("Control+z");
+  await expect.poll(() => texts(editor)).toEqual(["On the app's toolstack.", ""]);
 });
 
 test("Ctrl+Z with the pointer over the tab bar undoes the document, not the app", async ({
