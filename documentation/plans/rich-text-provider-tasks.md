@@ -3,7 +3,7 @@
 Tasks for [`rich-text-provider.md`](rich-text-provider.md). Each stage is a commit, and each
 stage's status is recorded here when it lands.
 
-Status: task 1 done; task 3 stages 1 and 2 done; task 2 not started.
+Status: task 1 done; task 3 stages 1 to 3 done; task 2 not started.
 
 <!-- toc -->
 
@@ -142,7 +142,7 @@ commit)` function that sends one `Input.imeSetComposition` per step and `Input.i
 
 ## Task 3 — remove the docs system: `simple_docsys`, `DocsBrowser` and TinyMCE
 
-Stages 1 and 2 done. Stages 1 to 3 do not depend on task 2 and can run before it; only stage 4 waits on
+Stages 1 to 3 done. Stages 1 to 3 do not depend on task 2 and can run before it; only stage 4 waits on
 task 2's stage 7.
 
 Gate status when stage 1 started, recorded so a later stage does not mistake it for its own
@@ -232,11 +232,22 @@ Stages:
     `pnpm run emitTypes` writes `types/`, which is neither gitignored nor eslint-ignored, so a
     run of it leaves `lint:check` red until the directory is deleted; that predates this task and
     is left as found.
-- **Stage 3 — the trees and the config.** Delete `simple_docsys/` and both `lib/tinymce`
-  trees, then every config line listed above, and the `CLAUDE.md` build line. `pnpm run build`,
-  `pnpm run typecheck`, `pnpm run test`, `pnpm run lint:check` and `pnpm exec playwright test`
-  are green; `dist/pathux.js` is byte-identical to before this stage, since nothing in it
-  imported any of this.
+- **Stage 3 — the trees and the config.** Done. Deleted `simple_docsys/` and both `lib/tinymce`
+  trees, the config lines listed above, and the `CLAUDE.md` build line; checked off the
+  `todos.md` entry for this task. `pnpm run build`, `pnpm run typecheck`, `pnpm run test`,
+  `pnpm run lint:check` and `pnpm exec playwright test` match the stage 1 baseline, and
+  `dist/pathux.js` is byte-identical to the stage 2 build. Deviations from the inventory:
+  - `tsconfig.json` keeps its two `servers/**` entries. The inventory listed them with the
+    `simple_docsys` ones, but typescript-eslint's project service resolves `servers/http2.js`
+    through them and reports a parsing error without them.
+  - `simple_docsys` was a pnpm workspace package (`pnpm-workspace.yaml`), so that entry and the
+    lockfile's importer section went too.
+  - `example/package.json` declared `marked` and `diff`, with matching entries in its npm-era
+    `example/package-lock.json`. They were the Electron and NW.js runtime copies for the
+    widget's `require` calls, unused by anything else in `example/`, and are removed.
+  - `buildtools/gen-datapaths.mjs` and `gen-themes.mjs` listed `marked`, `parse5` and `diff` as
+    esbuild externals; those entries are gone. `pnpm-lock.yaml` still resolves `marked` and
+    `diff` as transitive dependencies of tooling.
 - **Stage 4 — delete `RichEditor`.** Waits on task 2's stage 7, which deprecates it. Its
   remaining users are the container's rich `textarea` builder
   (`core/utils/container_widgets.ts:346`) and the matching overload in `core/ui.ts:1327`; both

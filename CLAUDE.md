@@ -49,7 +49,7 @@ This project uses pnpm as its package manager. Use `pnpm` (and `pnpm run …`)
 rather than `npm`.
 
 ```bash
-pnpm run build             # esbuild → dist/pathux.js, dist/pathux_with_docbrowser.js, example/dist/app.js
+pnpm run build             # esbuild → dist/pathux.js, example/dist/app.js
 pnpm run typecheck         # two passes: the library, then example/
 pnpm run test              # vitest
 pnpm run format            # prettier --write

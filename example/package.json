@@ -1,8 +1,6 @@
 {
   "name": "pathux-example",
   "dependencies": {
-    "diff": "^5.2.2",
-    "marked": "^2.1.3",
     "pngjs-nozlib": "^1.0.0"
   },
   "main": "nwjs_app.html",

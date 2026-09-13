@@ -1,5 +1,4 @@
 packages:
-  - simple_docsys
   - example
 
 onlyBuiltDependencies:

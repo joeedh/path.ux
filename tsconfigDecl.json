@@ -27,7 +27,6 @@
   "exclude": [
     "node_modules",
     "dist",
-    "scripts/lib/tinymce/**",
     "scripts/**/*.test.ts",
     "scripts/path-controller/util/isect.js"
   ]

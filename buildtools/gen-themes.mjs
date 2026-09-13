@@ -127,7 +127,7 @@ async function loadRegistry(entryModule) {
     // (Screen->Screen2, Container->_Container, ...) and the catalog keys would
     // no longer match the class names widgets pass as the SELF type param.
     keepNames: true,
-    external : ["electron", "marked", "parse5", "diff"],
+    external : ["electron"],
     banner   : { js: DOM_STUB_BANNER },
     logLevel : "silent",
   });

@@ -26,8 +26,6 @@
     "playwright/*.ts",
     "simple_example/**/*.js",
     "simple_example/**/*.ts",
-    "simple_docsys/**/*.js",
-    "simple_docsys/**/*.ts",
     "servers/**/*.ts",
     "servers/**/*.js",
     "tests/**/*.ts",

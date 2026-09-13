@@ -17,7 +17,7 @@ pnpm typecheck || exit 1
 pnpm emitTypes 
 
 mkdir -p _package
-cp -r scripts simple_docsys package.json tsconfig.json pnpm-lock.yaml pathux.d.ts Readme.MD types _package
+cp -r scripts package.json tsconfig.json pnpm-lock.yaml pathux.d.ts Readme.MD types _package
 
 # The consumer-facing eslint rules, at the same path they sit at in a checkout,
 # so an example config imports them identically either way.

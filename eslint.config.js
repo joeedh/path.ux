@@ -22,15 +22,10 @@ export default defineConfig([
     //old rollup config files
     "rollup*.js",
     "scripts/path-controller/util/*.js",
-    "**tinymce**",
     "**/node_modules/**",
     "**/dist/**",
     "**/build/**",
     "generated/**",
-    "simple_docsys/doc_build",
-    // A data fragment eval'd behind a "config = " prefix, not standalone JS.
-    "simple_docsys/docs.config.js",
-    "scripts/lib/tinymce/**",
     // Deliberately-wrong data paths that validDatapathRule.test.ts lints itself.
     "tests/fixtures/valid-datapath/**",
   ]),
@@ -120,12 +115,11 @@ export default defineConfig([
     languageOptions: { globals: globals.node },
   },
   {
-    // Dev servers and doc tooling are plain CommonJS scripts run under Node.
+    // Dev servers and the simple example are plain scripts run under Node.
     files: [
       "serv.js",
       "serv_simple.js",
       "servers/**/*.js",
-      "simple_docsys/**/*.js",
       "simple_example/**/*.js",
       "example/*.cjs",
     ],

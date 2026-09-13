@@ -300,7 +300,7 @@ async function loadApi(factoryModule, exportName) {
     // Native/host-only deps that are require()'d lazily (e.g. electron is only
     // pulled in by getElectron() at runtime) must not be resolved while bundling
     // the factory for static path extraction.
-    external: ["electron", "marked", "parse5", "diff"],
+    external: ["electron"],
     banner  : { js: DOM_STUB_BANNER },
     logLevel: "silent",
   });
