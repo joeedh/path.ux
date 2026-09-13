@@ -3,7 +3,7 @@
 Tasks for [`rich-text-provider.md`](rich-text-provider.md). Each stage is a commit, and each
 stage's status is recorded here when it lands.
 
-Status: task 1 done; task 3 stages 1 to 3 done; task 2 stage 1 done.
+Status: task 1 done; task 3 stages 1 to 3 done; task 2 stages 1 and 2 done.
 
 <!-- toc -->
 
@@ -32,7 +32,7 @@ optional for European layouts).
 
 ## Task 2 — implementation
 
-Stage 1 done. Seven stages, in order; each is green on `pnpm run typecheck`, `pnpm run test` and
+Stages 1 and 2 done. Seven stages, in order; each is green on `pnpm run typecheck`, `pnpm run test` and
 `pnpm run lint:check` before the next begins.
 
 ### Stage 1 — interfaces and the reference provider
@@ -82,6 +82,24 @@ the example do not rediscover them:
   nested three elements deep. Round-trip every offset of every fixture both ways. Pending-op
   mapping for each op type, including a split that moves the mapped position into the new
   block.
+
+Done. Thirty tests pass, under happy-dom rather than jsdom, since that is the environment the
+repo's vitest config already provides. Two departures from the text above:
+
+- `mapThroughPending(pos, pending, doc)` takes a third argument, a `PendingDocView` with the
+  block order and a `blockText` accessor for the document as it stands before the pending ops.
+  The ops alone cannot map a position through a `joinWithPrevious` (the previous block's
+  length) or order a cross-block range (the block order), and the mapper tracks how each
+  pending op changes both as it goes. The editor passes the provider's answers for the current
+  document, which is the pre-pending state because a result is applied in the microtask after
+  `exec` and no DOM event can arrive between the two.
+- A caret slot character counts 0 wherever it sits inside a text node, not only as a text node
+  of its own. `innerHTML` parses a slot beside text into one merged text node, and the walk
+  should not depend on how the nodes were built.
+
+`positions.ts` also exports `DomPos` (the `Selection` API's node-plus-offset pair) and
+`blockElement(root, id)`, which finds a block by scanning the root's children rather than by a
+CSS selector, so an id needs no escaping.
 
 ### Stage 3 — `RichTextContext`, `DocumentSession` and `DocEditOp`
 
