@@ -16,7 +16,7 @@ Status: task 1 done; task 2 not started.
   - [Stage 5 — composition events over CDP](#stage-5--composition-events-over-cdp)
   - [Stage 6 — clipboard and the toolbar](#stage-6--clipboard-and-the-toolbar)
   - [Stage 7 — the example app and the docs](#stage-7--the-example-app-and-the-docs)
-- [Task 3 — remove TinyMCE from the repo](#task-3--remove-tinymce-from-the-repo)
+- [Task 3 — remove the docs system: `simple_docsys`, `DocsBrowser` and TinyMCE](#task-3--remove-the-docs-system-simple_docsys-docsbrowser-and-tinymce)
 - [Task 4 — the IME plan](#task-4--the-ime-plan)
 
 <!-- tocstop -->
@@ -140,42 +140,83 @@ commit)` function that sends one `Input.imeSetComposition` per step and `Input.i
 - Barrel exports verified against a pre-change `Object.keys` baseline of `dist/pathux.js`.
 - Mark `RichEditor` `@deprecated` pointing at `RichTextEditor`.
 
-## Task 3 — remove TinyMCE from the repo
+## Task 3 — remove the docs system: `simple_docsys`, `DocsBrowser` and TinyMCE
 
-Not started. Waits on task 2, because the docs browser's edit mode is TinyMCE's only consumer
-and needs `rich-text-x` to replace it.
+Not started. Stages 1 to 3 do not depend on task 2 and can run before it; only stage 4 waits on
+task 2's stage 7.
+
+The three pieces are one system and go together. `simple_docsys` is a Node-side bridge that
+renders markdown to HTML with `marked` and writes edits back, reached over an RPC endpoint in
+the dev server or through `require` under Electron and NW.js. `DocsBrowser`
+(`scripts/docbrowser/`) is the widget that shows those pages in an iframe and edits them with
+TinyMCE. `DocsBrowserEditor` in `example/` is the pane that hosts the widget, and it is the
+widget's only consumer. `simple_docsys` was written for a locally served path.ux and later for
+Electron and NW.js, not for the web; the replacement, when one is wanted, is better wrappers
+around the web file system APIs, which is separate work and out of scope here.
 
 What is there today:
 
+- `simple_docsys/`: 79 tracked files, 3 MB, most of them `manual/` and `doc_build/` — a
+  placeholder manual (headings "In", "Page 2", "Page 3") and its build. Its own `package.json`
+  declares `marked`, `parse5` and `diff`; that is the only `marked` in the repo, so deleting the
+  directory removes the markdown dependency outright.
+- `servers/rpc.js` imports `simple_docsys/docsys.js` at module load and exposes `updateDoc`,
+  `newDoc`, `hasDoc` and `uploadImage`. All three dev servers import it: `servers/serv.js:4`
+  (which `pnpm serv` runs, and which Playwright's `webServer` starts), `servers/serv_simple.js:4`
+  and `servers/http2.js:9`. Deleting `simple_docsys` alone breaks the dev server and the
+  Playwright suite, so `rpc.js` and its wiring go in the same commit.
+- `scripts/docbrowser/docbrowser.ts` (plus a stale `docbrowser.ts.bak`), the
+  `scripts/pathux_with_docbrowser.ts` entry, the root `pathux_with_docbrowser.js` shim, the
+  tracked `dist/pathux_with_docbrowser.{js,js.map,d.ts}`, the second entry point in
+  `buildtools/esbuild.mjs:38`, and the `files` lists in `tsconfigDecl.json:24` and
+  `tsconfigDeclTmp.json:30`. The Electron path (`docbrowser.ts:180-195`) is the only user of
+  the root `parse5`, `@types/parse5` and `diff` devDependencies.
+- `example/editors/docbrowser/docbrowser.ts`, imported by `example/core/app.ts:1`; the
+  `docsbrowser` getter and field in `example/core/context.ts:12`, `:34` and `:119`;
+  `DocEditorPath` in `example/core/const.ts:56` and `:78`.
+- `docManualPath` and `docEditorPath` in `scripts/config/const.ts:185-186` and `:240-241`;
+  the TinyMCE types, `Window.tinymce`, `Window._tinymce`, `PATHUX_DOCPATH`,
+  `PATHUX_DOC_CONFIG`, `PATHUX_DOCPATH_PREFIX` and `_relative` in `scripts/global.d.ts`
+  (`:11-36`, `:130-144`).
 - `scripts/lib/tinymce/` and `example/lib/tinymce/`, 146 tracked files and 8.1 MB each. The
   `example/` copy is referenced by nothing.
-- `scripts/docbrowser/docbrowser.ts` dynamic-imports `../lib/tinymce/tinymce.cjs` at module
-  load (`:18`), gates `initDoc` on it (`:776`), and in edit mode runs a TinyMCE instance inside
-  the docs iframe (`:826-870`) with an image-upload handler. The whole library is bundled into
-  `dist/pathux_with_docbrowser.js` as a result.
-- `scripts/global.d.ts:11-36` declares the minimal TinyMCE types and `Window.tinymce`
-  (`:131`), and `Window._tinymce`.
-- Exclusions that exist only because of it: `tsconfigDecl.json:30`, `tsconfigDeclTmp.json:37`,
-  `eslint.config.js:26` and `:34`, `.claudeignore:3`.
+- Config that exists only for the above: `tsconfig.json:29-32` (`simple_docsys` and `servers`
+  includes), `eslint.config.js:26`, `:31`, `:33`, `:34` and `:129`, `.claudeignore:3`,
+  `tsconfigDecl.json:30`, `tsconfigDeclTmp.json:37`, and the `simple_docsys` copy in
+  `buildtools/build_package_new.sh:20`. The `pathux_with_docbrowser.js` line in `CLAUDE.md`'s
+  build section.
 
 Stages:
 
-- **Stage 1 — decide what the docs browser's edit mode becomes.** The default is a port: an
-  HTML-block provider (one block per top-level element of the docs page's `.contents` div,
-  `renderBlock` returning that element's clone, edits applied to the element's text) and
-  `rich-text-x` hosted in the iframe's document. The alternative is to drop edit mode from
-  the docs browser and keep it a viewer, which is a one-line decision if nobody edits docs
-  in-app any more. This is the one decision the tasklist cannot make; record it here when made.
-- **Stage 2 — port or remove edit mode** per stage 1, including the image-upload path if the
-  port is chosen (it becomes an atom the provider renders).
-- **Stage 3 — delete.** Remove both `lib/tinymce` trees, the TinyMCE section of
-  `scripts/global.d.ts`, the `TINYMCE_PATH` note at the top of `docbrowser.ts`, and the five
-  exclusion entries. Rebuild and confirm `dist/pathux_with_docbrowser.js` no longer contains
-  the `require_tinymce` chunk.
-- **Stage 4 — delete `RichEditor`.** Task 2's stage 7 deprecates it. Its remaining users are
-  the container's rich `textarea` builder (`core/utils/container_widgets.ts:346`) and the
-  matching overload in `core/ui.ts:1327`; both switch to `rich-text-x` over the plain provider,
-  after which `ui_richedit.ts` keeps `RichViewer` only.
+- **Stage 1 — the servers.** Delete `servers/rpc.js` and the `rpc` import and handler wiring
+  in `serv.js`, `serv_simple.js` and `http2.js`. `pnpm serv 5050` still serves the example and
+  the Playwright suite still starts.
+- **Stage 2 — the example pane and the widget.** Delete `example/editors/docbrowser/`, its
+  import in `app.ts`, the `docsbrowser` accessor in `context.ts` and `DocEditorPath` in
+  `const.ts`. Delete `scripts/docbrowser/`, the `pathux_with_docbrowser` entry, shim and dist
+  files, and the esbuild entry point. Remove the `doc*Path` constants, the `PATHUX_DOC*`,
+  `_relative` and TinyMCE declarations from `global.d.ts`, and `parse5`, `@types/parse5` and
+  `diff` from the root devDependencies (grep first; only `docbrowser.ts` uses them today).
+  Check that a saved layout in localStorage naming `docs-browser-editor-x` loads without
+  throwing now that the area type is unregistered — `FrameManager` warns on an unknown area at
+  `:2495` but the load path for a missing `Editor.register` entry needs verifying, and if it
+  throws, a one-line skip-with-warning is part of this stage.
+- **Stage 3 — the trees and the config.** Delete `simple_docsys/` and both `lib/tinymce`
+  trees, then every config line listed above, and the `CLAUDE.md` build line. `pnpm run build`,
+  `pnpm run typecheck`, `pnpm run test`, `pnpm run lint:check` and `pnpm exec playwright test`
+  are green; `dist/pathux.js` is byte-identical to before this stage, since nothing in it
+  imported any of this.
+- **Stage 4 — delete `RichEditor`.** Waits on task 2's stage 7, which deprecates it. Its
+  remaining users are the container's rich `textarea` builder
+  (`core/utils/container_widgets.ts:346`) and the matching overload in `core/ui.ts:1327`; both
+  switch to `rich-text-x` over the plain provider, after which `ui_richedit.ts` keeps
+  `RichViewer` only.
+
+No markdown library replaces `marked`. The design keeps markdown on the consumer's side: a
+markdown-backed document is a provider over a mutable holder (see the design's "The model the
+editor sees"), and a path.ux-shipped markdown provider would be its own plan. Nothing in the
+library renders markdown at runtime once `simple_docsys` is gone; `markdown-toc` is a docs
+tool and stays.
 
 ## Task 4 — the IME plan
 

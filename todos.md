@@ -40,3 +40,10 @@ sentence, per documentation/plans/menu-item-disabling.md.
 per-document toolstacks), per documentation/plans/rich-text-provider.md and
 its tasklist rich-text-provider-tasks.md. IME is a follow-up plan, written as
 the tasklist's last task.
+[ ]: remove the docs system (simple_docsys, servers/rpc.js, DocsBrowser and
+the pathux_with_docbrowser bundle, the example docs pane, both lib/tinymce
+trees, and the marked/parse5/diff dependencies), per
+documentation/plans/rich-text-provider-tasks.md task 3.
+[ ]: better wrappers around the web file system APIs, to cover what
+simple_docsys did for locally served, Electron and NW.js apps. Unrelated to
+the rich text work; noted here so it is not lost when simple_docsys goes.
