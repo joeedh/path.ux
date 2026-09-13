@@ -13,8 +13,9 @@ Status: task 1 done; task 2 not started.
   - [Stage 2 — position mapping](#stage-2--position-mapping)
   - [Stage 3 — `RichTextContext`, `DocumentSession` and `DocEditOp`](#stage-3--richtextcontext-documentsession-and-doceditop)
   - [Stage 4 — the editor widget](#stage-4--the-editor-widget)
-  - [Stage 5 — clipboard and the toolbar](#stage-5--clipboard-and-the-toolbar)
-  - [Stage 6 — the example app and the docs](#stage-6--the-example-app-and-the-docs)
+  - [Stage 5 — composition events over CDP](#stage-5--composition-events-over-cdp)
+  - [Stage 6 — clipboard and the toolbar](#stage-6--clipboard-and-the-toolbar)
+  - [Stage 7 — the example app and the docs](#stage-7--the-example-app-and-the-docs)
 - [Task 3 — the IME plan](#task-3--the-ime-plan)
 
 <!-- tocstop -->
@@ -30,7 +31,7 @@ optional for European layouts).
 
 ## Task 2 — implementation
 
-Not started. Six stages, in order; each is green on `pnpm run typecheck`, `pnpm run test` and
+Not started. Seven stages, in order; each is green on `pnpm run typecheck`, `pnpm run test` and
 `pnpm run lint:check` before the next begins.
 
 ### Stage 1 — interfaces and the reference provider
@@ -87,17 +88,46 @@ Not started. Six stages, in order; each is green on `pnpm run typecheck`, `pnpm 
   reflects it; Ctrl+Z undoes the whole typing run and Ctrl+Y restores it; moving the caret
   then typing starts a new run; ten characters typed while the toolstack is held (a test hook
   that delays `protect`) land in order; every delete type with `getTargetRanges` stubbed to
-  return `[]`; a `compositionstart`/`compositionend` pair leaves the document unchanged and
-  the caret where it was.
+  return `[]`. Composition is covered by stage 5 with real IME events rather than dispatched
+  ones.
 
-### Stage 5 — clipboard and the toolbar
+### Stage 5 — composition events over CDP
+
+Ground truth for the refusal path in stage 4 and for the IME plan in task 3. Playwright's
+keyboard API cannot compose, so the test drives Chromium's IME through a CDP session
+(`page.context().newCDPSession(page)`), which is also what `connectApp()` in
+`buildtools/cdp.mjs` hands back for the running example app.
+
+- A helper in `playwright/richtext/composition.ts` that records every `compositionstart`,
+  `compositionupdate`, `compositionend`, `beforeinput` (with `inputType`, `data` and
+  `isComposing`) and `input` event on a target into an array, and a `compose(cdp, steps,
+commit)` function that sends one `Input.imeSetComposition` per step and `Input.insertText`
+  for the commit.
+- `playwright/richtext/composition.spec.ts`, first against a bare `contenteditable` div and
+  then against `rich-text-x`:
+  - a two-step Japanese composition (`か`, `かん`) committed as `漢`: assert the full event
+    order, and in particular whether a final `beforeinput` with `insertCompositionText`
+    precedes `compositionend` or the commit arrives as `insertText`;
+  - a one-step dead-key composition (`´` then commit `é`): assert it is the same sequence with
+    one update;
+  - a composition abandoned by `Input.imeSetComposition` with empty text: assert what
+    `deleteCompositionText` looks like and whether `compositionend` carries `data: ""`;
+  - on `rich-text-x`, each of the above leaves the document unchanged, the caret where it
+    was, and dispatches one `refused` event.
+- Record the observed sequences in a comment at the top of the spec, since the IME plan is
+  written from them and the browser is the only source.
+- Firefox is manual only (no synthetic IME path); the manual steps in
+  `documentation/richtext.md` list the Windows language packs to install (Japanese and
+  Chinese Microsoft IMEs, Korean, and the United States-International keyboard for dead keys).
+
+### Stage 6 — clipboard and the toolbar
 
 - `copy`, `cut`, `paste` on the editable root through the provider.
 - Toolbar from `provider.marks()`, hidden by attribute, `editor.toggleMark(name)`.
 - Playwright: copy a range and paste it into a second block; cut is one undo entry; paste of
   three lines makes three blocks with the pre-allocated ids.
 
-### Stage 6 — the example app and the docs
+### Stage 7 — the example app and the docs
 
 - A page in `example/` with two `RichTextEditor`s over one `DocumentSession` on a
   per-document toolstack, and a third over the app's toolstack, so both configurations are
@@ -113,7 +143,7 @@ Not started. Six stages, in order; each is green on `pnpm run typecheck`, `pnpm 
 
 Not started. Waits on task 2 being complete and exercised in `example/`.
 
-- Write `documentation/plans/rich-text-ime.md`: replace composition refusal with a scoped
+- Write `documentation/plans/rich-text-ime.md` from the event sequences stage 5 recorded: replace composition refusal with a scoped
   parse-back of the composed block. The editor lets the browser mutate the block during
   composition, then on `compositionend` reads the block's DOM back through the position map
   into a `replaceBlockText` edit the provider applies, with marks carried over from the
