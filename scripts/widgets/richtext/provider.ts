@@ -119,7 +119,11 @@ export interface DocumentProvider<Doc> {
   renderBlock(doc: Doc, block: BlockId, ctx: IContextBase): HTMLElement;
 
   applyEdit(doc: Doc, op: EditOp): EditResult;
-  /** The edit that undoes `op`, computed before `applyEdit(doc, op)` runs. */
+  /**
+   * The edit that undoes `op`, computed before `applyEdit(doc, op)` runs. For `insertText` and
+   * `deleteRange` it must also undo every later keystroke folded into the same run, so it has
+   * to restore the block rather than reverse the one edit; a `replaceBlocks` snapshot does.
+   */
   inverse(doc: Doc, op: EditOp): EditOp;
 
   toClipboard(doc: Doc, range: DocRange): ClipboardContent;

@@ -3,7 +3,7 @@
 Tasks for [`rich-text-provider.md`](rich-text-provider.md). Each stage is a commit, and each
 stage's status is recorded here when it lands.
 
-Status: task 1 done; task 3 stages 1 to 3 done; task 2 stages 1 and 2 done.
+Status: task 1 done; task 3 stages 1 to 3 done; task 2 stages 1 to 3 done.
 
 <!-- toc -->
 
@@ -32,7 +32,7 @@ optional for European layouts).
 
 ## Task 2 — implementation
 
-Stages 1 and 2 done. Seven stages, in order; each is green on `pnpm run typecheck`, `pnpm run test` and
+Stages 1 to 3 done. Seven stages, in order; each is green on `pnpm run typecheck`, `pnpm run test` and
 `pnpm run lint:check` before the next begins.
 
 ### Stage 1 — interfaces and the reference provider
@@ -114,6 +114,47 @@ CSS selector, so an id needs no escaping.
   whole run; a bumped run counter ending the run; a `splitBlock` ending the run; undo after
   `dispose()` being a no-op; the same ops on a shared stack with an unrelated op between
   them; `SavedToolDefaults` untouched after a run.
+
+Done. Twenty-two tests pass, on top of the fifty and thirty from the stages before. Departures
+from the text above, and from the design:
+
+- `toLocked` calls the parent's own `toLocked` when it has one and falls back to
+  `toLockedImpl` only for a parent without. `_execTool` would have called exactly that on the
+  parent, and an app context's `toLocked` can carry save and load hooks the generic copy would
+  not know about. The `api` and `screen` getters cast, since `ContextLike` types both by the
+  self type and the parent's are what serve this context.
+- `DocumentSession` carries the listener side the design described in prose: `onChange(listener)`
+  returning its unsubscribe, and `deliver(change)`, which `DocEditOp`'s undo and redo call. The
+  session subscribes to the provider's `onChange` in its constructor and forwards, so an editor
+  registers with the session only, and `dispose()` unsubscribes and clears the set. The id is a
+  fourth constructor argument defaulting to `doc<n>` from a module counter.
+- `foldFrom` keeps the inverse stored when the run began and never asks `provider.inverse`
+  again. The design's sentence that a structural provider "must be prepared for `foldFrom` to
+  call `inverse` again and replace the stored one" cannot be honoured: by the time `foldFrom`
+  runs the state before the run is gone, so nothing computed then could undo it. The provider
+  contract in `provider.ts` now says the inverse of an `insertText` or `deleteRange` must
+  restore the block, not reverse the one edit. Proposed design edit: replace that sentence
+  with the contract as stated in `provider.ts`.
+- A non-folding op takes a key no other op carries, `<session>:<type>:#<n>` from a module
+  counter. With the run alone in the key, two `toggleMark` ops on one block in one run would
+  have matched and folded. A `deleteRange` across blocks takes the same unique form, since a run
+  never leaves its block.
+- `DocEditOp` types its context as `RichTextContext` through `ToolOp`'s third parameter, exposes
+  `op` and `inverse` getters over the JSON inputs, and `result()` returns the promise the
+  resolver fulfils. Its constructor takes `(op, inverse, sessionId, run)`, all optional, since
+  nstructjs needs a no-argument form. `foldFrom` merges a `deleteRange` run into one range
+  from the smallest offset over the summed lengths, which covers both a backspace run and a
+  forward-delete run.
+- On a disposed session `foldFrom` returns without settling `next`'s resolver, as there is no
+  result to give; nothing is awaiting by then, since the editor is gone with the session.
+- Registration is confirmed through `defaultRegistry.ensurePaths()` rather than `ToolPaths`,
+  which is only filled once something has walked the registry.
+
+One thing for stage 4 to settle, found while writing the tests: `exec` answers the submitting
+editor alone, so a second editor on the same session does not hear an edit made in the first.
+Delivering every result to the session as well is not the fix as the design stands, because
+the editor's `onChange` handler ends the typing run, which would break folding for the
+submitter.
 
 ### Stage 4 — the editor widget
 
