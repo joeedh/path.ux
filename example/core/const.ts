@@ -53,7 +53,6 @@ export interface AppConstants {
   autoSizeUpdate: boolean;
   VERSION: Version;
   LOCALSTORAGE_KEY: string;
-  DocEditorPath: string;
   customWindowSize?: WindowSize;
 }
 
@@ -75,7 +74,6 @@ const constants: AppConstants = {
   autoSizeUpdate     : true,
   VERSION            : new Version(0, 0, 0, 0),
   LOCALSTORAGE_KEY   : "pathux_example_app",
-  DocEditorPath      : "../simple_docsys.js",
 };
 
 export default constants;

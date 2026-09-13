@@ -23,18 +23,12 @@ importers:
       '@types/node':
         specifier: ^25.6.0
         version: 25.9.5
-      '@types/parse5':
-        specifier: ^7.0.0
-        version: 7.0.0
       '@typescript/native-preview':
         specifier: 7.0.0-dev.20260406.1
         version: 7.0.0-dev.20260406.1
       comment-lint:
         specifier: ^0.5.0
         version: 0.5.0
-      diff:
-        specifier: ^5.2.2
-        version: 5.2.2
       electron:
         specifier: ^43.0.0
         version: 43.6.0
@@ -62,9 +56,6 @@ importers:
       nw:
         specifier: 0.112.0-sdk
         version: 0.112.0-sdk
-      parse5:
-        specifier: 6.0.0
-        version: 6.0.0
       path.ux:
         specifier: 'link:'
         version: 'link:'
@@ -587,10 +578,6 @@ packages:
 
   '@types/node@25.9.5':
     resolution: {integrity: sha512-OScDchr2fwuUmWdf4kZ9h7PcJiYDVInhJizG/biAq3cAvqwYktuy/TYGGdZNMtNTFUP7rnb0NU4TUdm82kt4Rg==}
-
-  '@types/parse5@7.0.0':
-    resolution: {integrity: sha512-f2SeAxumolBmhuR62vNGTsSAvdz/Oj0k682xNrcKJ4dmRnTPODB74j6CPoNPzBPTHsu7Y7W7u93Mgp8Ovo8vWw==}
-    deprecated: This is a stub types definition. parse5 provides its own type definitions, so you do not need this installed.
 
   '@types/whatwg-mimetype@3.0.2':
     resolution: {integrity: sha512-c2AKvDT8ToxLIOUlN51gTiHXflsfIFisS4pO7pDPoKouJCESkhZnEy623gwP9laCy5lnLDAw1vAzu2vM2YLOrA==}
@@ -1996,10 +1983,6 @@ snapshots:
   '@types/node@25.9.5':
     dependencies:
       undici-types: 7.24.6
-
-  '@types/parse5@7.0.0':
-    dependencies:
-      parse5: 6.0.0
 
   '@types/whatwg-mimetype@3.0.2': {}
 

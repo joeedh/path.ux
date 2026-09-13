@@ -18,9 +18,6 @@ declare global {
   // Misc globals stashed by editors.
   var theEventGraph: unknown;
   var NodeEditorTab: unknown;
-  // Matches scripts/global.d.ts so the merged Window type stays a single signature
-  // (not an intersection) when the example and library are compiled together.
-  var _relative: (...args: unknown[]) => unknown;
   var haveElectron: boolean;
 
   interface Window {
@@ -31,7 +28,6 @@ declare global {
     DataRef: typeof DataRefClass;
     theEventGraph: unknown;
     NodeEditorTab: unknown;
-    _relative: (...args: unknown[]) => unknown;
     haveElectron: boolean;
   }
 }

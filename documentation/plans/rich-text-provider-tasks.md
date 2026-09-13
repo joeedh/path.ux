@@ -3,7 +3,7 @@
 Tasks for [`rich-text-provider.md`](rich-text-provider.md). Each stage is a commit, and each
 stage's status is recorded here when it lands.
 
-Status: task 1 done; task 3 stage 1 done; task 2 not started.
+Status: task 1 done; task 3 stages 1 and 2 done; task 2 not started.
 
 <!-- toc -->
 
@@ -142,7 +142,7 @@ commit)` function that sends one `Input.imeSetComposition` per step and `Input.i
 
 ## Task 3 — remove the docs system: `simple_docsys`, `DocsBrowser` and TinyMCE
 
-Stage 1 done. Stages 1 to 3 do not depend on task 2 and can run before it; only stage 4 waits on
+Stages 1 and 2 done. Stages 1 to 3 do not depend on task 2 and can run before it; only stage 4 waits on
 task 2's stage 7.
 
 Gate status when stage 1 started, recorded so a later stage does not mistake it for its own
@@ -206,18 +206,32 @@ Stages:
   only to call `rpc.handle`; a request under `/api/` now falls through to the static file path
   and gets a 404. `pnpm serv` serves `/` and `example/index.html`, and the Playwright suite
   starts and matches its baseline.
-- **Stage 2 — the example pane and the widget.** Delete `example/editors/docbrowser/`, its
-  import in `app.ts`, the `docsbrowser` accessor in `context.ts` and `DocEditorPath` in
-  `const.ts`. Delete `scripts/docbrowser/`, the `pathux_with_docbrowser` barrel, shim and dist
-  files, the esbuild entry point and its three externals, and the `tsconfigDecl.json` entry;
-  `pnpm run build` and `pnpm run emitTypes` then produce `pathux.*` only. Remove the
-  `doc*Path` constants, the `PATHUX_DOC*`,
-  `_relative` and TinyMCE declarations from `global.d.ts`, and `parse5`, `@types/parse5` and
-  `diff` from the root devDependencies (grep first; only `docbrowser.ts` uses them today).
-  Check that a saved layout in localStorage naming `docs-browser-editor-x` loads without
-  throwing now that the area type is unregistered — `FrameManager` warns on an unknown area at
-  `:2495` but the load path for a missing `Editor.register` entry needs verifying, and if it
-  throws, a one-line skip-with-warning is part of this stage.
+- **Stage 2 — the example pane and the widget.** Done. Deleted `example/editors/docbrowser/`,
+  its import in `app.ts`, the `docsbrowser` accessor in `context.ts` and `DocEditorPath` in
+  `const.ts`; deleted `scripts/docbrowser/`, the `pathux_with_docbrowser` barrel, shim and dist
+  files, the esbuild entry point and its three externals, and the `tsconfigDecl.json` entry.
+  `pnpm run build` and `pnpm run emitTypes` produce `pathux.*` only. Removed the `doc*Path`
+  constants, the `PATHUX_DOC*`, `_relative` and TinyMCE declarations from `global.d.ts`, and
+  `parse5`, `@types/parse5` and `diff` from the root devDependencies. Four things the inventory
+  above did not list, all handled here:
+  - The root `pathux.js` re-exported from `scripts/pathux_with_docbrowser.js`, not from `dist/`;
+    it now re-exports from `scripts/pathux.js`.
+  - `example/global.d.ts` declared `_relative` too (to match the library's declaration); both
+    copies are gone.
+  - `eslint.config.js:22` ignored the root `pathux_with_docbrowser.js`; that line went with the
+    file rather than waiting for stage 3.
+  - The lockfile still pins `parse5` and `diff` for the `simple_docsys` workspace package until
+    stage 3 deletes it.
+    A saved layout naming `docs-browser-editor-x` loads without throwing and needs no skip: the
+    file's schema carries the struct, nstructjs reads the editor entry without a registered class,
+    and `ScreenArea.loadSTRUCT` (`ScreenArea.ts:1719`) finds no active area, warns "Failed to find
+    active area!", and shows the tile's first remaining editor. Verified by capturing a layout with
+    the pane from the pre-deletion build, then loading it from localStorage in the rebuilt example
+    under Playwright: no page error, three tiles, the docs tile showing a workspace editor. The
+    library bundle differs from the stage 1 baseline by the two removed constants only.
+    `pnpm run emitTypes` writes `types/`, which is neither gitignored nor eslint-ignored, so a
+    run of it leaves `lint:check` red until the directory is deleted; that predates this task and
+    is left as found.
 - **Stage 3 — the trees and the config.** Delete `simple_docsys/` and both `lib/tinymce`
   trees, then every config line listed above, and the `CLAUDE.md` build line. `pnpm run build`,
   `pnpm run typecheck`, `pnpm run test`, `pnpm run lint:check` and `pnpm exec playwright test`

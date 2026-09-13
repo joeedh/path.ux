@@ -182,8 +182,6 @@ export interface IPathUXConstants {
   useNativeToolTips?: boolean;
   noElectronMenus?: boolean;
   DEBUG?: DebugFlags;
-  docManualPath?: string;
-  docEditorPath?: string;
 }
 
 interface PathUXConfigProvider extends Required<IPathUXConstants> {
@@ -236,10 +234,7 @@ const cconst: PathUXConfigProvider = {
     }
   },
 
-  colorSchemeType: "light",
-  docManualPath  : "../simple_docsys/doc_build/",
-  docEditorPath  : "../simple_docsys.js",
-
+  colorSchemeType      : "light",
   useNumSliderTextboxes: true,
   numSliderArrowLimit  : 15,
   simpleNumSliders     : false,

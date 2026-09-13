@@ -14490,8 +14490,6 @@ var init_const = __esm({
         }
       },
       colorSchemeType: "light",
-      docManualPath: "../simple_docsys/doc_build/",
-      docEditorPath: "../simple_docsys.js",
       useNumSliderTextboxes: true,
       numSliderArrowLimit: 15,
       simpleNumSliders: false,
@@ -36139,6 +36137,55 @@ var init_wrangler = __esm({
           e.stopPropagation();
         }
       }
+      /**
+       * Eats the rest of a pen or touch tap whose `pointerdown` selected a menu item. The menu
+       * is gone by the time the rest arrives, so each event is hit-tested onto whatever the
+       * menu covered. The `pointerup` carrying `pointerId` is stopped (a Button acts on a
+       * non-mouse `pointerup` directly), and so is the tap's `click`, which Chromium's gesture
+       * recognizer fires a few milliseconds after the release, in a later task and with a new
+       * pointerId, so it can only be matched by pointer type and time: the first non-mouse
+       * `click` within `clickWindowMS` of the release.
+       */
+      swallowRelease(pointerId) {
+        const opts = { capture: true };
+        const clickWindowMS = 500;
+        let clickTimer = 0;
+        const eat = (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+        };
+        const stopClickWatch = () => {
+          window.clearTimeout(clickTimer);
+          window.removeEventListener("click", onClick, opts);
+        };
+        const onClick = (e) => {
+          if (e instanceof PointerEvent && e.pointerType === "mouse") {
+            return;
+          }
+          stopClickWatch();
+          eat(e);
+        };
+        const stopReleaseWatch = () => {
+          window.removeEventListener("pointerup", onUp, opts);
+          window.removeEventListener("pointercancel", onCancel, opts);
+        };
+        const onUp = (e) => {
+          if (e.pointerId !== pointerId) {
+            return;
+          }
+          stopReleaseWatch();
+          eat(e);
+          window.addEventListener("click", onClick, opts);
+          clickTimer = window.setTimeout(stopClickWatch, clickWindowMS);
+        };
+        const onCancel = (e) => {
+          if (e.pointerId === pointerId) {
+            stopReleaseWatch();
+          }
+        };
+        window.addEventListener("pointerup", onUp, opts);
+        window.addEventListener("pointercancel", onCancel, opts);
+      }
       on_pointerup(e) {
         const pick = this._pickPreamble(e);
         if (!pick) {
@@ -36806,7 +36853,11 @@ var init_menu = __esm({
             if (this.activeItem?._isMenu) {
               return;
             }
+            const selected = !this._was_clicked;
             this.click();
+            if (selected && this._was_clicked && e.type === "pointerdown" && e instanceof PointerEvent && e.pointerType !== "mouse") {
+              menuWrangler.swallowRelease(e.pointerId);
+            }
           };
           li.addEventListener("contextmenu", (e) => e.preventDefault());
           for (const type of ["pointerup", "click", "pointerdown"]) {

@@ -1,4 +1,3 @@
-import "../editors/docbrowser/docbrowser.js";
 import {
   nstructjs,
   ToolStack,

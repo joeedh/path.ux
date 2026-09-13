@@ -21,7 +21,7 @@
     "lib"                 : ["esnext", "DOM", "DOM.Iterable", "esnext.disposable"],
     "types"               : []
   },
-  "files"          : ["scripts/pathux.ts", "scripts/pathux_with_docbrowser.ts"],
+  "files"          : ["scripts/pathux.ts"],
   "rootDir"        : "./scripts",
   "outDir"         : "types",
   "exclude": [

@@ -9,7 +9,6 @@ import {
   getLastToolStruct,
   ContextLike,
 } from "../pathux.js";
-import { DocsBrowserEditor } from "../editors/docbrowser/docbrowser.js";
 
 import { sendNote } from "../pathux.js";
 
@@ -31,7 +30,6 @@ export interface AppContext extends ContextLike<AppState, ToolStack> {
   canvas: Canvas;
   workspace: WorkspaceEditor | undefined;
   editor: Area | undefined;
-  docsbrowser: DocsBrowserEditor | undefined;
 }
 
 export class BaseOverlay extends ContextOverlay {
@@ -114,10 +112,6 @@ export class ViewOverlay extends ContextOverlay {
 
   get editor() {
     return Area.getActiveArea();
-  }
-
-  get docsbrowser() {
-    return Area.getActiveArea(DocsBrowserEditor);
   }
 }
 

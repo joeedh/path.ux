@@ -4,7 +4,7 @@ import path from "path";
 
 const watch = process.argv.includes("--watch");
 
-const external = ["fs", "path", "electron", "marked", "parse5", "path", "diff"];
+const external = ["fs", "path", "electron"];
 
 let onEndPlugin = {
   name: "onEndPlugin",
@@ -35,7 +35,7 @@ let copyExamplePlugin = {
 };
 
 const libCtx = await esbuild.context({
-  entryPoints: ["scripts/pathux.ts", "scripts/pathux_with_docbrowser.ts"],
+  entryPoints: ["scripts/pathux.ts"],
   outdir     : "dist",
   sourcemap  : "linked",
   bundle     : true,
