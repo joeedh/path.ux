@@ -6,8 +6,6 @@ const http2 = require("http2");
 const fs = require("fs");
 const pathmod = require("path");
 
-const rpc = require("./rpc.js");
-
 let colormap = {
   black  : 30,
   red    : 31,
@@ -139,61 +137,6 @@ server.on("stream", (stream, headers) => {
 
   while (path.startsWith("/")) {
     path = path.slice(1, path.length).trim();
-  }
-
-  if (path.startsWith("api/")) {
-    path = path.slice(4, path.length);
-
-    let api_finish = (method, data) => {
-      let json;
-
-      console.log(termColor("API", "blue"), method, data);
-
-      try {
-        json = JSON.parse(unescape(data));
-      } catch (error) {
-        sendError(404, escape(data));
-        return;
-      }
-
-      if (!Array.isArray(json)) {
-        json = [json];
-      }
-
-      //console.log(json);
-      rpc
-        .handle(method, json)
-        .then((result) => {
-          stream.respond({
-            "content-type": "application/json",
-            ":status"     : 200,
-          });
-          stream.end(result);
-        })
-        .catch((error) => {
-          console.log(error);
-          sendError(501, "" + error);
-        });
-    };
-
-    if (headers[":method"].toLowerCase() === "get") {
-      path = path.split("?");
-      api_finish(path[0], path[1]);
-    } else {
-      stream.setEncoding("utf8");
-      let data = "";
-      stream.on("data", (chunk) => {
-        data += chunk;
-        //console.log("got data", chunk);
-      });
-
-      stream.on("end", () => {
-        console.log("end");
-        api_finish(path, data.trim());
-      });
-    }
-
-    return;
   }
 
   path = pathmod.resolve(SERVER_ROOT + "/" + path);

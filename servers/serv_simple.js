@@ -1,8 +1,6 @@
 const PORT = 5002;
 const HOST = "localhost";
 
-import * as rpc from "./rpc.js";
-
 const debug_prevent_default = false;
 const debug_disable_all_listeners = false;
 const debug_listeners = false; //parse code with babel and activates functionaltiy in scripts/util/polyfill.js
@@ -121,44 +119,6 @@ const serv = http.createServer(
 
     if (!p.startsWith("/")) {
       p = "/" + p;
-    }
-
-    if (p.startsWith("/api/")) {
-      let path = p.slice(5, p.length);
-      path = path.split("?");
-
-      let method = path[0];
-      let json;
-
-      console.log(termColor("API", "blue"), path);
-
-      try {
-        json = JSON.parse(unescape(path[1]));
-      } catch (error) {
-        res.sendError(404, escape(path[1]));
-        return;
-      }
-
-      if (!Array.isArray(json)) {
-        json = [json];
-      }
-
-      console.log(json);
-      rpc
-        .handle(method, json)
-        .then((result) => {
-          res.statusCode = 200;
-          res.setHeader("Content-Type", "application/json");
-          res.setHeader("Content-Length", result.length);
-          res._addHeaders();
-          res.end(result);
-        })
-        .catch((error) => {
-          console.log(error);
-          res.sendError(501, "" + error);
-        });
-
-      return;
     }
 
     console.log(termColor(req.method, "green"), p);

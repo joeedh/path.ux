@@ -1,8 +1,6 @@
 const PORT = process.argv[2] ? parseInt(process.argv[2]) : 5002;
 const HOST = "localhost";
 
-import * as rpc from "./rpc.js";
-
 const debug_prevent_default = false;
 const debug_disable_all_listeners = false;
 const debug_listeners = false; //parse code with babel and activates functionaltiy in scripts/util/polyfill.js
@@ -123,79 +121,6 @@ const serv = http.createServer(
 
     if (!p.startsWith("/")) {
       p = "/" + p;
-    }
-
-    if (p.startsWith("/api/")) {
-      let path = p.slice(5, p.length);
-      path = path.split("?");
-
-      let method = path[0];
-
-      console.log(method, "PATH", path);
-      console.log(termColor("API", "blue"), path);
-
-      function apiFinish(args) {
-        console.log(args);
-
-        rpc
-          .handle(method, args)
-          .then((result) => {
-            res.statusCode = 200;
-            res.setHeader("Content-Type", "application/json");
-            res.setHeader("Content-Length", result.length);
-            res._addHeaders();
-            res.end(result);
-          })
-          .catch((error) => {
-            console.log(error);
-            res.sendError(501, "" + error);
-          });
-      }
-
-      if (req.method === "POST") {
-        req.setEncoding("utf8");
-        let data = "";
-
-        req.on("data", (chunk) => {
-          console.log("CHUNK", chunk);
-          data += chunk;
-        });
-        req.on("end", () => {
-          console.log("DATA", data);
-          let args;
-          try {
-            args = JSON.parse(data);
-          } catch (error) {
-            console.log(error.message);
-            res.sendError(404, "JSON parse error: " + data);
-            return;
-          }
-
-          apiFinish(args);
-        });
-
-        return;
-      }
-
-      let args;
-      if (path.length > 1) {
-        try {
-          args = JSON.parse(unescape(path[1]));
-        } catch (error) {
-          res.sendError(404, "JSON parse error: " + escape(path[1]));
-          return;
-        }
-      } else {
-        args = [];
-      }
-
-      if (!Array.isArray(args)) {
-        args = [args];
-      }
-
-      apiFinish(args);
-
-      return;
     }
 
     console.log(termColor(req.method, "green"), p);

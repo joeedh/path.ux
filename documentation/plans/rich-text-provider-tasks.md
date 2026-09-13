@@ -3,7 +3,7 @@
 Tasks for [`rich-text-provider.md`](rich-text-provider.md). Each stage is a commit, and each
 stage's status is recorded here when it lands.
 
-Status: task 1 done; task 2 not started.
+Status: task 1 done; task 3 stage 1 done; task 2 not started.
 
 <!-- toc -->
 
@@ -142,8 +142,17 @@ commit)` function that sends one `Input.imeSetComposition` per step and `Input.i
 
 ## Task 3 — remove the docs system: `simple_docsys`, `DocsBrowser` and TinyMCE
 
-Not started. Stages 1 to 3 do not depend on task 2 and can run before it; only stage 4 waits on
+Stage 1 done. Stages 1 to 3 do not depend on task 2 and can run before it; only stage 4 waits on
 task 2's stage 7.
+
+Gate status when stage 1 started, recorded so a later stage does not mistake it for its own
+regression: `pnpm run typecheck` and `pnpm run test` were green. `pnpm run lint:check` was red
+before any change here, from three stale registered worktrees under `.claude/worktrees/` that
+eslint's flat config walks, from `simple_example/*.js` and the submodule's `pathwatch.ts`, and
+from 157 prose findings across `documentation/` and `specs/`. `pnpm run format:check` was red on
+75 files, none under `servers/`. `pnpm exec playwright test` had one failure, the theme editor
+variable list in `theme_vars.spec.ts`, and the run rewrites the tracked screenshots under
+`playwright/screenshots/`. Each stage below is held to adding nothing to those sets.
 
 The three pieces are one system and go together. `simple_docsys` is a Node-side bridge that
 renders markdown to HTML with `marked` and writes edits back, reached over an RPC endpoint in
@@ -192,9 +201,11 @@ What is there today:
 
 Stages:
 
-- **Stage 1 — the servers.** Delete `servers/rpc.js` and the `rpc` import and handler wiring
-  in `serv.js`, `serv_simple.js` and `http2.js`. `pnpm serv 5050` still serves the example and
-  the Playwright suite still starts.
+- **Stage 1 — the servers.** Done. Deleted `servers/rpc.js` and the `rpc` import and the whole
+  `/api/` handler block in `serv.js`, `serv_simple.js` and `http2.js`, since the block existed
+  only to call `rpc.handle`; a request under `/api/` now falls through to the static file path
+  and gets a 404. `pnpm serv` serves `/` and `example/index.html`, and the Playwright suite
+  starts and matches its baseline.
 - **Stage 2 — the example pane and the widget.** Delete `example/editors/docbrowser/`, its
   import in `app.ts`, the `docsbrowser` accessor in `context.ts` and `DocEditorPath` in
   `const.ts`. Delete `scripts/docbrowser/`, the `pathux_with_docbrowser` barrel, shim and dist
