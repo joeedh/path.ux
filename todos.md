@@ -36,3 +36,7 @@ document the macro defaults policy, per
 documentation/plans/per-api-tool-tables.md.
 [x]: give menu items a disabled state and let ToolOp.canRun return a refusal
 sentence, per documentation/plans/menu-item-disabling.md.
+[ ]: rich text editing over a document provider (beforeinput, DocEditOp,
+per-document toolstacks), per documentation/plans/rich-text-provider.md and
+its tasklist rich-text-provider-tasks.md. IME is a follow-up plan, written as
+the tasklist's last task.
