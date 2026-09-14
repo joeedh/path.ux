@@ -321,6 +321,15 @@ the rest on `rich-text-x`; the rest of the suite is unchanged with the one pre-e
   editor did not make, the snapshot's selection comes from `getTargetRanges()` on the first
   `insertCompositionText` when the browser supplies one.
 
+Blocked, not started. Stage 1's Android recording was not produced: Android and macOS were
+written up in `documentation/richtext.md` as manual device steps, and only the three Firefox
+desktop recordings were run. Stage 4 waits on someone running the Android steps on a phone.
+Nothing here is implemented on a guess, since the per-update decision and the
+`getTargetRanges()` question both turn on what the recording shows. The stage 3 acceptance
+path already handles Gboard's per-keystroke composition at word-level undo granularity, which
+the plan states is acceptable for the first landing; stage 4 only revisits that if the
+recording shows it is not enough.
+
 ## Risks
 
 - **The diff misattributes a composition that also normalizes text elsewhere in the block**
