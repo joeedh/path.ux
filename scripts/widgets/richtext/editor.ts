@@ -5,6 +5,7 @@ import type { CSSFont } from "../../core/cssfont";
 import type { RowFrame } from "../../core/ui_containers";
 import { t } from "../../core/theme_schema";
 import type { IconCheck } from "../ui_widgets";
+import { css2color } from "../../core/ui_theme";
 import { RichTextContext } from "./context";
 import type { DocumentSession } from "./context";
 import { DocEditOp } from "./ops";
@@ -256,6 +257,29 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     this.root.style.font = font.genCSS();
     this.root.style.color = font.color;
     this.root.style.backgroundColor = this.getDefault("background-color") as string;
+
+    this.tintToolbarIcons(font.color);
+  }
+
+  /**
+   * Tints the toolbar's white sprite icons to match the text color. The icons are white, so
+   * `brightness` multiplies them to the text color's luminance, which reads correctly in a
+   * light theme and a dark one without depending on a light-or-dark flag. The filter sits on
+   * each button's icon div, not the host, so the button's own background and border keep their
+   * theme colors.
+   */
+  private tintToolbarIcons(textColor: string): void {
+    if (this.markButtons.size === 0) {
+      return;
+    }
+
+    const c = css2color(textColor);
+    const luminance = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    const filter = `brightness(${luminance.toFixed(3)})`;
+
+    for (const btn of this.markButtons.values()) {
+      btn.dom.style.filter = filter;
+    }
   }
 
   /** Focuses the editable root and places the selection. */
@@ -1026,6 +1050,9 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     row.checkInit();
     this.shadow.insertBefore(row, this.root);
     this.toolbar = row;
+
+    // buildToolbar can run after setCSS (session set late), so tint the fresh buttons here too
+    this.tintToolbarIcons((this.getDefault("DefaultText") as CSSFont).color);
   }
 
   private syncToolbar(): void {

@@ -45474,6 +45474,7 @@ function rootReflects(root, blocks) {
 // scripts/widgets/richtext/editor.ts
 init_ui_base();
 init_theme_schema();
+init_ui_theme();
 var FORMAT_MARKS = {
   formatBold: "bold",
   formatItalic: "italic",
@@ -45642,6 +45643,25 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     this.root.style.font = font.genCSS();
     this.root.style.color = font.color;
     this.root.style.backgroundColor = this.getDefault("background-color");
+    this.tintToolbarIcons(font.color);
+  }
+  /**
+   * Tints the toolbar's white sprite icons to match the text color. The icons are white, so
+   * `brightness` multiplies them to the text color's luminance, which reads correctly in a
+   * light theme and a dark one without depending on a light-or-dark flag. The filter sits on
+   * each button's icon div, not the host, so the button's own background and border keep their
+   * theme colors.
+   */
+  tintToolbarIcons(textColor) {
+    if (this.markButtons.size === 0) {
+      return;
+    }
+    const c = css2color(textColor);
+    const luminance = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    const filter = `brightness(${luminance.toFixed(3)})`;
+    for (const btn of this.markButtons.values()) {
+      btn.dom.style.filter = filter;
+    }
   }
   /** Focuses the editable root and places the selection. */
   select(range) {
@@ -46240,6 +46260,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     row.checkInit();
     this.shadow.insertBefore(row, this.root);
     this.toolbar = row;
+    this.tintToolbarIcons(this.getDefault("DefaultText").color);
   }
   syncToolbar() {
     const session = this._session;
