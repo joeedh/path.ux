@@ -14434,7 +14434,6 @@ var init_const = __esm({
         () => onUserGesture(() => {
           queryClipboardPermission().then((status) => {
             if (!status) {
-              startClipboardReader();
               return;
             }
             const sync = () => {

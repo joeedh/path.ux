@@ -110,8 +110,9 @@ if (typeof document !== "undefined") {
   onPageLoad(() =>
     onUserGesture(() => {
       queryClipboardPermission().then((status) => {
+        // Firefox and Safari: read() shows a Paste button on every call, so polling
+        // would raise one five times a second; the app's own copies still work
         if (!status) {
-          startClipboardReader();
           return;
         }
 
