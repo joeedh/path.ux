@@ -6,7 +6,7 @@ IME commit and a dead-key accent reach the document as ordinary edits. Read that
 "What the browser still does", "Position mapping" and the Findings first; this plan assumes
 them.
 
-Status: written and pressure tested (18 findings, all folded in; see the end). Stage 1 done.
+Status: written and pressure tested (18 findings, all folded in; see the end). Stages 1 and 2 done.
 Stage status is recorded under each stage as it lands.
 
 ## What the browsers do
@@ -232,6 +232,25 @@ what key name it carried.
   selection, including the `aab` case; deletion; no change; `abab` to `ababab` with the caret
   at 0, at 2 and at 4; an inserted `ATOM_CHAR` refused; a replaced atom allowed; a change not
   adjacent to the caret refused; text that is not in any block, handled by the root reconcile.
+
+Done. Twenty-three tests. What the module answers and where it departs from the text above:
+
+- `composedEdit` answers `undefined` when the texts are equal, `{ range, text }` for an edit,
+  or `{ refused }` with the reason as a string, so the editor can log it with the mutation
+  records. The editor decides between `insertText` and `deleteRange` from whether `text` is
+  empty; the diff does not name an op type.
+- The interval of starts is computed from the full common prefix and suffix and their overlap
+  (`abab` to `ababab` has prefix 4 and suffix 4 over a length of 4, so the start may sit
+  anywhere in `[0, 4]`), and the start is the selection's start clamped into that interval.
+  The seeding widens the range after the start is chosen, so a collapsed caret at 2 gives an
+  insertion of `ab` at 2 rather than a replacement of `[2, 4)`.
+- Adjacency is checked on the minimal edit before the seeding widens it, since the widened
+  range always covers the selection; a half-open range that touches the selection passes.
+- The selection is taken in either order and clamped into the snapshot text.
+- The "text that is not in any block" case is a check on the root, not on two strings, so the
+  module also carries `rootReflects(root, blocks)`, the root reconcile's test that every root
+  child is the block element for `blocks` in order. Stage 3 calls it on the fallback path.
+- The module stays out of the barrel, as `positions.ts` does; the editor imports it.
 
 ### Stage 3 — the editor accepts composition
 
