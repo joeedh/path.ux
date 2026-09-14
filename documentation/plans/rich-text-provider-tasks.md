@@ -3,7 +3,7 @@
 Tasks for [`rich-text-provider.md`](rich-text-provider.md). Each stage is a commit, and each
 stage's status is recorded here when it lands.
 
-Status: task 1 done; task 2 done (all seven stages); task 3 done (all four stages).
+Status: all four tasks done. Task 4's plan is `rich-text-ime.md`, not yet started.
 
 <!-- toc -->
 
@@ -524,7 +524,13 @@ tool and stays.
 
 ## Task 4 — the IME plan
 
-Not started. Waits on task 2 being complete and exercised in `example/`.
+**Done.** `documentation/plans/rich-text-ime.md`, pressure tested by a fresh-context agent
+(18 findings, all folded in and listed at its end). One deviation from the sketch below: no
+`replaceBlockText` op. The composed block is diffed against a snapshot taken at
+`compositionstart` and the result submitted as an ordinary `insertText` or `deleteRange`, so
+the provider's own mark handling covers the composition. The plan's stage 1 records what the
+manual runs here did not: a real Windows dead key, combining Korean, Escape in Firefox, and
+Android. Executing the plan is a `todos.md` item of its own.
 
 - Write `documentation/plans/rich-text-ime.md` from the event sequences stage 5 recorded: replace composition refusal with a scoped
   parse-back of the composed block. The editor lets the browser mutate the block during
