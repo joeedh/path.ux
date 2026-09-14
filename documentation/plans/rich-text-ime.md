@@ -6,7 +6,7 @@ IME commit and a dead-key accent reach the document as ordinary edits. Read that
 "What the browser still does", "Position mapping" and the Findings first; this plan assumes
 them.
 
-Status: written and pressure tested (18 findings, all folded in; see the end). Not started.
+Status: written and pressure tested (18 findings, all folded in; see the end). Stage 1 done.
 Stage status is recorded under each stage as it lands.
 
 ## What the browsers do
@@ -24,18 +24,19 @@ in the order:
   `compositionend` with `data: ""`. `deleteCompositionText` was never seen.
 - Chromium fires `compositionend` after the commit's `input`; Firefox fires it before, the
   spec order. In Chromium the DOM holds the committed text at `compositionend`. In Firefox the
-  commit's mutation precedes `compositionend` too, with one `input` still to come; whether an
-  abandoned composition's text is gone from the DOM by `compositionend` in Firefox is not
-  recorded, and stage 1 records it.
+  commit's mutation precedes `compositionend` too, with one `input` still to come. Stage 1
+  recorded that an abandoned composition's text is gone from the DOM by `compositionend` in
+  Firefox as well.
 - Korean, one observation (`ㅜ` then `ㅑ`, two vowels that cannot combine): each keystroke was
   its own composition, the next key committed the previous one and opened a new one, and Space
-  committed and then arrived as an ordinary `insertText` with a space. Whether a combining
-  sequence (`han` then `a`, where the final consonant moves to the next syllable) re-opens
-  composition over the committed syllable is not recorded.
-- The CDP dead-key scenario is synthetic: the spec sends `´` then `é` itself. Whether a real
-  US-International dead key on Windows goes through composition at all is not recorded. On
-  Windows the keyboard layout composes dead keys before the browser sees a key, so it may
-  arrive as a plain `insertText`; macOS composes them as marked text.
+  committed and then arrived as an ordinary `insertText` with a space. Stage 1 recorded the
+  combining sequence (한 then ㅏ, where the final consonant moves to the next syllable): the
+  open composition's update shrinks to 하 and commits, and a fresh composition opens with 나.
+  Nothing re-opens composition over the committed syllable.
+- The CDP dead-key scenario is synthetic: the spec sends `´` then `é` itself. Stage 1
+  recorded a real US-International dead key on Windows in Firefox: the layout composes it
+  before the browser sees a character, and it arrives as a plain cancelable `insertText` with
+  no composition event. macOS composes dead keys as marked text.
 
 Assumed, not recorded, and marked where the plan leans on them:
 
@@ -193,6 +194,34 @@ recorded baseline, and `pnpm exec playwright test` for the stages that touch the
 - Manual steps for Android (Chrome via `chrome://inspect` over USB, Gboard: type a word,
   Backspace inside it, tap into a committed word and change it) and for macOS press-and-hold.
   Stage 4 waits on the Android one; nothing else waits on this stage's macOS result.
+
+Done. The recorder reads the target's text at `compositionstart` and `compositionend` from a
+capture-phase listener on the target's parent, so it sees the DOM before the editor's own
+handler runs, and logs `keydown` with its key. The console-pasteable form is in
+documentation/richtext.md and prints the same lines. The recordings are in the tasklist's
+stage 5 note; what they decide for the stages after this one:
+
+- A Windows dead key never composes (Firefox, real keyboard): stage 3's dead-key test is
+  `caf` typed then a plain `é` keystroke, one undo entry, and the synthetic CDP dead key
+  stays as the one-update composition it always was.
+- Korean does not re-open composition over committed text (Firefox, Microsoft IME): the
+  combining key shrinks the open composition's update and commits, and a fresh composition
+  opens for the next syllable. Stage 3's back-to-back test is that shape. The adjacency
+  clause in verification stays, since an IME that does recompose the previous syllable would
+  still pass it.
+- An abandoned composition's text is gone from the DOM by `compositionend` in both browsers,
+  so the no-op case of the diff is what an Escape produces, and nothing is left to re-render
+  unless a render was held.
+- Escape reaches Firefox as key `Process` while composing; the guard in stage 3 covers
+  browsers that report `Escape`.
+- Chromium over CDP: a synthetic composition ignores Escape, and the current editor's Escape
+  handler blurs the root, which commits the composition rather than cancelling it. Stage 3's
+  early return while composing removes that path.
+- Android and macOS are documented as manual steps only; neither has been run.
+
+Deviation: the recorder also logs `keydown`, which the stage text did not ask for, because
+the Korean and Escape recordings needed to show which key opened or closed a composition and
+what key name it carried.
 
 ### Stage 2 — the diff
 

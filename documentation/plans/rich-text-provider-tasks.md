@@ -3,7 +3,8 @@
 Tasks for [`rich-text-provider.md`](rich-text-provider.md). Each stage is a commit, and each
 stage's status is recorded here when it lands.
 
-Status: all four tasks done. Task 4's plan is `rich-text-ime.md`, not yet started.
+Status: all four tasks done. Task 4's plan is `rich-text-ime.md`, in progress; its
+stages record their status there.
 
 <!-- toc -->
 
@@ -278,6 +279,50 @@ Firefox differs from Chromium, all of which the IME plan has to allow for:
   still to come, on a block element it has already replaced; no stray DOM resulted.
 - Still open by hand: the dead key (United States-International sits under the language's
   keyboard list, not the language list).
+
+Recorded again for the IME plan's stage 1 (2026-09-13), with the recorder also reading the
+target's text at `compositionstart` and `compositionend` and logging `keydown`. Chromium over
+CDP, all synthetic:
+
+- The DOM holds the committed text at `compositionend`, and an abandoned composition's text is
+  gone from the DOM by `compositionend`, whose `data` is `""`.
+- The Korean shape (ㅎ, 하, 한 committed as 하, then ㄴ, 나 committed as 나): a commit whose
+  text differs from the last update is one more `compositionupdate` and
+  `insertCompositionText` carrying the committed text, and the second composition begins with
+  its own `compositionstart` after the first's `compositionend`. CDP cannot say whether a real
+  IME re-opens composition over the committed syllable; that is the Firefox recording below.
+- Escape while a synthetic composition is open: the `keydown` fires with `isComposing` and
+  nothing follows, since no IME is there to cancel it. On the editor, whose `keydown` handler
+  blurs the root on Escape, the blur commits the composition: `compositionend` carries the
+  composed text and the DOM keeps it, and the commit is then refused.
+- A real Windows dead key cannot be sent through CDP, which injects at the renderer; the
+  dead-key scenario stays synthetic.
+
+Firefox by hand on Windows 11 (2026-09-13), with the console recorder from
+documentation/richtext.md:
+
+- A real dead key never composes. On United States-International, `` ` `` then `e` arrives as
+  a `keydown` with key `Dead`, then a `keydown` with key `è`, then one ordinary cancelable
+  `beforeinput` of `insertText` with `è` and `isComposing` false. No composition event fires.
+  The layout resolves the dead key before the browser sees a character, so the dead-key path
+  is the plain keystroke path and the current build already lands the accent.
+
+- Korean 한 then ㅏ (keys `g`, `k`, `s`, `k`, then Space) does not re-open a composition
+  over committed text. The first three keys are updates ㅎ, 하, 한 of one composition, every
+  `keydown` reporting key `Process`. The fourth key shrinks the same composition's update to
+  하, commits it (a repeated `insertCompositionText` with no `compositionupdate` before it,
+  then `compositionend "하"` with the DOM holding 하), and only then opens a fresh
+  composition whose first update is already 나; the ㄴ never appears on its own. Each
+  composition is one region of one block. The trailing `input` after `compositionend` fires
+  after the editor's re-render, with the re-rendered text. Space then arrives as a plain
+  `insertText`.
+
+- Escape mid-composition (Japanese, `kan` showing かｎ) abandons it the way Chromium does: a
+  `compositionupdate ""`, an `insertCompositionText` with empty `data`, then
+  `compositionend ""` with the DOM already back to the original text, and the trailing
+  `input` after it. The Escape `keydown` reports key `Process` with `isComposing` true, so
+  the editor's own Escape handler never sees it. Firefox's empty-data `input` event carries
+  `""` where Chromium's carries `null`.
 
 Departures from the text above:
 

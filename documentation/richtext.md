@@ -156,16 +156,86 @@ adding a language and its keyboard:
 
 - Japanese: the Microsoft IME that comes with the language pack.
 - Chinese (Simplified): Microsoft Pinyin.
-- Korean: Microsoft IME.
+- Korean: Microsoft IME. Its 2-set layout puts ㅎ on `g`, ㅏ on `k` and ㄴ on `s`.
 - English (United States): add the United States-International keyboard for dead keys, where
-  `'` then `e` composes `é`.
+  `'` then `e` composes `é`. It sits under the language's keyboard list, not the language list.
 
-Then, with the example app's Rich Text tab open in Firefox and the caret inside the editor:
+Open the example app's Rich Text tab, then paste this into the browser console. It prints one
+line per event on the first editor, in the format the Playwright recorder uses, so a manual run
+and a CDP run read alike. The text it prints is the editable root's, read before the editor's
+own handler runs; a keydown that arrives during a composition is stopped before the editor's
+handler, so the IME's own answer to Escape is what gets recorded rather than the editor's blur.
+
+```js
+{
+  const find = (root) => {
+    const hit = root.querySelector('[data-testid="richtext-editor"]');
+    if (hit) return hit;
+    for (const el of root.querySelectorAll("*")) {
+      const found = el.shadowRoot && find(el.shadowRoot);
+      if (found) return found;
+    }
+  };
+  const target = find(document).root;
+  const textAt = new Set(["input", "compositionstart", "compositionend"]);
+  const types = [
+    "compositionstart",
+    "compositionupdate",
+    "compositionend",
+    "beforeinput",
+    "input",
+    "keydown",
+  ];
+  for (const type of types) {
+    target.parentNode.addEventListener(
+      type,
+      (e) => {
+        const parts = [type];
+        if (type === "keydown") parts.push(e.key);
+        if ("inputType" in e) parts.push(e.inputType);
+        if ("data" in e) parts.push(JSON.stringify(e.data));
+        if (type === "keydown" || "inputType" in e)
+          parts.push(e.isComposing ? "composing" : "not composing");
+        if ("inputType" in e) parts.push(e.cancelable ? "cancelable" : "not cancelable");
+        if (textAt.has(type)) parts.push("text=" + JSON.stringify(target.textContent));
+        console.log(parts.join(" "));
+        if (type === "keydown" && e.isComposing) e.stopPropagation();
+      },
+      true
+    );
+  }
+}
+```
+
+Then, with the caret at the end of "Hello, world." in the first editor:
 
 1. Switch to the Japanese IME, type `kan`, press Space to convert and Enter to commit. The text
    must stay unchanged, the caret must stay put, and one `refused` event must fire; the
    example logs it to the console.
-2. Repeat with Pinyin (`ni hao`, Space) and Korean (`han`).
-3. Switch to United States-International and type `'e`. The same refusal must apply to the dead
-   key, and a plain `e` must still land in the document.
-4. Start a composition and press Escape. The document must stay unchanged and the caret stay put.
+2. Repeat with Pinyin (`ni hao`, Space).
+3. Switch to Korean, in Hangul mode, and type `g`, `k`, `s`, `k`, then Space. The first three
+   compose 한; the fourth moves the ㄴ to a new syllable, 하 then 나. What matters in the
+   log is whether the fourth key commits 하 and opens a new composition, or edits the open one.
+4. Switch to United States-International and type `'e`, then a plain `e`. What matters is
+   whether the dead key arrives as a composition or as an ordinary `insertText` of `é`.
+5. Start a Japanese composition (`kan`) and press Escape until the composed text is gone. What
+   matters is the `text=` on the `compositionend` line: whether the composed text is still in
+   the DOM when the event fires.
+
+The results of each run are recorded in the tasklist's stage 5 note
+(plans/rich-text-provider-tasks.md).
+
+### Android and macOS
+
+Neither has been recorded. The steps, for whoever has the device:
+
+- Android, Chrome, with Gboard: serve the example (`node serv.js 5050` from the repo root),
+  open `chrome://inspect` on the desktop with the phone over USB, and paste the snippet into
+  the inspected page's console. Then in the first editor: type a word and a space; type a word
+  and press Backspace inside it before the space; tap into a word that is already committed
+  and change a letter. What matters is whether the word stays in one composition until the
+  space, whether Backspace arrives as a cancelable `beforeinput` inside the composition, and
+  whether tapping into committed text re-opens a composition over it.
+- macOS, Safari and Chrome: paste the snippet, then hold `e` until the accent popover shows
+  and pick `é`. What matters is whether the accent arrives as a composition, as
+  `insertReplacementText` over the base letter, or as a plain `insertText`.
