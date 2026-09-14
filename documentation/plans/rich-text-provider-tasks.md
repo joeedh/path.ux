@@ -261,8 +261,9 @@ Done. Six Playwright tests pass, three on a bare `contenteditable` div and three
   exactly one `refused` event, at `compositionend`.
 
 Firefox, by hand on Windows 11 with the Microsoft IMEs (2026-09-13), recorded with a console
-listener on the editor's root. Japanese and Korean pass the manual steps: document and caret
-unchanged, one `refused` per composition, the example logs `insertCompositionText`. Where
+listener on the editor's root. Japanese, Pinyin and Korean pass the manual steps: document and
+caret unchanged, one `refused` per composition, the example logs `insertCompositionText`;
+Escape mid-composition leaves the caret where the composition started. Where
 Firefox differs from Chromium, all of which the IME plan has to allow for:
 
 - Korean is one composition per keystroke. `n` opens a composition for ㅜ; the next key
@@ -275,8 +276,8 @@ Firefox differs from Chromium, all of which the IME plan has to allow for:
 - `compositionend` fires before the commit's final `input` event, the spec order. Chromium
   fires it last. The editor's re-render at `compositionend` therefore runs with one `input`
   still to come, on a block element it has already replaced; no stray DOM resulted.
-- Still open by hand: Pinyin, the dead key (United States-International sits under the
-  language's keyboard list, not the language list) and Escape mid-composition.
+- Still open by hand: the dead key (United States-International sits under the language's
+  keyboard list, not the language list).
 
 Departures from the text above:
 
