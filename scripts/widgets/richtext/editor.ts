@@ -471,7 +471,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
   /** Re-renders the composed block from the provider and restores the snapshot's caret. */
   private rerenderComposed(snapshot: CompositionSnapshot): void {
     const view = this.view();
-    if (view === undefined || !view.blocks.includes(snapshot.block)) {
+    if (view?.blocks.includes(snapshot.block) !== true) {
       this.refuseComposition(snapshot);
       return;
     }

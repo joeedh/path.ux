@@ -6,7 +6,7 @@ IME commit and a dead-key accent reach the document as ordinary edits. Read that
 "What the browser still does", "Position mapping" and the Findings first; this plan assumes
 them.
 
-Status: written and pressure tested (18 findings, all folded in; see the end). Stages 1 to 3 done.
+Status: written and pressure tested (18 findings, all folded in; see the end). Stages 1 to 4 done.
 Stage status is recorded under each stage as it lands.
 
 ## What the browsers do
@@ -42,11 +42,14 @@ Assumed, not recorded, and marked where the plan leans on them:
 
 - Replacing the element under a composition cancels the composition in Chromium. The render
   hold below rests on this.
-- Android: Gboard keeps a word in composition until a space, edits it with Backspace, and
-  re-opens composition over an already-committed word when the caret lands in it. Stage 4
-  rests on this and waits for stage 1.
 - macOS press-and-hold accents may arrive as composition or as `insertReplacementText` over
   the base letter. Safari is unrecorded on either platform.
+
+Android was recorded in stage 4 (Samsung Keyboard; see the tasklist's stage 5 note). It keeps
+the whole word in one composition until a space, handles an in-word Backspace as a shrinking
+composition update rather than a delete, and may pull the token before the caret into the
+composition. The block-text diff recovers the true edit in every case, so no code was needed;
+Gboard specifically was not recorded.
 
 ## Approach: reconcile the composed block at `compositionend`
 
@@ -321,14 +324,24 @@ the rest on `rich-text-x`; the rest of the suite is unchanged with the one pre-e
   editor did not make, the snapshot's selection comes from `getTargetRanges()` on the first
   `insertCompositionText` when the browser supplies one.
 
-Blocked, not started. Stage 1's Android recording was not produced: Android and macOS were
-written up in `documentation/richtext.md` as manual device steps, and only the three Firefox
-desktop recordings were run. Stage 4 waits on someone running the Android steps on a phone.
-Nothing here is implemented on a guess, since the per-update decision and the
-`getTargetRanges()` question both turn on what the recording shows. The stage 3 acceptance
-path already handles Gboard's per-keystroke composition at word-level undo granularity, which
-the plan states is acceptable for the first landing; stage 4 only revisits that if the
-recording shows it is not enough.
+Done, and it needed no code. Android was recorded by hand (Samsung Keyboard on a Galaxy phone,
+Chrome over `chrome://inspect`; the full recordings are in the tasklist's stage 5 note). What
+the recordings settle:
+
+- **Word-level latency is acceptable.** The keyboard keeps the whole word in one composition
+  and commits it at the space, so the document updates once per word. The plan already stated
+  that is acceptable for the first landing, and stage 3's acceptance path delivers it as one
+  undo entry per word. No per-update commit is needed.
+- **In-composition Backspace is not a delete.** It arrives as a shorter `insertCompositionText`
+  and the composition stays open, so nothing has to let a cancelable delete through
+  mid-composition; the `compositionend` diff handles the net word.
+- **`getTargetRanges()` is not needed.** The keyboard may pull the token before the caret into
+  the composition, but the selection at `compositionstart` stays collapsed at the caret and the
+  block-text diff recovers the true minimal edit, so the snapshot's own selection suffices.
+
+Not verified: Gboard specifically, and macOS. The diff works from block text and a collapsed
+caret rather than from any keyboard-specific event shape, so both are expected to work; the
+manual steps in `documentation/richtext.md` stay for whoever has those devices.
 
 ## Risks
 

@@ -324,6 +324,26 @@ documentation/richtext.md:
   the editor's own Escape handler never sees it. Firefox's empty-data `input` event carries
   `""` where Chromium's carries `null`.
 
+Android by hand (2026-09-13), Samsung Keyboard on a Galaxy phone, Chrome over
+`chrome://inspect` with the console recorder:
+
+- The whole word is one composition. One `compositionstart`, one `compositionupdate` per
+  letter, one `compositionend` at the space, and the space then arrives as a plain
+  `insertText`. So the document updates once per word, at the space; the plan accepted that
+  word-level latency for the first landing.
+- The composition can cover the token before the caret. Typing at the end of "world." opened
+  a composition whose data ran "world.", "world.h", ... "world.hello". The block's text still
+  changed only by inserting "hello" at the caret, and the editor diffs the block text rather
+  than the composition data, so it recovers the collapsed insert. The selection at
+  `compositionstart` stayed collapsed at the caret, so the snapshot's own selection is enough
+  and `getTargetRanges()` is not needed.
+- Backspace inside a composition is a shrinking composition update, not a delete. After
+  "hello" a Backspace produced `compositionupdate "hell"` as `insertCompositionText`,
+  composing, not cancelable, and the composition stayed open. No cancelable
+  `deleteContentBackward` reaches the DOM mid-composition on this keyboard.
+- `keydown` reports key `Unidentified` while composing, which the editor ignores. A capital
+  letter and the space arrived as plain `insertText`, outside any composition.
+
 Departures from the text above:
 
 - `tsconfig.json` now includes `playwright/**/*.ts` rather than `playwright/*.ts`, so the new

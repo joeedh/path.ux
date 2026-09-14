@@ -238,7 +238,12 @@ The recorded runs are in the tasklist's stage 5 note (plans/rich-text-provider-t
 
 ### Android and macOS
 
-Neither has been recorded. The steps, for whoever has the device:
+Android was recorded on Samsung Keyboard (see the tasklist's stage 5 note): a word is one
+composition committed at the space, an in-word Backspace shrinks the composition rather than
+sending a delete, and the composition may cover the token before the caret. The editor's
+`compositionend` diff handles all of it, so composition works on Android with no code of its
+own. Gboard specifically and macOS have not been recorded; the steps, for whoever has the
+device:
 
 - Android, Chrome, with Gboard: serve the example (`node serv.js 5050` from the repo root),
   open `chrome://inspect` on the desktop with the phone over USB, and paste the snippet into

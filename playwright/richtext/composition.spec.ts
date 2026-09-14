@@ -69,7 +69,6 @@ const HA = String.fromCharCode(0xd558);
 const HAN = String.fromCharCode(0xd55c);
 const NIEUN = String.fromCharCode(0x3134);
 const NA = String.fromCharCode(0xb098);
-const CARET_SLOT = String.fromCharCode(0x200b);
 
 const NOT_CANCELABLE = "composing not cancelable";
 
@@ -198,8 +197,6 @@ declare global {
 }
 
 const ORIGINAL = ["Hello, world.", "A second paragraph to edit.", ""];
-// the editable root's text: every block's text in order, an empty block being one caret slot
-const ROOT_TEXT = ORIGINAL.map((t) => (t === "" ? CARET_SLOT : t)).join("");
 const CARET = 6;
 
 async function openEditor(page: Page): Promise<Locator> {

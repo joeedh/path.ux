@@ -45806,7 +45806,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
   /** Re-renders the composed block from the provider and restores the snapshot's caret. */
   rerenderComposed(snapshot) {
     const view = this.view();
-    if (view === void 0 || !view.blocks.includes(snapshot.block)) {
+    if (view?.blocks.includes(snapshot.block) !== true) {
       this.refuseComposition(snapshot);
       return;
     }

@@ -143,6 +143,16 @@ const cases: Case[] = [
     selection: [2, 2],
     expected : { range: [1, 2], text: "X" },
   },
+  {
+    // Android keeps a word in one composition and may pull the preceding token into it, but the
+    // block-text diff still recovers the collapsed insert at the caret; see the Android note in
+    // documentation/plans/rich-text-provider-tasks.md
+    name     : "an Android word composition is the net insert at the caret",
+    base     : "Hello, world.",
+    dom      : "Hello, world.hello",
+    selection: [13, 13],
+    expected : { range: [13, 13], text: "hello" },
+  },
 ];
 
 describe("composedEdit", () => {
