@@ -50,7 +50,7 @@ Stage status is recorded under each stage as it lands.
   - [Stage 6 — optional follow-ups](#stage-6--optional-follow-ups)
   - [Stage 7 — the syntax reference](#stage-7--the-syntax-reference)
 - [Findings](#findings)
-- [Open questions](#open-questions)
+- [Decisions](#decisions)
 
 <!-- tocstop -->
 
@@ -305,11 +305,13 @@ Per the DOM-events direction in CLAUDE.md, a `CustomEvent("linkclick", { detail:
 cancelable: true })` dispatched on the editor's host element, non-bubbling like the editor's
 `refused` and `ListBox`'s `change`; the consumer owns the element and listens on it.
 The provider raises it through `ctx.editor.linkClicked` from the click listener its
-`renderBlock` installs on a link; the editor's default when nobody prevents it is to open the
-link popup in edit mode and, in render-only mode, to open a `"url"` link in a new tab and do
-nothing for any other kind. A plain click on a link in edit mode places the caret first, as
-in any editor; the popup opens on the same click. A consumer such as visualnovel listens for
-`kind === "wiki"`, resolves `[[line: L7]]` itself and calls `preventDefault`.
+`renderBlock` installs on a link. The editor attaches no meaning to a link: it never
+navigates, opens a tab or resolves a target, in either mode. Its one default, in edit mode
+only, is the link popup that edits the mark's target, and `preventDefault` suppresses that.
+In render-only mode there is no default at all; a click that nobody listens for does
+nothing. A plain click on a link in edit mode places the caret first, as in any editor; the
+popup opens on the same click. A consumer such as visualnovel listens for `kind === "wiki"`
+and resolves `[[line: L7]]` itself; a web app listens for `kind === "url"` and opens it.
 
 ## The markdown document
 
@@ -340,7 +342,14 @@ interface MdMark {
 
 interface MdAtom {
   offset: number;
-  image: { src: string; alt: string; title?: string; width?: number };
+  /** `attrs` holds the sanitized attributes of an `<img>` HTML form, for a consumer's own metadata. */
+  image: {
+    src: string;
+    alt: string;
+    title?: string;
+    width?: number;
+    attrs?: Record<string, string>;
+  };
 }
 
 interface MdBlock extends MdKind {
@@ -377,7 +386,8 @@ interface MdDoc {
   logic in `providers/plain.ts` is shared rather than copied: the range arithmetic moves into
   a `providers/marks.ts` module both providers import, extended to shift `atoms` the same way.
   `marks.ts` is imported and never `export *`-ed.
-- `table`, `raw` and `frontmatter` are opaque and keep their source verbatim. Front matter
+- `table`, `raw` and `frontmatter` are opaque and keep their source verbatim. Editable
+  tables are deferred to a plan of their own. Front matter
   can only be the first block; a `frontmatter` block is never created by an edit. A `raw`
   block is a media or embed element the provider preserves without rendering (see Media);
   every other element the HTML rules cannot normalize is dropped, per the no-preservation
@@ -477,6 +487,9 @@ The table, `providers/markdown_html.ts`:
   keeps the earlier block's. `setKind` clears `html.tag` and keeps style and attrs.
 - The toolbar offers nothing for `html`; it is preserved through edits and reachable only
   from the source.
+- GitHub strips `style` and `class`, so a styled span renders unstyled there. The provider
+  emits them regardless; a consumer that wants a GitHub-safe export strips them itself,
+  from the `MdDoc` before `markdownText` or in a serializer of its own.
 - Fixtures in stage 2 cover each row of the table, a styled paragraph, an inline styled span,
   a nested wrapper, a `<pre>` that comes back as a fence, and one fixture per sanitizer rule.
 
@@ -546,6 +559,9 @@ HTMLElement | undefined` option. The provider calls it for every image atom and 
   comes back in `md-image-x`, so resize, move and the atom contract (`data-doc-atom`,
   `contenteditable="false"`, the caret slots) stay the provider's. `undefined` falls back to
   `<img>`. A consumer building a YouTube embed does so here, with whatever element it trusts.
+  The hook decides from the image record alone; a consumer that needs more than the source
+  writes the image as `<img src="…" data-kind="…">` and reads `image.attrs`, which the
+  sanitizer keeps and the serializer emits back. The provider adds no media hint of its own.
 - `renderBlock` is a public method and a subclass may override it for anything the hook does
   not reach; the hook exists so the common case needs no subclass.
 - `<video>`, `<audio>`, `<picture>`, `<iframe>`, `<object>` and `<embed>` at block level are
@@ -666,8 +682,8 @@ All four are widgets or listeners the provider installs in `renderBlock`, editin
   state.
 - **Links.** The `<a>`'s click listener calls `ctx.editor.linkClicked`. The editor's default
   in edit mode is `link-popup-x`, a small widget opened through `ctx.screen.popup` at the link
-  with a textbox for the target, the kind shown as a label, Remove and Open buttons; apply
-  dispatches `setLink` against the range captured when the popup opened (`LinkInfo.range`, or
+  with a textbox for the target, the kind shown as a label and a Remove button (no Open
+  button, since the editor does not know what a target means); apply dispatches `setLink` against the range captured when the popup opened (`LinkInfo.range`, or
   the toolbar's `ctx.editor.selection()` read before the popup takes focus), because focusing
   the textbox blurs the root and the live selection is gone by apply time. The popup is opened
   with the `"click"` close mode, since `screen.popup`'s default closes on pointer-leave after
@@ -1059,18 +1075,18 @@ hosted editor is inside `RichTextArea`'s shadow, and changing `VALUE` to `Doc` f
 `on_change` without touching `SELF`; and `mdast-util-to-markdown` escapes `[` in text, so a
 wikilink must be an inline `html` node.
 
-## Open questions
+## Decisions
 
-- Underline and image width as inline HTML: acceptable for the files this will edit?
-- The HTML table drops wrapper elements and turns `<pre>` into a fence. Is there any element
-  whose exact form must survive, beyond the verbatim `table` block?
-- GitHub strips `style` and `class`, so a styled span renders unstyled there. The plan emits
-  them anyway; is a "GitHub-safe" export mode wanted later?
-- `renderMedia` decides by the image source alone (extension or host). Should the atom also
-  carry a hint from the source, such as a `data-media` attribute on an `<img>` HTML form, or
-  is the source enough?
-- Tables read-only: acceptable for the first version?
-- `headings()` returns ids and levels only; titles come from `blockText`. Enough for the
-  outline widget, or should it return the text too?
-- The editor's default for a `"url"` link click in render-only mode opens a new tab. Should
-  the default be nothing, leaving every navigation to the consumer?
+Answered after the pressure test, each folded into its section above:
+
+- Underline and image width serialize as inline HTML (`<u>`, `<img width>`); there is no
+  other representation and the common renderers show both.
+- Nothing survives verbatim beyond `table`, `raw` and front matter; every other element is
+  normalized, and a `<pre>` comes back as a fence.
+- A GitHub-safe export (no `style`, no `class`) is the consumer's, not the provider's.
+- Media metadata beyond the image source is the consumer's too: an `<img>` HTML form with a
+  `data-*` attribute, read back from `image.attrs`.
+- Tables are read-only; editing them is deferred.
+- `headings()` returns ids and levels only; titles come from `blockText`.
+- A link click has no default behaviour in either mode beyond the edit-mode popup. The
+  widget makes no assumption about what a link means.
