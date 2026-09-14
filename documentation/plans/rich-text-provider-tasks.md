@@ -260,6 +260,24 @@ Done. Six Playwright tests pass, three on a bare `contenteditable` div and three
 - On `rich-text-x` each scenario leaves the document and the caret unchanged and dispatches
   exactly one `refused` event, at `compositionend`.
 
+Firefox, by hand on Windows 11 with the Microsoft IMEs (2026-09-13), recorded with a console
+listener on the editor's root. Japanese and Korean pass the manual steps: document and caret
+unchanged, one `refused` per composition, the example logs `insertCompositionText`. Where
+Firefox differs from Chromium, all of which the IME plan has to allow for:
+
+- Korean is one composition per keystroke. `n` opens a composition for ㅜ; the next key
+  (`keydown` reports key `Process`) commits it and opens a new one for ㅑ. Space commits the
+  open composition and then sends an ordinary `beforeinput` of `insertText` with a space,
+  which the editor commits as a normal edit, so a space after a refused syllable is the
+  user's own keystroke landing and not a leak.
+- The commit is a repeated `insertCompositionText` with the same data and no
+  `compositionupdate` before it; Chromium sends an update first.
+- `compositionend` fires before the commit's final `input` event, the spec order. Chromium
+  fires it last. The editor's re-render at `compositionend` therefore runs with one `input`
+  still to come, on a block element it has already replaced; no stray DOM resulted.
+- Still open by hand: Pinyin, the dead key (United States-International sits under the
+  language's keyboard list, not the language list) and Escape mid-composition.
+
 Departures from the text above:
 
 - `tsconfig.json` now includes `playwright/**/*.ts` rather than `playwright/*.ts`, so the new
