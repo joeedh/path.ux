@@ -50,6 +50,8 @@ flattened into it.
   - [Accepted](#accepted)
   - [Rejected](#rejected)
 
+<!-- regenerate with pnpm markdown-toc -->
+
 <!-- tocstop -->
 
 ## What is there today

@@ -252,7 +252,11 @@ export class UIBase<
   /* EventNode mixin fields */
   graphNode?: EventNode;
 
-  /* Dynamic property fields set by subclasses (numslider, etc) */
+  /*
+   * Dynamic property UX fields set by subclasses (numslider, etc),
+   * these are often mapped to DOM attributes.
+   */
+
   accessor baseUnit: string | undefined = undefined;
   accessor displayUnit: string | undefined;
   accessor isInt: boolean | undefined;
@@ -266,7 +270,7 @@ export class UIBase<
   accessor stepIsRelative: boolean | undefined;
   accessor sliderDisplayExp: number | undefined;
   accessor uiRange: [number, number] | undefined;
-  // XXX review this later
+
   get value(): VALUE {
     throw new Error("implement me");
   }
@@ -275,6 +279,10 @@ export class UIBase<
   }
   ondestroy?: () => void;
   getValue?: () => unknown;
+  /**
+   * Widgets should emit normal html change events (but still invoke
+   * this for backwards compatibility).
+   */
   declare on_change: ((val: VALUE) => void) | null;
 
   _reflagGraph = false;
@@ -368,11 +376,11 @@ export class UIBase<
     init.initUIBase(this);
   }
 
-  get useNativeToolTips() {
+  get useNativeToolTips(): boolean {
     return this._useNativeToolTips;
   }
 
-  set useNativeToolTips(val) {
+  set useNativeToolTips(val: boolean) {
     this._useNativeToolTips = val;
     this._useNativeToolTips_set = true;
   }
@@ -385,7 +393,7 @@ export class UIBase<
     props.setParentWidget(this, val);
   }
 
-  get useDataPathUndo() {
+  get useDataPathUndo(): boolean {
     return props.getUseDataPathUndo(this);
   }
 
@@ -395,15 +403,15 @@ export class UIBase<
 
    every child will inherit
    */
-  set useDataPathUndo(val) {
+  set useDataPathUndo(val: boolean) {
     this._useDataPathUndo = val;
   }
 
-  get description() {
+  get description(): string | undefined {
     return this._description;
   }
 
-  set description(val) {
+  set description(val: string | undefined) {
     props.setDescription(this, val);
   }
 
@@ -429,20 +437,20 @@ export class UIBase<
     props.setBackground(this, bg);
   }
 
-  get disabled() {
+  get disabled(): boolean {
     return props.getDisabled(this);
   }
 
-  set disabled(v) {
+  set disabled(v: boolean) {
     this._client_disabled_set = v;
     this.__updateDisable(this.disabled);
   }
 
-  get internalDisabled() {
+  get internalDisabled(): boolean {
     return this._internalDisabled;
   }
 
-  set internalDisabled(val) {
+  set internalDisabled(val: boolean) {
     this._internalDisabled = !!val;
 
     this.__updateDisable(this.disabled);
@@ -460,7 +468,7 @@ export class UIBase<
     return "" + this._id;
   }
 
-  get modalRunning() {
+  get modalRunning(): boolean {
     return this._modaldata !== undefined;
   }
 
@@ -564,7 +572,7 @@ export class UIBase<
     });
   }
 
-  get isVisible() {
+  get isVisible(): boolean {
     return this.checkVisibility();
   }
 
@@ -679,7 +687,7 @@ export class UIBase<
     css.setCSS(this, setBG);
   }
 
-  //TS patch into this.update.after
+  //TS patch into this.setCSS.after
   setCSSAfter(cb: () => void) {
     const anyThis = this as unknown as any;
     return anyThis.setCSS.after(cb);
@@ -719,8 +727,10 @@ export class UIBase<
     modal.clipboardHotkeyInit(this);
   }
 
-  /** set havePickClipboard to true in define() to
-   *  enable mouseover pick clipboarding */
+  /**
+   * Set havePickClipboard to true in define() to
+   * enable mouseover pick clipboarding
+   **/
   clipboardCopy(): void {
     throw new Error("implement me!");
   }
@@ -913,7 +923,7 @@ export class UIBase<
     datapath.popReportContext(this);
   }
 
-  pathSocketUpdate(ctx: unknown, path: string): this {
+  pathSocketUpdate(ctx: CTX, path: string): this {
     this.flagPropSocketUpdate("value");
     return this;
   }
@@ -926,6 +936,7 @@ export class UIBase<
     return datapath.getPathMeta(this, ctx, path);
   }
 
+  /** Get description (tooltip) associated with a given path. */
   getPathDescription(ctx: CTX, path: string): string | undefined {
     return datapath.getPathDescription(this, ctx, path);
   }

@@ -20,9 +20,10 @@ needs the DOM.
 - [Writing a tool subclass](#writing-a-tool-subclass)
 - [widgetPath](#widgetpath)
 - [Reading a tag back](#reading-a-tag-back)
-- [The headless split](#the-headless-split)
 - [Who writes a tag today](#who-writes-a-tag-today)
 - [What this is not](#what-this-is-not)
+
+<!-- regenerate with pnpm markdown-toc -->
 
 <!-- tocstop -->
 

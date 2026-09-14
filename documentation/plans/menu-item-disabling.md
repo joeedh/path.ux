@@ -48,6 +48,8 @@ of each result, including the three the review got wrong.
   - [Accepted](#accepted)
   - [Rejected](#rejected)
 
+<!-- regenerate with pnpm markdown-toc -->
+
 <!-- tocstop -->
 
 ## Three coupled changes

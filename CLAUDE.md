@@ -14,6 +14,8 @@ HTML5 UI library with Blender RNA-style data binding.
   and the pressure tested results folded back into the plan
 - when executing plans the status of each stage/task/phase/wave/etc
   should be written into the plan itself and marked as completed when done.
+- **DO NOT use any pre-existing 'house style' for plans**. Do not read files simply to try
+  and match their prose style or structure.
 
 ## ToDos
 

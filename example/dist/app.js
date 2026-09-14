@@ -33743,7 +33743,10 @@ var init_ui_base = __esm({
       _clipboard_events;
       /* EventNode mixin fields */
       graphNode;
-      /* Dynamic property fields set by subclasses (numslider, etc) */
+      /*
+       * Dynamic property UX fields set by subclasses (numslider, etc),
+       * these are often mapped to DOM attributes.
+       */
       #baseUnit = void 0;
       get baseUnit() {
         return this.#baseUnit;
@@ -33835,7 +33838,6 @@ var init_ui_base = __esm({
       set uiRange(_) {
         this.#uiRange = _;
       }
-      // XXX review this later
       get value() {
         throw new Error("implement me");
       }
@@ -34133,7 +34135,7 @@ var init_ui_base = __esm({
       setCSS(setBG = true) {
         setCSS(this, setBG);
       }
-      //TS patch into this.update.after
+      //TS patch into this.setCSS.after
       setCSSAfter(cb) {
         const anyThis = this;
         return anyThis.setCSS.after(cb);
@@ -34160,8 +34162,10 @@ var init_ui_base = __esm({
       _clipboardHotkeyInit() {
         clipboardHotkeyInit(this);
       }
-      /** set havePickClipboard to true in define() to
-       *  enable mouseover pick clipboarding */
+      /**
+       * Set havePickClipboard to true in define() to
+       * enable mouseover pick clipboarding
+       **/
       clipboardCopy() {
         throw new Error("implement me!");
       }
@@ -34300,6 +34304,7 @@ var init_ui_base = __esm({
       getPathMeta(ctx, path) {
         return getPathMeta(this, ctx, path);
       }
+      /** Get description (tooltip) associated with a given path. */
       getPathDescription(ctx, path) {
         return getPathDescription(this, ctx, path);
       }

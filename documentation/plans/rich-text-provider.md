@@ -32,6 +32,8 @@ Status: **pressure tested once and revised**. The test found ten problems, all a
 - [Answers an implementer would otherwise guess at](#answers-an-implementer-would-otherwise-guess-at)
 - [Findings](#findings)
 
+<!-- regenerate with pnpm markdown-toc -->
+
 <!-- tocstop -->
 
 ## Why

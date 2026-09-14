@@ -20,6 +20,8 @@ stages record their status there.
 - [Task 3 — remove the docs system: `simple_docsys`, `DocsBrowser` and TinyMCE](#task-3--remove-the-docs-system-simple_docsys-docsbrowser-and-tinymce)
 - [Task 4 — the IME plan](#task-4--the-ime-plan)
 
+<!-- regenerate with pnpm markdown-toc -->
+
 <!-- tocstop -->
 
 ## Task 1 — pressure test the design
