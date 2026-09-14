@@ -42,6 +42,9 @@ its tasklist rich-text-provider-tasks.md. IME is a follow-up plan, written as
 the tasklist's last task.
 [ ]: accept IME and dead-key composition in rich-text-x, per
 documentation/plans/rich-text-ime.md (four stages; stage 1 is recordings).
+Stages 1 to 3 done and committed; the editor accepts composition on desktop.
+Stage 4 (Android) is blocked on an Android/Gboard recording nobody has run
+yet; the manual steps are in documentation/richtext.md.
 [x]: remove the docs system (simple_docsys, servers/rpc.js, DocsBrowser and
 the pathux_with_docbrowser bundle, the example docs pane, both lib/tinymce
 trees, and the marked/parse5/diff dependencies), per
