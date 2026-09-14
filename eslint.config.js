@@ -26,6 +26,10 @@ export default defineConfig([
     "**/dist/**",
     "**/build/**",
     "generated/**",
+    // Declaration output of emitTypes, which the flat config would otherwise walk.
+    "types/**",
+    ".tmp-types/**",
+    ".tmp-types-example/**",
     // Deliberately-wrong data paths that validDatapathRule.test.ts lints itself.
     "tests/fixtures/valid-datapath/**",
   ]),

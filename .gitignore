@@ -20,4 +20,10 @@ node_modules/
 .playwright-mcp
 .turbo
 dist/example
+
+# Declaration output of `pnpm run emitTypes` and the scratch decl configs; the package
+# build regenerates it and nothing reads a committed copy.
+types/
+.tmp-types/
+.tmp-types-example/
 example/myicon2.png
