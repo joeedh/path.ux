@@ -20,7 +20,7 @@ import { IContextBase } from "./context_base";
 import type { TreeView } from "../widgets/ui_treeview";
 import { ToolOp } from "../path-controller/toolsys";
 import type { TextArea } from "../widgets/ui_textarea";
-import type { RichEditor } from "../widgets/ui_richedit";
+import type { RichTextArea } from "../widgets/richtext/textarea";
 
 // Type-only: a value import of ui_containers would evaluate `class RowFrame extends
 // Container` while Container is still in its temporal dead zone. ui_containers imports
@@ -1324,7 +1324,7 @@ export class Container<
     isRichEdit?: boolean,
     /** @deprecated */
     label?: string
-  ): TextArea<CTX> | RichEditor<CTX> {
+  ): TextArea<CTX> | RichTextArea<CTX> {
     if (typeof value === "object") {
       mass_set_path ??= value.massSetPath;
       isRichEdit ??= value.isRichEdit;

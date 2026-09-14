@@ -188,7 +188,9 @@ name, tooltip and value type:
 
 - `textbox(path, text?, cb?, packflag?)` — single-line text. An explicit `text` argument
   overrides the bound value; leave it out to let the binding supply it.
-- `textarea(path, value?, packflag?, mass_set_path?)` — multi-line rich text.
+- `textarea(path, value?, packflag?, mass_set_path?)` — multi-line text: `TextArea`, or the
+  bound `RichTextArea` when the property has `RICH_TEXT_STRING` set or `isRichEdit` is passed
+  (see [richtext.md](richtext.md) § Binding a string property).
 - `viewer(path, value?, packflag?, mass_set_path?)` — read-only HTML view.
 - `pathlabel(path, label?, packflag?)` — a label showing the value, with the property's UI
   name when `label` is omitted.

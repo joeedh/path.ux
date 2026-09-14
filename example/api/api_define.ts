@@ -1,4 +1,5 @@
 import { DataAPI, DataStruct, buildToolSysAPI, nodegraph } from "../pathux.js";
+import { StringProperty } from "../pathux.js";
 import { WorkspaceEditor } from "../editors/workspace/workspace.js";
 import { Canvas, DrawFlags, CanvasPath, Material, ElementArray } from "../draw/draw.js";
 import { BrushSettings } from "../draw/brush.js";
@@ -134,6 +135,10 @@ export function defineAPI() {
     .displayUnit("radian")
     .range(-180, 180);
   dstruct.bool("boolval", "boolval", "Bool");
+  const text = dstruct.textblock("text", "text", "Text");
+  if (text.data instanceof StringProperty) {
+    text.data.setRichText(true);
+  }
   dstruct.color4("color", "color", "Color");
 
   dstruct

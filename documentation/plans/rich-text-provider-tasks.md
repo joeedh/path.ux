@@ -3,7 +3,7 @@
 Tasks for [`rich-text-provider.md`](rich-text-provider.md). Each stage is a commit, and each
 stage's status is recorded here when it lands.
 
-Status: task 1 done; task 3 stages 1 to 3 done; task 2 done (all seven stages).
+Status: task 1 done; task 2 done (all seven stages); task 3 done (all four stages).
 
 <!-- toc -->
 
@@ -438,11 +438,64 @@ Stages:
   - `buildtools/gen-datapaths.mjs` and `gen-themes.mjs` listed `marked`, `parse5` and `diff` as
     esbuild externals; those entries are gone. `pnpm-lock.yaml` still resolves `marked` and
     `diff` as transitive dependencies of tooling.
-- **Stage 4 — delete `RichEditor`.** Waits on task 2's stage 7, which deprecates it. Its
-  remaining users are the container's rich `textarea` builder
-  (`core/utils/container_widgets.ts:346`) and the matching overload in `core/ui.ts:1327`; both
-  switch to `rich-text-x` over the plain provider, after which `ui_richedit.ts` keeps
-  `RichViewer` only.
+- **Stage 4 — delete `RichEditor`.** Done, as proposed below, with these deviations:
+  - The design's "`RichEditor` and `RichViewer` in `ui_richedit.ts` stay as they are" is
+    superseded for `RichEditor`; `RichViewer` and `html-viewer-x` are untouched.
+  - `DocumentSession.toolstack` is an `IToolStack`; the editor's `undo()`/`redo()` pass its
+    `RichTextContext`, and `tests/richtext/ops.test.ts` passes the context too.
+  - The example gained `data.text`, a `RICH_TEXT_STRING` property on `ModelData`, and
+    `generated/` was regenerated with `pnpm run gen:paths` so the datapath lint sees it.
+  - `tests/richtext/textarea.test.ts` (7 tests) covers the builder choice, the load, the
+    write, undo, an external write, the rebuilt-field undo and the unresolved path;
+    `playwright/richtext.spec.ts` gained the end-to-end case over the example field.
+  - Barrel: `RichEditor` out, `RichTextArea` in; nothing else changed in the fixture.
+  - The hosted editor carries `part="editor"`, so a consumer can style it from outside and
+    the Playwright case can find it without the example's tag prefix.
+
+  The entry as written: waits on task 2's stage 7, which deprecates it. Its remaining users
+  are the container's rich `textarea` builder (`core/utils/container_widgets.ts:346`) and
+  the matching overload in `core/ui.ts:1327`; both switch to `rich-text-x` over the plain
+  provider, after which `ui_richedit.ts` keeps `RichViewer` only.
+
+  Proposal, written before the code, because the entry above is thin where it matters. The
+  builder is a datapath consumer and the design says the editor binds no datapath ("What
+  deliberately does not change"): a consumer writes a provider over the value at the path. The
+  builder needs that provider, and nothing in the repo is it yet. What the stage does:
+
+  - A bound widget, `RichTextArea` (`rich-text-area-x`) in `widgets/richtext/textarea.ts`,
+    takes the builder's place the way `TextArea` does for the plain case. It holds a
+    `PlainDoc`, a `DocumentSession` over `PlainProvider` on the widget's `ctx.toolstack`, and
+    hosts one `rich-text-x` in its shadow root. `value` is the block texts joined by newlines;
+    `value`, `on_change` (kept as the deprecated shim the DOM-events rule asks for) and a
+    `change` event match the old widget's surface. `internalDisabled` makes the
+    editor's root non-editable.
+  - Reads: `updateFromPath` rebuilds the document from the path's lines when the value differs
+    from the one the widget last wrote, and reports it through `PlainProvider.notifyChange` so
+    the editor re-renders. Writes: the session's `onChange` joins the blocks and writes the path
+    with `ctx.api.setValue` (raw, so watchers wake), plus `massSetProp` when `mass_set_path`
+    is set. No `DataPathSetOp`: the `DocEditOp` already on the stack is the undo entry, and its
+    undo delivers a change that writes the string again. That keeps the design's rule (one
+    undo entry per typing run, never a string set per keystroke) while the path stays in sync.
+  - The string at the path is text. The old widget stored `innerHTML`; the reference provider
+    has no HTML serialization, and inventing one here would be the markdown provider decision
+    the task 3 note below defers. Marks live in the session for the widget's lifetime and are
+    not persisted through the path. Recorded as a deviation from the old widget's behaviour, not
+    from the design.
+  - `DocumentSession` accepts an `IToolStack` instead of a `ToolStack`, since `ctx.toolstack`
+    is typed `IToolStack` and the session only calls `foldOrExec`, `undo` and `redo`. The
+    editor passes its `RichTextContext` to `undo`/`redo`, which `IToolStack` declares and
+    `ToolStack` ignores. The example's `_appstate.toolstack` workaround from stage 7 goes with
+    it.
+  - `textareaImpl` creates `rich-text-area-x` for `isRichText` or `RICH_TEXT_STRING`;
+    `Container.textarea` returns `TextArea<CTX> | RichTextArea<CTX>` and keeps `isRichEdit`.
+    `RichEditor` and its `rich-text-editor-x` tag are deleted from `ui_richedit.ts`, which keeps
+    `RichViewer`; the type imports in `ui.ts` and `container_widgets.ts` follow. The barrel loses
+    `RichEditor` and gains `RichTextArea` (fixture regenerated, diff read). `documentation/
+richtext.md` and `container.md` describe the bound widget; `datapathUpdateNotify.md`'s
+    inventory rows are history and stay.
+  - Tests: a vitest for the binding (path to document, edit to path, undo restores the path,
+    external write re-renders) and a Playwright case on a `RICH_TEXT_STRING` property in the
+    example's Rich Text tab, so the builder path is exercised end to end.
 
 No markdown library replaces `marked`. The design keeps markdown on the consumer's side: a
 markdown-backed document is a provider over a mutable holder (see the design's "The model the

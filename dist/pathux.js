@@ -39829,7 +39829,7 @@ function textareaImpl(self2, datapath, value = "", packflag = 0, mass_set_path, 
   if (prop !== void 0) {
     isRichText = isRichText ?? Boolean(prop.flag & PropFlags.RICH_TEXT_STRING);
   }
-  const ret = UIBase.createElement(isRichText ? "rich-text-editor-x" : "text-area-x");
+  const ret = UIBase.createElement(isRichText ? "rich-text-area-x" : "text-area-x");
   ret.ctx = self2.ctx;
   ret.packflag |= packflag;
   if (value !== void 0) {
@@ -44217,209 +44217,6 @@ function widgetPathOf(owner, scope) {
 
 // scripts/widgets/ui_richedit.ts
 init_ui_base();
-init_simple_events();
-var RichEditor = class extends TextBoxBase {
-  _internalDisabled;
-  _value;
-  textOnlyMode;
-  styletag;
-  controls;
-  textarea;
-  _focus;
-  constructor() {
-    super();
-    this._internalDisabled = false;
-    this._value = "";
-    this._focus = 0;
-    this.textOnlyMode = false;
-    this.styletag = document.createElement("style");
-    this.styletag.textContent = `
-      div.rich-text-editor-x {
-        width        :   100%;
-        height       :   100%;
-        min-height   :   150px;
-        overflow     :   scroll;
-        padding      :   5px;
-        white-space  :   pre-wrap;
-      }
-
-      rich-text-editor-x {
-        display        : flex;
-        flex-direction : column;
-      }
-    `;
-    this.shadow.appendChild(this.styletag);
-    const controls = this.controls = UIBase.createElement("rowframe-x");
-    const makeicon = (icon, description, cb) => {
-      const btn = controls.iconbutton(icon, description, cb);
-      btn.iconsheet = 1;
-      btn.overrideDefault("padding", 3);
-      return btn;
-    };
-    makeicon(Icons.BOLD, "Bold", () => {
-      document.execCommand("bold");
-    });
-    makeicon(Icons.ITALIC, "Italic", () => {
-      document.execCommand("italic");
-    });
-    makeicon(Icons.UNDERLINE, "Underline", () => {
-      document.execCommand("underline");
-    });
-    makeicon(Icons.STRIKETHRU, "Strikethrough", () => {
-      document.execCommand("strikeThrough");
-    });
-    controls.background = this.getDefault("background-color");
-    controls.checkInit();
-    this.shadow.appendChild(controls);
-    this.textarea = document.createElement("div");
-    this.textarea.contentEditable = "true";
-    this.textarea.setAttribute("class", "rich-text-editor-x");
-    this.textarea.style.font = this.getDefault("DefaultText").genCSS();
-    this.textarea.style.backgroundColor = this.getDefault("background-color");
-    this.textarea.setAttribute("white-space", "pre-wrap");
-    this.textarea.addEventListener("keydown", (e) => {
-      if (e.keyCode === keymap["S"] && e.shiftKey && (e.ctrlKey || e.metaKey)) {
-        this.toggleStrikeThru();
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    });
-    this.textarea.addEventListener("focus", () => {
-      this._focus = 1;
-      this.setCSS();
-    });
-    this.textarea.addEventListener("blur", () => {
-      this._focus = 0;
-      this.setCSS();
-    });
-    document.execCommand("styleWithCSS", true);
-    window.ta = this;
-    this.textarea.addEventListener("selectionchange", () => {
-      console.log("sel1");
-    });
-    document.addEventListener("selectionchange", () => {
-      console.log("sel2", document.getSelection()?.startNode);
-    });
-    this.textarea.addEventListener("input", () => {
-      if (this.internalDisabled) {
-        return;
-      }
-      let text2;
-      if (this.textOnlyMode) {
-        text2 = this.textarea.innerText;
-      } else {
-        text2 = this.textarea.innerHTML;
-      }
-      if (this.textOnlyMode && text2 === this._value) {
-        console.log("detected formatting change");
-        return;
-      }
-      this._value = text2;
-      if (this.hasAttribute("datapath")) {
-        const path = this.getAttribute("datapath");
-        this.setPathValue(this.ctx, path, this.value);
-      }
-      if (this.on_change) {
-        this.on_change(this._value);
-      }
-      if (this.oninput) {
-        this.oninput(this._value);
-      }
-      this.dispatchEvent(new CustomEvent("input"));
-      this.dispatchEvent(new CustomEvent("change"));
-    });
-    this.shadow.appendChild(this.textarea);
-  }
-  formatStart() {
-  }
-  formatLine(line, text2) {
-    return line;
-  }
-  toggleStrikeThru() {
-    console.log("strike thru!");
-    document.execCommand("strikeThrough");
-  }
-  formatEnd() {
-  }
-  init() {
-    super.init();
-    window.rc = this;
-    document.execCommand("defaultParagraphSeparator", false, "div");
-    this.setCSS();
-  }
-  get internalDisabled() {
-    return this._internalDisabled;
-  }
-  set internalDisabled(val) {
-    const changed = !!this._internalDisabled !== !!val;
-    if (changed || 1) {
-      this._internalDisabled = !!val;
-      super.internalDisabled = val;
-      this.textarea.internalDisabled = val;
-      this.textarea.contentEditable = String(!val);
-      this.setCSS();
-    }
-  }
-  set value(val) {
-    this._value = val;
-    if (this.textOnlyMode) {
-      let val2 = "";
-      for (const l of val.split("\n")) {
-        val2 += l + "<br>";
-      }
-      val = val2;
-    }
-    this.textarea.innerHTML = val;
-  }
-  get value() {
-    return this._value;
-  }
-  setCSS() {
-    super.setCSS();
-    this.controls.background = this.getDefault("background-color");
-    if (this._focus) {
-      this.textarea.style.border = `2px dashed ${this.getDefault("focus-border-color")}`;
-    } else {
-      this.textarea.style.border = "none";
-    }
-    if (this.style.font) {
-      this.textarea.style.font = this.style.font;
-    } else {
-      this.textarea.style.font = this.getDefault("DefaultText").genCSS();
-    }
-    if (this.style.color) {
-      this.textarea.style.color = this.style.color;
-    } else {
-      this.textarea.style.color = this.getDefault("DefaultText").color;
-    }
-    if (this.disabled) {
-      this.textarea.style.backgroundColor = this.getDefault("DisabledBG");
-    } else {
-      this.textarea.style.backgroundColor = this.getDefault("background-color");
-    }
-  }
-  updateFromPath(rawValue, info) {
-    if (!info.resolved) {
-      console.warn("invalid datapath " + info.path);
-      this.internalDisabled = true;
-      return;
-    }
-    this.internalDisabled = false;
-    const value = rawValue;
-    if (value !== this._value) {
-      console.log("text change");
-      this.value = value;
-    }
-  }
-  static define() {
-    return {
-      tagname: "rich-text-editor-x",
-      style: "richtext",
-      modalKeyEvents: true
-    };
-  }
-};
-UIBase.internalRegister(RichEditor);
 var RichViewer = class extends UIBase {
   contents;
   _value;
@@ -45784,7 +45581,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       return;
     }
     this.endRun();
-    await session.toolstack.undo();
+    await session.toolstack.undo(this.richCtx);
     this.endRun();
   }
   async redo() {
@@ -45793,7 +45590,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       return;
     }
     this.endRun();
-    await session.toolstack.redo();
+    await session.toolstack.redo(this.richCtx);
     this.endRun();
   }
   /** Toggles `mark` over the selection; nothing happens on a collapsed one. */
@@ -46771,6 +46568,117 @@ var PlainProvider = class {
 function plainDocFromLines(lines, makeId) {
   return { blocks: lines.map((text2, i) => ({ id: makeId(i), text: text2, marks: [] })) };
 }
+
+// scripts/widgets/richtext/textarea.ts
+init_ui_base();
+var LINE_BREAK = /\r\n|\r|\n/;
+var RichTextArea = class extends UIBase {
+  editor;
+  provider = new PlainProvider();
+  doc = plainDocFromLines([""], () => newBlockId());
+  _session;
+  /** The value last written to or read from the path, so a watcher echo is not a change. */
+  lastValue = "";
+  constructor() {
+    super();
+    const style = document.createElement("style");
+    style.textContent = `
+      :host {
+        display : block;
+      }
+
+      rich-text-x {
+        width : 100%;
+      }
+    `;
+    this.shadow.appendChild(style);
+    this.editor = UIBase.createElement(
+      RichTextEditor.define().tagname
+    );
+    this.editor.setAttribute("part", "editor");
+    this.shadow.appendChild(this.editor);
+  }
+  // The DocEditOp on the stack is the undo entry; a DataPathSetOp per write would double it
+  get useDataPathUndo() {
+    return false;
+  }
+  set useDataPathUndo(_val) {
+  }
+  /** The session the field's editor shows; `undefined` until the widget has a context. */
+  get session() {
+    return this._session;
+  }
+  get value() {
+    return this.doc.blocks.map((block) => block.text).join("\n");
+  }
+  /** Replaces the document; the path is not written and no `change` fires. */
+  set value(value) {
+    this.load(value);
+  }
+  init() {
+    super.init();
+    this.editor.checkInit();
+    this.openSession();
+  }
+  update() {
+    super.update();
+    this.openSession();
+  }
+  __updateDisable(val) {
+    super.__updateDisable(val);
+    this.editor.root.contentEditable = String(!val);
+  }
+  updateFromPath(rawValue, info) {
+    if (!info.resolved) {
+      this.internalDisabled = true;
+      return;
+    }
+    this.internalDisabled = false;
+    const value = rawValue === void 0 || rawValue === null ? "" : String(rawValue);
+    if (value !== this.lastValue) {
+      this.load(value);
+    }
+  }
+  openSession() {
+    if (this._session !== void 0 || this.ctx === void 0) {
+      return;
+    }
+    const session = new DocumentSession(this.doc, this.provider, this.ctx.toolstack);
+    session.onChange(() => this.pushValue());
+    this._session = session;
+    this.editor.session = session;
+  }
+  load(value) {
+    this.lastValue = value;
+    const removedBlocks = this.doc.blocks.map((block) => block.id);
+    this.doc.blocks = plainDocFromLines(value.split(LINE_BREAK), () => newBlockId()).blocks;
+    this.provider.notifyChange(this.doc, {
+      dirtyBlocks: this.doc.blocks.map((block) => block.id),
+      removedBlocks
+    });
+  }
+  pushValue() {
+    const value = this.value;
+    if (value === this.lastValue) {
+      return;
+    }
+    this.lastValue = value;
+    const path = this.getAttribute("datapath");
+    if (path !== null && this.ctx !== void 0) {
+      this.setPathValue(this.ctx, path, value);
+    }
+    this.on_change?.(value);
+    this.dispatchEvent(new CustomEvent("change", { detail: { value } }));
+  }
+  static define() {
+    return {
+      tagname: "rich-text-area-x",
+      style: "richtext",
+      modalKeyEvents: true
+    };
+  }
+};
+UIBase.internalRegister(RichTextArea);
 
 // scripts/path-controller/curve/curve1d_utils.ts
 init_curve1d_base();
@@ -72211,7 +72119,7 @@ export {
   Refusal,
   RegionMode,
   ReportProperty,
-  RichEditor,
+  RichTextArea,
   RichTextContext,
   RichTextEditor,
   RichViewer,

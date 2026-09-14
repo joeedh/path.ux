@@ -254,7 +254,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     }
 
     this.endRun();
-    await session.toolstack.undo();
+    await session.toolstack.undo(this.richCtx);
     this.endRun();
   }
 
@@ -265,7 +265,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     }
 
     this.endRun();
-    await session.toolstack.redo();
+    await session.toolstack.redo(this.richCtx);
     this.endRun();
   }
 

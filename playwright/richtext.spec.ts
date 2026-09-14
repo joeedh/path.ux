@@ -35,7 +35,10 @@ declare global {
   interface Window {
     __release?: () => void;
     __globalUndos?: number;
-    _appstate: { toolstack: { length: number; undo(): Promise<void> } };
+    _appstate: {
+      toolstack: { length: number; undo(): Promise<void> };
+      viewctx: { data: { text: string } };
+    };
   }
 }
 
@@ -394,4 +397,39 @@ test("Ctrl+Z with the pointer over the tab bar undoes the document, not the app"
 
   await expect.poll(() => texts(editor)).toEqual(ORIGINAL);
   expect(await page.evaluate(() => window.__globalUndos)).toBe(0);
+});
+
+test("a rich text property bound through the container writes the model and undoes with the app", async ({
+  page,
+}) => {
+  await page.goto(PLAYWRIGHT_HOST);
+  await page.getByTestId("tab-richtext").click();
+
+  const field = page.locator('[data-testid="richtext-field"]');
+  const editor = field.locator("[part=editor]");
+  await expect(editor).toBeVisible();
+  await expect.poll(() => texts(editor)).toEqual([""]);
+
+  const modelText = () => page.evaluate(() => window._appstate.viewctx.data.text);
+  const fieldValue = () => field.evaluate((el) => (el as HTMLElement & { value: string }).value);
+  const appLength = () => page.evaluate(() => window._appstate.toolstack.length);
+  const before = await appLength();
+
+  await selectIn(editor, 0, 0);
+  await page.keyboard.type("Bound");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("text");
+
+  await expect.poll(() => texts(editor)).toEqual(["Bound", "text"]);
+  await expect.poll(modelText).toBe("Bound\ntext");
+  expect(await fieldValue()).toBe("Bound\ntext");
+  // one entry for the typing run, one for the split, one for the run after it
+  expect(await appLength()).toBe(before + 3);
+
+  await page.keyboard.press("Control+z");
+  await page.keyboard.press("Control+z");
+  await page.keyboard.press("Control+z");
+  await expect.poll(() => texts(editor)).toEqual([""]);
+  await expect.poll(modelText).toBe("");
+  expect(await appLength()).toBe(before + 3);
 });

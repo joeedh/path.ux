@@ -4,7 +4,8 @@ import * as util from "../../path-controller/util/util";
 import { UIBase, iconSheetFromPackFlag, PackFlags, Icons } from "../ui_base";
 import type { IContextBase } from "../context_base";
 import type { KnownDataPath } from "../datapath_registry";
-import type { RichViewer, RichEditor } from "../../widgets/ui_richedit";
+import type { RichViewer } from "../../widgets/ui_richedit";
+import type { RichTextArea } from "../../widgets/richtext/textarea";
 import type { ColorPicker, ColorPickerButton } from "../../widgets/ui_colorpicker2";
 import type { Container, Label } from "../ui";
 import type { TextArea } from "../../widgets/ui_textarea";
@@ -343,8 +344,8 @@ export function textareaImpl<CTX extends IContextBase, SELF extends string>(
     isRichText = isRichText ?? Boolean(prop.flag & PropFlags.RICH_TEXT_STRING);
   }
 
-  const ret = UIBase.createElement(isRichText ? "rich-text-editor-x" : "text-area-x") as
-    RichEditor<CTX> | TextArea<CTX>;
+  const ret = UIBase.createElement(isRichText ? "rich-text-area-x" : "text-area-x") as
+    RichTextArea<CTX> | TextArea<CTX>;
   ret.ctx = self.ctx;
 
   ret.packflag |= packflag;

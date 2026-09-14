@@ -6,10 +6,10 @@ browser input into `EditOp`s, runs them through a toolstack as `DocEditOp`s, and
 what the provider says changed. The design and its reasoning live in
 [plans/rich-text-provider.md](plans/rich-text-provider.md); this page is the consumer's view.
 
-Everything below is exported from the `pathux` barrel: `RichTextEditor`, `DocumentSession`,
-`RichTextContext`, `DocEditOp`, `PlainProvider`, `plainDocFromLines`, `newBlockId`,
-`ATOM_CHAR`, `CARET_SLOT` and the interfaces. `RichEditor` (`rich-text-editor-x`) is deprecated
-in favour of this widget.
+Everything below is exported from the `pathux` barrel: `RichTextEditor`, `RichTextArea`,
+`DocumentSession`, `RichTextContext`, `DocEditOp`, `PlainProvider`, `plainDocFromLines`,
+`newBlockId`, `ATOM_CHAR`, `CARET_SLOT` and the interfaces. The `execCommand`-driven
+`RichEditor` (`rich-text-editor-x`) is gone; `RichViewer` (`html-viewer-x`) stays.
 
 ## The model
 
@@ -102,7 +102,7 @@ context's. `editor.richCtx` exposes it.
   selection; `selection()` reads it as document positions.
 - `toggleMark(name)` toggles a mark over the selection. The toolbar built from `marks()` does
   the same and hides under a `no-toolbar` attribute.
-- `undo()` and `redo()` run the session's toolstack. Ctrl+Z, Ctrl+Y and Ctrl+Shift+Z are
+- `undo()` and `redo()` run the session's toolstack, passing the editor's `RichTextContext`. Ctrl+Z, Ctrl+Y and Ctrl+Shift+Z are
   handled on `keydown`; Ctrl+B, Ctrl+I and Ctrl+U arrive from the browser as formatting input
   and Ctrl+Shift+S toggles `strikethrough`. Escape blurs, and Tab is refused.
 - Copy and cut write the selection through `toClipboard`; paste and drop read through
@@ -116,6 +116,25 @@ The editor never patches the DOM optimistically. Every `beforeinput` is prevente
 an op; the DOM changes when the op's result comes back, which is after at least one `await` on
 the toolstack. Positions read from the DOM in the meantime are mapped through the ops still
 pending, so fast typing lands in order even when the stack is busy.
+
+## Binding a string property
+
+The editor itself binds no datapath: binding a whole document to a string path would make
+every keystroke a `DataPathSetOp`. `RichTextArea` (`rich-text-area-x`,
+`scripts/widgets/richtext/textarea.ts`) is the bound form, and what `Container.textarea`
+builds for a `StringProperty` with `RICH_TEXT_STRING` set (`setRichText(true)`) or an
+explicit `isRichEdit`; a plain multi-line property still gets `TextArea`.
+
+- The widget holds a `PlainDoc` and a `DocumentSession` over `PlainProvider` on the context's
+  toolstack, and hosts one `rich-text-x` (`field.editor`, with `field.session`), exposed as
+  `::part(editor)`.
+- `value` is the block texts joined by newlines. A write to the path splits it into blocks and
+  re-renders; marks live in the session for the widget's lifetime and are not written back.
+- Every edit is the `DocEditOp` the editor pushes on the app's stack. Its result writes the
+  path without an undo entry of its own, so undo restores the path through the same op; the
+  session outlives the widget, so an undo after the field is rebuilt still lands.
+- A `change` event (`detail: { value }`) fires on every write; `on_change` is the deprecated
+  callback form.
 
 ## Composition (IME and dead keys)
 

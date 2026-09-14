@@ -215,7 +215,7 @@ describe("DocEditOp", () => {
 
   test("undo applies the inverse and delivers through the session without a source", async () => {
     await submit(insert("a", 5, ","));
-    await ctx.toolstack.undo();
+    await ctx.toolstack.undo(ctx);
 
     expect(texts()).toEqual(["Hello world", "second line"]);
     expect(changes).toHaveLength(1);
@@ -226,8 +226,8 @@ describe("DocEditOp", () => {
 
   test("redo reapplies the edit and delivers through the session", async () => {
     await submit(insert("a", 5, ","));
-    await ctx.toolstack.undo();
-    await ctx.toolstack.redo();
+    await ctx.toolstack.undo(ctx);
+    await ctx.toolstack.redo(ctx);
 
     expect(texts()).toEqual(["Hello, world", "second line"]);
     expect(changes).toHaveLength(2);
@@ -248,11 +248,11 @@ describe("DocEditOp", () => {
     const head = ctx.toolstack[0] as DocEditOp;
     expect(head.op).toEqual(insert("a", 11, "!?."));
 
-    await ctx.toolstack.undo();
+    await ctx.toolstack.undo(ctx);
     expect(texts()[0]).toBe("Hello world");
     expect(changes).toHaveLength(1);
 
-    await ctx.toolstack.redo();
+    await ctx.toolstack.redo(ctx);
     expect(texts()[0]).toBe("Hello world!?.");
   });
 
@@ -264,9 +264,9 @@ describe("DocEditOp", () => {
     expect(texts()[0]).toBe("Hello wor");
     expect((ctx.toolstack[0] as DocEditOp).op).toEqual(del("a", 9, 11));
 
-    await ctx.toolstack.undo();
+    await ctx.toolstack.undo(ctx);
     expect(texts()[0]).toBe("Hello world");
-    await ctx.toolstack.redo();
+    await ctx.toolstack.redo(ctx);
     expect(texts()[0]).toBe("Hello wor");
   });
 
@@ -278,7 +278,7 @@ describe("DocEditOp", () => {
     expect((ctx.toolstack[0] as DocEditOp).op).toEqual(del("a", 0, 2));
     expect(ctx.toolstack).toHaveLength(1);
 
-    await ctx.toolstack.undo();
+    await ctx.toolstack.undo(ctx);
     expect(texts()[0]).toBe("Hello world");
   });
 
@@ -289,7 +289,7 @@ describe("DocEditOp", () => {
     expect(next.pushed).toBe(true);
     expect(ctx.toolstack).toHaveLength(2);
 
-    await ctx.toolstack.undo();
+    await ctx.toolstack.undo(ctx);
     expect(texts()[0]).toBe("Hello world!");
   });
 
@@ -307,8 +307,8 @@ describe("DocEditOp", () => {
     expect(ctx.toolstack).toHaveLength(3);
     expect(texts()).toEqual(["Hello world!", "?", "second line"]);
 
-    await ctx.toolstack.undo();
-    await ctx.toolstack.undo();
+    await ctx.toolstack.undo(ctx);
+    await ctx.toolstack.undo(ctx);
     expect(texts()).toEqual(["Hello world!", "second line"]);
   });
 
@@ -354,12 +354,12 @@ describe("DocEditOp", () => {
     await submit(insert("a", 5, ","));
     session.dispose();
 
-    await ctx.toolstack.undo();
+    await ctx.toolstack.undo(ctx);
     expect(texts()[0]).toBe("Hello, world");
     expect(changes).toEqual([]);
     expect(ctx.toolstack.cur).toBe(-1);
 
-    await ctx.toolstack.redo();
+    await ctx.toolstack.redo(ctx);
     expect(texts()[0]).toBe("Hello, world");
   });
 
@@ -405,8 +405,8 @@ describe("DocEditOp", () => {
     await submit(insert("a", 11, "!"));
     await submit(insert("a", 12, "?"));
     await submit(insert("a", 13, "."), 1);
-    await ctx.toolstack.undo();
-    await ctx.toolstack.redo();
+    await ctx.toolstack.undo(ctx);
+    await ctx.toolstack.redo(ctx);
 
     expect(SavedToolDefaults.valuesFor("richtext.edit")).toEqual(before);
     expect(before.op ?? "").toBe("");

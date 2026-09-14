@@ -29,6 +29,7 @@ export * from "./widgets/richtext/provider";
 export * from "./widgets/richtext/context";
 export * from "./widgets/richtext/ops";
 export * from "./widgets/richtext/editor";
+export * from "./widgets/richtext/textarea";
 export * from "./widgets/richtext/providers/plain";
 export * from "./widgets/ui_curvewidget";
 export * from "./widgets/ui_panel";

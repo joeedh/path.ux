@@ -162,10 +162,15 @@ export class PropsEditor extends Editor {
     const appDoc = new DocumentSession(
       plainDocFromLines(["On the app's toolstack.", ""], () => newBlockId()),
       provider,
-      _appstate.toolstack
+      this.ctx.toolstack
     );
     tab.label("One editor on the app's toolstack, so Edit > Undo undoes it too:");
     makeEditor(appDoc, "richtext-editor-app");
+
+    tab.label("A rich text property, bound through the container's textarea builder:");
+    const field = tab.prop("data.text");
+    field.setAttribute("data-testid", "richtext-field");
+    field.style.width = "420px";
   }
 
   exportTheme() {

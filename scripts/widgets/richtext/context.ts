@@ -1,7 +1,7 @@
 import { toLockedImpl } from "../../path-controller/controller/contextNew";
 import type { DataAPI } from "../../path-controller/controller/controller";
 import type { Screen } from "../../screen/FrameManager";
-import type { ToolStack } from "../../path-controller/toolsys/toolstack";
+import type { IToolStack } from "../../path-controller/controller/controller_abstract";
 import type { IContextBase } from "../../core/context_base";
 import type { DocChange, DocumentProvider } from "./provider";
 
@@ -25,7 +25,7 @@ export class DocumentSession<Doc = unknown> {
   constructor(
     readonly doc: Doc,
     readonly provider: DocumentProvider<Doc>,
-    readonly toolstack: ToolStack,
+    readonly toolstack: IToolStack,
     id = `doc${++sessionCounter}`
   ) {
     this.id = id;
