@@ -1,4 +1,4 @@
-import { CARET_SLOT } from "./provider";
+import { ATOM_CHAR, CARET_SLOT } from "./provider";
 import type { BlockId, DocPos, DocRange, EditOp } from "./provider";
 
 // Both directions of the map are a walk over one block's element. An atom counts 1 and its
@@ -78,6 +78,34 @@ function prefixLength(parent: Node, count: number) {
   }
 
   return len;
+}
+
+/**
+ * The block's flattened text as the position walk counts it: an atom is one `ATOM_CHAR`, a
+ * caret slot is nothing, every other character is itself. The composition diff reads a block
+ * back through this so its coordinates match the position map.
+ */
+export function blockTextOf(element: Element): string {
+  let out = "";
+
+  const walk = (parent: Node) => {
+    for (const child of parent.childNodes) {
+      if (isAtom(child)) {
+        out += ATOM_CHAR;
+      } else if (isText(child)) {
+        for (const ch of child.data) {
+          if (ch !== CARET_SLOT) {
+            out += ch;
+          }
+        }
+      } else {
+        walk(child);
+      }
+    }
+  };
+
+  walk(element);
+  return out;
 }
 
 /** The element rendering `block`, which is always a direct child of the editable root. */

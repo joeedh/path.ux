@@ -6,7 +6,7 @@ IME commit and a dead-key accent reach the document as ordinary edits. Read that
 "What the browser still does", "Position mapping" and the Findings first; this plan assumes
 them.
 
-Status: written and pressure tested (18 findings, all folded in; see the end). Stages 1 and 2 done.
+Status: written and pressure tested (18 findings, all folded in; see the end). Stages 1 to 3 done.
 Stage status is recorded under each stage as it lands.
 
 ## What the browsers do
@@ -279,6 +279,31 @@ Done. Twenty-three tests. What the module answers and where it departs from the 
 - `rich-text-provider.md`: the `mapInput` table row and "What the browser still does" gain a
   sentence pointing here; the Scope bullet moves composition from out to in with the fallback
   stated.
+
+Done. Fourteen composition Playwright tests pass, three on a bare `contenteditable` div and
+the rest on `rich-text-x`; the rest of the suite is unchanged with the one pre-existing
+`theme_vars` failure. What landed and where it departs from the text above:
+
+- `positions.ts` exports `blockTextOf(element)`, the flattening walk the diff reads a block
+  back through. `PendingMapper` already took its op list and view as parameters from task 2, so
+  nothing changed there; the editor's `pending` entries now carry `reflected`, and
+  `throughPending` maps through the non-reflected ops only.
+- `onCompositionStart` snapshots the composed block's id, its `blockTextOf`, the unmapped
+  selection, the non-reflected pending ops, and a frozen `PendingDocView`, and does not end the
+  run.
+- `onCompositionEnd` takes the observer's records first, diffs with `composedEdit`, maps the
+  range through the snapshot's ops against the frozen view, and submits the edit as reflected
+  through `submit()` so a collapsed insert folds. No change re-renders the block and restores
+  the caret; an unattributable one takes the root reconcile and the `refused` event.
+- `applyResult` and `docChanged` hold the composed block's render, its removal and every caret
+  write while composing; `commit`'s catch takes the root reconcile for a reflected op.
+- `onBeforeInput`, `onKeyDown`, `toggleMark` and `onCopy` return early while composing or when
+  the event carries `isComposing`; `onBeforeInput` checks that before `preventDefault`, so a
+  cancelable `beforeinput` inside a composition is neither prevented nor mapped.
+- Departure from the test list: the synthetic-Escape test asserts the composition stays open,
+  since the editor ignores a composing keydown and no longer blurs on Escape during a
+  composition; the Firefox recordings in the tasklist cover a real IME's Escape. No barrel
+  change, since `composition.ts` and `positions.ts` stay internal.
 
 ### Stage 4 — Android, after stage 1's recording
 

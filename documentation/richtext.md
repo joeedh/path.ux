@@ -138,12 +138,24 @@ explicit `isRichEdit`; a plain multi-line property still gets `TextArea`.
 
 ## Composition (IME and dead keys)
 
-The first implementation refuses composition: on `compositionend` the editor re-renders the
-block from the provider, puts the caret back where the composition started, and dispatches a
-`refused` event with `{ inputType: "insertCompositionText" }`. Nothing typed through an IME or a
-dead key reaches the document, which on a dead-key layout means every accented character.
-[plans/rich-text-provider.md](plans/rich-text-provider.md) says why, and task 4 of its
-tasklist is the plan that lifts it.
+The editor accepts composition. The browser mutates the composed block during the composition,
+and at `compositionend` the editor reads the block's text back, diffs it against a snapshot
+taken at `compositionstart`, and submits the difference as an ordinary `insertText` or
+`deleteRange`. A CJK commit, a dead-key accent and a press-and-hold accent all land as one
+edit; a collapsed insertion folds into the typing run in progress, so `café` on a dead-key
+layout is one undo entry. Nothing new reaches the provider, and marks extend exactly as they
+do for a keystroke at the same place.
+
+During the composition the browser owns the composed block and the caret. A result that
+arrives meanwhile (another editor over the session, an undo) applies to the document, but the
+composed block's render, its removal and every caret write are held until `compositionend`;
+other blocks render at once. [plans/rich-text-ime.md](plans/rich-text-ime.md) is the design.
+
+The refusal path remains as the fallback, and the `refused` event with it. It fires with
+`{ inputType: "insertCompositionText" }` only when the diff cannot attribute what the browser
+did: a composition that landed text outside any block, joined two blocks, or replaced a range
+away from the caret. The editor then re-renders the whole root and clamps the caret into the
+document.
 
 `playwright/richtext/composition.spec.ts` drives Chromium's IME over the Chrome DevTools
 Protocol and records the event sequences at the top of the file. Firefox has no synthetic IME
@@ -163,8 +175,8 @@ adding a language and its keyboard:
 Open the example app's Rich Text tab, then paste this into the browser console. It prints one
 line per event on the first editor, in the format the Playwright recorder uses, so a manual run
 and a CDP run read alike. The text it prints is the editable root's, read before the editor's
-own handler runs; a keydown that arrives during a composition is stopped before the editor's
-handler, so the IME's own answer to Escape is what gets recorded rather than the editor's blur.
+own handler runs. A keydown that arrives during a composition is stopped before the editor's
+handler; the editor already ignores such a keydown, so this only keeps the recording clean.
 
 ```js
 {
@@ -209,21 +221,20 @@ handler, so the IME's own answer to Escape is what gets recorded rather than the
 
 Then, with the caret at the end of "Hello, world." in the first editor:
 
-1. Switch to the Japanese IME, type `kan`, press Space to convert and Enter to commit. The text
-   must stay unchanged, the caret must stay put, and one `refused` event must fire; the
-   example logs it to the console.
+1. Switch to the Japanese IME, type `kan`, press Space to convert and Enter to commit. The
+   committed text must land in the block as one undo entry, the caret must sit after it, and
+   no `refused` event must fire.
 2. Repeat with Pinyin (`ni hao`, Space).
-3. Switch to Korean, in Hangul mode, and type `g`, `k`, `s`, `k`, then Space. The first three
-   compose 한; the fourth moves the ㄴ to a new syllable, 하 then 나. What matters in the
-   log is whether the fourth key commits 하 and opens a new composition, or edits the open one.
-4. Switch to United States-International and type `'e`, then a plain `e`. What matters is
-   whether the dead key arrives as a composition or as an ordinary `insertText` of `é`.
-5. Start a Japanese composition (`kan`) and press Escape until the composed text is gone. What
-   matters is the `text=` on the `compositionend` line: whether the composed text is still in
-   the DOM when the event fires.
+3. Switch to Korean, in Hangul mode, and type `g`, `k`, `s`, `k`, then Space. The result must
+   read 하나 in the block; each syllable is its own composition and both must land.
+4. Switch to United States-International and type `'e`, then a plain `e`. Both accented and
+   plain characters must land. On Windows the dead key never composes and arrives as a plain
+   `insertText`; the accent lands the same way a keystroke does.
+5. Start a Japanese composition (`kan`) and press Escape until the composed text is gone. The
+   document must stay unchanged and no `refused` event must fire, since the browser restores
+   the block's text before `compositionend`.
 
-The results of each run are recorded in the tasklist's stage 5 note
-(plans/rich-text-provider-tasks.md).
+The recorded runs are in the tasklist's stage 5 note (plans/rich-text-provider-tasks.md).
 
 ### Android and macOS
 

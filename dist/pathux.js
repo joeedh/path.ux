@@ -45161,6 +45161,26 @@ function prefixLength(parent, count2) {
   }
   return len;
 }
+function blockTextOf(element) {
+  let out = "";
+  const walk = (parent) => {
+    for (const child of parent.childNodes) {
+      if (isAtom(child)) {
+        out += ATOM_CHAR;
+      } else if (isText(child)) {
+        for (const ch of child.data) {
+          if (ch !== CARET_SLOT) {
+            out += ch;
+          }
+        }
+      } else {
+        walk(child);
+      }
+    }
+  };
+  walk(element);
+  return out;
+}
 function blockElement(root, block) {
   for (const child of root.children) {
     if (child.getAttribute(BLOCK_ATTR) === block) {
@@ -45393,6 +45413,64 @@ function mapThroughPending(pos, pending, doc) {
   return mapper.pos;
 }
 
+// scripts/widgets/richtext/composition.ts
+function commonPrefix(a2, b) {
+  const max = Math.min(a2.length, b.length);
+  let i = 0;
+  while (i < max && a2[i] === b[i]) {
+    i++;
+  }
+  return i;
+}
+function commonSuffix(a2, b) {
+  const max = Math.min(a2.length, b.length);
+  let i = 0;
+  while (i < max && a2[a2.length - 1 - i] === b[b.length - 1 - i]) {
+    i++;
+  }
+  return i;
+}
+function composedEdit(base, dom, selection) {
+  if (base === dom) {
+    return void 0;
+  }
+  const selStart = Math.max(0, Math.min(selection[0], selection[1], base.length));
+  const selEnd = Math.max(0, Math.min(Math.max(selection[0], selection[1]), base.length));
+  const prefix2 = commonPrefix(base, dom);
+  const suffix = commonSuffix(base, dom);
+  const overlap = Math.max(0, prefix2 + suffix - Math.min(base.length, dom.length));
+  const replaced = base.length - prefix2 - suffix + overlap;
+  const start = Math.max(prefix2 - overlap, Math.min(prefix2, selStart));
+  const end = start + replaced;
+  if (start > selEnd || end < selStart) {
+    return { refused: `the change at ${start} is away from the selection at ${selStart}` };
+  }
+  const from = Math.min(start, selStart);
+  const to = Math.max(end, selEnd);
+  const text2 = dom.slice(from, dom.length - (base.length - to));
+  if (text2.includes(ATOM_CHAR)) {
+    return { refused: "the composed text contains an atom" };
+  }
+  if (text2.includes(CARET_SLOT)) {
+    return { refused: "the composed text contains a caret slot" };
+  }
+  return { range: [from, to], text: text2 };
+}
+var BLOCK_ATTR2 = "data-doc-block";
+function rootReflects(root, blocks) {
+  const kids = root.childNodes;
+  if (kids.length !== blocks.length) {
+    return false;
+  }
+  for (let i = 0; i < kids.length; i++) {
+    const kid = kids[i];
+    if (kid.nodeType !== 1 || kid.getAttribute(BLOCK_ATTR2) !== blocks[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // scripts/widgets/richtext/editor.ts
 init_ui_base();
 init_theme_schema();
@@ -45461,7 +45539,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
   /** Where the next op must act to stay in the typing run in progress. */
   runAnchor;
   composing = false;
-  composeAt;
+  snapshot;
   observer;
   syncingToolbar = false;
   onSelectionChange = () => this.selectionChanged();
@@ -45594,6 +45672,9 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
   }
   /** Toggles `mark` over the selection; nothing happens on a collapsed one. */
   toggleMark(mark2) {
+    if (this.composing) {
+      return;
+    }
     const range = this.selectionThroughPending();
     if (range === void 0 || isCollapsed(range)) {
       return;
@@ -45605,8 +45686,11 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     return [];
   }
   onBeforeInput(e) {
+    if (this.composing || e.isComposing) {
+      return;
+    }
     e.preventDefault();
-    if (this.composing || this._session === void 0 || this._session.disposed) {
+    if (this._session === void 0 || this._session.disposed) {
       return;
     }
     for (const op of this.mapInput(e)) {
@@ -45614,6 +45698,9 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     }
   }
   onKeyDown(e) {
+    if (this.composing || e.isComposing) {
+      return;
+    }
     const mod = e.ctrlKey || e.metaKey;
     const key = e.key.toLowerCase();
     if (e.key === "Escape") {
@@ -45635,6 +45722,9 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
   }
   /** Writes the selection through `toClipboard`; a cut then commits its deletion on its own. */
   onCopy(e, cut) {
+    if (this.composing) {
+      return;
+    }
     const session = this._session;
     const range = this.selectionThroughPending();
     if (session === void 0 || range === void 0 || isCollapsed(range) || !e.clipboardData) {
@@ -45651,19 +45741,91 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       this.endRun();
     }
   }
+  /** Freezes the composed block and the document, so the composition can be diffed at the end. */
   onCompositionStart() {
     this.composing = true;
-    this.composeAt = this.selectionThroughPending()?.head;
-    this.endRun();
+    this.snapshot = void 0;
+    const range = this.domRange();
+    const view = this.view();
+    if (range === void 0 || view === void 0) {
+      return;
+    }
+    const block = range.head.block;
+    const element = blockElement(this.root, block);
+    if (element === void 0) {
+      return;
+    }
+    const blocks = [...view.blocks];
+    const texts = new Map(blocks.map((id) => [id, view.blockText(id)]));
+    this.snapshot = {
+      block,
+      text: blockTextOf(element),
+      selection: range,
+      pending: this.pending.filter((e) => !e.reflected).map((e) => e.op),
+      view: { blocks, blockText: (id) => texts.get(id) ?? "" }
+    };
   }
+  /** Diffs the composed block back into an edit and submits it, or falls back to a re-render. */
   onCompositionEnd() {
+    this.observer?.takeRecords();
     this.composing = false;
-    const at = this.composeAt;
-    this.composeAt = void 0;
-    if (at !== void 0 && this.view() !== void 0) {
-      this.applyResult({ dirtyBlocks: [at.block], removedBlocks: [], selection: collapsed(at) });
-    } else {
-      this.observer?.takeRecords();
+    const snapshot = this.snapshot;
+    this.snapshot = void 0;
+    if (snapshot === void 0 || this._session === void 0 || this._session.disposed) {
+      this.refuseComposition(snapshot);
+      return;
+    }
+    const element = blockElement(this.root, snapshot.block);
+    const view = this.view();
+    if (element === void 0 || view === void 0 || !rootReflects(this.root, view.blocks)) {
+      this.refuseComposition(snapshot);
+      return;
+    }
+    const sel = snapshot.selection;
+    if (sel.anchor.block !== snapshot.block || sel.head.block !== snapshot.block) {
+      this.refuseComposition(snapshot);
+      return;
+    }
+    const edit = composedEdit(snapshot.text, blockTextOf(element), [
+      sel.anchor.offset,
+      sel.head.offset
+    ]);
+    if (edit === void 0) {
+      this.rerenderComposed(snapshot);
+      return;
+    }
+    if ("refused" in edit) {
+      this.refuseComposition(snapshot);
+      return;
+    }
+    const map3 = (offset) => mapThroughPending({ block: snapshot.block, offset }, snapshot.pending, snapshot.view);
+    const range = { anchor: map3(edit.range[0]), head: map3(edit.range[1]) };
+    const op = edit.text.length > 0 ? { type: "insertText", at: range, text: edit.text } : { type: "deleteRange", range };
+    this.submit(op, true);
+  }
+  /** Re-renders the composed block from the provider and restores the snapshot's caret. */
+  rerenderComposed(snapshot) {
+    const view = this.view();
+    if (view === void 0 || !view.blocks.includes(snapshot.block)) {
+      this.refuseComposition(snapshot);
+      return;
+    }
+    const caret = mapThroughPending(snapshot.selection.head, snapshot.pending, snapshot.view);
+    this.applyResult({
+      dirtyBlocks: [snapshot.block],
+      removedBlocks: [],
+      selection: collapsed(this.clampPos(caret, view))
+    });
+  }
+  /** The fallback: reconcile the whole root, clamp the caret, and report the composition refused. */
+  refuseComposition(snapshot) {
+    this.renderAll();
+    const view = this.view();
+    if (view !== void 0) {
+      const caret = snapshot !== void 0 ? mapThroughPending(snapshot.selection.head, snapshot.pending, snapshot.view) : this.domRange()?.head ?? { block: view.blocks[0], offset: 0 };
+      if (caret.block !== void 0) {
+        this.setSelection(collapsed(this.clampPos(caret, view)));
+      }
     }
     this.refuse("insertCompositionText");
   }
@@ -45763,7 +45925,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     return [{ type: "deleteRange", range: { anchor: start, head: end } }];
   }
   /** Ends the run in progress unless `op` continues it, then commits `op`. */
-  submit(op) {
+  submit(op, reflected = false) {
     const anchor = this.runAnchor;
     if (op.type === "insertText" && isCollapsed(op.at)) {
       if (anchor === void 0 || !samePos(op.at.head, anchor)) {
@@ -45781,10 +45943,10 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     } else {
       this.endRun();
     }
-    void this.commit(op);
+    void this.commit(op, reflected);
   }
   /** Runs `op` through the toolstack and applies its result once it has run. */
-  async commit(op) {
+  async commit(op, reflected = false) {
     const session = this._session;
     const ctx = this.richCtx;
     if (session === void 0 || ctx === void 0) {
@@ -45797,25 +45959,30 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       this.pathUndoGen
     );
     const result = toolop.result(this);
-    this.pending.push(op);
+    const entry = { op, reflected };
+    this.pending.push(entry);
     let applied;
     try {
       const run = ctx.toolstack.foldOrExec(ctx, toolop);
       applied = await Promise.race([result, run.then(() => result)]);
     } catch (error2) {
-      this.dropPending(op);
-      this.endRun();
+      this.dropPending(entry);
       console.error("rich-text-x: edit failed", error2);
+      if (reflected) {
+        this.refuseComposition(void 0);
+      } else {
+        this.endRun();
+      }
       return;
     }
     if (this._session !== session) {
       return;
     }
-    this.dropPending(op);
+    this.dropPending(entry);
     this.applyResult(applied);
   }
-  dropPending(op) {
-    const index = this.pending.indexOf(op);
+  dropPending(entry) {
+    const index = this.pending.indexOf(entry);
     if (index >= 0) {
       this.pending.splice(index, 1);
     }
@@ -45825,6 +45992,9 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     const own = this.domRange();
     const view = this.view();
     this.applyResult({ ...change, selection: void 0 });
+    if (this.composing) {
+      return;
+    }
     if (own !== void 0 && view !== void 0) {
       this.setSelection({
         anchor: this.clampPos(own.anchor, view),
@@ -45901,11 +46071,14 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     }
     const { provider, doc } = session;
     const root = this.root;
+    const held = this.composing ? this.snapshot?.block : void 0;
     for (const id of result.removedBlocks) {
-      blockElement(root, id)?.remove();
+      if (id !== held) {
+        blockElement(root, id)?.remove();
+      }
     }
     const order = provider.blocks(doc);
-    const dirty2 = result.dirtyBlocks.map((id) => ({ id, index: order.indexOf(id) })).filter((entry) => entry.index >= 0).sort((a2, b) => a2.index - b.index);
+    const dirty2 = result.dirtyBlocks.filter((id) => id !== held).map((id) => ({ id, index: order.indexOf(id) })).filter((entry) => entry.index >= 0).sort((a2, b) => a2.index - b.index);
     for (const { id, index } of dirty2) {
       const fresh = provider.renderBlock(doc, id, ctx);
       const old = blockElement(root, id);
@@ -45923,7 +46096,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       }
     }
     this.observer?.takeRecords();
-    if (result.selection !== void 0) {
+    if (result.selection !== void 0 && !this.composing) {
       this.setSelection(result.selection);
     }
     this.syncToolbar();
@@ -46003,12 +46176,13 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     if (view === void 0) {
       return void 0;
     }
-    if (this.pending.length === 0) {
+    const ops = this.pending.filter((e) => !e.reflected).map((e) => e.op);
+    if (ops.length === 0) {
       return range;
     }
     return {
-      anchor: mapThroughPending(range.anchor, this.pending, view),
-      head: mapThroughPending(range.head, this.pending, view)
+      anchor: mapThroughPending(range.anchor, ops, view),
+      head: mapThroughPending(range.head, ops, view)
     };
   }
   selectionThroughPending() {

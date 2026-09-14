@@ -53,9 +53,10 @@ import {
  * keyboard is what decides that, and the tasklist's stage 5 note records what Firefox did.
  *
  * Escape while a synthetic composition is open does nothing on a bare div: the keydown fires
- * with isComposing and the composition stays open, since no IME is there to cancel it. On the
- * editor, whose keydown handler blurs the root on Escape, the blur commits the composition:
- * compositionend carries the composed text and the DOM keeps it.
+ * with isComposing and the composition stays open, since no IME is there to cancel it. The
+ * editor ignores a keydown with isComposing, so the composition stays open there too; a real
+ * IME's Escape ends the composition through compositionend, which the recordings in the
+ * tasklist's stage 5 note cover.
  */
 
 const KANJI = String.fromCharCode(0x6f22);
@@ -236,60 +237,173 @@ async function prepare(page: Page, editor: Locator) {
 }
 
 const refusals = (page: Page) => page.evaluate(() => window.__refused);
+const stackLength = (editor: Locator) =>
+  editor.evaluate(
+    (el) =>
+      (el as EditorProbe & { session: { toolstack: { length: number } } }).session.toolstack.length
+  );
+
+/** Selects a range in the first block. */
+function selectIn(editor: Locator, offset: number, to = offset): Promise<void> {
+  return editor.evaluate(
+    (el, [offset, to]) => {
+      const probe = el as EditorProbe;
+      const block = probe.session.provider.blocks(probe.session.doc)[0];
+      probe.select({ anchor: { block, offset }, head: { block, offset: to } });
+    },
+    [offset, to]
+  );
+}
 
 test.describe("rich-text-x", () => {
-  for (const { name, steps, commit } of scenarios) {
-    test(`${name} is refused and leaves the document and caret alone`, async ({ page }) => {
-      const editor = await openEditor(page);
-      const before = await prepare(page, editor);
-
-      const cdp = await page.context().newCDPSession(page);
-      await compose(cdp, steps, commit);
-
-      // the browser edits the DOM regardless, and the same sequence fires as on a bare div
-      expect(describeEvents(await takeEvents(page))).toEqual(
-        expectedSequence(updatesOf(steps, commit), commit ?? "", ROOT_TEXT, CARET)
-      );
-
-      await expect(editor.locator("[data-doc-block]").first()).toHaveText(ORIGINAL[0]);
-      expect(await texts(editor)).toEqual(ORIGINAL);
-      expect(await editor.evaluate((el) => (el as EditorProbe).selection())).toEqual(before);
-      expect(await refusals(page)).toEqual(["insertCompositionText"]);
-    });
-  }
-
-  test("the Korean shape is refused once per composition", async ({ page }) => {
-    const editor = await openEditor(page);
-    const before = await prepare(page, editor);
-    await composeKorean(page);
-
-    // the refusal re-renders the block at the first compositionend, so the second
-    // composition starts over the original text
-    expect(describeEvents(await takeEvents(page))).toEqual([
-      ...expectedSequence([HIEUT, HA, HAN, HA], HA, ROOT_TEXT, CARET),
-      ...expectedSequence([NIEUN, NA, NA], NA, ROOT_TEXT, CARET),
-    ]);
-
-    expect(await texts(editor)).toEqual(ORIGINAL);
-    expect(await editor.evaluate((el) => (el as EditorProbe).selection())).toEqual(before);
-    expect(await refusals(page)).toEqual(["insertCompositionText", "insertCompositionText"]);
-  });
-
-  test("Escape blurs the editor, which commits the composition, and the commit is refused", async ({
+  test("a Japanese commit lands in the document as one undo entry, no refusal", async ({
     page,
   }) => {
     const editor = await openEditor(page);
+    await prepare(page, editor);
+    const before = await stackLength(editor);
+
+    const cdp = await page.context().newCDPSession(page);
+    await compose(cdp, [KA, KAN], KANJI);
+
+    await expect
+      .poll(() => texts(editor))
+      .toEqual([`Hello,${KANJI} world.`, ORIGINAL[1], ORIGINAL[2]]);
+    // the caret sits after the committed character
+    const caret = await editor.evaluate((el) => (el as EditorProbe).selection());
+    expect(caret?.head.offset).toBe(7);
+    expect(caret?.anchor.offset).toBe(7);
+    expect(await stackLength(editor)).toBe(before + 1);
+    expect(await refusals(page)).toEqual([]);
+  });
+
+  test("a dead-key commit lands, no refusal", async ({ page }) => {
+    const editor = await openEditor(page);
+    await prepare(page, editor);
+
+    const cdp = await page.context().newCDPSession(page);
+    await compose(cdp, [ACUTE], E_ACUTE);
+
+    await expect
+      .poll(() => texts(editor))
+      .toEqual([`Hello,${E_ACUTE} world.`, ORIGINAL[1], ORIGINAL[2]]);
+    expect(await refusals(page)).toEqual([]);
+  });
+
+  test("an abandoned composition leaves the document unchanged, no refusal", async ({ page }) => {
+    const editor = await openEditor(page);
     const before = await prepare(page, editor);
-    await escapeMidComposition(page);
+    const stack = await stackLength(editor);
 
-    expect(describeEvents(await takeEvents(page))).toEqual([
-      ...expectedSequence([KA], "", ROOT_TEXT, CARET).slice(0, -1),
-      "keydown Escape composing",
-      `compositionend ${JSON.stringify(KA)} text=${textWith(ROOT_TEXT, CARET, KA)}`,
-    ]);
+    const cdp = await page.context().newCDPSession(page);
+    await compose(cdp, [KA], undefined);
 
-    expect(await texts(editor)).toEqual(ORIGINAL);
+    await expect.poll(() => texts(editor)).toEqual(ORIGINAL);
     expect(await editor.evaluate((el) => (el as EditorProbe).selection())).toEqual(before);
-    expect(await refusals(page)).toEqual(["insertCompositionText"]);
+    expect(await stackLength(editor)).toBe(stack);
+    expect(await refusals(page)).toEqual([]);
+  });
+
+  test("composing inside a bold run extends the bold", async ({ page }) => {
+    const editor = await openEditor(page);
+    await prepare(page, editor);
+
+    await selectIn(editor, 0, 5);
+    await page.keyboard.press("Control+b");
+    await expect(editor.locator("[data-doc-block] b").first()).toHaveText("Hello");
+
+    await selectIn(editor, 3);
+    const cdp = await page.context().newCDPSession(page);
+    await compose(cdp, [KA], KANJI);
+
+    await expect(editor.locator("[data-doc-block] b").first()).toHaveText(`Hel${KANJI}lo`);
+  });
+
+  test("composing over a selection replaces it", async ({ page }) => {
+    const editor = await openEditor(page);
+    await prepare(page, editor);
+
+    await selectIn(editor, 0, 5);
+    const cdp = await page.context().newCDPSession(page);
+    await compose(cdp, [KA], KANJI);
+
+    await expect.poll(() => texts(editor)).toEqual([`${KANJI}, world.`, ORIGINAL[1], ORIGINAL[2]]);
+  });
+
+  test("typing then a composed accent is one undo entry", async ({ page }) => {
+    const editor = await openEditor(page);
+    await prepare(page, editor);
+    const before = await stackLength(editor);
+
+    await selectIn(editor, 13);
+    await page.keyboard.type("caf");
+    const cdp = await page.context().newCDPSession(page);
+    await compose(cdp, [ACUTE], E_ACUTE);
+
+    await expect
+      .poll(() => texts(editor))
+      .toEqual([`Hello, world.caf${E_ACUTE}`, ORIGINAL[1], ORIGINAL[2]]);
+    expect(await stackLength(editor)).toBe(before + 1);
+
+    await page.keyboard.press("Control+z");
+    await expect.poll(() => texts(editor)).toEqual(ORIGINAL);
+  });
+
+  test("a composition while the toolstack is held lands after a pending keystroke", async ({
+    page,
+  }) => {
+    const editor = await openEditor(page);
+    await prepare(page, editor);
+
+    await selectIn(editor, 13);
+    await editor.evaluate((el) => {
+      void (
+        el as EditorProbe & {
+          session: { toolstack: { protect(n: string, cb: () => Promise<void>): Promise<void> } };
+        }
+      ).session.toolstack.protect(
+        "hold",
+        () =>
+          new Promise<void>((resolve) => {
+            (window as unknown as { __release?: () => void }).__release = resolve;
+          })
+      );
+    });
+
+    await page.keyboard.type("X");
+    const cdp = await page.context().newCDPSession(page);
+    await compose(cdp, [ACUTE], E_ACUTE);
+
+    // both are held behind the protect; releasing runs them in order
+    expect(await texts(editor)).toEqual(ORIGINAL);
+    await page.evaluate(() => (window as unknown as { __release?: () => void }).__release?.());
+
+    await expect
+      .poll(() => texts(editor))
+      .toEqual([`Hello, world.X${E_ACUTE}`, ORIGINAL[1], ORIGINAL[2]]);
+    expect(await refusals(page)).toEqual([]);
+  });
+
+  test("two compositions back to back both land, the Korean shape", async ({ page }) => {
+    const editor = await openEditor(page);
+    await prepare(page, editor);
+
+    await composeKorean(page);
+
+    await expect
+      .poll(() => texts(editor))
+      .toEqual([`Hello,${HA}${NA} world.`, ORIGINAL[1], ORIGINAL[2]]);
+    expect(await refusals(page)).toEqual([]);
+  });
+
+  test("a second editor over the same session shows the commit", async ({ page }) => {
+    const editor = await openEditor(page);
+    await prepare(page, editor);
+    const second = page.locator('[data-testid="richtext-editor-2"]');
+
+    const cdp = await page.context().newCDPSession(page);
+    await compose(cdp, [KA, KAN], KANJI);
+
+    await expect(second.locator("[data-doc-block]").first()).toHaveText(`Hello,${KANJI} world.`);
   });
 });

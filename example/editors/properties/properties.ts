@@ -148,7 +148,9 @@ export class PropsEditor extends Editor {
       return editor;
     };
 
-    tab.label("Composition (IME and dead-key input, including accents) is refused in this build.");
+    tab.label(
+      "Composition (IME and dead-key input, including accents) lands in the document as an ordinary edit."
+    );
 
     const shared = new DocumentSession(
       plainDocFromLines(["Hello, world.", "A second paragraph to edit.", ""], () => newBlockId()),

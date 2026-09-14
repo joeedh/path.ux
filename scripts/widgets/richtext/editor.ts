@@ -8,10 +8,11 @@ import type { IconCheck } from "../ui_widgets";
 import { RichTextContext } from "./context";
 import type { DocumentSession } from "./context";
 import { DocEditOp } from "./ops";
-import { blockElement, fromDocPos, mapThroughPending, toDocPos } from "./positions";
+import { blockElement, blockTextOf, fromDocPos, mapThroughPending, toDocPos } from "./positions";
 import type { DomPos, PendingDocView } from "./positions";
+import { composedEdit, rootReflects } from "./composition";
 import { ATOM_CHAR, newBlockId } from "./provider";
-import type { DocChange, DocPos, DocRange, EditOp, EditResult } from "./provider";
+import type { BlockId, DocChange, DocPos, DocRange, EditOp, EditResult } from "./provider";
 
 // What each formatting inputType asks for, in the provider's naming
 const FORMAT_MARKS: Record<string, string> = {
@@ -41,6 +42,25 @@ export interface RefusedDetail {
 const samePos = (a: DocPos, b: DocPos) => a.block === b.block && a.offset === b.offset;
 const isCollapsed = (range: DocRange) => samePos(range.anchor, range.head);
 const collapsed = (pos: DocPos): DocRange => ({ anchor: pos, head: pos });
+
+/** An op whose result has not been applied. `reflected` marks one the composed block's DOM already shows. */
+interface PendingEntry {
+  op: EditOp;
+  reflected: boolean;
+}
+
+/** What the editor froze at `compositionstart`, so the composed block can be diffed at the end. */
+interface CompositionSnapshot {
+  block: BlockId;
+  /** The block's flattened text when the composition began. */
+  text: string;
+  /** The selection then, in DOM coordinates (before the pending ops), as `domRange()` read it. */
+  selection: DocRange;
+  /** The non-reflected ops pending then; the composed block's DOM does not reflect these. */
+  pending: EditOp[];
+  /** The document as it stood then, for mapping the composed edit through `pending`. */
+  view: PendingDocView;
+}
 
 /** The offset a delete of one unit reaches from `offset`, going backward or forward. */
 function deleteBoundary(
@@ -88,9 +108,11 @@ function deleteBoundary(
 /**
  * Edits a document through a `DocumentProvider`. Every `beforeinput` is prevented and turned
  * into an `EditOp` run through the session's toolstack; the DOM changes only when a result
- * comes back. Composition is refused: the block is re-rendered at `compositionend` and a
- * `refused` event fires, as for any input the editor does not handle. The toolbar built from
- * `provider.marks()` hides under a `no-toolbar` attribute; `toggleMark` works either way.
+ * comes back. Composition is let through: the browser mutates the composed block during the
+ * composition, and at `compositionend` the editor diffs the block back into an ordinary edit
+ * and submits it. A composition it cannot attribute falls back to re-rendering the root and a
+ * `refused` event. The toolbar built from `provider.marks()` hides under a `no-toolbar`
+ * attribute; `toggleMark` works either way.
  */
 export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unknown> extends UIBase<
   CTX,
@@ -109,11 +131,11 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
   private unsubscribe?: () => void;
   private needsRender = false;
   /** Ops submitted whose results have not been applied, oldest first. */
-  private readonly pending: EditOp[] = [];
+  private readonly pending: PendingEntry[] = [];
   /** Where the next op must act to stay in the typing run in progress. */
   private runAnchor?: DocPos;
   private composing = false;
-  private composeAt?: DocPos;
+  private snapshot?: CompositionSnapshot;
   private observer?: MutationObserver;
   private syncingToolbar = false;
   private readonly onSelectionChange = () => this.selectionChanged();
@@ -271,6 +293,10 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
 
   /** Toggles `mark` over the selection; nothing happens on a collapsed one. */
   toggleMark(mark: string): void {
+    if (this.composing) {
+      return;
+    }
+
     const range = this.selectionThroughPending();
     if (range === undefined || isCollapsed(range)) {
       return;
@@ -285,9 +311,16 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
   }
 
   private onBeforeInput(e: InputEvent): void {
+    // an insertCompositionText is not cancelable and the diff at compositionend is its handler,
+    // so neither prevent nor map it; preventing a cancelable one inside a composition would
+    // cancel the composition
+    if (this.composing || e.isComposing) {
+      return;
+    }
+
     e.preventDefault();
 
-    if (this.composing || this._session === undefined || this._session.disposed) {
+    if (this._session === undefined || this._session.disposed) {
       return;
     }
 
@@ -297,6 +330,11 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
   }
 
   private onKeyDown(e: KeyboardEvent): void {
+    // the shortcuts are the browser's during a composition; on Windows they arrive as Process
+    if (this.composing || e.isComposing) {
+      return;
+    }
+
     const mod = e.ctrlKey || e.metaKey;
     const key = e.key.toLowerCase();
 
@@ -320,6 +358,10 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
 
   /** Writes the selection through `toClipboard`; a cut then commits its deletion on its own. */
   private onCopy(e: ClipboardEvent, cut: boolean): void {
+    if (this.composing) {
+      return;
+    }
+
     const session = this._session;
     const range = this.selectionThroughPending();
     if (session === undefined || range === undefined || isCollapsed(range) || !e.clipboardData) {
@@ -340,21 +382,121 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     }
   }
 
+  /** Freezes the composed block and the document, so the composition can be diffed at the end. */
   private onCompositionStart(): void {
     this.composing = true;
-    this.composeAt = this.selectionThroughPending()?.head;
-    this.endRun();
+    this.snapshot = undefined;
+
+    const range = this.domRange();
+    const view = this.view();
+    if (range === undefined || view === undefined) {
+      return;
+    }
+
+    const block = range.head.block;
+    const element = blockElement(this.root, block);
+    if (element === undefined) {
+      return;
+    }
+
+    const blocks = [...view.blocks];
+    const texts = new Map(blocks.map((id) => [id, view.blockText(id)]));
+
+    this.snapshot = {
+      block,
+      text     : blockTextOf(element),
+      selection: range,
+      pending  : this.pending.filter((e) => !e.reflected).map((e) => e.op),
+      view     : { blocks, blockText: (id) => texts.get(id) ?? "" },
+    };
   }
 
+  /** Diffs the composed block back into an edit and submits it, or falls back to a re-render. */
   private onCompositionEnd(): void {
-    this.composing = false;
-    const at = this.composeAt;
-    this.composeAt = undefined;
+    // Firefox queues the commit's mutation records before compositionend and delivers them
+    // after this returns, when composing is already false; drop them so the observer stays quiet
+    this.observer?.takeRecords();
 
-    if (at !== undefined && this.view() !== undefined) {
-      this.applyResult({ dirtyBlocks: [at.block], removedBlocks: [], selection: collapsed(at) });
-    } else {
-      this.observer?.takeRecords();
+    this.composing = false;
+    const snapshot = this.snapshot;
+    this.snapshot = undefined;
+
+    if (snapshot === undefined || this._session === undefined || this._session.disposed) {
+      this.refuseComposition(snapshot);
+      return;
+    }
+
+    const element = blockElement(this.root, snapshot.block);
+    const view = this.view();
+    if (element === undefined || view === undefined || !rootReflects(this.root, view.blocks)) {
+      this.refuseComposition(snapshot);
+      return;
+    }
+
+    const sel = snapshot.selection;
+    if (sel.anchor.block !== snapshot.block || sel.head.block !== snapshot.block) {
+      this.refuseComposition(snapshot);
+      return;
+    }
+
+    const edit = composedEdit(snapshot.text, blockTextOf(element), [
+      sel.anchor.offset,
+      sel.head.offset,
+    ]);
+
+    if (edit === undefined) {
+      // nothing composed, or an abandoned composition: the DOM is back to the block's text, but
+      // a held result may have moved the document on, so re-render the block and restore the caret
+      this.rerenderComposed(snapshot);
+      return;
+    }
+    if ("refused" in edit) {
+      this.refuseComposition(snapshot);
+      return;
+    }
+
+    const map = (offset: number): DocPos =>
+      mapThroughPending({ block: snapshot.block, offset }, snapshot.pending, snapshot.view);
+    const range: DocRange = { anchor: map(edit.range[0]), head: map(edit.range[1]) };
+    const op: EditOp =
+      edit.text.length > 0
+        ? { type: "insertText", at: range, text: edit.text }
+        : { type: "deleteRange", range };
+
+    // the browser already put the composed text in the block, so this op's DOM write is a
+    // no-op; mark it reflected so a position read before its result does not shift by it
+    this.submit(op, true);
+  }
+
+  /** Re-renders the composed block from the provider and restores the snapshot's caret. */
+  private rerenderComposed(snapshot: CompositionSnapshot): void {
+    const view = this.view();
+    if (view === undefined || !view.blocks.includes(snapshot.block)) {
+      this.refuseComposition(snapshot);
+      return;
+    }
+
+    const caret = mapThroughPending(snapshot.selection.head, snapshot.pending, snapshot.view);
+    this.applyResult({
+      dirtyBlocks  : [snapshot.block],
+      removedBlocks: [],
+      selection    : collapsed(this.clampPos(caret, view)),
+    });
+  }
+
+  /** The fallback: reconcile the whole root, clamp the caret, and report the composition refused. */
+  private refuseComposition(snapshot: CompositionSnapshot | undefined): void {
+    this.renderAll();
+
+    const view = this.view();
+    if (view !== undefined) {
+      const caret =
+        snapshot !== undefined
+          ? mapThroughPending(snapshot.selection.head, snapshot.pending, snapshot.view)
+          : (this.domRange()?.head ?? { block: view.blocks[0], offset: 0 });
+      if (caret.block !== undefined) {
+        this.setSelection(collapsed(this.clampPos(caret, view)));
+      }
     }
 
     this.refuse("insertCompositionText");
@@ -479,7 +621,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
   }
 
   /** Ends the run in progress unless `op` continues it, then commits `op`. */
-  private submit(op: EditOp): void {
+  private submit(op: EditOp, reflected = false): void {
     const anchor = this.runAnchor;
 
     if (op.type === "insertText" && isCollapsed(op.at)) {
@@ -499,11 +641,11 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
       this.endRun();
     }
 
-    void this.commit(op);
+    void this.commit(op, reflected);
   }
 
   /** Runs `op` through the toolstack and applies its result once it has run. */
-  private async commit(op: EditOp): Promise<void> {
+  private async commit(op: EditOp, reflected = false): Promise<void> {
     const session = this._session;
     const ctx = this.richCtx;
     if (session === undefined || ctx === undefined) {
@@ -517,7 +659,8 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
       this.pathUndoGen
     );
     const result = toolop.result(this);
-    this.pending.push(op);
+    const entry: PendingEntry = { op, reflected };
+    this.pending.push(entry);
 
     let applied: EditResult;
     try {
@@ -526,9 +669,15 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
       const run = ctx.toolstack.foldOrExec(ctx, toolop);
       applied = await Promise.race([result, run.then(() => result)]);
     } catch (error) {
-      this.dropPending(op);
-      this.endRun();
+      this.dropPending(entry);
       console.error("rich-text-x: edit failed", error);
+      // a composition op that fails leaves the block holding text the document lacks, so every
+      // later position in it is off; reconcile the root rather than drop the op
+      if (reflected) {
+        this.refuseComposition(undefined);
+      } else {
+        this.endRun();
+      }
       return;
     }
 
@@ -536,12 +685,12 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
       return;
     }
 
-    this.dropPending(op);
+    this.dropPending(entry);
     this.applyResult(applied);
   }
 
-  private dropPending(op: EditOp): void {
-    const index = this.pending.indexOf(op);
+  private dropPending(entry: PendingEntry): void {
+    const index = this.pending.indexOf(entry);
     if (index >= 0) {
       this.pending.splice(index, 1);
     }
@@ -555,6 +704,12 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     // the change's selection is not taken: an editor that does not hold the selection must
     // not pull it away from the one that does
     this.applyResult({ ...change, selection: undefined });
+
+    // hold the caret restore and the run break while composing, for the same reason
+    // applyResult holds the selection: the browser owns the caret until compositionend
+    if (this.composing) {
+      return;
+    }
 
     if (own !== undefined && view !== undefined) {
       this.setSelection({
@@ -652,12 +807,19 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     const { provider, doc } = session;
     const root = this.root;
 
+    // during a composition the browser owns the composed block and the caret; its render, its
+    // removal and every caret write are held until compositionend renders the composition
+    const held = this.composing ? this.snapshot?.block : undefined;
+
     for (const id of result.removedBlocks) {
-      blockElement(root, id)?.remove();
+      if (id !== held) {
+        blockElement(root, id)?.remove();
+      }
     }
 
     const order = provider.blocks(doc);
     const dirty = result.dirtyBlocks
+      .filter((id) => id !== held)
       .map((id) => ({ id, index: order.indexOf(id) }))
       .filter((entry) => entry.index >= 0)
       .sort((a, b) => a.index - b.index);
@@ -682,7 +844,9 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
 
     this.observer?.takeRecords();
 
-    if (result.selection !== undefined) {
+    // hold every caret write while composing, so a result from elsewhere does not move the
+    // caret out of the composition the browser is running
+    if (result.selection !== undefined && !this.composing) {
       this.setSelection(result.selection);
     }
     this.syncToolbar();
@@ -783,13 +947,16 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     if (view === undefined) {
       return undefined;
     }
-    if (this.pending.length === 0) {
+
+    // a reflected op's DOM write is already in the block, so a DOM-read position sits past it
+    const ops = this.pending.filter((e) => !e.reflected).map((e) => e.op);
+    if (ops.length === 0) {
       return range;
     }
 
     return {
-      anchor: mapThroughPending(range.anchor, this.pending, view),
-      head  : mapThroughPending(range.head, this.pending, view),
+      anchor: mapThroughPending(range.anchor, ops, view),
+      head  : mapThroughPending(range.head, ops, view),
     };
   }
 

@@ -57,15 +57,17 @@ In scope for the first implementation:
 - Position mapping between DOM `(node, offset)` pairs and document positions.
 - `DocEditOp`, a foldable `ToolOp` carrying one edit, and the editor's choice of toolstack.
 - Copy, cut and paste through the provider.
+- Composition (IME and dead keys), added by task 4. The editor lets the browser compose and
+  diffs the composed block back into an ordinary edit at `compositionend`, with the refusal
+  path kept as the fallback. [rich-text-ime.md](rich-text-ime.md) is the design.
+
+Composition was out of scope for the first implementation and refused; task 4 added it, and
+the Scope bullet above and [rich-text-ime.md](rich-text-ime.md) describe what landed. The
+refusal path this document's original design put in place is now the fallback the reconcile
+falls back to.
 
 Out of scope for the first implementation:
 
-- Composition. The editor refuses it rather than mis-handling it (see
-  [What the browser still does](#what-the-browser-still-does)). This is a larger gap than "no
-  CJK input": dead-key layouts (US-International, French, German, macOS press-and-hold) deliver
-  accented characters through composition too, so the first implementation drops every é and ü
-  typed on those layouts. Writing the plan that lifts this is the last task in the tasklist and
-  waits on everything else working.
 - Collaborative editing. The provider's change notifications are the seam it would use, but no
   conflict handling is designed here.
 - Spellcheck and autocorrect. `spellcheck="false"` on the editable root for now.
@@ -306,15 +308,16 @@ root.addEventListener("beforeinput", (e) => {
 
 `mapInput` is a table over `e.inputType`.
 
-| `inputType`                                                                                                                                                  | `EditOp`                                                                     |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
-| `insertText`                                                                                                                                                 | `insertText` with `e.data`                                                   |
-| `insertParagraph`, `insertLineBreak`                                                                                                                         | `splitBlock` with a fresh id                                                 |
-| `deleteContentBackward`, `deleteContentForward`, `deleteWordBackward`, `deleteWordForward`, `deleteSoftLineBackward`, `deleteSoftLineForward`, `deleteByCut` | `deleteRange`, or `joinWithPrevious` when the range crosses a block boundary |
-| `formatBold`, `formatItalic`, `formatUnderline`, `formatStrikeThrough`                                                                                       | `toggleMark` with the provider's name for that mark, if `marks()` has one    |
-| `insertFromPaste`, `insertFromDrop`                                                                                                                          | `insertContent` via `fromClipboard`                                          |
-| `historyUndo`, `historyRedo`                                                                                                                                 | not an `EditOp`; calls `toolstack.undo()`/`redo()` directly                  |
-| `insertCompositionText`, `deleteCompositionText`, `insertReplacementText`, everything else                                                                   | refused                                                                      |
+| `inputType`                                                                                                                                                  | `EditOp`                                                                           |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| `insertText`                                                                                                                                                 | `insertText` with `e.data`                                                         |
+| `insertParagraph`, `insertLineBreak`                                                                                                                         | `splitBlock` with a fresh id                                                       |
+| `deleteContentBackward`, `deleteContentForward`, `deleteWordBackward`, `deleteWordForward`, `deleteSoftLineBackward`, `deleteSoftLineForward`, `deleteByCut` | `deleteRange`, or `joinWithPrevious` when the range crosses a block boundary       |
+| `formatBold`, `formatItalic`, `formatUnderline`, `formatStrikeThrough`                                                                                       | `toggleMark` with the provider's name for that mark, if `marks()` has one          |
+| `insertFromPaste`, `insertFromDrop`                                                                                                                          | `insertContent` via `fromClipboard`                                                |
+| `historyUndo`, `historyRedo`                                                                                                                                 | not an `EditOp`; calls `toolstack.undo()`/`redo()` directly                        |
+| `insertCompositionText`                                                                                                                                      | let through; diffed at `compositionend` (see [rich-text-ime.md](rich-text-ime.md)) |
+| `insertReplacementText`, everything else                                                                                                                     | refused                                                                            |
 
 The range an entry works on comes from `e.getTargetRanges()` when it has one, and from
 `document.getSelection()` otherwise. Browsers differ here and the editor cannot rely on
@@ -527,11 +530,12 @@ With every handled `inputType` prevented, the browser still owns:
 - Text layout, wrapping, and bidi.
 - Focus, and the `selectionchange` event.
 - Composition. `insertCompositionText` is not cancelable in any browser, so during a
-  composition the browser mutates the DOM regardless of `preventDefault`. The first
-  implementation handles this by refusing: on `compositionstart` the editor sets a `composing`
-  flag and records the caret's `DocPos`; on `compositionend` it re-renders that block from the
-  provider, restores the recorded position, clears the flag, and dispatches a `refused` event
-  the consumer can surface. See [Scope](#scope) for what this costs on dead-key layouts.
+  composition the browser mutates the DOM regardless of `preventDefault`. Task 4 turned this
+  from a refusal into an accepted edit: the editor lets the browser compose, snapshots the
+  block at `compositionstart`, and at `compositionend` diffs the block back into an
+  `insertText` or `deleteRange` it submits through the ordinary path. The `refused` event
+  survives as the fallback for a composition the diff cannot attribute.
+  [rich-text-ime.md](rich-text-ime.md) is the design.
 
 A `MutationObserver` on the root is a development-mode assertion rather than a recovery path:
 it logs any mutation the editor did not make, so a missed `inputType` shows up as a console
