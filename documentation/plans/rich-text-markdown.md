@@ -1000,7 +1000,51 @@ and the bundle contains no micromark. Deviations, each with its reason:
   lines and the caret on the second), `markdown-raw` (a preserved `<video>` placeholder),
   and the same document under `readonly`. Electron pass on `markdown-document`.
 
-Status: not started.
+Status: done. `providers/markdown_provider.ts` and `providers/markdown_render.ts`, reached
+through `richtext/markdown.ts`, which registers the `markdown` format on import; theme keys
+and `--richtext-*` variables; the Markdown tab over `example/editors/properties/markdown_sample.ts`;
+`tests/richtext/markdownProvider.test.ts` (66 tests); `playwright/richtext/markdown.spec.ts`
+in Chromium and Firefox with the five screenshots, plus `markdown-document-electron.png`
+from the Electron pass. The runtime barrel and the bundle are unchanged and the bundle
+contains no micromark. Deviations, each with its reason:
+
+- The registry entry is a `RichTextFormat` (`provider()`, `fromText`, `toText`) rather
+  than a provider factory: a mode needs the parser and serializer as well as the provider,
+  and only the module that owns the parser can supply them. `RichTextFormat` is the one
+  type-only name the barrel gains, and `tests/fixtures/barrel-surface.json` records it.
+- Enter in a paragraph is a hard break under Shift only, and it is an `insertBreak` custom
+  op (a `break` mark over one `\n`) rather than a text insert, so a soft break and a hard
+  one stay distinct after stage 2's decision to keep both. Enter in a fence inserts `\n`,
+  except on an empty last line, where it leaves the fence and drops the empty line.
+- `hr`, `table`, `raw` and `frontmatter` render inside a `contenteditable="false"` wrapper
+  (`div.md-opaque`) and the provider treats each as one atom: `blockText` is `ATOM_CHAR`,
+  a split lands a paragraph before or after (refused at the start of front matter), a join
+  into one selects it instead. Chromium drops a selection endpoint inside such a wrapper, so
+  `fromDocPos` maps an opaque position to the root's child offset.
+- Backspace or Delete beside an opaque block arrives from both engines as a range from the
+  end of the previous editable block to the start of the next, so a range whose interior is
+  only opaque blocks removes them without joining its ends; a whole opaque block deleted on
+  its own becomes an empty paragraph under the same id, so the caret has somewhere to go.
+- `ClipboardContent` gains `text`, the plain text as it arrived, because a paste into a
+  fence takes the text verbatim rather than the parsed blocks; the pre-allocated ids then go
+  unused, which the protocol allows. A paste into an empty paragraph adopts the first pasted
+  block's kind. A whole block copies as its markdown entry, a list item indented by depth;
+  a partial code selection copies as bare text.
+- `marks.ts`'s helpers take a trailing `normalize` parameter, defaulting to the name-only
+  merge, so the provider can pass `normalizeMdMarks` and keep two adjacent links apart.
+- Table cells render through `toMarkdown` on the cell's mdast children and a parse back,
+  since the cell holds inline markdown rather than a block of the model.
+- `markdownOps` builds the custom ops (`setKind`, `setDepth`, `setTask`, `setLink`,
+  `setImage`, `moveAtom`, `insertBreak`) so stage 4's toolbar and the tests share one
+  encoding; a custom op's `data` may carry a `selection`, which is what Tab and Shift+Tab
+  use to keep the range. The inverse of a custom op spans the document order between its
+  first and last block, since a redo must see the same contiguous span.
+- The `code` mark button shows `Icons.FILE` until stage 4 draws its own; the toolbar theme
+  keys wait for stage 4 as well.
+- The Playwright config gains a `firefox` project matched to the markdown spec only. Marker
+  text is unreadable through the DOM, so the numbering checks read it over CDP and run in
+  Chromium only; Firefox element screenshots come back offset, so screenshots are Chromium
+  only and Firefox checks behaviour.
 
 ### Stage 4 — toolbar and inline editors
 

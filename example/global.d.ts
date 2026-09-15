@@ -29,6 +29,8 @@ declare global {
     theEventGraph: unknown;
     NodeEditorTab: unknown;
     haveElectron: boolean;
+    /** Opens a markdown document in the Markdown tab's editor, for the Playwright specs. */
+    __loadMarkdown?: (text: string) => void;
   }
 }
 

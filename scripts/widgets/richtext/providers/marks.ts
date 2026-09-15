@@ -37,14 +37,18 @@ export function normalizeMarks<M extends Mark>(marks: readonly M[]): M[] {
   return out.sort((a, b) => a.from - b.from || a.name.localeCompare(b.name));
 }
 
+/** How a helper below merges its result; a provider whose marks carry more than a name passes its own. */
+export type Normalize<M extends Mark> = (marks: readonly M[]) => M[];
+
 /** The marks clipped to `[from, to)` and re-based so that `from` becomes `base`. */
 export function clipMarks<M extends Mark>(
   marks: readonly M[],
   from: number,
   to: number,
-  base: number
+  base: number,
+  normalize: Normalize<M> = normalizeMarks
 ): M[] {
-  return normalizeMarks(
+  return normalize(
     marks.map((m) => ({
       ...m,
       from: Math.max(m.from, from) - from + base,
@@ -57,8 +61,13 @@ export function clipMarks<M extends Mark>(
  * The marks after typing `len` characters at `pos`. A mark the caret is inside of or at the end
  * of grows over the new text; a mark starting at `pos` moves right and leaves it unmarked.
  */
-export function marksAfterTyping<M extends Mark>(marks: readonly M[], pos: number, len: number) {
-  return normalizeMarks(
+export function marksAfterTyping<M extends Mark>(
+  marks: readonly M[],
+  pos: number,
+  len: number,
+  normalize: Normalize<M> = normalizeMarks
+) {
+  return normalize(
     marks.map((m) => ({
       ...m,
       from: m.from < pos ? m.from : m.from + len,
@@ -71,7 +80,12 @@ export function marksAfterTyping<M extends Mark>(marks: readonly M[], pos: numbe
  * The marks after pasting `len` unmarked characters at `pos`. A mark spanning `pos` is split
  * around the insertion, so pasted text never inherits a mark.
  */
-export function marksAroundInsert<M extends Mark>(marks: readonly M[], pos: number, len: number) {
+export function marksAroundInsert<M extends Mark>(
+  marks: readonly M[],
+  pos: number,
+  len: number,
+  normalize: Normalize<M> = normalizeMarks
+) {
   const out: M[] = [];
 
   for (const m of marks) {
@@ -85,13 +99,18 @@ export function marksAroundInsert<M extends Mark>(marks: readonly M[], pos: numb
     }
   }
 
-  return normalizeMarks(out);
+  return normalize(out);
 }
 
 /** The marks after deleting `[from, to)`: later offsets move left, marks inside it vanish. */
-export function marksAfterDelete<M extends Mark>(marks: readonly M[], from: number, to: number) {
+export function marksAfterDelete<M extends Mark>(
+  marks: readonly M[],
+  from: number,
+  to: number,
+  normalize: Normalize<M> = normalizeMarks
+) {
   const map = (x: number) => (x <= from ? x : x >= to ? x - (to - from) : from);
-  return normalizeMarks(marks.map((m) => ({ ...m, from: map(m.from), to: map(m.to) })));
+  return normalize(marks.map((m) => ({ ...m, from: map(m.from), to: map(m.to) })));
 }
 
 /** Whether some mark named `name` covers all of `[from, to)`. */
@@ -104,7 +123,8 @@ export function cutMark<M extends Mark>(
   marks: readonly M[],
   name: string,
   from: number,
-  to: number
+  to: number,
+  normalize: Normalize<M> = normalizeMarks
 ) {
   const kept: M[] = [];
   for (const m of marks) {
@@ -116,7 +136,7 @@ export function cutMark<M extends Mark>(
     }
   }
 
-  return normalizeMarks(kept);
+  return normalize(kept);
 }
 
 /**

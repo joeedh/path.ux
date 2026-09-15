@@ -32,9 +32,15 @@ import type {
   PopupContainer,
 } from "../../pathux.js";
 
+import {
+  MarkdownProvider,
+  markdownDocFromText,
+} from "../../../scripts/widgets/richtext/markdown.js";
+import type { MdDoc } from "../../../scripts/widgets/richtext/markdown.js";
 import { Editor } from "../editor_base.js";
 import { PropsPage } from "../../page.js";
 import { theme, themeVars } from "../../theme.js";
+import { MARKDOWN_SAMPLE } from "./markdown_sample.js";
 
 // graphpack's PackNodeVertex tracks which side of a node a socket sits on; this
 // app sets it when laying out the demo graph. It is not part of the library type.
@@ -104,6 +110,7 @@ export class PropsEditor extends Editor {
         },
         galleryTab  : (tab) => this.buildGallery(tab),
         richTextTab : (tab) => this.buildRichText(tab),
+        markdownTab : (tab) => this.buildMarkdown(tab),
         eventStrip: (con) => {
           con.dataPrefix = "";
           const bval = con.prop("data.boolval");
@@ -174,6 +181,29 @@ export class PropsEditor extends Editor {
     const field = tab.prop("data.text");
     field.setAttribute("data-testid", "richtext-field");
     field.style.width = "420px";
+  }
+
+  /**
+   * Fills the Markdown tab: one editor over the sample document on its own toolstack. A spec
+   * loads another document through `window.__loadMarkdown`, which opens a fresh session.
+   */
+  buildMarkdown(tab: Container) {
+    const provider = new MarkdownProvider();
+    const editor = UIBase.constructElement<RichTextEditor<typeof this.ctx, MdDoc>>(
+      RichTextEditor.define().tagname,
+      this.ctx
+    );
+    editor.setAttribute("data-testid", "markdown-editor");
+    editor.style.width = "560px";
+
+    const open = (text: string) => {
+      editor.session = new DocumentSession(markdownDocFromText(text), provider, new ToolStack());
+    };
+    open(MARKDOWN_SAMPLE);
+    window.__loadMarkdown = open;
+
+    tab.label("A markdown document on its own toolstack; every block kind the provider renders:");
+    tab.add(editor);
   }
 
   exportTheme() {

@@ -245,6 +245,20 @@ explicit `isRichEdit`; a plain multi-line property still gets `TextArea`.
   session outlives the widget, so an undo after the field is rebuilt still lands.
 - A `change` event (`detail: { value }`) fires on every write; `on_change` is the deprecated
   callback form.
+- A format is a `RichTextFormat` (`provider()`, `fromText`, `toText`) registered under a name
+  with `RichTextArea.registerFormat` and read back with `RichTextArea.format(name)`. `plain`
+  is registered by the module itself; importing `scripts/widgets/richtext/markdown.ts`
+  registers `markdown`, so the parser only reaches an app that asks for it. Choosing a format
+  on the widget lands with the markdown work's binding stage.
+
+## Markdown
+
+`MarkdownProvider` (`scripts/widgets/richtext/providers/markdown_provider.ts`) edits the
+document that `markdownDocFromText` parses and `markdownText` serializes. All of it is reached
+through `scripts/widgets/richtext/markdown.ts`, never the barrel, because it bundles the mdast
+chain. The provider's rules, its custom ops (`markdownOps`) and its rendering are described in
+[plans/rich-text-markdown.md](plans/rich-text-markdown.md) until that plan's docs stage writes
+them up here; the Markdown tab of the example app shows it running.
 
 ## Composition (IME and dead keys)
 

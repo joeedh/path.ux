@@ -16011,7 +16011,34 @@ var init_theme = __esm({
           size: 16,
           color: "rgba(35, 35, 35, 1.0)"
         }),
-        "background-color": "rgb(245, 245, 245)"
+        "background-color": "rgb(245, 245, 245)",
+        "readonly-background": "rgb(252, 252, 252)",
+        "selection-background": "rgba(70, 130, 220, 0.35)",
+        "link-color": "rgb(30, 100, 200)",
+        "link-underline": true,
+        "code-font": new CSSFont({
+          font: "monospace",
+          weight: "normal",
+          variant: "normal",
+          style: "normal",
+          size: 14,
+          color: "rgba(35, 35, 35, 1.0)"
+        }),
+        "code-background": "rgba(0, 0, 0, 0.06)",
+        "code-border-radius": 4,
+        "quote-border-color": "rgb(190, 190, 190)",
+        "quote-text-color": "rgb(95, 95, 95)",
+        "marker-color": "rgb(120, 120, 120)",
+        "heading-font": new CSSFont({
+          font: "sans-serif",
+          weight: "bold",
+          variant: "normal",
+          style: "normal",
+          size: 16,
+          color: "rgba(35, 35, 35, 1.0)"
+        }),
+        "hr-color": "rgb(200, 200, 200)",
+        "opaque-background": "rgba(0, 0, 0, 0.045)"
       },
       screenborder: {
         "border-inner": "grey",
@@ -45281,7 +45308,8 @@ function fromDocPos(root, pos) {
     return void 0;
   }
   if (isOpaqueBlock(blockEl)) {
-    return { node: blockEl, offset: pos.offset <= 0 ? 0 : blockEl.childNodes.length };
+    const index = [...root.childNodes].indexOf(blockEl);
+    return { node: root, offset: pos.offset <= 0 ? index : index + 1 };
   }
   let remaining = Math.max(0, pos.offset);
   let lastText;
@@ -45526,6 +45554,18 @@ function rootReflects(root, blocks) {
 init_ui_base();
 init_theme_schema();
 init_ui_theme();
+var THEME_COLORS = [
+  "readonly-background",
+  "selection-background",
+  "link-color",
+  "code-background",
+  "quote-border-color",
+  "quote-text-color",
+  "marker-color",
+  "hr-color",
+  "opaque-background"
+];
+var THEME_FONTS = ["code-font", "heading-font"];
 var FORMAT_MARKS = {
   formatBold: "bold",
   formatItalic: "italic",
@@ -45619,6 +45659,15 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
         outline       : none;
         white-space   : pre-wrap;
         overflow-wrap : anywhere;
+        background    : var(--richtext-background);
+      }
+
+      .rich-text-root[readonly] {
+        background : var(--richtext-readonly-background);
+      }
+
+      .rich-text-root ::selection {
+        background : var(--richtext-selection-background);
       }
     `;
     this.shadow.appendChild(this.styletag);
@@ -45819,7 +45868,16 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     const font = this.getDefault("DefaultText");
     this.root.style.font = font.genCSS();
     this.root.style.color = font.color;
-    this.root.style.backgroundColor = this.getDefault("background-color");
+    const set2 = (name, value) => this.style.setProperty(`--richtext-${name}`, value);
+    set2("background", this.getDefault("background-color"));
+    for (const key of THEME_COLORS) {
+      set2(key, this.getDefault(key));
+    }
+    for (const key of THEME_FONTS) {
+      set2(key, this.getDefault(key).genCSS());
+    }
+    set2("code-border-radius", `${this.getDefault("code-border-radius")}px`);
+    set2("link-underline", this.getDefault("link-underline") ? "underline" : "none");
     const c = css2color(font.color);
     const luminance = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
     this.style.setProperty("--richtext-icon-tint", `brightness(${luminance.toFixed(3)})`);
@@ -46512,7 +46570,20 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       modalKeyEvents: true,
       theme: {
         DefaultText: t.font,
-        "background-color": t.color
+        "background-color": t.color,
+        "readonly-background": t.color,
+        "selection-background": t.color,
+        "link-color": t.color,
+        "link-underline": t.bool,
+        "code-font": t.font,
+        "code-background": t.color,
+        "code-border-radius": t.number,
+        "quote-border-color": t.color,
+        "quote-text-color": t.color,
+        "marker-color": t.color,
+        "heading-font": t.font,
+        "hr-color": t.color,
+        "opaque-background": t.color
       }
     };
   }
@@ -46533,8 +46604,8 @@ function normalizeMarks(marks) {
   }
   return out.sort((a2, b) => a2.from - b.from || a2.name.localeCompare(b.name));
 }
-function clipMarks(marks, from, to, base) {
-  return normalizeMarks(
+function clipMarks(marks, from, to, base, normalize = normalizeMarks) {
+  return normalize(
     marks.map((m) => ({
       ...m,
       from: Math.max(m.from, from) - from + base,
@@ -46542,8 +46613,8 @@ function clipMarks(marks, from, to, base) {
     }))
   );
 }
-function marksAfterTyping(marks, pos, len) {
-  return normalizeMarks(
+function marksAfterTyping(marks, pos, len, normalize = normalizeMarks) {
+  return normalize(
     marks.map((m) => ({
       ...m,
       from: m.from < pos ? m.from : m.from + len,
@@ -46551,7 +46622,7 @@ function marksAfterTyping(marks, pos, len) {
     }))
   );
 }
-function marksAroundInsert(marks, pos, len) {
+function marksAroundInsert(marks, pos, len, normalize = normalizeMarks) {
   const out = [];
   for (const m of marks) {
     if (m.to <= pos) {
@@ -46563,16 +46634,16 @@ function marksAroundInsert(marks, pos, len) {
       out.push({ ...m, from: pos + len, to: m.to + len });
     }
   }
-  return normalizeMarks(out);
+  return normalize(out);
 }
-function marksAfterDelete(marks, from, to) {
+function marksAfterDelete(marks, from, to, normalize = normalizeMarks) {
   const map3 = (x) => x <= from ? x : x >= to ? x - (to - from) : from;
-  return normalizeMarks(marks.map((m) => ({ ...m, from: map3(m.from), to: map3(m.to) })));
+  return normalize(marks.map((m) => ({ ...m, from: map3(m.from), to: map3(m.to) })));
 }
 function hasMark(marks, name, from, to) {
   return marks.some((m) => m.name === name && m.from <= from && m.to >= to);
 }
-function cutMark(marks, name, from, to) {
+function cutMark(marks, name, from, to, normalize = normalizeMarks) {
   const kept = [];
   for (const m of marks) {
     if (m.name !== name) {
@@ -46582,7 +46653,7 @@ function cutMark(marks, name, from, to) {
       kept.push({ ...m, from: Math.max(m.from, to), to: m.to });
     }
   }
-  return normalizeMarks(kept);
+  return normalize(kept);
 }
 function markSegments(length, marks) {
   const bounds = /* @__PURE__ */ new Set([0, length]);
@@ -47068,6 +47139,7 @@ function plainDocFromLines(lines, makeId) {
 // scripts/widgets/richtext/textarea.ts
 init_ui_base();
 var LINE_BREAK = /\r\n|\r|\n/;
+var formats = /* @__PURE__ */ new Map();
 var RichTextArea = class extends UIBase {
   editor;
   provider = new PlainProvider();
@@ -47093,6 +47165,14 @@ var RichTextArea = class extends UIBase {
     );
     this.editor.setAttribute("part", "editor");
     this.shadow.appendChild(this.editor);
+  }
+  /** Registers a document format under `name`, replacing any earlier one of that name. */
+  static registerFormat(name, format) {
+    formats.set(name, format);
+  }
+  /** The format registered as `name`, or `undefined` when nothing has registered it yet. */
+  static format(name) {
+    return formats.get(name);
   }
   // The DocEditOp on the stack is the undo entry; a DataPathSetOp per write would double it
   get useDataPathUndo() {
@@ -47183,6 +47263,11 @@ var RichTextArea = class extends UIBase {
   }
 };
 UIBase.internalRegister(RichTextArea);
+RichTextArea.registerFormat("plain", {
+  provider: () => new PlainProvider(),
+  fromText: (text2) => plainDocFromLines(text2.split(LINE_BREAK), () => newBlockId()),
+  toText: (doc) => doc.blocks.map((b) => b.text).join("\n")
+});
 
 // scripts/path-controller/curve/curve1d_utils.ts
 init_curve1d_base();

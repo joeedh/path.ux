@@ -56,8 +56,13 @@ notification.
 [x]: markdown model, parse and serialize (stage 2 of the same plan):
 `richtext/markdown.ts` with the mdast chain as the library's first runtime
 dependencies, the HTML table and sanitizer, and a fixture corpus that round
-trips. Stages 3 to 7 (the provider, its toolbar and inline editors, the
-example tab and the docs) remain.
+trips.
+[x]: the markdown provider (stage 3 of the same plan): `MarkdownProvider`
+and the block renderer behind `richtext/markdown.ts`, the `markdown` format
+registered on `RichTextArea`, rich text theme keys, a bare Markdown tab in
+the example, and the markdown Playwright spec in Chromium and Firefox.
+Stages 4 to 7 (the toolbar and inline editors, binding and docs, the
+follow-ups and the syntax reference) remain.
 [ ]: better wrappers around the web file system APIs, to cover what
 simple_docsys did for locally served, Electron and NW.js apps. Unrelated to
 the rich text work; noted here so it is not lost when simple_docsys goes.

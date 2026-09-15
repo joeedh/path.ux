@@ -185,7 +185,9 @@ export function toDocPos(root: ParentNode, node: Node, domOffset: number): DocPo
 
 /**
  * Maps a document position to a DOM position, or to `undefined` when the block is not
- * rendered. An offset past the block's length lands at the end of its last text node.
+ * rendered. An offset past the block's length lands at the end of its last text node. An
+ * opaque block's two positions are the root's child offsets on either side of it, since
+ * Chromium drops a selection endpoint placed inside a `contenteditable="false"` element.
  */
 export function fromDocPos(root: ParentNode, pos: DocPos): DomPos | undefined {
   const blockEl = blockElement(root, pos.block);
@@ -194,7 +196,8 @@ export function fromDocPos(root: ParentNode, pos: DocPos): DomPos | undefined {
   }
 
   if (isOpaqueBlock(blockEl)) {
-    return { node: blockEl, offset: pos.offset <= 0 ? 0 : blockEl.childNodes.length };
+    const index = [...root.childNodes].indexOf(blockEl);
+    return { node: root as Node, offset: pos.offset <= 0 ? index : index + 1 };
   }
 
   let remaining = Math.max(0, pos.offset);

@@ -22,6 +22,7 @@ export interface PropsPageRefs {
   eventStrip?: (con: Container) => void;
   galleryTab?: (tab: Container) => void;
   richTextTab?: (tab: Container) => void;
+  markdownTab?: (tab: Container) => void;
 }
 
 export function PropsPage(refs: PropsPageRefs = {}) {
@@ -68,6 +69,7 @@ export function PropsPage(refs: PropsPageRefs = {}) {
       </tab>
       <tab label="Gallery" ref={refs.galleryTab} data-testid="tab-gallery" />
       <tab label="Rich Text" ref={refs.richTextTab} data-testid="tab-richtext" />
+      <tab label="Markdown" ref={refs.markdownTab} data-testid="tab-markdown" />
       <tab label="Last Command" data-testid="tab-last-command">
         <last-tool-panel-x />
       </tab>

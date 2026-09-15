@@ -2,7 +2,23 @@
 // and never through the `pathux` barrel, so an app that does not edit markdown does not bundle
 // the mdast chain.
 
+import { markdownDocFromText } from "./providers/markdown_parse";
+import { markdownText } from "./providers/markdown_serialize";
+import { MarkdownProvider } from "./providers/markdown_provider";
+import { RichTextArea } from "./textarea";
+import type { MdDoc } from "./providers/markdown_model";
+
 export * from "./providers/markdown_model";
 export { markdownDocFromText } from "./providers/markdown_parse";
 export { markdownText, markdownTree } from "./providers/markdown_serialize";
 export { sanitizeAttrs, sanitizeStyle, safeUrl } from "./providers/markdown_html";
+export { MarkdownProvider, markdownOps } from "./providers/markdown_provider";
+export type { MarkdownProviderOptions, MdKindTarget } from "./providers/markdown_provider";
+export { renderMarkdownBlock, markdownStyles } from "./providers/markdown_render";
+export type { MarkdownRenderOptions } from "./providers/markdown_render";
+
+RichTextArea.registerFormat<MdDoc>("markdown", {
+  provider: () => new MarkdownProvider(),
+  fromText: (text) => markdownDocFromText(text),
+  toText  : (doc) => markdownText(doc),
+});

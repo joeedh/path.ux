@@ -47,6 +47,8 @@ export interface ClipboardContent {
   blocks: readonly string[];
   /** The whole selection as HTML, when the provider can produce it. */
   html?: string;
+  /** The plain text as it arrived, for a target that takes text verbatim (a code block). */
+  text?: string;
 }
 
 /**

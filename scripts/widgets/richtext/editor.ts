@@ -25,6 +25,20 @@ import type {
   ToolbarSync,
 } from "./provider";
 
+// The color keys set as `--richtext-<key>` variables as they are, and the font keys as CSS
+const THEME_COLORS = [
+  "readonly-background",
+  "selection-background",
+  "link-color",
+  "code-background",
+  "quote-border-color",
+  "quote-text-color",
+  "marker-color",
+  "hr-color",
+  "opaque-background",
+] as const;
+const THEME_FONTS = ["code-font", "heading-font"] as const;
+
 // What each formatting inputType asks for, in the provider's naming
 const FORMAT_MARKS: Record<string, string> = {
   formatBold         : "bold",
@@ -184,6 +198,15 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
         outline       : none;
         white-space   : pre-wrap;
         overflow-wrap : anywhere;
+        background    : var(--richtext-background);
+      }
+
+      .rich-text-root[readonly] {
+        background : var(--richtext-readonly-background);
+      }
+
+      .rich-text-root ::selection {
+        background : var(--richtext-selection-background);
       }
     `;
     this.shadow.appendChild(this.styletag);
@@ -420,7 +443,19 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     const font = this.getDefault("DefaultText") as CSSFont;
     this.root.style.font = font.genCSS();
     this.root.style.color = font.color;
-    this.root.style.backgroundColor = this.getDefault("background-color") as string;
+
+    // every theme key becomes a variable on the host, so a provider's static sheet reads them
+    const set = (name: string, value: string) =>
+      this.style.setProperty(`--richtext-${name}`, value);
+    set("background", this.getDefault("background-color") as string);
+    for (const key of THEME_COLORS) {
+      set(key, this.getDefault(key) as string);
+    }
+    for (const key of THEME_FONTS) {
+      set(key, (this.getDefault(key) as CSSFont).genCSS());
+    }
+    set("code-border-radius", `${this.getDefault("code-border-radius") as number}px`);
+    set("link-underline", this.getDefault("link-underline") ? "underline" : "none");
 
     // The toolbar's sprite icons are white, so a brightness filter multiplies them to the text
     // color's luminance, which reads in a light theme and a dark one alike; the toolbar
@@ -1309,8 +1344,21 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
       style         : "richtext",
       modalKeyEvents: true,
       theme: {
-        DefaultText       : t.font,
-        "background-color": t.color,
+        DefaultText           : t.font,
+        "background-color"    : t.color,
+        "readonly-background" : t.color,
+        "selection-background": t.color,
+        "link-color"          : t.color,
+        "link-underline"      : t.bool,
+        "code-font"           : t.font,
+        "code-background"     : t.color,
+        "code-border-radius"  : t.number,
+        "quote-border-color"  : t.color,
+        "quote-text-color"    : t.color,
+        "marker-color"        : t.color,
+        "heading-font"        : t.font,
+        "hr-color"            : t.color,
+        "opaque-background"   : t.color,
       },
     };
   }

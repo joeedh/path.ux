@@ -768,6 +768,7 @@
     "Resolved",
     "ResolvedToolDef",
     "RichTextChangeDetail",
+    "RichTextFormat",
     "RunnableToolPhase",
     "SVGRectWithColor",
     "ScreenAreaAny",

@@ -275,11 +275,10 @@ describe("fromDocPos", () => {
     });
   });
 
-  test("an opaque block returns its root", () => {
-    const root = makeRoot(OPAQUE);
-    const div = root.firstElementChild!;
-    expect(fromDocPos(root, { block: "table", offset: 0 })).toEqual({ node: div, offset: 0 });
-    expect(fromDocPos(root, { block: "table", offset: 1 })).toEqual({ node: div, offset: 1 });
+  test("an opaque block maps to the root's child offsets on either side of it", () => {
+    const root = makeRoot(`<p data-doc-block="a">x</p>${OPAQUE}`);
+    expect(fromDocPos(root, { block: "table", offset: 0 })).toEqual({ node: root, offset: 1 });
+    expect(fromDocPos(root, { block: "table", offset: 1 })).toEqual({ node: root, offset: 2 });
   });
 
   test("an unrendered block maps to nothing", () => {

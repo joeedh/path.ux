@@ -38,6 +38,12 @@ export default defineConfig({
       name: "chromium",
       use : { ...devices["Desktop Chrome"] },
     },
+    // the markdown spec pins caret placement in a second engine; the other specs drive CDP
+    {
+      name     : "firefox",
+      use      : { ...devices["Desktop Firefox"] },
+      testMatch: /richtext[\\/]markdown\.spec\.ts/,
+    },
 
     /* Test against mobile viewports. */
     // {

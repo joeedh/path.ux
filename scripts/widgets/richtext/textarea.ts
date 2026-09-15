@@ -5,10 +5,28 @@ import type { PathWatchInfo } from "../../path-controller/controller/pathwatch";
 import { DocumentSession } from "./context";
 import { RichTextEditor } from "./editor";
 import { newBlockId } from "./provider";
+import type { DocumentProvider } from "./provider";
 import { PlainProvider, plainDocFromLines } from "./providers/plain";
 import type { PlainDoc } from "./providers/plain";
 
 const LINE_BREAK = /\r\n|\r|\n/;
+
+/**
+ * One way of holding a string datapath as a document: the provider that edits it and the
+ * two conversions. Registered by name with `RichTextArea.registerFormat`; the markdown
+ * module registers `"markdown"` when it is imported, so the parser never enters the barrel.
+ */
+export interface RichTextFormat<Doc> {
+  provider(): DocumentProvider<Doc>;
+  fromText(text: string): Doc;
+  toText(doc: Doc): string;
+}
+
+/**
+ * The registered formats, type-erased: `ToolbarSync` makes a provider invariant in its
+ * document, so the one cast lives here and `format()` hands the entry back as `unknown`.
+ */
+const formats = new Map<string, RichTextFormat<unknown>>();
 
 /**
  * A rich text field bound to a string datapath, the way `TextArea` is for plain text: a
@@ -52,6 +70,16 @@ export class RichTextArea<CTX extends IContextBase = IContextBase> extends UIBas
     // exposed as a part, so a consumer styles it with ::part(editor) and a test finds it
     this.editor.setAttribute("part", "editor");
     this.shadow.appendChild(this.editor);
+  }
+
+  /** Registers a document format under `name`, replacing any earlier one of that name. */
+  static registerFormat<Doc>(name: string, format: RichTextFormat<Doc>): void {
+    formats.set(name, format as RichTextFormat<unknown>);
+  }
+
+  /** The format registered as `name`, or `undefined` when nothing has registered it yet. */
+  static format(name: string): RichTextFormat<unknown> | undefined {
+    return formats.get(name);
   }
 
   // The DocEditOp on the stack is the undo entry; a DataPathSetOp per write would double it
@@ -164,3 +192,9 @@ export class RichTextArea<CTX extends IContextBase = IContextBase> extends UIBas
   }
 }
 UIBase.internalRegister(RichTextArea);
+
+RichTextArea.registerFormat<PlainDoc>("plain", {
+  provider: () => new PlainProvider(),
+  fromText: (text) => plainDocFromLines(text.split(LINE_BREAK), () => newBlockId()),
+  toText  : (doc) => doc.blocks.map((b) => b.text).join("\n"),
+});
