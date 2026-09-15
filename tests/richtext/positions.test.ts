@@ -1,5 +1,4 @@
 import { describe, expect, test } from "vitest";
-import type { IContextBase } from "../../scripts/core/context_base";
 import {
   blockElement,
   fromDocPos,
@@ -7,7 +6,12 @@ import {
   toDocPos,
   type PendingDocView,
 } from "../../scripts/widgets/richtext/positions";
-import { CARET_SLOT, type DocPos, type EditOp } from "../../scripts/widgets/richtext/provider";
+import {
+  CARET_SLOT,
+  type DocPos,
+  type EditOp,
+  type ProviderContext,
+} from "../../scripts/widgets/richtext/provider";
 import { PlainProvider, type PlainDoc } from "../../scripts/widgets/richtext/providers/plain";
 
 const ATOM = '<span data-doc-atom="" contenteditable="false"><img alt="x">chip</span>';
@@ -57,7 +61,7 @@ function makeRoot(html: string) {
   return root;
 }
 
-const ctx = undefined as unknown as IContextBase;
+const ctx = undefined as unknown as ProviderContext;
 
 function renderedRoot() {
   const provider = new PlainProvider();
@@ -370,6 +374,29 @@ describe("mapThroughPending", () => {
     expect(
       map(pos("a", 3), { type: "replaceBlocks", after: null, blocks: [], remove: ["b"] })
     ).toEqual(pos("a", 3));
+  });
+
+  test("a custom op moves positions by its shifts and by nothing else", () => {
+    const custom = (delta: number): EditOp => ({
+      type  : "custom",
+      name  : "prefix",
+      blocks: ["a"],
+      data  : {},
+      shifts: [{ block: "a", at: 0, delta }],
+    });
+
+    expect(map(pos("a", 3), custom(2))).toEqual(pos("a", 5));
+    expect(map(pos("a", 3), custom(-2))).toEqual(pos("a", 1));
+    expect(map(pos("a", 1), custom(-2))).toEqual(pos("a", 0));
+    expect(map(pos("b", 3), custom(2))).toEqual(pos("b", 3));
+    expect(
+      map(pos("a", 3), { type: "custom", name: "upper", blocks: ["a"], data: { touch: ["a"] } })
+    ).toEqual(pos("a", 3));
+
+    // a later op sees the length the shift changed
+    expect(map(pos("b", 1), custom(2), { type: "joinWithPrevious", block: "b" })).toEqual(
+      pos("a", 14)
+    );
   });
 
   test("a queue is applied in order, tracking the lengths earlier ops changed", () => {

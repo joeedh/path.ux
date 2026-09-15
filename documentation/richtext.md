@@ -7,8 +7,10 @@ what the provider says changed. The design and its reasoning live in
 [plans/rich-text-provider.md](plans/rich-text-provider.md); this page is the consumer's view.
 
 Everything below is exported from the `pathux` barrel: `RichTextEditor`, `RichTextArea`,
-`DocumentSession`, `RichTextContext`, `DocEditOp`, `PlainProvider`, `plainDocFromLines`,
-`newBlockId`, `ATOM_CHAR`, `CARET_SLOT` and the interfaces. The `execCommand`-driven
+`DocumentSession`, `RichTextContext`, `DocEditOp`, `replaceContentsOp`, `PlainProvider`,
+`plainDocFromLines`, `newBlockId`, `ATOM_CHAR`, `CARET_SLOT` and the interfaces. The helpers
+in `providers/marks.ts` and `providers/toolbar.ts` are not: a provider imports them by path
+(`path.ux/scripts/widgets/richtext/providers/toolbar`). The `execCommand`-driven
 `RichEditor` (`rich-text-editor-x`) is gone; `RichViewer` (`html-viewer-x`) stays.
 
 ## The model
@@ -31,37 +33,70 @@ string-backed document (a markdown source, a text field) needs a holder, `{ text
 the like, since a string cannot be edited in place.
 
 - `blocks(doc)`, `blockText(doc, block)`, `isOpaque(doc, block)`: the model above.
-- `marks()`: the marks `toggleMark` may name, in toolbar order. `activeMarks(doc, range)` is
-  optional and returns the marks the toolbar shows as on: those a `toggleMark` there would
-  remove, or for a caret the marks typing there would extend.
+- `marks()`: the marks `toggleMark` and the editor's Ctrl+B, Ctrl+I, Ctrl+U and Ctrl+Shift+S
+  may name; a name not listed is refused. `activeMarks(doc, range)` is optional and returns
+  the marks a toolbar shows as on: those a `toggleMark` there would remove, or for a caret
+  the marks typing there would extend.
+- `headings(doc)` is optional and returns `{ block, level }` in document order, for a consumer
+  building an outline; the editor builds none.
 - `renderBlock(doc, block, ctx)` returns a fresh element the editor places as a direct child of
-  its editable root, replaced wholesale on every re-render. The contract:
+  its editable root, replaced wholesale on every re-render. `ctx` is a `ProviderContext`: the
+  editor's `RichTextContext` with the `EditorBridge` under `ctx.editor` (see The bridge). The
+  contract:
   - the root carries `data-doc-block="<id>"`;
   - an atom carries `data-doc-atom` and `contenteditable="false"`, and its subtree counts for
     nothing in the position walk;
   - an opaque block's root carries `contenteditable="false"` as well;
   - text is real text nodes, with a `CARET_SLOT` (a zero-width space) on each side of an atom
     and one inside an empty block, so the caret has somewhere to sit;
-  - a widget embedded as an atom is built with `UIBase.constructElement` under `ctx`, which is
-    the editor's `RichTextContext`, so its toolstack is the document's.
+  - a widget embedded as an atom is built with `UIBase.constructElement` under `ctx`, so its
+    toolstack is the document's and it reaches the editor through `ctx.editor`. The editor
+    keeps that context on it: its `_forEachChildWidget` skips the editable root, so a
+    `setCtx` cascade from the app never replaces it, and `renderAll` and each applied result
+    drive the embedded widgets' `update()` themselves.
+- `styles()` is optional and returns CSS the editor places in a `<style>` after its own,
+  replaced whole whenever `session` is set or the theme updates. The root is in the editor's
+  shadow DOM, so this is the only way a page-level rule reaches a block element.
 - `applyEdit(doc, op)` applies one `EditOp` and returns an `EditResult`: `dirtyBlocks` to
   re-render (new ids included), `removedBlocks`, and the `selection` the caret lands on. The op
   types are `insertText`, `deleteRange`, `splitBlock`, `joinWithPrevious`, `toggleMark`,
-  `insertContent` and `replaceBlocks`; `provider.ts` documents each. `insertText` and
+  `insertContent`, `replaceBlocks` and `custom`; `provider.ts` documents each. `insertText` and
   `insertContent` take a range and replace it when it is not collapsed. `deleteRange` across
   blocks joins the outer two. `replaceBlocks` is the snapshot form of an inverse and never comes
   from user input, but every provider must apply it.
+- `custom` is the provider's own op: `{ name, blocks, data, shifts? }`, where `data` is JSON
+  (it is serialized on the toolstack), `blocks` names every block it may touch so the inverse
+  can snapshot them, and `shifts` lists each `{ block, at, delta }` by which it moves text, so
+  a keystroke pending behind it lands in the right place. A provider throws on a `name` it
+  does not know; `PlainProvider` knows none. A custom op never folds into a typing run.
+- `handleKey(doc, range, event)` is optional and runs on `keydown` before the editor's own
+  handling, for every key but the undo and redo chords and never when read-only. An op it
+  returns is submitted and the key is consumed, `beforeinput` included; `undefined` falls
+  through to the editor, so Tab stays refused unless the provider takes it.
 - `inverse(doc, op)` is called before `applyEdit` and returns the edit that undoes `op`. For
   `insertText` and `deleteRange` it must also undo every later keystroke folded into the same
   typing run, so it has to restore the block rather than reverse the one edit. A
   `replaceBlocks` snapshot of the block does that, and is what the reference provider answers
   with for every op.
+- `snapshots(doc, blocks?)` returns the `BlockSnapshot`s a `replaceBlocks` restores, for the
+  given blocks or the whole document; `inverse` and `replaceContentsOp` are built on it.
+- `emitDocFile(doc)` returns the document as a `Blob` in its file format, for a Save button.
 - `toClipboard(doc, range)` returns `{ blocks, html? }`, one string per block the range covers;
   `fromClipboard(data)` parses a `DataTransfer` into the same shape, or returns `undefined` to
   refuse a paste. The editor joins `blocks` with newlines for `text/plain`.
-- `onChange(doc, listener)` reports changes made outside `applyEdit` (a load, a remote update,
-  a write to a field the document renders) and returns the unsubscribe. A provider need not
-  report its own `applyEdit`.
+- `buildToolbar(row, ctx)` is optional and fills the editor's toolbar row, called with the
+  editor's `ProviderContext` whenever `session` is set. Its widgets edit through
+  `ctx.editor.dispatch`. It returns a `ToolbarSync`, `(doc, selection) => void`, which the
+  editor calls on every selection change to light the buttons; per-editor state lives in that
+  closure, since one provider serves every editor over a session. `providers/toolbar.ts`
+  supplies `addMarkButtons(row, ctx, provider, marks?)`, one `IconCheck` per mark with a sync
+  that reads `activeMarks`, and `addSeparator(row)`; `providers/marks.ts` has the range
+  arithmetic for flat `{ from, to, name }` marks. A provider without `buildToolbar` gets no
+  toolbar.
+- `onExternalChange(doc, listener)` is optional and reports changes made outside `applyEdit`
+  (a remote update, a write to a field the document renders) and returns the unsubscribe. A
+  provider never reports its own `applyEdit`. See Hearing about changes for when to use it
+  rather than `session.dispatch`.
 
 `PlainProvider` in `providers/plain.ts` is the reference: blocks of text with `from`/`to`
 marks, rendered as `<p>` with `<b>`, `<i>`, `<u>` and `<s>`. `plainDocFromLines` builds one for
@@ -76,9 +111,12 @@ about changes. `dispose()` marks the document closed; its ops on any stack becom
 
 ```ts
 const session = new DocumentSession(doc, provider, new ToolStack());
-const editor = UIBase.constructElement<RichTextEditor>("rich-text-x", ctx);
+const editor = UIBase.constructElement<RichTextEditor<Ctx, PlainDoc>>("rich-text-x", ctx);
 editor.session = session;
 ```
+
+`RichTextEditor` and `DocumentSession` take the document type as a parameter and are
+invariant in it (the toolbar sync is a function over the document), so name it on both.
 
 The toolstack is the session's choice, and the two configurations feel different:
 
@@ -94,23 +132,95 @@ inverse as JSON. A run of typing on one block folds into one entry; anything els
 
 The editor builds its subtree, and the widgets a provider embeds, under a `RichTextContext`
 whose `toolstack` is the session's and whose `state`, `api` and `screen` are the parent
-context's. `editor.richCtx` exposes it.
+context's. `editor.richCtx` exposes it; its `editor` is the bridge below.
+
+### History engines
+
+A client that navigates between documents builds the engine itself; these are the primitives.
+
+- `session.dispatch(op, parentCtx, source?, run?)` runs one `EditOp` on the session's
+  toolstack with no editor involved and resolves with the `EditResult`. `run` defaults to a
+  fresh value, so two dispatches never fold into each other; pass an editor's run to join its
+  typing. A document takes an op with no editor open, or from behind the current one.
+- `replaceContentsOp(provider, doc, next)` builds the op that swaps the whole document for
+  `next`, keeping `next`'s block ids. Its inverse snapshots the current blocks, so undoing a
+  reload restores the edits it overwrote, ids included; it never folds and is one undo entry.
+- `session.revision` counts every delivered change, folds included. Record it at load and at
+  save to tell whether an external change conflicts with local edits; `toolstack.cur` cannot
+  serve, since a typing run folds into the head entry without moving it.
+- `editor.viewState` (get and set) is `{ selection?, scrollTop }`. The editable root is the
+  scroller, so give the host a height; setting `session` renders from scratch and loses both,
+  by design. Save it before navigating away, restore it after setting the session back.
+  `editor.scrollToBlock(id)` scrolls a block into view.
+- Undo lives in the session and `dispose()` is terminal. Per-document undo across navigation
+  means keeping the session and its toolstack alive and swapping only `editor.session`;
+  evicting a document is discarding its undo. Block ids are fresh per parse, so undo does not
+  persist across restarts.
+- A change the user must not be able to revert (an initial load, a remote update the client
+  has accepted) goes through the provider's `onExternalChange`; a reload the user may undo
+  goes through `dispatch` with `replaceContentsOp`.
+
+### The bridge
+
+Every widget a provider embeds and every toolbar item it builds gets the editor's context, and
+`ctx.editor` on it is the `EditorBridge`: one per editor, so two editors over one session get
+two. It is how a provider reaches the editor without holding a pointer to it.
+
+- `dispatch(op)` ends the typing run and commits `op` through the session's toolstack,
+  resolving after the result is applied so the fresh block element can be read; it resolves
+  `undefined` when the editor is read-only.
+- `readOnly`, `selection()`, `select(range)`, `blockElement(block)` and `root` read and drive
+  the editor. `posFromPoint(x, y)` maps a viewport point to a document position, or
+  `undefined` where the platform cannot say (WebKit).
+- `linkClicked(link, event)` raises the editor's `linkclick` event and returns `false` when a
+  listener prevented it.
 
 ## The editor
 
 - `session` sets or swaps the document. `select(range)` focuses the editor and places the
-  selection; `selection()` reads it as document positions.
-- `toggleMark(name)` toggles a mark over the selection. The toolbar built from `marks()` does
-  the same and hides under a `no-toolbar` attribute.
+  selection; `selection()` reads it as document positions. `getValue()` is the document.
+- `toggleMark(name)` toggles a mark over the selection. The toolbar is the provider's, built
+  by its `buildToolbar` whenever `session` is set, and hides under a `no-toolbar` attribute.
+- `readOnly` (attribute `readonly`, reflected) makes the editor a viewer: the root's
+  `contenteditable` goes false and nothing else changes, so the scroll position and the
+  selection survive, text stays selectable and copy works; `beforeinput`, `keydown` (undo
+  chords included), paste, drop and `handleKey` return without acting; `dispatch` resolves
+  `undefined`; and the toolbar's widgets are disabled in place. `readOnly` and `disabled`
+  are the only writers of `contenteditable`, so a disable-then-enable cycle leaves a
+  read-only editor read-only. `RichViewer` is not extended; this is the viewer.
 - `undo()` and `redo()` run the session's toolstack, passing the editor's `RichTextContext`. Ctrl+Z, Ctrl+Y and Ctrl+Shift+Z are
-  handled on `keydown`; Ctrl+B, Ctrl+I and Ctrl+U arrive from the browser as formatting input
-  and Ctrl+Shift+S toggles `strikethrough`. Escape blurs, and Tab is refused.
+  handled on `keydown`; every other key is offered to the provider's `handleKey` first.
+  Ctrl+B, Ctrl+I and Ctrl+U arrive from the browser as formatting input and Ctrl+Shift+S
+  toggles `strikethrough`. Escape blurs, and Tab is refused unless the provider takes it.
+- A `linkclick` event, `detail: LinkInfo` (`{ kind, target, text, range }`), cancelable and
+  non-bubbling, fires when a provider's link is clicked. The editor attaches no meaning to a
+  link and never navigates; the consumer listens on the element and resolves the target.
+  Its one default, in edit mode only, is the link popup, which `preventDefault` suppresses
+  (the popup itself lands with the markdown provider); read-only has no default.
 - Copy and cut write the selection through `toClipboard`; paste and drop read through
   `fromClipboard`.
 - A `refused` event, `detail: { inputType }`, fires for every input the editor declined: an
   input type it has no mapping for, a paste the provider refused, and composition.
 - `RichTextEditor.observeMutations` (a static, on by default) logs any change to the editable
   DOM the editor did not make, which is how a missed input type shows up during development.
+
+## Hearing about changes
+
+A change can be heard at three levels, one for each kind of owner.
+
+- **The editor's `change` event**, for UI code that owns an editor. After applying any change
+  to the session it shows, its own edits included, the editor dispatches
+  `CustomEvent("change", { detail: { change, info, session } })` (`RichTextChangeDetail`) on
+  its host element and calls `on_change?.(doc)`. It fires once per applied edit, not on blur
+  as a form control's `change` does, and does not bubble: listen on the element.
+- **`session.onChange(listener)`**, for anything that owns a document: an outline, a history
+  engine, a save-on-change hook. The listener gets `(change, info)` with `info.origin` one of
+  `edit`, `fold` (the op joined the typing run at the head of the stack), `undo`, `redo` or
+  `external`, the `op` for every origin but `external`, and the `submitter` the op's source
+  passed to `DocEditOp.result`. `session.revision` counts these.
+- **`provider.onExternalChange`**, for provider authors only: how a change the session cannot
+  see reaches it, delivered with `origin: "external"`. A provider never reports its own
+  `applyEdit`.
 
 The editor never patches the DOM optimistically. Every `beforeinput` is prevented and mapped to
 an op; the DOM changes when the op's result comes back, which is after at least one `await` on

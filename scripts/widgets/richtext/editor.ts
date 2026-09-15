@@ -4,16 +4,26 @@ import type { IContextBase } from "../../core/context_base";
 import type { CSSFont } from "../../core/cssfont";
 import type { RowFrame } from "../../core/ui_containers";
 import { t } from "../../core/theme_schema";
-import type { IconCheck } from "../ui_widgets";
 import { css2color } from "../../core/ui_theme";
 import { RichTextContext } from "./context";
-import type { DocumentSession } from "./context";
+import type { DocChangeInfo, DocumentSession } from "./context";
 import { DocEditOp } from "./ops";
 import { blockElement, blockTextOf, fromDocPos, mapThroughPending, toDocPos } from "./positions";
 import type { DomPos, PendingDocView } from "./positions";
 import { composedEdit, rootReflects } from "./composition";
 import { ATOM_CHAR, newBlockId } from "./provider";
-import type { BlockId, DocChange, DocPos, DocRange, EditOp, EditResult } from "./provider";
+import type {
+  BlockId,
+  DocChange,
+  DocPos,
+  DocRange,
+  EditOp,
+  EditResult,
+  EditorBridge,
+  LinkInfo,
+  ProviderContext,
+  ToolbarSync,
+} from "./provider";
 
 // What each formatting inputType asks for, in the provider's naming
 const FORMAT_MARKS: Record<string, string> = {
@@ -38,6 +48,13 @@ const WORD_DELETES = new Set(["deleteWordBackward", "deleteWordForward"]);
 /** The detail of the `refused` event: the input the editor declined to handle. */
 export interface RefusedDetail {
   inputType: string;
+}
+
+/** The detail of the editor's `change` event: what changed, where it came from, and the session it applied to. */
+export interface RichTextChangeDetail<Doc = unknown> {
+  change: DocChange;
+  info: DocChangeInfo;
+  session: DocumentSession<Doc>;
 }
 
 const samePos = (a: DocPos, b: DocPos) => a.block === b.block && a.offset === b.offset;
@@ -112,12 +129,13 @@ function deleteBoundary(
  * comes back. Composition is let through: the browser mutates the composed block during the
  * composition, and at `compositionend` the editor diffs the block back into an ordinary edit
  * and submits it. A composition it cannot attribute falls back to re-rendering the root and a
- * `refused` event. The toolbar built from `provider.marks()` hides under a `no-toolbar`
- * attribute; `toggleMark` works either way.
+ * `refused` event. The toolbar is the provider's, built into a row the editor hosts above the
+ * root and hidden under a `no-toolbar` attribute; `toggleMark` works either way. `readOnly`
+ * locks every input path without touching the rendered DOM.
  */
 export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unknown> extends UIBase<
   CTX,
-  unknown,
+  Doc,
   "RichTextEditor"
 > {
   /** Logs any DOM mutation the editor did not make, so a missed inputType shows up. */
@@ -125,10 +143,14 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
 
   readonly root: HTMLDivElement;
   private readonly styletag: HTMLStyleElement;
-  private toolbar?: RowFrame<CTX>;
-  private readonly markButtons = new Map<string, IconCheck<CTX>>();
+  /** Holds `provider.styles()`, replaced whole whenever the session or the theme changes. */
+  private readonly providerStyle: HTMLStyleElement;
+  private toolbar?: RowFrame<ProviderContext>;
+  private toolbarSync?: ToolbarSync<Doc>;
+  /** What `toolbar.disabled` was last written to, so a read-only switch writes it once. */
+  private toolbarLocked = false;
   private _session?: DocumentSession<Doc>;
-  private rctx?: RichTextContext<CTX, Doc>;
+  private rctx?: RichTextContext<CTX, Doc> & ProviderContext;
   private unsubscribe?: () => void;
   private needsRender = false;
   /** Ops submitted whose results have not been applied, oldest first. */
@@ -138,8 +160,11 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
   private composing = false;
   private snapshot?: CompositionSnapshot;
   private observer?: MutationObserver;
-  private syncingToolbar = false;
+  /** The info the session delivered for each of this editor's own results, read back once applied. */
+  private readonly ownInfo = new WeakMap<DocChange, DocChangeInfo>();
   private readonly onSelectionChange = () => this.selectionChanged();
+  /** How a provider reaches this editor from the context it renders under. */
+  readonly bridge: EditorBridge;
 
   constructor() {
     super();
@@ -152,7 +177,9 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
       }
 
       .rich-text-root {
+        flex          : 1 1 auto;
         min-height    : 6em;
+        overflow-y    : auto;
         padding       : 5px;
         outline       : none;
         white-space   : pre-wrap;
@@ -160,11 +187,27 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
       }
     `;
     this.shadow.appendChild(this.styletag);
+    this.providerStyle = document.createElement("style");
+    this.shadow.appendChild(this.providerStyle);
 
     const root = (this.root = document.createElement("div"));
     root.className = "rich-text-root";
     root.contentEditable = "true";
     root.spellcheck = false;
+
+    const editor = this;
+    this.bridge = {
+      dispatch: (op) => this.dispatch(op),
+      get readOnly() {
+        return editor.readOnly;
+      },
+      selection   : () => this.selectionThroughPending(),
+      select      : (range) => this.select(range),
+      blockElement: (block) => blockElement(root, block),
+      posFromPoint: (x, y) => this.posFromPoint(x, y),
+      root,
+      linkClicked: (link, event) => this.linkClicked(link, event),
+    };
 
     root.addEventListener("beforeinput", (e) => this.onBeforeInput(e));
     root.addEventListener("keydown", (e) => this.onKeyDown(e));
@@ -201,28 +244,65 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     this.rctx = undefined;
     this.pending.length = 0;
     this.runAnchor = undefined;
-    this.unsubscribe = session?.onChange((change, source) => {
-      if (source !== this) {
-        this.docChanged(change);
+    this.unsubscribe = session?.onChange((change, info) => {
+      // an own result is applied by the commit that awaits it, which announces it then
+      if (info.submitter === this) {
+        this.ownInfo.set(change, info);
+        return;
       }
+
+      this.docChanged(change);
+      this.announce(change, info);
     });
 
+    this.providerStyle.textContent = session?.provider.styles?.() ?? "";
     this.buildToolbar();
     this.renderAll();
   }
 
   /** The context the document's UI is built under, rebuilt when the parent context changes. */
-  get richCtx(): RichTextContext<CTX, Doc> | undefined {
+  get richCtx(): (RichTextContext<CTX, Doc> & ProviderContext) | undefined {
     const session = this._session;
     if (session === undefined || this.ctx === undefined) {
       return undefined;
     }
 
     if (this.rctx?.parent !== this.ctx || this.rctx.session !== session) {
-      this.rctx = new RichTextContext(this.ctx, session);
+      // the bridge is always passed, so the context is a ProviderContext by construction
+      this.rctx = new RichTextContext(this.ctx, session, this.bridge) as RichTextContext<CTX, Doc> &
+        ProviderContext;
     }
 
     return this.rctx;
+  }
+
+  /** The document shown, or `undefined` without a session. */
+  getValue = (): Doc | undefined => this._session?.doc;
+
+  /**
+   * Render-only mode, reflected as the `readonly` attribute. Switching it leaves the DOM and
+   * the scroll position alone: the root stops being editable, every input path returns
+   * without acting, the toolbar's widgets disable in place, and `dispatch` resolves `undefined`.
+   */
+  get readOnly(): boolean {
+    return this.hasAttribute("readonly");
+  }
+
+  set readOnly(value: boolean) {
+    this.toggleAttribute("readonly", value);
+    this.applyEditable();
+  }
+
+  /** The selection and scroll position, for a history engine to save before swapping `session` and restore after. */
+  get viewState(): { selection?: DocRange; scrollTop: number } {
+    return { selection: this.domRange(), scrollTop: this.root.scrollTop };
+  }
+
+  set viewState(state: { selection?: DocRange; scrollTop: number }) {
+    this.root.scrollTop = state.scrollTop;
+    if (state.selection !== undefined) {
+      this.setSelection(state.selection);
+    }
   }
 
   init() {
@@ -239,6 +319,90 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     }
     if (this.toolbar !== undefined) {
       this.toolbar.hidden = this.hasAttribute("no-toolbar");
+    }
+    this.applyEditable();
+    // the update cascade stops at the root, so the widgets a provider embedded run from here
+    this.updateEmbedded(this.root);
+  }
+
+  /**
+   * Skips the editable root: the widgets a provider embeds under a block keep the context they
+   * were built under, so neither the `setCtx` cascade nor the update cascade reaches them.
+   */
+  override _forEachChildWidget(cb: (n: UIBase<CTX>) => void, thisvar?: unknown): void {
+    const rec = (n: Node & { shadow?: ShadowRoot }) => {
+      if (n === this.root) {
+        return;
+      }
+      if (n instanceof UIBase) {
+        if (thisvar !== undefined) {
+          cb.call(thisvar, n as UIBase<CTX>);
+        } else {
+          cb(n as UIBase<CTX>);
+        }
+        return;
+      }
+
+      for (const child of n.childNodes) {
+        rec(child);
+      }
+      if (n.shadow !== undefined) {
+        for (const child of n.shadow.childNodes) {
+          rec(child);
+        }
+      }
+    };
+
+    for (const n of this.childNodes) {
+      rec(n);
+    }
+    for (const n of this.shadow.childNodes) {
+      rec(n);
+    }
+  }
+
+  override __updateDisable(val: boolean): void {
+    super.__updateDisable(val);
+    this.applyEditable();
+  }
+
+  /**
+   * The one writer of the root's `contenteditable`: editable unless read-only or disabled.
+   * Also mirrors `readOnly` onto the root as a `readonly` attribute a provider's styles can
+   * target, and locks the toolbar's widgets in place.
+   */
+  private applyEditable(): void {
+    const readOnly = this.readOnly;
+    const editable = !readOnly && !this.disabled ? "true" : "false";
+
+    if (this.root.getAttribute("contenteditable") !== editable) {
+      this.root.contentEditable = editable;
+    }
+    this.root.toggleAttribute("readonly", readOnly);
+
+    if (this.toolbar !== undefined && this.toolbarLocked !== readOnly) {
+      this.toolbarLocked = readOnly;
+      this.toolbar.disabled = readOnly;
+    }
+  }
+
+  /** Runs `flushUpdate` on every widget a provider placed under `scope`. */
+  private updateEmbedded(scope: ParentNode): void {
+    const rec = (n: Node) => {
+      if (n instanceof UIBase) {
+        if (n.parentWidget === undefined) {
+          n.parentWidget = this;
+        }
+        n.flushUpdate();
+        return;
+      }
+      for (const child of n.childNodes) {
+        rec(child);
+      }
+    };
+
+    for (const n of scope.childNodes) {
+      rec(n);
     }
   }
 
@@ -258,28 +422,15 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     this.root.style.color = font.color;
     this.root.style.backgroundColor = this.getDefault("background-color") as string;
 
-    this.tintToolbarIcons(font.color);
-  }
-
-  /**
-   * Tints the toolbar's white sprite icons to match the text color. The icons are white, so
-   * `brightness` multiplies them to the text color's luminance, which reads correctly in a
-   * light theme and a dark one without depending on a light-or-dark flag. The filter sits on
-   * each button's icon div, not the host, so the button's own background and border keep their
-   * theme colors.
-   */
-  private tintToolbarIcons(textColor: string): void {
-    if (this.markButtons.size === 0) {
-      return;
-    }
-
-    const c = css2color(textColor);
+    // The toolbar's sprite icons are white, so a brightness filter multiplies them to the text
+    // color's luminance, which reads in a light theme and a dark one alike; the toolbar
+    // helpers put the variable on each icon div, so a button's own background keeps its color
+    const c = css2color(font.color);
     const luminance = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
-    const filter = `brightness(${luminance.toFixed(3)})`;
+    this.style.setProperty("--richtext-icon-tint", `brightness(${luminance.toFixed(3)})`);
 
-    for (const btn of this.markButtons.values()) {
-      btn.dom.style.filter = filter;
-    }
+    // setCSS re-runs on every theme update, so the provider's sheet is replaced, not appended
+    this.providerStyle.textContent = this._session?.provider.styles?.() ?? "";
   }
 
   /** Focuses the editable root and places the selection. */
@@ -291,6 +442,60 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
   /** The current selection as document positions, or `undefined` when it is elsewhere. */
   selection(): DocRange | undefined {
     return this.domRange();
+  }
+
+  /** Scrolls the root so the block's element sits at its top; nothing happens for an unrendered block. */
+  scrollToBlock(block: BlockId): void {
+    const el = blockElement(this.root, block);
+    if (el === undefined) {
+      return;
+    }
+
+    const top = el.getBoundingClientRect().top - this.root.getBoundingClientRect().top;
+    this.root.scrollTop += top;
+  }
+
+  /** Ends the typing run and commits `op`; resolves with its result, or `undefined` when read-only or dropped. */
+  async dispatch(op: EditOp): Promise<EditResult | undefined> {
+    if (this.readOnly) {
+      return undefined;
+    }
+
+    this.endRun();
+    return this.commit(op);
+  }
+
+  /**
+   * Raises `linkclick` for a link the provider rendered and the user clicked. The editor
+   * attaches no meaning to the link; its one default, in edit mode, is `linkDefault`, which
+   * `preventDefault` on the event suppresses. Returns `false` when the consumer prevented it.
+   */
+  linkClicked(link: LinkInfo, event: MouseEvent): boolean {
+    const proceed = this.dispatchEvent(
+      new CustomEvent<LinkInfo>("linkclick", { detail: link, cancelable: true })
+    );
+
+    if (proceed && !this.readOnly) {
+      this.linkDefault(link, event);
+    }
+
+    return proceed;
+  }
+
+  /** The edit-mode default for a link click. Empty until the link popup lands. */
+  protected linkDefault(_link: LinkInfo, _event: MouseEvent): void {}
+
+  /**
+   * The document position under a viewport point. The lookup pierces the shadow root, which
+   * WebKit's `caretRangeFromPoint` cannot, so there the answer is `undefined`.
+   */
+  private posFromPoint(x: number, y: number): DocPos | undefined {
+    if (typeof document.caretPositionFromPoint !== "function") {
+      return undefined;
+    }
+
+    const caret = document.caretPositionFromPoint(x, y, { shadowRoots: [this.shadow] });
+    return caret === null ? undefined : this.docPos(caret.offsetNode, caret.offset);
   }
 
   async undo(): Promise<void> {
@@ -315,9 +520,12 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     this.endRun();
   }
 
-  /** Toggles `mark` over the selection; nothing happens on a collapsed one. */
+  /** Toggles `mark` over the selection; nothing happens on a collapsed one or for a name the provider does not list. */
   toggleMark(mark: string): void {
-    if (this.composing) {
+    if (this.composing || this.readOnly) {
+      return;
+    }
+    if (!this._session?.provider.marks().some((m) => m.name === mark)) {
       return;
     }
 
@@ -344,7 +552,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
 
     e.preventDefault();
 
-    if (this._session === undefined || this._session.disposed) {
+    if (this._session === undefined || this._session.disposed || this.readOnly) {
       return;
     }
 
@@ -355,12 +563,19 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
 
   private onKeyDown(e: KeyboardEvent): void {
     // the shortcuts are the browser's during a composition; on Windows they arrive as Process
-    if (this.composing || e.isComposing) {
+    if (this.composing || e.isComposing || this.readOnly) {
       return;
     }
 
     const mod = e.ctrlKey || e.metaKey;
     const key = e.key.toLowerCase();
+    const undoChord = mod && !e.altKey && (key === "z" || key === "y");
+
+    // consuming the keydown also stops the beforeinput the key would have produced
+    if (!undoChord && this.providerHandles(e)) {
+      e.preventDefault();
+      return;
+    }
 
     if (e.key === "Escape") {
       this.root.blur();
@@ -378,6 +593,27 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
       void this.redo();
       e.preventDefault();
     }
+  }
+
+  /** Offers `e` to the provider's `handleKey` and submits what it answers; `false` when it declines. */
+  private providerHandles(e: KeyboardEvent): boolean {
+    const session = this._session;
+    if (session === undefined || session.disposed || session.provider.handleKey === undefined) {
+      return false;
+    }
+
+    const range = this.selectionThroughPending();
+    if (range === undefined) {
+      return false;
+    }
+
+    const op = session.provider.handleKey(session.doc, range, e);
+    if (op === undefined) {
+      return false;
+    }
+
+    this.submit(op);
+    return true;
   }
 
   /** Writes the selection through `toClipboard`; a cut then commits its deletion on its own. */
@@ -399,7 +635,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     }
     e.preventDefault();
 
-    if (cut && !session.disposed) {
+    if (cut && !session.disposed && !this.readOnly) {
       // an entry of its own: neither joining a delete run nor starting one
       this.submit({ type: "deleteRange", range });
       this.endRun();
@@ -668,12 +904,12 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     void this.commit(op, reflected);
   }
 
-  /** Runs `op` through the toolstack and applies its result once it has run. */
-  private async commit(op: EditOp, reflected = false): Promise<void> {
+  /** Runs `op` through the toolstack and applies its result once it has run; `undefined` when it did not land. */
+  private async commit(op: EditOp, reflected = false): Promise<EditResult | undefined> {
     const session = this._session;
     const ctx = this.richCtx;
     if (session === undefined || ctx === undefined) {
-      return;
+      return undefined;
     }
 
     const toolop = new DocEditOp(
@@ -702,15 +938,33 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
       } else {
         this.endRun();
       }
-      return;
+      return undefined;
     }
 
     if (this._session !== session) {
-      return;
+      return undefined;
     }
 
     this.dropPending(entry);
     this.applyResult(applied);
+    this.announce(applied, this.ownInfo.get(applied) ?? { origin: "edit", op, submitter: this });
+
+    return applied;
+  }
+
+  /** Reports a change this editor has applied: the `change` event on the host, then `on_change` with the document. */
+  private announce(change: DocChange, info: DocChangeInfo): void {
+    const session = this._session;
+    if (session === undefined) {
+      return;
+    }
+
+    this.dispatchEvent(
+      new CustomEvent<RichTextChangeDetail<Doc>>("change", {
+        detail: { change, info, session },
+      })
+    );
+    this.on_change?.(session.doc);
   }
 
   private dropPending(entry: PendingEntry): void {
@@ -818,6 +1072,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     );
     this.observer?.takeRecords();
     this.needsRender = false;
+    this.updateEmbedded(this.root);
   }
 
   /** Re-renders the dirty blocks, drops the removed ones and places the selection. */
@@ -864,6 +1119,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
           root.append(fresh);
         }
       }
+      this.updateEmbedded(fresh);
     }
 
     this.observer?.takeRecords();
@@ -1006,22 +1262,22 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     return this.throughPending({ anchor, head });
   }
 
+  /** Hands the provider a fresh row above the root; the old row and its sync are dropped. */
   private buildToolbar(): void {
     this.toolbar?.remove();
     this.toolbar = undefined;
-    this.markButtons.clear();
+    this.toolbarSync = undefined;
+    this.toolbarLocked = false;
 
     const session = this._session;
-    if (session === undefined) {
+    const ctx = this.richCtx;
+    if (session === undefined || ctx === undefined || session.provider.buildToolbar === undefined) {
       return;
     }
 
-    const marks = session.provider.marks();
-    if (marks.length === 0) {
-      return;
-    }
-
-    const row = UIBase.createElement<RowFrame<CTX>>("rowframe-x");
+    const row = UIBase.createElement<RowFrame<ProviderContext>>("rowframe-x");
+    // the row's ctx is the document's, so its parent is typed by that context rather than CTX
+    row.parentWidget = this as unknown as UIBase<ProviderContext>;
 
     // The setCtx cascade from the screen would otherwise replace the document's context
     Object.defineProperty(row, "ctx", {
@@ -1030,49 +1286,21 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
       set         : () => {},
     });
 
-    for (const mark of marks) {
-      const btn = UIBase.createElement<IconCheck<CTX>>("iconcheck-x");
-      btn.icon = mark.icon;
-      btn.description = mark.label;
-      btn.iconsheet = 1;
-      btn.drawCheck = false;
-      btn.setAttribute("data-testid", `richtext-mark-${mark.name}`);
-      btn.on_change = () => {
-        if (!this.syncingToolbar) {
-          this.toggleMark(mark.name);
-        }
-      };
-
-      row.add(btn);
-      this.markButtons.set(mark.name, btn);
-    }
-
+    this.toolbarSync = session.provider.buildToolbar(row, ctx);
     row.checkInit();
     this.shadow.insertBefore(row, this.root);
     this.toolbar = row;
-
-    // buildToolbar can run after setCSS (session set late), so tint the fresh buttons here too
-    this.tintToolbarIcons((this.getDefault("DefaultText") as CSSFont).color);
+    this.applyEditable();
   }
 
+  /** Runs the provider's toolbar sync, except while an op is pending and the DOM is behind the document. */
   private syncToolbar(): void {
     const session = this._session;
-    if (session === undefined || this.markButtons.size === 0 || this.pending.length > 0) {
+    if (session === undefined || this.toolbarSync === undefined || this.pending.length > 0) {
       return;
     }
 
-    const range = this.domRange();
-    const active = new Set(
-      range !== undefined && session.provider.activeMarks !== undefined
-        ? session.provider.activeMarks(session.doc, range)
-        : []
-    );
-
-    this.syncingToolbar = true;
-    for (const [name, btn] of this.markButtons) {
-      btn.checked = active.has(name);
-    }
-    this.syncingToolbar = false;
+    this.toolbarSync(session.doc, this.domRange());
   }
 
   static define(): UIBaseDefinition {

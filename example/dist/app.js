@@ -44926,80 +44926,6 @@ function toLockedImpl() {
   return new ContextLocker(this).lock(this, this.saveProperty, this.loadProperty);
 }
 
-// scripts/widgets/richtext/context.ts
-var sessionCounter = 0;
-var DocumentSession = class {
-  constructor(doc, provider, toolstack, id = `doc${++sessionCounter}`) {
-    this.doc = doc;
-    this.provider = provider;
-    this.toolstack = toolstack;
-    this.id = id;
-    this.unsubscribe = provider.onChange(doc, (change) => this.deliver(change));
-  }
-  doc;
-  provider;
-  toolstack;
-  id;
-  disposed = false;
-  listeners = /* @__PURE__ */ new Set();
-  unsubscribe;
-  /** Hears every change delivered through the session, provider changes included. */
-  onChange(listener) {
-    this.listeners.add(listener);
-    return () => {
-      this.listeners.delete(listener);
-    };
-  }
-  /**
-   * Forwards a change to every listener. Every `DocEditOp` phase arrives this way, with
-   * `source` naming the submitter so an editor can skip a change it already applied.
-   */
-  deliver(change, source) {
-    if (this.disposed) {
-      return;
-    }
-    for (const listener of [...this.listeners]) {
-      listener(change, source);
-    }
-  }
-  /** Marks the document closed: its ops on any stack become no-ops and nothing is delivered. */
-  dispose() {
-    if (this.disposed) {
-      return;
-    }
-    this.disposed = true;
-    this.unsubscribe();
-    this.listeners.clear();
-  }
-};
-var RichTextContext = class _RichTextContext {
-  constructor(parent, session) {
-    this.parent = parent;
-    this.session = session;
-  }
-  parent;
-  session;
-  get state() {
-    return this.parent.state;
-  }
-  // The api and screen resolve against whichever context they are handed, so the parent's
-  // serve this context as well; the self type on ContextLike is what the casts bridge
-  get api() {
-    return this.parent.api;
-  }
-  get screen() {
-    return this.parent.screen;
-  }
-  get toolstack() {
-    return this.session.toolstack;
-  }
-  /** Locks the parent; the session and its toolstack are not state and stay live. */
-  toLocked() {
-    const parent = this.parent.toLocked ? this.parent.toLocked() : toLockedImpl.call(this.parent);
-    return new _RichTextContext(parent, this.session);
-  }
-};
-
 // scripts/widgets/richtext/ops.ts
 init_toolop();
 init_toolprop();
@@ -45028,7 +44954,7 @@ var DocEditOp = class extends ToolOp {
   /**
    * `run` is the submitting editor's `pathUndoGen`; two `insertText` or `deleteRange` ops on
    * one block with the same run fold, and the editor bumps it whenever the next op is not
-   * contiguous with the run in progress.
+   * contiguous with the run in progress. A session's `dispatch` passes a fresh string instead.
    */
   constructor(op, inverse, sessionId = "", run = 0) {
     super();
@@ -45051,7 +44977,7 @@ var DocEditOp = class extends ToolOp {
   /**
    * The `EditResult` of applying this op, whether it pushes or folds into the head. Call
    * before submitting; the promise is settled by the phase that applies the op, which also
-   * delivers the result to the session's listeners with `source` attached.
+   * delivers the result to the session's listeners with `source` as the submitter.
    */
   result(source) {
     this.source = source;
@@ -45059,12 +44985,12 @@ var DocEditOp = class extends ToolOp {
       this.resolve = resolve;
     });
   }
-  settle(session, result) {
+  settle(session, result, origin, op) {
     const resolve = this.resolve;
-    const source = this.source;
+    const submitter = this.source;
     this.resolve = void 0;
     this.source = void 0;
-    session.deliver(result, source);
+    session.deliver(result, { origin, op, submitter });
     resolve?.(result);
   }
   /** The inverse was computed by the editor before submission; there is nothing to record. */
@@ -45075,14 +45001,20 @@ var DocEditOp = class extends ToolOp {
     if (session.disposed) {
       return;
     }
-    this.settle(session, session.provider.applyEdit(session.doc, this.op));
+    const op = this.op;
+    const origin = this._was_redo ? "redo" : "edit";
+    this.settle(session, session.provider.applyEdit(session.doc, op), origin, op);
   }
   undo(ctx) {
     const { session } = ctx;
     if (session.disposed) {
       return;
     }
-    session.deliver(session.provider.applyEdit(session.doc, this.inverse));
+    const inverse = this.inverse;
+    session.deliver(session.provider.applyEdit(session.doc, inverse), {
+      origin: "undo",
+      op: inverse
+    });
   }
   foldKey() {
     return this.key;
@@ -45112,10 +45044,111 @@ var DocEditOp = class extends ToolOp {
       const range = { anchor: { block, offset: start2 }, head: { block, offset: start2 + length } };
       this.inputs.op.setValue(JSON.stringify({ ...head, range }));
     }
-    next.settle(session, session.provider.applyEdit(session.doc, delta));
+    next.settle(session, session.provider.applyEdit(session.doc, delta), "fold", delta);
   }
 };
 ToolOp.register(DocEditOp);
+
+// scripts/widgets/richtext/context.ts
+var sessionCounter = 0;
+var dispatchCounter = 0;
+var DocumentSession = class {
+  constructor(doc, provider, toolstack, id = `doc${++sessionCounter}`) {
+    this.doc = doc;
+    this.provider = provider;
+    this.toolstack = toolstack;
+    this.id = id;
+    this.unsubscribe = provider.onExternalChange?.(doc, (change) => this.deliver(change, { origin: "external" })) ?? (() => {
+    });
+  }
+  doc;
+  provider;
+  toolstack;
+  id;
+  disposed = false;
+  /** Counts every delivered change, folds included, so a client can tell local edits from none. */
+  revision = 0;
+  listeners = /* @__PURE__ */ new Set();
+  unsubscribe;
+  /** Hears every change delivered through the session, an editor's own edits included. */
+  onChange(listener) {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+  /**
+   * The only path to the listeners. Every `DocEditOp` phase and the provider's external hook
+   * arrive here; an editor skips a change whose `submitter` is itself, having applied it already.
+   */
+  deliver(change, info) {
+    if (this.disposed) {
+      return;
+    }
+    this.revision++;
+    for (const listener of [...this.listeners]) {
+      listener(change, info);
+    }
+  }
+  /**
+   * Runs one op on the session's toolstack with no editor involved, and resolves with its
+   * result once it has run. `run` defaults to a fresh value, so two dispatches never fold
+   * into each other; pass an editor's own run to join its typing run.
+   */
+  async dispatch(op, parentCtx, source, run = `dispatch${++dispatchCounter}`) {
+    const ctx = new RichTextContext(parentCtx, this);
+    const toolop = new DocEditOp(op, this.provider.inverse(this.doc, op), this.id, run);
+    const result = toolop.result(source);
+    const ran = ctx.toolstack.foldOrExec(ctx, toolop);
+    return Promise.race([result, ran.then(() => result)]);
+  }
+  /** Marks the document closed: its ops on any stack become no-ops and nothing is delivered. */
+  dispose() {
+    if (this.disposed) {
+      return;
+    }
+    this.disposed = true;
+    this.unsubscribe();
+    this.listeners.clear();
+  }
+};
+function replaceContentsOp(provider, doc, next) {
+  return {
+    type: "replaceBlocks",
+    after: null,
+    blocks: provider.snapshots(next),
+    remove: provider.blocks(doc)
+  };
+}
+var RichTextContext = class _RichTextContext {
+  constructor(parent, session, editor) {
+    this.parent = parent;
+    this.session = session;
+    this.editor = editor;
+  }
+  parent;
+  session;
+  editor;
+  get state() {
+    return this.parent.state;
+  }
+  // The api and screen resolve against whichever context they are handed, so the parent's
+  // serve this context as well; the self type on ContextLike is what the casts bridge
+  get api() {
+    return this.parent.api;
+  }
+  get screen() {
+    return this.parent.screen;
+  }
+  get toolstack() {
+    return this.session.toolstack;
+  }
+  /** Locks the parent; the session, its toolstack and the bridge are not state and stay live. */
+  toLocked() {
+    const parent = this.parent.toLocked ? this.parent.toLocked() : toLockedImpl.call(this.parent);
+    return new _RichTextContext(parent, this.session, this.editor);
+  }
+};
 
 // scripts/widgets/richtext/positions.ts
 var BLOCK_ATTR = "data-doc-block";
@@ -45313,9 +45346,22 @@ var PendingMapper = class {
       case "insertContent":
         this.insertContent(this.delete(op.at), op.content.blocks, op.newBlocks);
         break;
+      case "custom":
+        for (const shift of op.shifts ?? []) {
+          this.shift(shift.block, shift.at, shift.delta);
+        }
+        break;
       case "toggleMark":
       case "replaceBlocks":
         break;
+    }
+  }
+  /** Text of length `|delta|` added at `at` when `delta` is positive, removed from `at` on otherwise. */
+  shift(block, at, delta) {
+    if (delta > 0) {
+      this.insertAt({ block, offset: at }, delta);
+    } else if (delta < 0) {
+      this.delete({ anchor: { block, offset: at }, head: { block, offset: at - delta } });
     }
   }
   length(block) {
@@ -45534,8 +45580,12 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
   static observeMutations = true;
   root;
   styletag;
+  /** Holds `provider.styles()`, replaced whole whenever the session or the theme changes. */
+  providerStyle;
   toolbar;
-  markButtons = /* @__PURE__ */ new Map();
+  toolbarSync;
+  /** What `toolbar.disabled` was last written to, so a read-only switch writes it once. */
+  toolbarLocked = false;
   _session;
   rctx;
   unsubscribe;
@@ -45547,8 +45597,11 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
   composing = false;
   snapshot;
   observer;
-  syncingToolbar = false;
+  /** The info the session delivered for each of this editor's own results, read back once applied. */
+  ownInfo = /* @__PURE__ */ new WeakMap();
   onSelectionChange = () => this.selectionChanged();
+  /** How a provider reaches this editor from the context it renders under. */
+  bridge;
   constructor() {
     super();
     this.styletag = document.createElement("style");
@@ -45559,7 +45612,9 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       }
 
       .rich-text-root {
+        flex          : 1 1 auto;
         min-height    : 6em;
+        overflow-y    : auto;
         padding       : 5px;
         outline       : none;
         white-space   : pre-wrap;
@@ -45567,10 +45622,25 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       }
     `;
     this.shadow.appendChild(this.styletag);
+    this.providerStyle = document.createElement("style");
+    this.shadow.appendChild(this.providerStyle);
     const root = this.root = document.createElement("div");
     root.className = "rich-text-root";
     root.contentEditable = "true";
     root.spellcheck = false;
+    const editor = this;
+    this.bridge = {
+      dispatch: (op) => this.dispatch(op),
+      get readOnly() {
+        return editor.readOnly;
+      },
+      selection: () => this.selectionThroughPending(),
+      select: (range) => this.select(range),
+      blockElement: (block) => blockElement(root, block),
+      posFromPoint: (x, y) => this.posFromPoint(x, y),
+      root,
+      linkClicked: (link, event) => this.linkClicked(link, event)
+    };
     root.addEventListener("beforeinput", (e) => this.onBeforeInput(e));
     root.addEventListener("keydown", (e) => this.onKeyDown(e));
     root.addEventListener("compositionstart", () => this.onCompositionStart());
@@ -45601,11 +45671,15 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     this.rctx = void 0;
     this.pending.length = 0;
     this.runAnchor = void 0;
-    this.unsubscribe = session?.onChange((change, source) => {
-      if (source !== this) {
-        this.docChanged(change);
+    this.unsubscribe = session?.onChange((change, info) => {
+      if (info.submitter === this) {
+        this.ownInfo.set(change, info);
+        return;
       }
+      this.docChanged(change);
+      this.announce(change, info);
     });
+    this.providerStyle.textContent = session?.provider.styles?.() ?? "";
     this.buildToolbar();
     this.renderAll();
   }
@@ -45616,9 +45690,33 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       return void 0;
     }
     if (this.rctx?.parent !== this.ctx || this.rctx.session !== session) {
-      this.rctx = new RichTextContext(this.ctx, session);
+      this.rctx = new RichTextContext(this.ctx, session, this.bridge);
     }
     return this.rctx;
+  }
+  /** The document shown, or `undefined` without a session. */
+  getValue = () => this._session?.doc;
+  /**
+   * Render-only mode, reflected as the `readonly` attribute. Switching it leaves the DOM and
+   * the scroll position alone: the root stops being editable, every input path returns
+   * without acting, the toolbar's widgets disable in place, and `dispatch` resolves `undefined`.
+   */
+  get readOnly() {
+    return this.hasAttribute("readonly");
+  }
+  set readOnly(value) {
+    this.toggleAttribute("readonly", value);
+    this.applyEditable();
+  }
+  /** The selection and scroll position, for a history engine to save before swapping `session` and restore after. */
+  get viewState() {
+    return { selection: this.domRange(), scrollTop: this.root.scrollTop };
+  }
+  set viewState(state) {
+    this.root.scrollTop = state.scrollTop;
+    if (state.selection !== void 0) {
+      this.setSelection(state.selection);
+    }
   }
   init() {
     super.init();
@@ -45634,6 +45732,80 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     if (this.toolbar !== void 0) {
       this.toolbar.hidden = this.hasAttribute("no-toolbar");
     }
+    this.applyEditable();
+    this.updateEmbedded(this.root);
+  }
+  /**
+   * Skips the editable root: the widgets a provider embeds under a block keep the context they
+   * were built under, so neither the `setCtx` cascade nor the update cascade reaches them.
+   */
+  _forEachChildWidget(cb, thisvar) {
+    const rec = (n) => {
+      if (n === this.root) {
+        return;
+      }
+      if (n instanceof UIBase) {
+        if (thisvar !== void 0) {
+          cb.call(thisvar, n);
+        } else {
+          cb(n);
+        }
+        return;
+      }
+      for (const child of n.childNodes) {
+        rec(child);
+      }
+      if (n.shadow !== void 0) {
+        for (const child of n.shadow.childNodes) {
+          rec(child);
+        }
+      }
+    };
+    for (const n of this.childNodes) {
+      rec(n);
+    }
+    for (const n of this.shadow.childNodes) {
+      rec(n);
+    }
+  }
+  __updateDisable(val) {
+    super.__updateDisable(val);
+    this.applyEditable();
+  }
+  /**
+   * The one writer of the root's `contenteditable`: editable unless read-only or disabled.
+   * Also mirrors `readOnly` onto the root as a `readonly` attribute a provider's styles can
+   * target, and locks the toolbar's widgets in place.
+   */
+  applyEditable() {
+    const readOnly = this.readOnly;
+    const editable = !readOnly && !this.disabled ? "true" : "false";
+    if (this.root.getAttribute("contenteditable") !== editable) {
+      this.root.contentEditable = editable;
+    }
+    this.root.toggleAttribute("readonly", readOnly);
+    if (this.toolbar !== void 0 && this.toolbarLocked !== readOnly) {
+      this.toolbarLocked = readOnly;
+      this.toolbar.disabled = readOnly;
+    }
+  }
+  /** Runs `flushUpdate` on every widget a provider placed under `scope`. */
+  updateEmbedded(scope) {
+    const rec = (n) => {
+      if (n instanceof UIBase) {
+        if (n.parentWidget === void 0) {
+          n.parentWidget = this;
+        }
+        n.flushUpdate();
+        return;
+      }
+      for (const child of n.childNodes) {
+        rec(child);
+      }
+    };
+    for (const n of scope.childNodes) {
+      rec(n);
+    }
   }
   _ondestroy() {
     document.removeEventListener("selectionchange", this.onSelectionChange);
@@ -45648,25 +45820,10 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     this.root.style.font = font.genCSS();
     this.root.style.color = font.color;
     this.root.style.backgroundColor = this.getDefault("background-color");
-    this.tintToolbarIcons(font.color);
-  }
-  /**
-   * Tints the toolbar's white sprite icons to match the text color. The icons are white, so
-   * `brightness` multiplies them to the text color's luminance, which reads correctly in a
-   * light theme and a dark one without depending on a light-or-dark flag. The filter sits on
-   * each button's icon div, not the host, so the button's own background and border keep their
-   * theme colors.
-   */
-  tintToolbarIcons(textColor) {
-    if (this.markButtons.size === 0) {
-      return;
-    }
-    const c = css2color(textColor);
+    const c = css2color(font.color);
     const luminance = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
-    const filter = `brightness(${luminance.toFixed(3)})`;
-    for (const btn of this.markButtons.values()) {
-      btn.dom.style.filter = filter;
-    }
+    this.style.setProperty("--richtext-icon-tint", `brightness(${luminance.toFixed(3)})`);
+    this.providerStyle.textContent = this._session?.provider.styles?.() ?? "";
   }
   /** Focuses the editable root and places the selection. */
   select(range) {
@@ -45676,6 +45833,51 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
   /** The current selection as document positions, or `undefined` when it is elsewhere. */
   selection() {
     return this.domRange();
+  }
+  /** Scrolls the root so the block's element sits at its top; nothing happens for an unrendered block. */
+  scrollToBlock(block) {
+    const el = blockElement(this.root, block);
+    if (el === void 0) {
+      return;
+    }
+    const top = el.getBoundingClientRect().top - this.root.getBoundingClientRect().top;
+    this.root.scrollTop += top;
+  }
+  /** Ends the typing run and commits `op`; resolves with its result, or `undefined` when read-only or dropped. */
+  async dispatch(op) {
+    if (this.readOnly) {
+      return void 0;
+    }
+    this.endRun();
+    return this.commit(op);
+  }
+  /**
+   * Raises `linkclick` for a link the provider rendered and the user clicked. The editor
+   * attaches no meaning to the link; its one default, in edit mode, is `linkDefault`, which
+   * `preventDefault` on the event suppresses. Returns `false` when the consumer prevented it.
+   */
+  linkClicked(link, event) {
+    const proceed = this.dispatchEvent(
+      new CustomEvent("linkclick", { detail: link, cancelable: true })
+    );
+    if (proceed && !this.readOnly) {
+      this.linkDefault(link, event);
+    }
+    return proceed;
+  }
+  /** The edit-mode default for a link click. Empty until the link popup lands. */
+  linkDefault(_link, _event) {
+  }
+  /**
+   * The document position under a viewport point. The lookup pierces the shadow root, which
+   * WebKit's `caretRangeFromPoint` cannot, so there the answer is `undefined`.
+   */
+  posFromPoint(x, y) {
+    if (typeof document.caretPositionFromPoint !== "function") {
+      return void 0;
+    }
+    const caret = document.caretPositionFromPoint(x, y, { shadowRoots: [this.shadow] });
+    return caret === null ? void 0 : this.docPos(caret.offsetNode, caret.offset);
   }
   async undo() {
     const session = this._session;
@@ -45695,9 +45897,12 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     await session.toolstack.redo(this.richCtx);
     this.endRun();
   }
-  /** Toggles `mark` over the selection; nothing happens on a collapsed one. */
+  /** Toggles `mark` over the selection; nothing happens on a collapsed one or for a name the provider does not list. */
   toggleMark(mark2) {
-    if (this.composing) {
+    if (this.composing || this.readOnly) {
+      return;
+    }
+    if (!this._session?.provider.marks().some((m) => m.name === mark2)) {
       return;
     }
     const range = this.selectionThroughPending();
@@ -45715,7 +45920,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       return;
     }
     e.preventDefault();
-    if (this._session === void 0 || this._session.disposed) {
+    if (this._session === void 0 || this._session.disposed || this.readOnly) {
       return;
     }
     for (const op of this.mapInput(e)) {
@@ -45723,11 +45928,16 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     }
   }
   onKeyDown(e) {
-    if (this.composing || e.isComposing) {
+    if (this.composing || e.isComposing || this.readOnly) {
       return;
     }
     const mod = e.ctrlKey || e.metaKey;
     const key = e.key.toLowerCase();
+    const undoChord = mod && !e.altKey && (key === "z" || key === "y");
+    if (!undoChord && this.providerHandles(e)) {
+      e.preventDefault();
+      return;
+    }
     if (e.key === "Escape") {
       this.root.blur();
       e.preventDefault();
@@ -45745,6 +45955,23 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       e.preventDefault();
     }
   }
+  /** Offers `e` to the provider's `handleKey` and submits what it answers; `false` when it declines. */
+  providerHandles(e) {
+    const session = this._session;
+    if (session === void 0 || session.disposed || session.provider.handleKey === void 0) {
+      return false;
+    }
+    const range = this.selectionThroughPending();
+    if (range === void 0) {
+      return false;
+    }
+    const op = session.provider.handleKey(session.doc, range, e);
+    if (op === void 0) {
+      return false;
+    }
+    this.submit(op);
+    return true;
+  }
   /** Writes the selection through `toClipboard`; a cut then commits its deletion on its own. */
   onCopy(e, cut) {
     if (this.composing) {
@@ -45761,7 +45988,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       e.clipboardData.setData("text/html", content.html);
     }
     e.preventDefault();
-    if (cut && !session.disposed) {
+    if (cut && !session.disposed && !this.readOnly) {
       this.submit({ type: "deleteRange", range });
       this.endRun();
     }
@@ -45970,12 +46197,12 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     }
     void this.commit(op, reflected);
   }
-  /** Runs `op` through the toolstack and applies its result once it has run. */
+  /** Runs `op` through the toolstack and applies its result once it has run; `undefined` when it did not land. */
   async commit(op, reflected = false) {
     const session = this._session;
     const ctx = this.richCtx;
     if (session === void 0 || ctx === void 0) {
-      return;
+      return void 0;
     }
     const toolop = new DocEditOp(
       op,
@@ -45998,13 +46225,28 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       } else {
         this.endRun();
       }
-      return;
+      return void 0;
     }
     if (this._session !== session) {
-      return;
+      return void 0;
     }
     this.dropPending(entry);
     this.applyResult(applied);
+    this.announce(applied, this.ownInfo.get(applied) ?? { origin: "edit", op, submitter: this });
+    return applied;
+  }
+  /** Reports a change this editor has applied: the `change` event on the host, then `on_change` with the document. */
+  announce(change, info) {
+    const session = this._session;
+    if (session === void 0) {
+      return;
+    }
+    this.dispatchEvent(
+      new CustomEvent("change", {
+        detail: { change, info, session }
+      })
+    );
+    this.on_change?.(session.doc);
   }
   dropPending(entry) {
     const index = this.pending.indexOf(entry);
@@ -46086,6 +46328,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     );
     this.observer?.takeRecords();
     this.needsRender = false;
+    this.updateEmbedded(this.root);
   }
   /** Re-renders the dirty blocks, drops the removed ones and places the selection. */
   applyResult(result) {
@@ -46119,6 +46362,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
           root.append(fresh);
         }
       }
+      this.updateEmbedded(fresh);
     }
     this.observer?.takeRecords();
     if (result.selection !== void 0 && !this.composing) {
@@ -46228,59 +46472,38 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     }
     return this.throughPending({ anchor, head });
   }
+  /** Hands the provider a fresh row above the root; the old row and its sync are dropped. */
   buildToolbar() {
     this.toolbar?.remove();
     this.toolbar = void 0;
-    this.markButtons.clear();
+    this.toolbarSync = void 0;
+    this.toolbarLocked = false;
     const session = this._session;
-    if (session === void 0) {
-      return;
-    }
-    const marks = session.provider.marks();
-    if (marks.length === 0) {
+    const ctx = this.richCtx;
+    if (session === void 0 || ctx === void 0 || session.provider.buildToolbar === void 0) {
       return;
     }
     const row = UIBase.createElement("rowframe-x");
+    row.parentWidget = this;
     Object.defineProperty(row, "ctx", {
       configurable: true,
       get: () => this.richCtx ?? this.ctx,
       set: () => {
       }
     });
-    for (const mark2 of marks) {
-      const btn = UIBase.createElement("iconcheck-x");
-      btn.icon = mark2.icon;
-      btn.description = mark2.label;
-      btn.iconsheet = 1;
-      btn.drawCheck = false;
-      btn.setAttribute("data-testid", `richtext-mark-${mark2.name}`);
-      btn.on_change = () => {
-        if (!this.syncingToolbar) {
-          this.toggleMark(mark2.name);
-        }
-      };
-      row.add(btn);
-      this.markButtons.set(mark2.name, btn);
-    }
+    this.toolbarSync = session.provider.buildToolbar(row, ctx);
     row.checkInit();
     this.shadow.insertBefore(row, this.root);
     this.toolbar = row;
-    this.tintToolbarIcons(this.getDefault("DefaultText").color);
+    this.applyEditable();
   }
+  /** Runs the provider's toolbar sync, except while an op is pending and the DOM is behind the document. */
   syncToolbar() {
     const session = this._session;
-    if (session === void 0 || this.markButtons.size === 0 || this.pending.length > 0) {
+    if (session === void 0 || this.toolbarSync === void 0 || this.pending.length > 0) {
       return;
     }
-    const range = this.domRange();
-    const active = new Set(
-      range !== void 0 && session.provider.activeMarks !== void 0 ? session.provider.activeMarks(session.doc, range) : []
-    );
-    this.syncingToolbar = true;
-    for (const [name, btn] of this.markButtons) {
-      btn.checked = active.has(name);
-    }
-    this.syncingToolbar = false;
+    this.toolbarSync(session.doc, this.domRange());
   }
   static define() {
     return {
@@ -46295,6 +46518,136 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
   }
 };
 UIBase.internalRegister(RichTextEditor);
+
+// scripts/widgets/richtext/providers/marks.ts
+function normalizeMarks(marks) {
+  const sorted = marks.filter((m) => m.from < m.to).map((m) => ({ ...m })).sort((a2, b) => a2.from - b.from || a2.name.localeCompare(b.name));
+  const out = [];
+  for (const m of sorted) {
+    const prev = out.find((o) => o.name === m.name && o.to >= m.from);
+    if (prev) {
+      prev.to = Math.max(prev.to, m.to);
+    } else {
+      out.push(m);
+    }
+  }
+  return out.sort((a2, b) => a2.from - b.from || a2.name.localeCompare(b.name));
+}
+function clipMarks(marks, from, to, base) {
+  return normalizeMarks(
+    marks.map((m) => ({
+      ...m,
+      from: Math.max(m.from, from) - from + base,
+      to: Math.min(m.to, to) - from + base
+    }))
+  );
+}
+function marksAfterTyping(marks, pos, len) {
+  return normalizeMarks(
+    marks.map((m) => ({
+      ...m,
+      from: m.from < pos ? m.from : m.from + len,
+      to: m.to < pos ? m.to : m.to + len
+    }))
+  );
+}
+function marksAroundInsert(marks, pos, len) {
+  const out = [];
+  for (const m of marks) {
+    if (m.to <= pos) {
+      out.push({ ...m });
+    } else if (m.from >= pos) {
+      out.push({ ...m, from: m.from + len, to: m.to + len });
+    } else {
+      out.push({ ...m, from: m.from, to: pos });
+      out.push({ ...m, from: pos + len, to: m.to + len });
+    }
+  }
+  return normalizeMarks(out);
+}
+function marksAfterDelete(marks, from, to) {
+  const map3 = (x) => x <= from ? x : x >= to ? x - (to - from) : from;
+  return normalizeMarks(marks.map((m) => ({ ...m, from: map3(m.from), to: map3(m.to) })));
+}
+function hasMark(marks, name, from, to) {
+  return marks.some((m) => m.name === name && m.from <= from && m.to >= to);
+}
+function cutMark(marks, name, from, to) {
+  const kept = [];
+  for (const m of marks) {
+    if (m.name !== name) {
+      kept.push(m);
+    } else {
+      kept.push({ ...m, from: m.from, to: Math.min(m.to, from) });
+      kept.push({ ...m, from: Math.max(m.from, to), to: m.to });
+    }
+  }
+  return normalizeMarks(kept);
+}
+function markSegments(length, marks) {
+  const bounds = /* @__PURE__ */ new Set([0, length]);
+  for (const m of marks) {
+    bounds.add(m.from);
+    bounds.add(m.to);
+  }
+  const edges = [...bounds].sort((a2, b) => a2 - b);
+  const out = [];
+  for (let i2 = 0; i2 + 1 < edges.length; i2++) {
+    const from = edges[i2];
+    const to = edges[i2 + 1];
+    out.push({ from, to, marks: marks.filter((m) => m.from <= from && m.to >= to) });
+  }
+  return out;
+}
+
+// scripts/widgets/richtext/providers/toolbar.ts
+init_ui_base();
+var isCollapsed2 = ({ anchor, head }) => anchor.block === head.block && anchor.offset === head.offset;
+function addMarkButtons(row, ctx, provider, marks = provider.marks()) {
+  const buttons = /* @__PURE__ */ new Map();
+  let syncing = false;
+  for (const mark2 of marks) {
+    const btn = UIBase.createElement("iconcheck-x");
+    btn.icon = mark2.icon;
+    btn.description = mark2.label;
+    btn.iconsheet = 1;
+    btn.drawCheck = false;
+    btn.setAttribute("data-testid", `richtext-mark-${mark2.name}`);
+    btn.dom.style.filter = "var(--richtext-icon-tint, none)";
+    btn.on_change = () => {
+      if (syncing) {
+        return;
+      }
+      const range = ctx.editor.selection();
+      if (range !== void 0 && !isCollapsed2(range)) {
+        void ctx.editor.dispatch({ type: "toggleMark", range, mark: mark2.name });
+      }
+    };
+    row.add(btn);
+    buttons.set(mark2.name, btn);
+  }
+  return (doc, selection) => {
+    const active = new Set(
+      selection !== void 0 && provider.activeMarks !== void 0 ? provider.activeMarks(doc, selection) : []
+    );
+    syncing = true;
+    for (const [name, btn] of buttons) {
+      btn.checked = active.has(name);
+    }
+    syncing = false;
+  };
+}
+function addSeparator(row) {
+  const sep = document.createElement("div");
+  sep.className = "richtext-toolbar-separator";
+  sep.style.width = "1px";
+  sep.style.alignSelf = "stretch";
+  sep.style.margin = "2px 4px";
+  sep.style.backgroundColor = "var(--richtext-toolbar-border, currentColor)";
+  sep.style.opacity = "0.4";
+  row.shadow.appendChild(sep);
+  return sep;
+}
 
 // scripts/widgets/richtext/providers/plain.ts
 init_icon_enum();
@@ -46320,55 +46673,6 @@ var cloneBlock = (b) => ({
   marks: b.marks.map((m) => ({ ...m }))
 });
 var unique = (ids) => [...new Set(ids)];
-function normalizeMarks(marks) {
-  const sorted = marks.filter((m) => m.from < m.to).map((m) => ({ ...m })).sort((a2, b) => a2.from - b.from || a2.name.localeCompare(b.name));
-  const out = [];
-  for (const m of sorted) {
-    const prev = out.find((o) => o.name === m.name && o.to >= m.from);
-    if (prev) {
-      prev.to = Math.max(prev.to, m.to);
-    } else {
-      out.push(m);
-    }
-  }
-  return out.sort((a2, b) => a2.from - b.from || a2.name.localeCompare(b.name));
-}
-function clipMarks(marks, from, to, base) {
-  return normalizeMarks(
-    marks.map((m) => ({
-      from: Math.max(m.from, from) - from + base,
-      to: Math.min(m.to, to) - from + base,
-      name: m.name
-    }))
-  );
-}
-function marksAfterTyping(marks, pos, len) {
-  return normalizeMarks(
-    marks.map((m) => ({
-      from: m.from < pos ? m.from : m.from + len,
-      to: m.to < pos ? m.to : m.to + len,
-      name: m.name
-    }))
-  );
-}
-function marksAroundInsert(marks, pos, len) {
-  const out = [];
-  for (const m of marks) {
-    if (m.to <= pos) {
-      out.push({ ...m });
-    } else if (m.from >= pos) {
-      out.push({ from: m.from + len, to: m.to + len, name: m.name });
-    } else {
-      out.push({ from: m.from, to: pos, name: m.name });
-      out.push({ from: pos + len, to: m.to + len, name: m.name });
-    }
-  }
-  return normalizeMarks(out);
-}
-function marksAfterDelete(marks, from, to) {
-  const map3 = (x) => x <= from ? x : x >= to ? x - (to - from) : from;
-  return normalizeMarks(marks.map((m) => ({ from: map3(m.from), to: map3(m.to), name: m.name })));
-}
 var PlainProvider = class {
   listeners = /* @__PURE__ */ new WeakMap();
   blocks(doc) {
@@ -46406,9 +46710,7 @@ var PlainProvider = class {
       return [];
     }
     return [...names].filter(
-      (name) => segments.every(
-        ({ marks, from, to }) => marks.some((m) => m.name === name && m.from <= from && m.to >= to)
-      )
+      (name) => segments.every(({ marks, from, to }) => hasMark(marks, name, from, to))
     );
   }
   renderBlock(doc, block, ctx) {
@@ -46419,18 +46721,9 @@ var PlainProvider = class {
       el.append(document.createTextNode(CARET_SLOT));
       return el;
     }
-    const bounds = /* @__PURE__ */ new Set([0, b.text.length]);
-    for (const m of b.marks) {
-      bounds.add(m.from);
-      bounds.add(m.to);
-    }
-    const edges = [...bounds].sort((a2, b2) => a2 - b2);
-    for (let i2 = 0; i2 + 1 < edges.length; i2++) {
-      const from = edges[i2];
-      const to = edges[i2 + 1];
+    for (const { from, to, marks } of markSegments(b.text.length, b.marks)) {
       let node = document.createTextNode(b.text.slice(from, to));
-      const active = b.marks.filter((m) => m.from <= from && m.to >= to).reverse();
-      for (const m of active) {
+      for (const m of [...marks].reverse()) {
         const tag = MARK_TAGS[m.name];
         const wrap = document.createElement(tag ?? "span");
         if (tag === void 0) {
@@ -46442,6 +46735,9 @@ var PlainProvider = class {
       el.append(node);
     }
     return el;
+  }
+  buildToolbar(row, ctx) {
+    return addMarkButtons(row, ctx, this);
   }
   applyEdit(doc, op) {
     switch (op.type) {
@@ -46512,6 +46808,8 @@ var PlainProvider = class {
         return this.insertContent(doc, op.at, op.content.blocks, op.newBlocks);
       case "replaceBlocks":
         return this.replaceBlocks(doc, op.after, op.blocks, op.remove);
+      case "custom":
+        throw new Error(`PlainProvider: unknown custom op ${op.name}`);
     }
   }
   inverse(doc, op) {
@@ -46548,6 +46846,9 @@ var PlainProvider = class {
         }
         break;
       }
+      case "custom":
+        touched = [...op.blocks];
+        break;
     }
     if (after === void 0) {
       const first2 = touched.length > 0 ? this.index(doc, touched[0]) : 0;
@@ -46556,9 +46857,12 @@ var PlainProvider = class {
     return {
       type: "replaceBlocks",
       after,
-      blocks: touched.map((id) => this.snapshot(doc, id)),
+      blocks: this.snapshots(doc, touched),
       remove: unique([...touched, ...created])
     };
+  }
+  snapshots(doc, blocks = this.blocks(doc)) {
+    return blocks.map((id) => this.snapshot(doc, id));
   }
   toClipboard(doc, range) {
     const r = this.order(doc, range);
@@ -46577,7 +46881,11 @@ var PlainProvider = class {
     }
     return { blocks: data.getData("text/plain").split(/\r\n|\r|\n/) };
   }
-  onChange(doc, listener) {
+  /** The block texts joined by newlines, as `text/plain`. */
+  emitDocFile(doc) {
+    return new Blob([doc.blocks.map((b) => b.text).join("\n")], { type: "text/plain" });
+  }
+  onExternalChange(doc, listener) {
     let set2 = this.listeners.get(doc);
     if (set2 === void 0) {
       set2 = /* @__PURE__ */ new Set();
@@ -46588,7 +46896,7 @@ var PlainProvider = class {
       set2.delete(listener);
     };
   }
-  /** Reports a change made to `doc` outside `applyEdit` to every `onChange` listener. */
+  /** Reports a change made to `doc` outside `applyEdit` to every `onExternalChange` listener. */
   notifyChange(doc, change) {
     const set2 = this.listeners.get(doc);
     if (set2 === void 0) {
@@ -46667,21 +46975,10 @@ var PlainProvider = class {
     if (segments.length === 0) {
       return { dirtyBlocks: [], removedBlocks: [], selection: range };
     }
-    const covered = segments.every(
-      ({ block, from, to }) => block.marks.some((m) => m.name === mark2 && m.from <= from && m.to >= to)
-    );
+    const covered = segments.every(({ block, from, to }) => hasMark(block.marks, mark2, from, to));
     for (const { block, from, to } of segments) {
       if (covered) {
-        const kept = [];
-        for (const m of block.marks) {
-          if (m.name !== mark2) {
-            kept.push(m);
-          } else {
-            kept.push({ from: m.from, to: Math.min(m.to, from), name: m.name });
-            kept.push({ from: Math.max(m.from, to), to: m.to, name: m.name });
-          }
-        }
-        block.marks = normalizeMarks(kept);
+        block.marks = cutMark(block.marks, mark2, from, to);
       } else {
         block.marks = normalizeMarks([...block.marks, { from, to, name: mark2 }]);
       }
@@ -46823,9 +47120,17 @@ var RichTextArea = class extends UIBase {
     super.update();
     this.openSession();
   }
+  /** Render-only mode, passed through to the hosted editor; the field's value still follows the path. */
+  get readOnly() {
+    return this.editor.readOnly;
+  }
+  set readOnly(value) {
+    this.editor.readOnly = value;
+  }
+  // The editor is the only writer of its root's contenteditable, combining this with readOnly
   __updateDisable(val) {
     super.__updateDisable(val);
-    this.editor.root.contentEditable = String(!val);
+    this.editor.internalDisabled = val;
   }
   updateFromPath(rawValue, info) {
     if (!info.resolved) {

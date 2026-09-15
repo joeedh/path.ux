@@ -270,10 +270,25 @@ class PendingMapper {
       case "insertContent":
         this.insertContent(this.delete(op.at), op.content.blocks, op.newBlocks);
         break;
+      case "custom":
+        // the op's data is the provider's; its shifts are what the mapper can read
+        for (const shift of op.shifts ?? []) {
+          this.shift(shift.block, shift.at, shift.delta);
+        }
+        break;
       case "toggleMark":
       case "replaceBlocks":
         // neither moves text; replaceBlocks is never pending from user input
         break;
+    }
+  }
+
+  /** Text of length `|delta|` added at `at` when `delta` is positive, removed from `at` on otherwise. */
+  private shift(block: BlockId, at: number, delta: number) {
+    if (delta > 0) {
+      this.insertAt({ block, offset: at }, delta);
+    } else if (delta < 0) {
+      this.delete({ anchor: { block, offset: at }, head: { block, offset: at - delta } });
     }
   }
 

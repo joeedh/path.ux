@@ -20,6 +20,7 @@ import {
   plainDocFromLines,
 } from "../../pathux.js";
 import type {
+  PlainDoc,
   RefusedDetail,
   ThemeEditor,
   AssetGallery,
@@ -131,8 +132,8 @@ export class PropsEditor extends Editor {
    */
   buildRichText(tab: Container) {
     const provider = new PlainProvider();
-    const makeEditor = (session: DocumentSession, testid: string) => {
-      const editor = UIBase.constructElement<RichTextEditor>(
+    const makeEditor = (session: DocumentSession<PlainDoc>, testid: string) => {
+      const editor = UIBase.constructElement<RichTextEditor<typeof this.ctx, PlainDoc>>(
         RichTextEditor.define().tagname,
         this.ctx
       );

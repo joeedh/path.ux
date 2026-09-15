@@ -1,4 +1,5 @@
 import type { IContextBase } from "../../core/context_base";
+import type { RowFrame } from "../../core/ui_containers";
 
 // The editor's whole view of a document is here: blocks with stable ids, flattened text per
 // block, positions into that text, and the edits the provider applies. Marks, block kinds and
@@ -37,6 +38,10 @@ export interface MarkInfo {
   icon: number;
 }
 
+/** A value that survives `JSON.stringify`, which is how a `DocEditOp` stores its op. */
+export type JsonValue =
+  string | number | boolean | null | readonly JsonValue[] | { readonly [key: string]: JsonValue };
+
 /** A selection ready for the clipboard, one plain-text entry per block. */
 export interface ClipboardContent {
   blocks: readonly string[];
@@ -53,10 +58,19 @@ export interface BlockSnapshot {
   state: unknown;
 }
 
+/** A text-length change a `custom` op makes, so pending positions can be mapped through it. */
+export interface CustomShift {
+  block: BlockId;
+  at: number;
+  /** Positive for text added at `at`, negative for text removed from `at` on. */
+  delta: number;
+}
+
 /**
  * One edit to a document. `insertText` and `insertContent` replace a non-collapsed range;
  * `deleteRange` across blocks joins the outer two; `replaceBlocks` is the snapshot form of an
- * inverse and is never produced by user input.
+ * inverse and is never produced by user input; `custom` is the provider's own, which the
+ * editor never produces and never reads beyond `blocks` and `shifts`.
  */
 export type EditOp =
   | { type: "insertText"; at: DocRange; text: string }
@@ -77,6 +91,15 @@ export type EditOp =
       after: BlockId | null;
       blocks: readonly BlockSnapshot[];
       remove: readonly BlockId[];
+    }
+  | {
+      type: "custom";
+      name: string;
+      /** A contiguous span in document order: every block from the first touched to the last. */
+      blocks: readonly BlockId[];
+      data: JsonValue;
+      /** One entry per block whose text length changes; omitted when none does. */
+      shifts?: readonly CustomShift[];
     };
 
 /** What an edit changed and where the caret lands. */
@@ -97,10 +120,53 @@ export interface DocChange {
   selection?: DocRange;
 }
 
+/** A heading, for a consumer building an outline; the title comes from `blockText`. */
+export interface HeadingInfo {
+  block: BlockId;
+  level: number;
+}
+
+/** A link the provider rendered and the user clicked, carried by the editor's `linkclick` event. */
+export interface LinkInfo {
+  /** Provider-defined: `"url"`, `"wiki"`, whatever else the provider parses. */
+  kind: string;
+  target: string;
+  text: string;
+  range: DocRange;
+}
+
+/**
+ * The editor as a provider reaches it, through `ctx.editor` on the context every embedded
+ * widget and toolbar item is built under. One bridge per editor.
+ */
+export interface EditorBridge {
+  /** Ends the typing run and commits `op` through the session's toolstack; `undefined` when read-only. */
+  dispatch(op: EditOp): Promise<EditResult | undefined>;
+  readonly readOnly: boolean;
+  /** The selection as document positions, mapped through the ops still pending. */
+  selection(): DocRange | undefined;
+  select(range: DocRange): void;
+  blockElement(block: BlockId): HTMLElement | undefined;
+  /** The document position under a viewport point, for a drop caret; `undefined` where the platform cannot say. */
+  posFromPoint(x: number, y: number): DocPos | undefined;
+  /** The editable root, for positioning a popup. */
+  readonly root: HTMLElement;
+  /** Raises the editor's `linkclick` event; returns `false` when the consumer prevented it. */
+  linkClicked(link: LinkInfo, event: MouseEvent): boolean;
+}
+
+/** The context a provider renders and builds its toolbar under: the editor's, with the bridge on it. */
+export interface ProviderContext extends IContextBase {
+  editor: EditorBridge;
+}
+
+/** Called on every selection change of the editor whose toolbar the provider built. */
+export type ToolbarSync<Doc> = (doc: Doc, selection: DocRange | undefined) => void;
+
 /**
  * The seam between the editor and a document model. Every method is synchronous; a provider
  * over an asynchronous store keeps an in-memory document and reconciles behind it through
- * `onChange`. `applyEdit` mutates `doc` in place, so `Doc` must be a mutable object.
+ * `onExternalChange`. `applyEdit` mutates `doc` in place, so `Doc` must be a mutable object.
  */
 export interface DocumentProvider<Doc> {
   blocks(doc: Doc): readonly BlockId[];
@@ -108,20 +174,40 @@ export interface DocumentProvider<Doc> {
   blockText(doc: Doc, block: BlockId): string;
   /** Whether the caret cannot enter the block, which is then selected or deleted as a unit. */
   isOpaque(doc: Doc, block: BlockId): boolean;
-  /** The marks a `toggleMark` edit may name; the editor builds its toolbar from this list. */
+  /** The marks a `toggleMark` edit may name; the editor's `toggleMark` and its key mappings resolve against this list. */
   marks(): readonly MarkInfo[];
   /**
    * The marks the toolbar shows as on for `range`: those a `toggleMark` there would remove,
    * or those typing at a collapsed range would extend. Without it the toolbar never lights.
    */
   activeMarks?(doc: Doc, range: DocRange): readonly string[];
+  /** The headings in document order, for a consumer building an outline. */
+  headings?(doc: Doc): readonly HeadingInfo[];
 
   /**
    * A fresh element for the block, replaced wholesale on every re-render. The root carries
    * `data-doc-block`; an atom carries `data-doc-atom` and `contenteditable="false"`; a
    * `CARET_SLOT` text node sits on each side of an atom and inside an empty block.
    */
-  renderBlock(doc: Doc, block: BlockId, ctx: IContextBase): HTMLElement;
+  renderBlock(doc: Doc, block: BlockId, ctx: ProviderContext): HTMLElement;
+  /**
+   * CSS for the rendered blocks, placed in the editor's shadow root after its own styles and
+   * replaced whole on every theme update. The string is static; colors and fonts come from
+   * the CSS variables the editor sets on its root.
+   */
+  styles?(): string;
+  /**
+   * Fills the toolbar row the editor hosts, editing through `ctx.editor.dispatch`, and
+   * returns the sync the editor calls on every selection change. Runs once per session set.
+   */
+  buildToolbar?(row: RowFrame<ProviderContext>, ctx: ProviderContext): ToolbarSync<Doc> | undefined;
+
+  /**
+   * A key the provider handles before the editor does: a returned op is submitted and the
+   * event consumed, which also suppresses the `beforeinput` the key would have produced.
+   * Every key arrives but the undo and redo chords; nothing arrives in read-only mode.
+   */
+  handleKey?(doc: Doc, range: DocRange, event: KeyboardEvent): EditOp | undefined;
 
   applyEdit(doc: Doc, op: EditOp): EditResult;
   /**
@@ -131,12 +217,21 @@ export interface DocumentProvider<Doc> {
    */
   inverse(doc: Doc, op: EditOp): EditOp;
 
+  /** The snapshots a `replaceBlocks` needs, of `blocks` or of the whole document. */
+  snapshots(doc: Doc, blocks?: readonly BlockId[]): readonly BlockSnapshot[];
+
   toClipboard(doc: Doc, range: DocRange): ClipboardContent;
   /** Content for a paste or drop, or `undefined` to refuse it. */
   fromClipboard(data: DataTransfer): ClipboardContent | undefined;
+  /** The document serialized for saving; `Blob.type` carries the media type. */
+  emitDocFile(doc: Doc): Blob;
 
-  /** Subscribes to changes made outside `applyEdit`; returns the unsubscribe function. */
-  onChange(doc: Doc, listener: (change: DocChange) => void): () => void;
+  /**
+   * Subscribes to mutations the session cannot see (a store reconciling behind the document,
+   * a write to a field it renders) and returns the unsubscribe. A provider never reports its
+   * own `applyEdit`, and a change reported here lands on no undo stack.
+   */
+  onExternalChange?(doc: Doc, listener: (change: DocChange) => void): () => void;
 }
 
 let blockIdCounter = 0;

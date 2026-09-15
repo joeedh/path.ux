@@ -49,6 +49,11 @@ work; their manual steps stay in documentation/richtext.md.
 the pathux_with_docbrowser bundle, the example docs pane, both lib/tinymce
 trees, and the marked/parse5/diff dependencies), per
 documentation/plans/rich-text-provider-tasks.md task 3.
+[x]: rich text provider protocol for the markdown work (stage 1 of
+documentation/plans/rich-text-markdown.md): custom ops, the editor bridge,
+provider toolbars, readOnly, viewState, session.dispatch and typed change
+notification. Stages 2 to 7 (the markdown provider, its rendering, the
+example tab and the docs) remain.
 [ ]: better wrappers around the web file system APIs, to cover what
 simple_docsys did for locally served, Electron and NW.js apps. Unrelated to
 the rich text work; noted here so it is not lost when simple_docsys goes.

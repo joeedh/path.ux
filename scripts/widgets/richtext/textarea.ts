@@ -86,9 +86,19 @@ export class RichTextArea<CTX extends IContextBase = IContextBase> extends UIBas
     this.openSession();
   }
 
+  /** Render-only mode, passed through to the hosted editor; the field's value still follows the path. */
+  get readOnly(): boolean {
+    return this.editor.readOnly;
+  }
+
+  set readOnly(value: boolean) {
+    this.editor.readOnly = value;
+  }
+
+  // The editor is the only writer of its root's contenteditable, combining this with readOnly
   override __updateDisable(val: boolean): void {
     super.__updateDisable(val);
-    this.editor.root.contentEditable = String(!val);
+    this.editor.internalDisabled = val;
   }
 
   override updateFromPath(rawValue: unknown, info: PathWatchInfo): void {

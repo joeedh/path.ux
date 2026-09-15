@@ -1,6 +1,10 @@
 import { describe, expect, test, vi } from "vitest";
-import type { IContextBase } from "../../scripts/core/context_base";
-import { CARET_SLOT, type DocRange, type EditOp } from "../../scripts/widgets/richtext/provider";
+import {
+  CARET_SLOT,
+  type DocRange,
+  type EditOp,
+  type ProviderContext,
+} from "../../scripts/widgets/richtext/provider";
 import {
   PlainProvider,
   plainDocFromLines,
@@ -24,7 +28,7 @@ const caret = (block: string, offset: number) => range(block, offset, block, off
 const mark = (from: number, to: number, name: string) => ({ from, to, name });
 
 const provider = new PlainProvider();
-const ctx = undefined as unknown as IContextBase;
+const ctx = undefined as unknown as ProviderContext;
 
 describe("reading", () => {
   test("blocks, text, opacity and marks", () => {
@@ -419,6 +423,37 @@ describe("inverse", () => {
   });
 });
 
+describe("snapshots and emitDocFile", () => {
+  test("snapshots covers the named blocks, or the whole document", () => {
+    const doc = fixture();
+    expect(provider.snapshots(doc, ["b"])).toEqual([{ id: "b", state: fixture().blocks[1] }]);
+    expect(provider.snapshots(doc).map((s) => s.id)).toEqual(["a", "b", "c"]);
+    expect(provider.snapshots(doc)[0].state).not.toBe(doc.blocks[0]);
+  });
+
+  test("emitDocFile is the texts joined by newlines as text/plain", async () => {
+    const blob = provider.emitDocFile(fixture());
+    expect(blob.type).toBe("text/plain");
+    expect(await blob.text()).toBe(["Hello world", "second line", "third"].join("\n"));
+  });
+
+  test("a custom op's inverse snapshots its span and the provider refuses to apply it", () => {
+    const doc = fixture();
+    const op: EditOp = { type: "custom", name: "nope", blocks: ["a", "b"], data: null };
+
+    expect(provider.inverse(doc, op)).toEqual({
+      type  : "replaceBlocks",
+      after : null,
+      blocks: [
+        { id: "a", state: fixture().blocks[0] },
+        { id: "b", state: fixture().blocks[1] },
+      ],
+      remove: ["a", "b"],
+    });
+    expect(() => provider.applyEdit(doc, op)).toThrow(/unknown custom op nope/);
+  });
+});
+
 describe("clipboard", () => {
   test("toClipboard slices the outer blocks, in either direction", () => {
     const doc = fixture();
@@ -440,13 +475,13 @@ describe("clipboard", () => {
   });
 });
 
-describe("onChange", () => {
+describe("onExternalChange", () => {
   test("delivers to every listener until unsubscribed", () => {
     const doc = fixture();
     const first = vi.fn();
     const second = vi.fn();
-    const off = provider.onChange(doc, first);
-    provider.onChange(doc, second);
+    const off = provider.onExternalChange(doc, first);
+    provider.onExternalChange(doc, second);
     const change = { dirtyBlocks: ["a"], removedBlocks: [] };
 
     provider.notifyChange(doc, change);

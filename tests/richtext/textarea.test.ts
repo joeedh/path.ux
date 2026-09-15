@@ -206,3 +206,17 @@ test("an unresolved path disables the field", () => {
   expect(field.internalDisabled).toBe(true);
   expect(field.editor.root.contentEditable).toBe("false");
 });
+
+test("a disable then enable cycle leaves a read-only field read-only", () => {
+  const field = openField(makeCtx());
+
+  field.readOnly = true;
+  expect(field.editor.root.contentEditable).toBe("false");
+
+  field.internalDisabled = true;
+  field.internalDisabled = false;
+  expect(field.editor.root.contentEditable).toBe("false");
+
+  field.readOnly = false;
+  expect(field.editor.root.contentEditable).toBe("true");
+});

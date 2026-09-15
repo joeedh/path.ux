@@ -1,4 +1,4 @@
-import type { IContextBase } from "../../../core/context_base";
+import type { RowFrame } from "../../../core/ui_containers";
 import { Icons } from "../../../icon_enum";
 import { CARET_SLOT } from "../provider";
 import type {
@@ -12,14 +12,24 @@ import type {
   EditOp,
   EditResult,
   MarkInfo,
+  ProviderContext,
+  ToolbarSync,
 } from "../provider";
+import {
+  clipMarks,
+  cutMark,
+  hasMark,
+  markSegments,
+  marksAfterDelete,
+  marksAfterTyping,
+  marksAroundInsert,
+  normalizeMarks,
+} from "./marks";
+import type { Mark } from "./marks";
+import { addMarkButtons } from "./toolbar";
 
 /** A mark over the half-open offset range `[from, to)` of a block's text. */
-export interface PlainMark {
-  from: number;
-  to: number;
-  name: string;
-}
+export type PlainMark = Mark;
 
 export interface PlainBlock {
   id: BlockId;
@@ -65,78 +75,6 @@ const cloneBlock = (b: PlainBlock): PlainBlock => ({
 });
 
 const unique = (ids: readonly BlockId[]) => [...new Set(ids)];
-
-/** Drops empty marks, merges same-named marks that touch or overlap, and sorts by start. */
-function normalizeMarks(marks: readonly PlainMark[]): PlainMark[] {
-  const sorted = marks
-    .filter((m) => m.from < m.to)
-    .map((m) => ({ ...m }))
-    .sort((a, b) => a.from - b.from || a.name.localeCompare(b.name));
-  const out: PlainMark[] = [];
-
-  for (const m of sorted) {
-    const prev = out.find((o) => o.name === m.name && o.to >= m.from);
-    if (prev) {
-      prev.to = Math.max(prev.to, m.to);
-    } else {
-      out.push(m);
-    }
-  }
-
-  return out.sort((a, b) => a.from - b.from || a.name.localeCompare(b.name));
-}
-
-/** The marks clipped to `[from, to)` and re-based so that `from` becomes `base`. */
-function clipMarks(marks: readonly PlainMark[], from: number, to: number, base: number) {
-  return normalizeMarks(
-    marks.map((m) => ({
-      from: Math.max(m.from, from) - from + base,
-      to  : Math.min(m.to, to) - from + base,
-      name: m.name,
-    }))
-  );
-}
-
-/**
- * The marks after typing `len` characters at `pos`. A mark the caret is inside of or at the end
- * of grows over the new text; a mark starting at `pos` moves right and leaves it unmarked.
- */
-function marksAfterTyping(marks: readonly PlainMark[], pos: number, len: number) {
-  return normalizeMarks(
-    marks.map((m) => ({
-      from: m.from < pos ? m.from : m.from + len,
-      to  : m.to < pos ? m.to : m.to + len,
-      name: m.name,
-    }))
-  );
-}
-
-/**
- * The marks after pasting `len` unmarked characters at `pos`. A mark spanning `pos` is split
- * around the insertion, so pasted text never inherits a mark.
- */
-function marksAroundInsert(marks: readonly PlainMark[], pos: number, len: number) {
-  const out: PlainMark[] = [];
-
-  for (const m of marks) {
-    if (m.to <= pos) {
-      out.push({ ...m });
-    } else if (m.from >= pos) {
-      out.push({ from: m.from + len, to: m.to + len, name: m.name });
-    } else {
-      out.push({ from: m.from, to: pos, name: m.name });
-      out.push({ from: pos + len, to: m.to + len, name: m.name });
-    }
-  }
-
-  return normalizeMarks(out);
-}
-
-/** The marks after deleting `[from, to)`: later offsets move left, marks inside it vanish. */
-function marksAfterDelete(marks: readonly PlainMark[], from: number, to: number) {
-  const map = (x: number) => (x <= from ? x : x >= to ? x - (to - from) : from);
-  return normalizeMarks(marks.map((m) => ({ from: map(m.from), to: map(m.to), name: m.name })));
-}
 
 /**
  * The reference provider over `PlainDoc`. Marks are flat offset ranges, no block is opaque,
@@ -190,13 +128,11 @@ export class PlainProvider implements DocumentProvider<PlainDoc> {
     }
 
     return [...names].filter((name) =>
-      segments.every(({ marks, from, to }) =>
-        marks.some((m) => m.name === name && m.from <= from && m.to >= to)
-      )
+      segments.every(({ marks, from, to }) => hasMark(marks, name, from, to))
     );
   }
 
-  renderBlock(doc: PlainDoc, block: BlockId, ctx: IContextBase): HTMLElement {
+  renderBlock(doc: PlainDoc, block: BlockId, ctx: ProviderContext): HTMLElement {
     const b = this.block(doc, block);
     const el = document.createElement("p");
     el.setAttribute("data-doc-block", b.id);
@@ -206,21 +142,11 @@ export class PlainProvider implements DocumentProvider<PlainDoc> {
       return el;
     }
 
-    const bounds = new Set([0, b.text.length]);
-    for (const m of b.marks) {
-      bounds.add(m.from);
-      bounds.add(m.to);
-    }
-    const edges = [...bounds].sort((a, b) => a - b);
-
-    for (let i = 0; i + 1 < edges.length; i++) {
-      const from = edges[i];
-      const to = edges[i + 1];
+    for (const { from, to, marks } of markSegments(b.text.length, b.marks)) {
       let node: Node = document.createTextNode(b.text.slice(from, to));
 
       // wrap innermost first, so the first mark in the list ends up outermost
-      const active = b.marks.filter((m) => m.from <= from && m.to >= to).reverse();
-      for (const m of active) {
+      for (const m of [...marks].reverse()) {
         const tag = MARK_TAGS[m.name];
         const wrap = document.createElement(tag ?? "span");
         if (tag === undefined) {
@@ -234,6 +160,10 @@ export class PlainProvider implements DocumentProvider<PlainDoc> {
     }
 
     return el;
+  }
+
+  buildToolbar(row: RowFrame<ProviderContext>, ctx: ProviderContext): ToolbarSync<PlainDoc> {
+    return addMarkButtons(row, ctx, this);
   }
 
   applyEdit(doc: PlainDoc, op: EditOp): EditResult {
@@ -320,6 +250,9 @@ export class PlainProvider implements DocumentProvider<PlainDoc> {
 
       case "replaceBlocks":
         return this.replaceBlocks(doc, op.after, op.blocks, op.remove);
+
+      case "custom":
+        throw new Error(`PlainProvider: unknown custom op ${op.name}`);
     }
   }
 
@@ -358,6 +291,9 @@ export class PlainProvider implements DocumentProvider<PlainDoc> {
         }
         break;
       }
+      case "custom":
+        touched = [...op.blocks];
+        break;
     }
 
     // the touched blocks are contiguous in every case above, so one anchor places them all
@@ -369,9 +305,13 @@ export class PlainProvider implements DocumentProvider<PlainDoc> {
     return {
       type: "replaceBlocks",
       after,
-      blocks: touched.map((id) => this.snapshot(doc, id)),
+      blocks: this.snapshots(doc, touched),
       remove: unique([...touched, ...created]),
     };
+  }
+
+  snapshots(doc: PlainDoc, blocks: readonly BlockId[] = this.blocks(doc)): BlockSnapshot[] {
+    return blocks.map((id) => this.snapshot(doc, id));
   }
 
   toClipboard(doc: PlainDoc, range: DocRange): ClipboardContent {
@@ -396,7 +336,12 @@ export class PlainProvider implements DocumentProvider<PlainDoc> {
     return { blocks: data.getData("text/plain").split(/\r\n|\r|\n/) };
   }
 
-  onChange(doc: PlainDoc, listener: (change: DocChange) => void) {
+  /** The block texts joined by newlines, as `text/plain`. */
+  emitDocFile(doc: PlainDoc): Blob {
+    return new Blob([doc.blocks.map((b) => b.text).join("\n")], { type: "text/plain" });
+  }
+
+  onExternalChange(doc: PlainDoc, listener: (change: DocChange) => void) {
     let set = this.listeners.get(doc);
     if (set === undefined) {
       set = new Set();
@@ -409,7 +354,7 @@ export class PlainProvider implements DocumentProvider<PlainDoc> {
     };
   }
 
-  /** Reports a change made to `doc` outside `applyEdit` to every `onChange` listener. */
+  /** Reports a change made to `doc` outside `applyEdit` to every `onExternalChange` listener. */
   notifyChange(doc: PlainDoc, change: DocChange) {
     const set = this.listeners.get(doc);
     if (set === undefined) {
@@ -508,22 +453,11 @@ export class PlainProvider implements DocumentProvider<PlainDoc> {
       return { dirtyBlocks: [], removedBlocks: [], selection: range };
     }
 
-    const covered = segments.every(({ block, from, to }) =>
-      block.marks.some((m) => m.name === mark && m.from <= from && m.to >= to)
-    );
+    const covered = segments.every(({ block, from, to }) => hasMark(block.marks, mark, from, to));
 
     for (const { block, from, to } of segments) {
       if (covered) {
-        const kept: PlainMark[] = [];
-        for (const m of block.marks) {
-          if (m.name !== mark) {
-            kept.push(m);
-          } else {
-            kept.push({ from: m.from, to: Math.min(m.to, from), name: m.name });
-            kept.push({ from: Math.max(m.from, to), to: m.to, name: m.name });
-          }
-        }
-        block.marks = normalizeMarks(kept);
+        block.marks = cutMark(block.marks, mark, from, to);
       } else {
         block.marks = normalizeMarks([...block.marks, { from, to, name: mark }]);
       }

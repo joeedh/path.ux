@@ -903,7 +903,27 @@ Each stage is a commit and records its status here when it lands.
   host element and `preventDefault` suppresses the default; the three history-engine cases
   under History engines; the change-notification cases under Change notification.
 
-Status: not started.
+Status: done. Everything above landed as listed; `tests/richtext/editor.test.ts` holds the
+editor-level tests and the readOnly scroll check sits in `playwright/richtext.spec.ts`.
+Deviations, each with its reason:
+
+- `ops.ts` changed as well: the typed `deliver` needs `DocEditOp` to pass `origin`, `op` and
+  `submitter`, so `settle`, `exec`, `undo` and `foldFrom` do; `run` is `number | string` so
+  `dispatch` can mint a run that no editor's counter ever equals.
+- `ToolbarSync<Doc>` is `(doc, selection) => void` and `addMarkButtons` takes the provider:
+  `ProviderContext` carries the bridge but not the session, so the sync cannot reach the
+  document or `activeMarks` on its own. That makes `RichTextEditor` and `DocumentSession`
+  invariant in `Doc`, so the example names `PlainDoc` on both.
+- `RichTextContext` takes the bridge as an optional third constructor argument; the
+  session's own `dispatch` builds a context with none.
+- The barrel gains the type-only names the listed ones are made of: `CustomShift`,
+  `JsonValue`, `DocChangeOrigin` and `RichTextChangeDetail`. `tests/fixtures/barrel-surface.json`
+  records the new surface.
+- `getValue` is an arrow property, since `UIBase` declares it as one.
+- The toolbar tint is a `--richtext-icon-tint` variable set on the host in `setCSS`, which
+  `addMarkButtons` reads, so the editor tints buttons it did not build.
+- `_forEachChildWidget` skips the root, as planned, and the editor drives embedded widgets'
+  `update()` from `update()` as well, so a theme or ctx change still reaches them.
 
 ### Stage 2 — model, parse, serialize
 

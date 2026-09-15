@@ -6,6 +6,7 @@ import { ToolStack } from "../../scripts/path-controller/toolsys/toolstack";
 import { IntProperty } from "../../scripts/path-controller/toolsys/toolprop";
 import type { IContextBase } from "../../scripts/core/context_base";
 import { DocumentSession, RichTextContext } from "../../scripts/widgets/richtext/context";
+import type { DocChangeInfo } from "../../scripts/widgets/richtext/context";
 import { DocEditOp } from "../../scripts/widgets/richtext/ops";
 import type { DocChange, DocRange, EditOp } from "../../scripts/widgets/richtext/provider";
 import { PlainProvider, plainDocFromLines } from "../../scripts/widgets/richtext/providers/plain";
@@ -73,8 +74,8 @@ let doc: PlainDoc;
 let session: DocumentSession<PlainDoc>;
 let ctx: RichTextContext<AppCtx, PlainDoc>;
 let changes: DocChange[];
-/** Every change and source the session delivered, submitter's own included. */
-let delivered: { change: DocChange; source: unknown }[];
+/** Every change and info the session delivered, submitter's own included. */
+let delivered: { change: DocChange; info: DocChangeInfo }[];
 
 /** Stands in for the editor: the token it hands `result()` and skips in its own listener. */
 const SUBMITTER = { name: "editor" };
@@ -101,9 +102,9 @@ function openDocument(toolstack = new ToolStack()) {
   ctx = new RichTextContext(app, session);
   changes = [];
   delivered = [];
-  session.onChange((change, source) => {
-    delivered.push({ change, source });
-    if (source !== SUBMITTER) {
+  session.onChange((change, info) => {
+    delivered.push({ change, info });
+    if (info.submitter !== SUBMITTER) {
       changes.push(change);
     }
   });
@@ -170,7 +171,7 @@ describe("DocumentSession", () => {
 
     expect(session.disposed).toBe(true);
     provider.notifyChange(doc, { dirtyBlocks: ["a"], removedBlocks: [] });
-    session.deliver({ dirtyBlocks: ["a"], removedBlocks: [] });
+    session.deliver({ dirtyBlocks: ["a"], removedBlocks: [] }, { origin: "external" });
     expect(changes).toEqual([]);
   });
 
@@ -197,7 +198,9 @@ describe("DocEditOp", () => {
     expect(result.selection).toEqual(collapsed("a", 6));
     expect(result.dirtyBlocks).toEqual(["a"]);
     expect(changes).toEqual([]);
-    expect(delivered).toEqual([{ change: result, source: SUBMITTER }]);
+    expect(delivered).toEqual([
+      { change: result, info: { origin: "edit", op: insert("a", 5, ","), submitter: SUBMITTER } },
+    ]);
     expect(ctx.toolstack).toHaveLength(1);
   });
 
@@ -209,7 +212,10 @@ describe("DocEditOp", () => {
     await ctx.toolstack.foldOrExec(ctx, toolop);
 
     expect(delivered).toHaveLength(2);
-    expect(delivered[1]).toEqual({ change: await result, source: other });
+    expect(delivered[1]).toEqual({
+      change: await result,
+      info  : { origin: "fold", op: insert("a", 12, "?"), submitter: other },
+    });
     expect(changes).toHaveLength(1);
   });
 
@@ -221,7 +227,9 @@ describe("DocEditOp", () => {
     expect(changes).toHaveLength(1);
     expect(changes[0].dirtyBlocks).toEqual(["a"]);
     expect(changes[0].selection).toEqual(collapsed("a", 11));
-    expect(delivered[1].source).toBeUndefined();
+    expect(delivered[1].info.submitter).toBeUndefined();
+    expect(delivered[1].info.origin).toBe("undo");
+    expect(delivered[1].info.op?.type).toBe("replaceBlocks");
   });
 
   test("redo reapplies the edit and delivers through the session", async () => {
@@ -232,6 +240,7 @@ describe("DocEditOp", () => {
     expect(texts()).toEqual(["Hello, world", "second line"]);
     expect(changes).toHaveLength(2);
     expect(changes[1].selection).toEqual(collapsed("a", 6));
+    expect(delivered[2].info).toEqual({ origin: "redo", op: insert("a", 5, ",") });
   });
 
   test("a run of insertText folds into one entry whose undo removes the whole run", async () => {

@@ -1,8 +1,7 @@
 import { ToolOp } from "../../path-controller/toolsys/toolop";
 import type { FoldableToolOp } from "../../path-controller/toolsys/toolop";
 import { StringProperty } from "../../path-controller/toolsys/toolprop";
-import type { RichTextContext } from "./context";
-import type { DocumentSession } from "./context";
+import type { DocChangeInfo, DocumentSession, RichTextContext } from "./context";
 import type { EditOp, EditResult } from "./provider";
 
 // A run of typing folds into one entry. Every other kind of edit pushes, which the key
@@ -40,14 +39,14 @@ export class DocEditOp extends ToolOp<EditInputs, {}, RichTextContext> implement
 
   private readonly key: string;
   private resolve?: (result: EditResult) => void;
-  private source?: unknown;
+  private source?: object;
 
   /**
    * `run` is the submitting editor's `pathUndoGen`; two `insertText` or `deleteRange` ops on
    * one block with the same run fold, and the editor bumps it whenever the next op is not
-   * contiguous with the run in progress.
+   * contiguous with the run in progress. A session's `dispatch` passes a fresh string instead.
    */
-  constructor(op?: EditOp, inverse?: EditOp, sessionId = "", run = 0) {
+  constructor(op?: EditOp, inverse?: EditOp, sessionId = "", run: number | string = 0) {
     super();
 
     if (op !== undefined) {
@@ -76,9 +75,9 @@ export class DocEditOp extends ToolOp<EditInputs, {}, RichTextContext> implement
   /**
    * The `EditResult` of applying this op, whether it pushes or folds into the head. Call
    * before submitting; the promise is settled by the phase that applies the op, which also
-   * delivers the result to the session's listeners with `source` attached.
+   * delivers the result to the session's listeners with `source` as the submitter.
    */
-  result(source?: unknown): Promise<EditResult> {
+  result(source?: object): Promise<EditResult> {
     this.source = source;
 
     return new Promise((resolve) => {
@@ -86,13 +85,18 @@ export class DocEditOp extends ToolOp<EditInputs, {}, RichTextContext> implement
     });
   }
 
-  private settle(session: DocumentSession, result: EditResult): void {
+  private settle(
+    session: DocumentSession,
+    result: EditResult,
+    origin: DocChangeInfo["origin"],
+    op: EditOp
+  ): void {
     const resolve = this.resolve;
-    const source = this.source;
+    const submitter = this.source;
     this.resolve = undefined;
     this.source = undefined;
 
-    session.deliver(result, source);
+    session.deliver(result, { origin, op, submitter });
     resolve?.(result);
   }
 
@@ -105,7 +109,10 @@ export class DocEditOp extends ToolOp<EditInputs, {}, RichTextContext> implement
       return;
     }
 
-    this.settle(session, session.provider.applyEdit(session.doc, this.op));
+    const op = this.op;
+    // the toolstack marks a redo before re-running exec; the resolver is unset by then
+    const origin = this._was_redo ? "redo" : "edit";
+    this.settle(session, session.provider.applyEdit(session.doc, op), origin, op);
   }
 
   override undo(ctx: RichTextContext): void {
@@ -114,7 +121,11 @@ export class DocEditOp extends ToolOp<EditInputs, {}, RichTextContext> implement
       return;
     }
 
-    session.deliver(session.provider.applyEdit(session.doc, this.inverse));
+    const inverse = this.inverse;
+    session.deliver(session.provider.applyEdit(session.doc, inverse), {
+      origin: "undo",
+      op    : inverse,
+    });
   }
 
   foldKey(): string {
@@ -152,7 +163,7 @@ export class DocEditOp extends ToolOp<EditInputs, {}, RichTextContext> implement
       this.inputs.op.setValue(JSON.stringify({ ...head, range }));
     }
 
-    next.settle(session, session.provider.applyEdit(session.doc, delta));
+    next.settle(session, session.provider.applyEdit(session.doc, delta), "fold", delta);
   }
 }
 

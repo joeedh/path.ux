@@ -433,3 +433,61 @@ test("a rich text property bound through the container writes the model and undo
   await expect.poll(modelText).toBe("");
   expect(await appLength()).toBe(before + 3);
 });
+
+test("readOnly locks every input path and holds a non-zero scrollTop", async ({ page }) => {
+  const editor = await openEditor(page);
+  const setReadOnly = (value: boolean) =>
+    editor.evaluate((el, value) => {
+      (el as EditorProbe & { readOnly: boolean }).readOnly = value;
+    }, value);
+
+  // enough lines to overflow a fixed height, so the root has something to scroll
+  await selectIn(editor, 2, 0);
+  await editor.evaluate((el) => {
+    (el as HTMLElement).style.height = "160px";
+    const data = new DataTransfer();
+    const lines = Array.from({ length: 20 }, (_, i) => `line ${i}`);
+    data.setData("text/plain", lines.join(String.fromCharCode(10)));
+    (el as EditorProbe).root.dispatchEvent(
+      new InputEvent("beforeinput", {
+        inputType   : "insertFromPaste",
+        dataTransfer: data,
+        cancelable  : true,
+        bubbles     : true,
+      })
+    );
+  });
+  await expect.poll(async () => (await texts(editor)).length).toBe(22);
+
+  await editor.evaluate((el) => {
+    (el as EditorProbe).root.scrollTop = 60;
+  });
+  const scrollTop = () => editor.evaluate((el) => (el as EditorProbe).root.scrollTop);
+  expect(await scrollTop()).toBeGreaterThan(0);
+  const held = await scrollTop();
+  const before = await texts(editor);
+
+  await setReadOnly(true);
+  await expect(editor.locator(".rich-text-root")).toHaveAttribute("contenteditable", "false");
+  expect(await scrollTop()).toBe(held);
+  expect(await editor.evaluate((el) => el.hasAttribute("readonly"))).toBe(true);
+
+  await selectIn(editor, 0, 13);
+  await page.keyboard.type("nope");
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Control+z");
+  await page.waitForTimeout(100);
+  expect(await texts(editor)).toEqual(before);
+  expect(await scrollTop()).toBe(held);
+  expect(
+    await editor
+      .locator('[data-testid="richtext-mark-bold"]')
+      .evaluate((el) => (el as HTMLElement & { disabled: boolean }).disabled)
+  ).toBe(true);
+
+  await setReadOnly(false);
+  await expect(editor.locator(".rich-text-root")).toHaveAttribute("contenteditable", "true");
+  await selectIn(editor, 0, 13);
+  await page.keyboard.type("!");
+  await expect.poll(async () => (await texts(editor))[0]).toBe("Hello, world.!");
+});
