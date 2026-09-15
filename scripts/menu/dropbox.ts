@@ -305,11 +305,9 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
       return;
     }
 
-    if (this.prop === undefined) {
-      this.prop = prop;
-    }
-
-    prop = this.prop;
+    // The cache follows the latest resolution: an enumDef that rebuilds its property (a model
+    // list that grew) would otherwise label the button from the first list it ever saw
+    this.prop = prop;
 
     let name: string | null;
 
