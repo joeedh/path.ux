@@ -11,6 +11,7 @@ import { StringProperty } from "../../scripts/path-controller/toolsys/toolprop";
 import { DocEditOp } from "../../scripts/widgets/richtext/ops";
 import type { EditOp } from "../../scripts/widgets/richtext/provider";
 import { RichTextArea } from "../../scripts/widgets/richtext/textarea";
+import { MarkdownProvider } from "../../scripts/widgets/richtext/markdown";
 import { TextArea } from "../../scripts/widgets/ui_textarea";
 /* used only as a type above, so the element registration it performs on import needs
  * naming explicitly or the import is elided */
@@ -18,6 +19,17 @@ import "../../scripts/core/ui_containers";
 
 beforeAll(() => {
   (globalThis as unknown as { window: unknown }).window ||= globalThis;
+
+  // the markdown toolbar's kind dropdown draws on a 2d canvas, which happy-dom does not implement
+  const proto = HTMLCanvasElement.prototype as unknown as { getContext(kind: string): unknown };
+  proto.getContext = () =>
+    new Proxy(
+      {},
+      {
+        get: (_t, key) => (key === "measureText" ? () => ({ width: 10 }) : () => undefined),
+        set: () => true,
+      }
+    );
 
   // no iconsheet <img> elements exist in the test DOM; the toolbar's icon CSS lookups
   // dereference sheet.image.src, so give the sheets a stand-in
@@ -35,6 +47,7 @@ beforeEach(() => {
 class Data {
   text = "Hello world\nsecond line";
   plain = "one line";
+  md = "# Title\n\nSome *text* here.\n";
 }
 
 class Root {
@@ -58,6 +71,10 @@ function makeCtx() {
     text.data.setRichText(true);
   }
   dataDef.textblock("plain", "plain", "Plain");
+  const md = dataDef.textblock("md", "md", "Markdown");
+  if (md.data instanceof StringProperty) {
+    md.data.setRichText("markdown");
+  }
 
   const rootDef = api.mapStruct(Root);
   rootDef.struct("data", "data", "Data", dataDef);
@@ -219,4 +236,62 @@ test("a disable then enable cycle leaves a read-only field read-only", () => {
 
   field.readOnly = false;
   expect(field.editor.root.contentEditable).toBe("true");
+});
+
+test("a property whose richTextFormat is markdown opens the field in markdown mode", () => {
+  const field = openField(makeCtx(), "data.md");
+
+  expect(field.format).toBe("markdown");
+  expect(field.session?.provider).toBeInstanceOf(MarkdownProvider);
+  expect(blockTexts(field)).toEqual(["Title", "Some text here."]);
+  expect(field.editor.root.querySelector("h1")?.textContent).toBe("Title");
+  expect(field.editor.root.querySelector("em")?.textContent).toBe("text");
+  expect(field.value).toBe("# Title\n\nSome *text* here.\n");
+});
+
+test("an edit in markdown mode writes the source back with its marks, and undo restores it", async () => {
+  const ctx = makeCtx();
+  const field = openField(ctx, "data.md");
+
+  await submit(field, insertAt(field, 1, 15, "!"));
+  expect(ctx.data.md).toBe("# Title\n\nSome *text* here.!\n");
+  expect(ctx.toolstack.length).toBe(1);
+
+  await ctx.toolstack.undo();
+  expect(ctx.data.md).toBe("# Title\n\nSome *text* here.\n");
+  expect(field.editor.root.querySelector("em")?.textContent).toBe("text");
+});
+
+test("a write to a markdown path re-parses the field", () => {
+  const ctx = makeCtx();
+  const field = openField(ctx, "data.md");
+
+  ctx.api.setValue(ctx, "data.md", "- one\n- two\n");
+  flushPathNotifications();
+
+  expect(blockTexts(field)).toEqual(["one", "two"]);
+  expect(field.editor.root.querySelectorAll(".md-li")).toHaveLength(2);
+});
+
+test("the format option and the format property re-parse the value; an unknown format throws", () => {
+  const ctx = makeCtx();
+  const field = makeContainer(ctx).textarea("data.text" as never, { format: "markdown" });
+  if (!(field instanceof RichTextArea)) {
+    throw new Error("expected a RichTextArea");
+  }
+  field.checkInit();
+  field.update();
+  flushPathNotifications();
+
+  expect(field.format).toBe("markdown");
+  expect(field.session?.provider).toBeInstanceOf(MarkdownProvider);
+
+  field.format = "plain";
+  expect(field.session?.provider).not.toBeInstanceOf(MarkdownProvider);
+  expect(blockTexts(field)).toEqual(["Hello world", "second line"]);
+
+  expect(() => {
+    field.format = "nope";
+  }).toThrow(/registered as "nope"/);
+  expect(field.format).toBe("plain");
 });

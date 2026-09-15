@@ -2,7 +2,7 @@ import { UIBase } from "../../core/ui_base";
 import type { IContextBase } from "../../core/context_base";
 import type { UIBaseDefinition } from "../../core/base/ui_base_types";
 import type { PathWatchInfo } from "../../path-controller/controller/pathwatch";
-import { DocumentSession } from "./context";
+import { DocumentSession, replaceContentsOp } from "./context";
 import { RichTextEditor } from "./editor";
 import { newBlockId } from "./provider";
 import type { DocumentProvider } from "./provider";
@@ -28,10 +28,20 @@ export interface RichTextFormat<Doc> {
  */
 const formats = new Map<string, RichTextFormat<unknown>>();
 
+const plainFormat: RichTextFormat<PlainDoc> = {
+  provider: () => new PlainProvider(),
+  fromText: (text) => plainDocFromLines(text.split(LINE_BREAK), () => newBlockId()),
+  toText  : (doc) => doc.blocks.map((b) => b.text).join("\n"),
+};
+// the registry's cast again, since the field holds whichever format it is given
+const plainEntry = plainFormat as RichTextFormat<unknown>;
+
 /**
  * A rich text field bound to a string datapath, the way `TextArea` is for plain text: a
- * `rich-text-x` over a `PlainDoc` the widget holds, on the context's toolstack. The value is
- * the block texts joined by newlines; marks live in the session for the widget's lifetime.
+ * `rich-text-x` over a document the widget holds, on the context's toolstack. `format` names
+ * the registered `RichTextFormat` that parses the path's string into that document and
+ * serializes it back: `plain` joins the block texts with newlines and keeps marks in the
+ * session only, `markdown` round-trips them through the source.
  *
  * Every edit is the `DocEditOp` the editor pushes, and the path is written from its result
  * without an undo entry of its own. The session outlives the widget, so an undo after the
@@ -42,10 +52,12 @@ export class RichTextArea<CTX extends IContextBase = IContextBase> extends UIBas
   string,
   "RichTextArea"
 > {
-  readonly editor: RichTextEditor<CTX, PlainDoc>;
-  private readonly provider = new PlainProvider();
-  private readonly doc: PlainDoc = plainDocFromLines([""], () => newBlockId());
-  private _session?: DocumentSession<PlainDoc>;
+  readonly editor: RichTextEditor<CTX, unknown>;
+  private _format = "plain";
+  private entry = plainEntry;
+  private provider = plainEntry.provider();
+  private doc = plainEntry.fromText("");
+  private _session?: DocumentSession<unknown>;
   /** The value last written to or read from the path, so a watcher echo is not a change. */
   private lastValue = "";
 
@@ -64,7 +76,7 @@ export class RichTextArea<CTX extends IContextBase = IContextBase> extends UIBas
     `;
     this.shadow.appendChild(style);
 
-    this.editor = UIBase.createElement<RichTextEditor<CTX, PlainDoc>>(
+    this.editor = UIBase.createElement<RichTextEditor<CTX, unknown>>(
       RichTextEditor.define().tagname
     );
     // exposed as a part, so a consumer styles it with ::part(editor) and a test finds it
@@ -90,12 +102,40 @@ export class RichTextArea<CTX extends IContextBase = IContextBase> extends UIBas
   override set useDataPathUndo(_val: boolean) {}
 
   /** The session the field's editor shows; `undefined` until the widget has a context. */
-  get session(): DocumentSession<PlainDoc> | undefined {
+  get session(): DocumentSession<unknown> | undefined {
     return this._session;
   }
 
+  /**
+   * The name of the registered format the field edits the string as. Setting it re-parses
+   * the current value into a fresh session, so the old format's edits leave the stack; a
+   * name nothing has registered throws, since the module that registers it was not imported.
+   */
+  get format(): string {
+    return this._format;
+  }
+
+  set format(name: string) {
+    if (name === this._format) {
+      return;
+    }
+
+    const entry = formats.get(name);
+    if (entry === undefined) {
+      throw new Error(`RichTextArea: no rich text format is registered as "${name}"`);
+    }
+
+    this._format = name;
+    this.entry = entry;
+    this.provider = entry.provider();
+    this.doc = entry.fromText(this.lastValue);
+    this._session?.dispose();
+    this._session = undefined;
+    this.openSession();
+  }
+
   get value(): string {
-    return this.doc.blocks.map((block) => block.text).join("\n");
+    return this.entry.toText(this.doc);
   }
 
   /** Replaces the document; the path is not written and no `change` fires. */
@@ -149,21 +189,27 @@ export class RichTextArea<CTX extends IContextBase = IContextBase> extends UIBas
     }
 
     const session = new DocumentSession(this.doc, this.provider, this.ctx.toolstack);
-    session.onChange(() => this.pushValue());
+    // a load is the path's own value arriving, so it is not written back normalized
+    session.onChange((_change, info) => {
+      if (info.origin !== "external") {
+        this.pushValue();
+      }
+    });
     this._session = session;
     this.editor.session = session;
   }
 
+  // A path write is not an edit: the contents swap outside the stack and the session hears
+  // it as an external change, so the editor re-renders and keeps its own selection
   private load(value: string): void {
     this.lastValue = value;
 
-    const removedBlocks = this.doc.blocks.map((block) => block.id);
-    this.doc.blocks = plainDocFromLines(value.split(LINE_BREAK), () => newBlockId()).blocks;
-
-    this.provider.notifyChange(this.doc, {
-      dirtyBlocks: this.doc.blocks.map((block) => block.id),
-      removedBlocks,
-    });
+    const next = this.entry.fromText(value);
+    const { dirtyBlocks, removedBlocks } = this.provider.applyEdit(
+      this.doc,
+      replaceContentsOp(this.provider, this.doc, next)
+    );
+    this._session?.deliver({ dirtyBlocks, removedBlocks }, { origin: "external" });
   }
 
   private pushValue(): void {
@@ -193,8 +239,4 @@ export class RichTextArea<CTX extends IContextBase = IContextBase> extends UIBas
 }
 UIBase.internalRegister(RichTextArea);
 
-RichTextArea.registerFormat<PlainDoc>("plain", {
-  provider: () => new PlainProvider(),
-  fromText: (text) => plainDocFromLines(text.split(LINE_BREAK), () => newBlockId()),
-  toText  : (doc) => doc.blocks.map((b) => b.text).join("\n"),
-});
+RichTextArea.registerFormat("plain", plainFormat);

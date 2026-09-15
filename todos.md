@@ -65,8 +65,12 @@ the example, and the markdown Playwright spec in Chromium and Firefox.
 `buildToolbar` with the kind dropdown, mark, list and Link buttons, the
 `link-popup-x` link editor, `md-image-x` with its modal resize and move ops,
 their theme keys, the Playwright tests and screenshots, and the Electron
-pass. Stages 5 to 7 (binding and docs, the follow-ups and the syntax
-reference) remain.
+pass.
+[x]: markdown binding, example and docs (stage 5 of the same plan):
+`RichTextArea.format` from the property's `richTextFormat`, the example's
+Markdown tab with its outline, Read-only toggle, Save and status line, and
+the rich text doc's Render-only, Link clicks and Markdown sections. Stages
+6 and 7 (the optional follow-ups and the syntax reference) remain.
 [ ]: better wrappers around the web file system APIs, to cover what
 simple_docsys did for locally served, Electron and NW.js apps. Unrelated to
 the rich text work; noted here so it is not lost when simple_docsys goes.

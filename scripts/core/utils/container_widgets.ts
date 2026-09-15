@@ -333,7 +333,8 @@ export function textareaImpl<CTX extends IContextBase, SELF extends string>(
   value = "",
   packflag = 0,
   mass_set_path?: string,
-  isRichText?: boolean
+  isRichText?: boolean,
+  format?: string
 ) {
   packflag |= self.inherit_packflag & ~PackFlags.NO_UPDATE;
 
@@ -342,11 +343,17 @@ export function textareaImpl<CTX extends IContextBase, SELF extends string>(
   const prop = datapath ? self.getPathMeta(self.ctx, datapath) : undefined;
   if (prop !== undefined) {
     isRichText = isRichText ?? Boolean(prop.flag & PropFlags.RICH_TEXT_STRING);
+    if (prop instanceof StringPropertyBase) {
+      format ??= prop.richTextFormat;
+    }
   }
 
   const ret = UIBase.createElement(isRichText ? "rich-text-area-x" : "text-area-x") as
     RichTextArea<CTX> | TextArea<CTX>;
   ret.ctx = self.ctx;
+  if (format !== undefined && "format" in ret) {
+    ret.format = format;
+  }
 
   ret.packflag |= packflag;
 
@@ -392,4 +399,4 @@ export function viewerImpl<CTX extends IContextBase, SELF extends string>(
 }
 
 import "../../widgets/ui_textarea";
-import { PropFlags } from "../../path-controller/toolsys/toolprop";
+import { PropFlags, StringPropertyBase } from "../../path-controller/toolsys/toolprop";

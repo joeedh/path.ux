@@ -139,6 +139,10 @@ export function defineAPI() {
   if (text.data instanceof StringProperty) {
     text.data.setRichText(true);
   }
+  const markdown = dstruct.textblock("markdown", "markdown", "Markdown");
+  if (markdown.data instanceof StringProperty) {
+    markdown.data.setRichText("markdown");
+  }
   dstruct.color4("color", "color", "Color");
 
   dstruct

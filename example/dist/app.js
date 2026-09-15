@@ -12809,6 +12809,7 @@ var init_string = __esm({
     StringPropertyBase {
       data                  : string;
       multiLineIdleTimeout ?: int;
+      richTextFormat       ?: string;
     }
   `
       );
@@ -12817,6 +12818,8 @@ var init_string = __esm({
        * Uses a default value if undefined.  In miliseconds.
        */
       multiLineIdleTimeout;
+      /** The document format a rich text field edits this string as; `undefined` is the plain block form. */
+      richTextFormat;
       constructor(type, value2, apiname, uiname, description, flag, icon) {
         super(type, void 0, apiname, uiname, description, flag, icon);
         this.setValue(value2 ?? "");
@@ -12830,6 +12833,7 @@ var init_string = __esm({
       copyTo(b) {
         super.copyTo(b);
         b.multiLineIdleTimeout = this.multiLineIdleTimeout;
+        b.richTextFormat = this.richTextFormat;
         b.data = this.data;
       }
       getValue() {
@@ -12852,12 +12856,19 @@ var init_string = __esm({
         }
         return this;
       }
+      /**
+       * Should a rich text field edit this property? A format name (`"markdown"`) picks the
+       * document format the field uses; `true` is the plain block form.
+       */
       setRichText(state) {
-        if (state) {
-          this.flag |= PropFlags.RICH_TEXT_STRING;
-        } else {
+        if (state === false) {
           this.flag &= ~PropFlags.RICH_TEXT_STRING;
+          this.richTextFormat = void 0;
+        } else {
+          this.flag |= PropFlags.RICH_TEXT_STRING;
+          this.richTextFormat = state === true ? void 0 : state;
         }
+        return this;
       }
       /** Should a textarea be used to edit this property? */
       get multiLine() {
@@ -40000,15 +40011,21 @@ function colorPickerImpl(self2, inpath, packflag_or_args = 0, mass_set_path, the
   self2._add(ret);
   return ret;
 }
-function textareaImpl(self2, datapath, value2 = "", packflag = 0, mass_set_path, isRichText) {
+function textareaImpl(self2, datapath, value2 = "", packflag = 0, mass_set_path, isRichText, format) {
   packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
   mass_set_path = self2._getMassPath(self2.ctx, datapath, mass_set_path);
   const prop = datapath ? self2.getPathMeta(self2.ctx, datapath) : void 0;
   if (prop !== void 0) {
     isRichText = isRichText ?? Boolean(prop.flag & PropFlags.RICH_TEXT_STRING);
+    if (prop instanceof StringPropertyBase) {
+      format ??= prop.richTextFormat;
+    }
   }
   const ret = UIBase.createElement(isRichText ? "rich-text-area-x" : "text-area-x");
   ret.ctx = self2.ctx;
+  if (format !== void 0 && "format" in ret) {
+    ret.format = format;
+  }
   ret.packflag |= packflag;
   if (value2 !== void 0) {
     ret.value = value2;
@@ -41620,14 +41637,16 @@ var Container3 = class _Container extends UIBase {
     ).widget;
   }
   textarea(datapath, value2, packflag = 0, mass_set_path, isRichEdit, label) {
+    let format;
     if (typeof value2 === "object") {
       mass_set_path ??= value2.massSetPath;
       isRichEdit ??= value2.isRichEdit;
+      format = value2.format;
       label ??= value2.label;
       value2 = value2.value;
     }
     return this.addPropLabel(
-      textareaImpl(this, datapath, value2, packflag, mass_set_path, isRichEdit),
+      textareaImpl(this, datapath, value2, packflag, mass_set_path, isRichEdit, format),
       label,
       packflag
     ).widget;
@@ -47452,10 +47471,18 @@ function plainDocFromLines(lines, makeId) {
 init_ui_base();
 var LINE_BREAK = /\r\n|\r|\n/;
 var formats = /* @__PURE__ */ new Map();
+var plainFormat = {
+  provider: () => new PlainProvider(),
+  fromText: (text6) => plainDocFromLines(text6.split(LINE_BREAK), () => newBlockId()),
+  toText: (doc) => doc.blocks.map((b) => b.text).join("\n")
+};
+var plainEntry = plainFormat;
 var RichTextArea = class extends UIBase {
   editor;
-  provider = new PlainProvider();
-  doc = plainDocFromLines([""], () => newBlockId());
+  _format = "plain";
+  entry = plainEntry;
+  provider = plainEntry.provider();
+  doc = plainEntry.fromText("");
   _session;
   /** The value last written to or read from the path, so a watcher echo is not a change. */
   lastValue = "";
@@ -47496,8 +47523,32 @@ var RichTextArea = class extends UIBase {
   get session() {
     return this._session;
   }
+  /**
+   * The name of the registered format the field edits the string as. Setting it re-parses
+   * the current value into a fresh session, so the old format's edits leave the stack; a
+   * name nothing has registered throws, since the module that registers it was not imported.
+   */
+  get format() {
+    return this._format;
+  }
+  set format(name) {
+    if (name === this._format) {
+      return;
+    }
+    const entry = formats.get(name);
+    if (entry === void 0) {
+      throw new Error(`RichTextArea: no rich text format is registered as "${name}"`);
+    }
+    this._format = name;
+    this.entry = entry;
+    this.provider = entry.provider();
+    this.doc = entry.fromText(this.lastValue);
+    this._session?.dispose();
+    this._session = void 0;
+    this.openSession();
+  }
   get value() {
-    return this.doc.blocks.map((block) => block.text).join("\n");
+    return this.entry.toText(this.doc);
   }
   /** Replaces the document; the path is not written and no `change` fires. */
   set value(value2) {
@@ -47540,18 +47591,24 @@ var RichTextArea = class extends UIBase {
       return;
     }
     const session = new DocumentSession(this.doc, this.provider, this.ctx.toolstack);
-    session.onChange(() => this.pushValue());
+    session.onChange((_change, info) => {
+      if (info.origin !== "external") {
+        this.pushValue();
+      }
+    });
     this._session = session;
     this.editor.session = session;
   }
+  // A path write is not an edit: the contents swap outside the stack and the session hears
+  // it as an external change, so the editor re-renders and keeps its own selection
   load(value2) {
     this.lastValue = value2;
-    const removedBlocks = this.doc.blocks.map((block) => block.id);
-    this.doc.blocks = plainDocFromLines(value2.split(LINE_BREAK), () => newBlockId()).blocks;
-    this.provider.notifyChange(this.doc, {
-      dirtyBlocks: this.doc.blocks.map((block) => block.id),
-      removedBlocks
-    });
+    const next = this.entry.fromText(value2);
+    const { dirtyBlocks, removedBlocks } = this.provider.applyEdit(
+      this.doc,
+      replaceContentsOp(this.provider, this.doc, next)
+    );
+    this._session?.deliver({ dirtyBlocks, removedBlocks }, { origin: "external" });
   }
   pushValue() {
     const value2 = this.value;
@@ -47575,11 +47632,7 @@ var RichTextArea = class extends UIBase {
   }
 };
 UIBase.internalRegister(RichTextArea);
-RichTextArea.registerFormat("plain", {
-  provider: () => new PlainProvider(),
-  fromText: (text6) => plainDocFromLines(text6.split(LINE_BREAK), () => newBlockId()),
-  toText: (doc) => doc.blocks.map((b) => b.text).join("\n")
-});
+RichTextArea.registerFormat("plain", plainFormat);
 
 // scripts/path-controller/curve/curve1d_utils.ts
 init_curve1d_base();
@@ -73749,6 +73802,7 @@ var ModelData = class _ModelData extends DataBlock {
   enum;
   color;
   text;
+  markdown;
   boolval;
   demoNodeGraph = makeDemoGraph();
   constructor() {
@@ -73762,6 +73816,7 @@ var ModelData = class _ModelData extends DataBlock {
     this.enum = 0;
     this.color = new Vector4([0, 0, 0, 1]);
     this.text = "";
+    this.markdown = "# Notes\n\nA *bound* markdown field; its source is the property.\n";
     this.boolval = true;
   }
   static blockDefine() {
@@ -73787,6 +73842,7 @@ var ModelData = class _ModelData extends DataBlock {
     b.vector_test.load(this.vector_test);
     b.color.load(this.color);
     b.text = this.text;
+    b.markdown = this.markdown;
     b.value = this.value;
     b.enum = this.enum;
     b.curvemap.load(this.curvemap);
@@ -73802,6 +73858,7 @@ ModelData.STRUCT = struct_default.inherit(ModelData, DataBlock, "example.ModelDa
   enum          : int;
   value         : float;
   text          : string;
+  markdown      : string;
   canvas        : Canvas;
   curvemap      : Curve1D;
   angle1        : float;
@@ -74719,6 +74776,10 @@ function defineAPI() {
   const text6 = dstruct.textblock("text", "text", "Text");
   if (text6.data instanceof StringProperty) {
     text6.data.setRichText(true);
+  }
+  const markdown = dstruct.textblock("markdown", "markdown", "Markdown");
+  if (markdown.data instanceof StringProperty) {
+    markdown.data.setRichText("markdown");
   }
   dstruct.color4("color", "color", "Color");
   dstruct.vec4("vector_test", "vector_test", "vector_test").decimalPlaces(1).baseUnit("radian").displayUnit("degree").range(-180, 180);
@@ -89704,8 +89765,10 @@ var PropsEditor = class extends Editor2 {
     field.style.width = "420px";
   }
   /**
-   * Fills the Markdown tab: one editor over the sample document on its own toolstack. A spec
-   * loads another document through `window.__loadMarkdown`, which opens a fresh session.
+   * Fills the Markdown tab: an editor over the sample document on its own toolstack, with a
+   * Read-only toggle, a Save button, an outline of the headings that selects one on click,
+   * and a status line that shows a wikilink's target. A spec loads another document through
+   * `window.__loadMarkdown`, which opens a fresh session.
    */
   buildMarkdown(tab2) {
     const provider = new MarkdownProvider();
@@ -89715,13 +89778,82 @@ var PropsEditor = class extends Editor2 {
     );
     editor.setAttribute("data-testid", "markdown-editor");
     editor.style.width = "560px";
+    tab2.label("A markdown document on its own toolstack; every block kind the provider renders:");
+    const controls = tab2.row();
+    const readOnly = controls.check(void 0, "Read-only");
+    readOnly.setAttribute("data-testid", "markdown-readonly");
+    readOnly.on_change = (value2) => {
+      editor.readOnly = value2;
+    };
+    const save = controls.button("Save", () => {
+      const session = editor.session;
+      if (session !== void 0) {
+        saveFile(session.provider.emitDocFile(session.doc), "document.md", ["md"], "text/markdown");
+      }
+    });
+    save.setAttribute("data-testid", "markdown-save");
+    const status = controls.label("");
+    status.setAttribute("data-testid", "markdown-status");
+    const body = tab2.row();
+    body.style.alignItems = "flex-start";
+    const side = body.col();
+    side.label("Outline");
+    const outline = side.listbox();
+    outline.setAttribute("data-testid", "markdown-outline");
+    outline.style.width = "180px";
+    outline.style.height = "320px";
+    let outlineKey = "";
+    const rebuildOutline = () => {
+      const session = editor.session;
+      if (session === void 0) {
+        return;
+      }
+      const { provider: p, doc } = session;
+      const headings = p.headings?.(doc) ?? [];
+      const rows = headings.map((h) => [h.block, h.level, p.blockText(doc, h.block)]);
+      const key = JSON.stringify(rows);
+      if (key === outlineKey) {
+        return;
+      }
+      outlineKey = key;
+      outline.clear();
+      for (const [block, level, title] of rows) {
+        outline.addItem("\xA0\xA0".repeat(level - 1) + title, block);
+      }
+    };
+    outline.addEventListener("change", (e) => {
+      const block = e.selection.id;
+      if (block === void 0 || editor.session === void 0) {
+        return;
+      }
+      const pos = { block, offset: 0 };
+      editor.select({ anchor: pos, head: pos });
+      editor.scrollToBlock(block);
+    });
+    body.add(editor);
+    editor.addEventListener("linkclick", (e) => {
+      const link2 = e.detail;
+      if (link2.kind === "wiki") {
+        e.preventDefault();
+        status.text = `Wikilink: ${link2.target}`;
+      }
+    });
+    let stopListening = () => {
+    };
     const open = (text6) => {
-      editor.session = new DocumentSession(markdownDocFromText(text6), provider, new ToolStack());
+      stopListening();
+      const session = new DocumentSession(markdownDocFromText(text6), provider, new ToolStack());
+      editor.session = session;
+      outlineKey = "";
+      rebuildOutline();
+      stopListening = session.onChange(rebuildOutline);
     };
     open(MARKDOWN_SAMPLE);
     window.__loadMarkdown = open;
-    tab2.label("A markdown document on its own toolstack; every block kind the provider renders:");
-    tab2.add(editor);
+    tab2.label("A markdown property, bound through the container's textarea builder:");
+    const field = tab2.prop("data.markdown");
+    field.setAttribute("data-testid", "markdown-field");
+    field.style.width = "560px";
   }
   exportTheme() {
     if (!this.themeEditor) {

@@ -41,7 +41,7 @@ the like, since a string cannot be edited in place.
   building an outline; the editor builds none.
 - `renderBlock(doc, block, ctx)` returns a fresh element the editor places as a direct child of
   its editable root, replaced wholesale on every re-render. `ctx` is a `ProviderContext`: the
-  editor's `RichTextContext` with the `EditorBridge` under `ctx.editor` (see The bridge). The
+  editor's `RichTextContext` with the `EditorBridge` under `ctx.editor` (see Provider bridge). The
   contract:
   - the root carries `data-doc-block="<id>"`;
   - an atom carries `data-doc-atom` and `contenteditable="false"`, and its subtree counts for
@@ -160,7 +160,7 @@ A client that navigates between documents builds the engine itself; these are th
   has accepted) goes through the provider's `onExternalChange`; a reload the user may undo
   goes through `dispatch` with `replaceContentsOp`.
 
-### The bridge
+### Provider bridge
 
 Every widget a provider embeds and every toolbar item it builds gets the editor's context, and
 `ctx.editor` on it is the `EditorBridge`: one per editor, so two editors over one session get
@@ -181,30 +181,51 @@ two. It is how a provider reaches the editor without holding a pointer to it.
   selection; `selection()` reads it as document positions. `getValue()` is the document.
 - `toggleMark(name)` toggles a mark over the selection. The toolbar is the provider's, built
   by its `buildToolbar` whenever `session` is set, and hides under a `no-toolbar` attribute.
-- `readOnly` (attribute `readonly`, reflected) makes the editor a viewer: the root's
-  `contenteditable` goes false and nothing else changes, so the scroll position and the
-  selection survive, text stays selectable and copy works; `beforeinput`, `keydown` (undo
-  chords included), paste, drop and `handleKey` return without acting; `dispatch` resolves
-  `undefined`; and the toolbar's widgets are disabled in place. `readOnly` and `disabled`
-  are the only writers of `contenteditable`, so a disable-then-enable cycle leaves a
-  read-only editor read-only. `RichViewer` is not extended; this is the viewer.
+- `readOnly` (attribute `readonly`, reflected) is render-only mode, described below.
 - `undo()` and `redo()` run the session's toolstack, passing the editor's `RichTextContext`. Ctrl+Z, Ctrl+Y and Ctrl+Shift+Z are
   handled on `keydown`; every other key is offered to the provider's `handleKey` first.
   Ctrl+B, Ctrl+I and Ctrl+U arrive from the browser as formatting input and Ctrl+Shift+S
   toggles `strikethrough`. Escape blurs, and Tab is refused unless the provider takes it.
-- A `linkclick` event, `detail: LinkInfo` (`{ kind, target, text, range }`), cancelable and
-  non-bubbling, fires when a provider's link is clicked. The editor attaches no meaning to a
-  link and never navigates; the consumer listens on the element and resolves the target.
-  Its one default, in edit mode only, is the link popup (`link-popup-x`, opened by
-  `openLinkPopup` from `richtext/link_popup.ts`), which `preventDefault` suppresses; read-only
-  has no default. The popup edits the target and applies it as the provider's `setLink` op
-  through `setLinkOp`; Apply or Enter commits, Remove clears the link, Escape closes.
+- A `linkclick` event fires when a provider's link is clicked; see Link clicks below.
 - Copy and cut write the selection through `toClipboard`; paste and drop read through
   `fromClipboard`.
 - A `refused` event, `detail: { inputType }`, fires for every input the editor declined: an
   input type it has no mapping for, a paste the provider refused, and composition.
 - `RichTextEditor.observeMutations` (a static, on by default) logs any change to the editable
   DOM the editor did not make, which is how a missed input type shows up during development.
+
+## Render-only mode
+
+`editor.readOnly` (attribute `readonly`, reflected) makes the editor a viewer of the session
+it shows; `RichViewer` is not extended for this.
+
+- The root's `contenteditable` goes false and nothing else changes: the DOM is not rebuilt,
+  so the scroll position and the selection survive, text stays selectable and copy works.
+- `beforeinput`, `keydown` (undo chords included), paste, drop and `handleKey` return without
+  acting; `dispatch` resolves `undefined`, on the editor and on the bridge alike.
+- The toolbar's widgets are disabled in place; a provider's embedded widgets read
+  `ctx.editor.readOnly` on each interaction, so a mode switch needs no re-render (the markdown
+  task box ignores its click, the image handle hides, a link click still raises `linkclick`).
+- `readOnly` and `disabled` are the only writers of the root's `contenteditable`, combined
+  into the one attribute, so a disable-then-enable cycle leaves a read-only editor read-only.
+- `RichTextArea.readOnly` passes through to its hosted editor; the field's value still follows
+  the path.
+
+## Link clicks
+
+A `CustomEvent("linkclick")`, `detail: LinkInfo` (`{ kind, target, text, range }`), cancelable
+and non-bubbling, fires on the editor's host element when a provider's link is clicked. The
+editor attaches no meaning to a link: it never navigates, opens a tab or resolves a target, in
+either mode. The consumer listens on the element and resolves the target itself, by `kind`:
+the markdown provider reports `url` for `[text](target)` and `wiki` for `[[target]]`.
+
+Its one default, in edit mode only, is the link popup (`link-popup-x`, `openLinkPopup` in
+`richtext/link_popup.ts`), which edits the mark's target; `preventDefault` suppresses it, and
+render-only mode has no default at all. A plain click places the caret first, as in any editor,
+and the popup opens on the same click. The popup applies its result as the provider's
+`setLink` op through `setLinkOp`: Apply or Enter commits, Remove clears the link, Escape
+closes. The example's Markdown tab shows the shape: it listens for `kind === "wiki"`, prevents
+the default and shows the target in a status line, and leaves a url link to the popup.
 
 ## Hearing about changes
 
@@ -237,40 +258,104 @@ every keystroke a `DataPathSetOp`. `RichTextArea` (`rich-text-area-x`,
 builds for a `StringProperty` with `RICH_TEXT_STRING` set (`setRichText(true)`) or an
 explicit `isRichEdit`; a plain multi-line property still gets `TextArea`.
 
-- The widget holds a `PlainDoc` and a `DocumentSession` over `PlainProvider` on the context's
-  toolstack, and hosts one `rich-text-x` (`field.editor`, with `field.session`), exposed as
-  `::part(editor)`.
-- `value` is the block texts joined by newlines. A write to the path splits it into blocks and
-  re-renders; marks live in the session for the widget's lifetime and are not written back.
+- The widget holds a document and a `DocumentSession` over the format's provider on the
+  context's toolstack, and hosts one `rich-text-x` (`field.editor`, with `field.session`),
+  exposed as `::part(editor)`.
+- A format is a `RichTextFormat` (`provider()`, `fromText`, `toText`) registered under a name
+  with `RichTextArea.registerFormat` and read back with `RichTextArea.format(name)`. `plain`
+  is registered by the module itself: `value` is the block texts joined by newlines, and marks
+  live in the session for the widget's lifetime and are not written back. Importing
+  `scripts/widgets/richtext/markdown.ts` registers `markdown`, so the parser only reaches an
+  app that asks for it: `value` is the markdown source, and marks round-trip through it.
+- `field.format` names the format. `Container.textarea` sets it from the property's
+  `richTextFormat`, which `setRichText("markdown")` records (`setRichText(true)` is plain), or
+  from an explicit `format` option; setting it later re-parses the value into a fresh session,
+  and a name nothing has registered throws. A write to the path re-parses the field through
+  `replaceContentsOp` as an external change, outside the stack, so the editor keeps its
+  selection and the path is not written back normalized.
 - Every edit is the `DocEditOp` the editor pushes on the app's stack. Its result writes the
   path without an undo entry of its own, so undo restores the path through the same op; the
   session outlives the widget, so an undo after the field is rebuilt still lands.
 - A `change` event (`detail: { value }`) fires on every write; `on_change` is the deprecated
   callback form.
-- A format is a `RichTextFormat` (`provider()`, `fromText`, `toText`) registered under a name
-  with `RichTextArea.registerFormat` and read back with `RichTextArea.format(name)`. `plain`
-  is registered by the module itself; importing `scripts/widgets/richtext/markdown.ts`
-  registers `markdown`, so the parser only reaches an app that asks for it. Choosing a format
-  on the widget lands with the markdown work's binding stage.
 
 ## Markdown
 
-`MarkdownProvider` (`scripts/widgets/richtext/providers/markdown_provider.ts`) edits the
-document that `markdownDocFromText` parses and `markdownText` serializes. All of it is reached
-through `scripts/widgets/richtext/markdown.ts`, never the barrel, because it bundles the mdast
-chain. The provider's rules, its custom ops (`markdownOps`) and its rendering are described in
-[plans/rich-text-markdown.md](plans/rich-text-markdown.md) until that plan's docs stage writes
-them up here; the Markdown tab of the example app shows it running.
+`MarkdownProvider` edits an `MdDoc`, the document `markdownDocFromText` parses and
+`markdownText` serializes. All of it is reached through `scripts/widgets/richtext/markdown.ts`
+(`path.ux/scripts/widgets/richtext/markdown`), never the barrel, because it bundles the mdast
+chain; importing the module also registers the `markdown` format on `RichTextArea`. The
+Markdown tab of the example app (`example/editors/properties/properties.ts`) shows it running:
+an editor on its own toolstack with a Read-only toggle, a Save button over `emitDocFile`, an
+outline built from `headings()` that selects a heading on click, a status line fed by
+`linkclick`, and a bound field over a `setRichText("markdown")` property. The syntax reference
+for what the parser accepts and what comes back out is the plan's last stage; until it lands,
+[plans/rich-text-markdown.md](plans/rich-text-markdown.md) holds the detail.
 
-Its toolbar holds a block-kind dropdown (Paragraph, Heading 1–6, Quote, Code), the mark
-buttons, bulleted, numbered and task list toggles, and a Link button that opens the link
-popup over the selection. An image renders as `md-image-x`: hovering shows an outline and a
-corner handle, dragging the handle resizes (a modal `ImageResizeOp`, committed as `setImage`
-on release, Escape restores), and dragging the image moves it (a modal `ImageMoveOp` with a
-ghost and a drop caret, committed as `moveAtom`; a target that refuses atoms draws the caret
-grey and the release does nothing). Under `readonly` the widgets, the task boxes and the
-handle are inert. The theme keys are `toolbar-*` on the `richtext` class and the `mdimage`
-and `linkpopup` classes.
+### The document
+
+- `MdDoc` is `{ blocks: MdBlock[] }`. A block is its kind plus `id`, `text`, `marks` and
+  `atoms`: `paragraph`, `heading` (`level`), `listItem` (`ordered`, `depth`, `task`,
+  `checked`), `quote` (`depth`), `code` (`lang`, with newlines in `text`), and the opaque kinds
+  `hr`, `table`, `raw` and `frontmatter`, each keeping its `source`.
+- Marks are `{ from, to, name }` with `bold`, `italic`, `underline`, `strikethrough`, `code`,
+  `link` (`kind`, `target`, `title`), `style` (an inline element, style or attributes the
+  source carried) and `break` (a hard line break over one `\n`; a bare `\n` is a soft one).
+- An atom is an image, `{ offset, image: { src, alt, title?, width? } }`, one `ATOM_CHAR` in
+  the text. `mdBlock(id, kind, text)` builds an empty block; `wikilinkSource` is the `[[…]]`
+  form of a target and its text.
+- `markdownDocFromText(text, newId?)` understands GFM tables, task lists and strikethrough,
+  YAML front matter, `[[target|text]]` wikilinks and a whitelist of inline and block HTML; ids
+  are fresh per parse. `markdownText(doc)` writes fixed forms (`-` bullets, `*` emphasis and
+  strong, fenced code, `---` rules, ATX headings) and falls back to inline or block HTML for
+  what markdown cannot say (a wikilink, an underline, a sized image, a preserved element);
+  `markdownTree` is the mdast it builds. `sanitizeAttrs`, `sanitizeStyle` and `safeUrl` are
+  the HTML rules, shared with the renderer.
+
+### The provider
+
+- Paragraphs, headings, list items, quotes and fences are edited in place; the opaque kinds
+  are one atom long, selected and deleted as a unit and never typed into.
+- Enter in a list item makes an item of the same kind and depth (a task item an unchecked
+  task); in an empty item or quote it exits the run as a paragraph; in a heading it makes a
+  paragraph; on an empty last line of a fence it leaves the fence; before an opaque block it
+  makes a paragraph, and at the start of front matter it is refused. Backspace at the start of
+  an item, heading or quote first demotes it to a paragraph (a nested item drops a level), and
+  joins only a paragraph; a join into an opaque block does nothing.
+- `handleKey`: Tab and Shift+Tab on a list item change its depth; Enter inside a fence
+  inserts a newline; Shift+Enter is a hard break in any text block.
+- `markdownOps` builds the custom ops the toolbar, the inline editors and a consumer share:
+  `setKind` (paragraph, heading level, list kind, quote, code; a fence splitting into lines
+  takes the ids in `data`), `setDepth`, `setTask`, `setLink` (an empty target removes),
+  `setImage` (`width`, `alt`), `moveAtom` (across blocks, with `shifts`) and `insertBreak`.
+  Each inverse snapshots the span between the op's first and last block.
+- The clipboard carries one markdown entry per block (an item with its marker and indent, a
+  fence whole), so a paste re-parses into blocks; a paste into a fence takes the text verbatim,
+  and a paste into an empty paragraph adopts the first block's kind. `emitDocFile` is a
+  `text/markdown` blob.
+- `headings(doc)` lists `{ block, level }` in document order for an outline.
+- `MarkdownProviderOptions.renderMedia(image, ctx)` supplies the element for an image atom,
+  for an app whose media are not plain `<img>`s.
+
+### Rendering and editing widgets
+
+- `renderMarkdownBlock` renders each kind to its element (`h1`–`h6`, `p`, `div.md-li` with
+  `--md-depth` and CSS counters for numbering, `div.md-quote`, `pre`, `hr`, `table`, and the
+  opaque kinds as `contenteditable="false"` wrappers), and `markdownStyles()` is the CSS the
+  provider hands the editor.
+- The toolbar holds a block-kind dropdown (Paragraph, Heading 1–6, Quote, Code), the mark
+  buttons, bulleted, numbered and task list toggles, and a Link button that opens the link
+  popup over the selection.
+- A task item renders a checkbox that dispatches `setTask`. An image renders as `md-image-x`:
+  hovering shows an outline and a corner handle, dragging the handle resizes (a modal
+  `ImageResizeOp`, committed as `setImage` on release, Escape restores) and dragging the image
+  moves it (a modal `ImageMoveOp` with a ghost and a drop caret, committed as `moveAtom`; a
+  target that refuses atoms draws the caret grey and the release does nothing). Under
+  `readonly` the toolbar, the boxes and the handle are inert.
+- Theme keys: `richtext` carries the block typography (`heading-font`, `code-font`,
+  `quote-border-color`, `link-color`, …) and the `toolbar-*` keys; `mdimage` and `linkpopup` are the
+  widgets' own classes. Run `pnpm run gen:themes --strict scripts/widgets/richtext/markdown.ts`
+  to catalogue them, since the default entry is the barrel.
 
 ## Composition (IME and dead keys)
 

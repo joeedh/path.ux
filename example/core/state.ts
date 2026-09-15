@@ -13,6 +13,7 @@ export class ModelData extends DataBlock {
   enum: number;
   color: Vector4;
   text: string;
+  markdown: string;
   boolval: boolean;
   demoNodeGraph = makeDemoGraph();
 
@@ -31,6 +32,7 @@ export class ModelData extends DataBlock {
     this.enum = 0;
     this.color = new Vector4([0, 0, 0, 1]);
     this.text = "";
+    this.markdown = "# Notes\n\nA *bound* markdown field; its source is the property.\n";
     this.boolval = true;
   }
 
@@ -62,6 +64,7 @@ export class ModelData extends DataBlock {
     b.vector_test.load(this.vector_test);
     b.color.load(this.color);
     b.text = this.text;
+    b.markdown = this.markdown;
     b.value = this.value;
     b.enum = this.enum;
     b.curvemap.load(this.curvemap);
@@ -81,6 +84,7 @@ ModelData.STRUCT =
   enum          : int;
   value         : float;
   text          : string;
+  markdown      : string;
   canvas        : Canvas;
   curvemap      : Curve1D;
   angle1        : float;

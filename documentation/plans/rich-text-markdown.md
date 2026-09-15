@@ -1119,7 +1119,30 @@ reason:
   (after selecting a heading from the outline), `markdown-readonly-toggle` (the same scroll
   position before and after the toggle, two captures). Electron pass on `markdown-tab`.
 
-Status: not started.
+Status: done. `RichTextArea.format` over the format registry, set by `Container.textarea`
+from the property's new `richTextFormat` (`setRichText("markdown")`, recorded in
+`path-controller`'s `StringPropertyBase`) or a `format` option; the Markdown tab with the
+Read-only toggle, Save, the outline, the status line and a bound `data.markdown` field;
+`documentation/richtext.md` restructured with Render-only mode, Link clicks and the Markdown
+sections and the Provider bridge heading; four field tests in `tests/richtext/textarea.test.ts`
+and three Playwright tests with `markdown-tab`, `markdown-outline-click`,
+`markdown-readonly-toggle-before` and `-after`, plus `markdown-tab-electron.png` from the
+Electron pass (outline click, toggle and wikilink status checked there too). The runtime
+barrel is unchanged. Deviations, each with its reason:
+
+- The field reloads a path write through `replaceContentsOp` applied directly and delivered
+  to the session as an external change, rather than the plain form's in-place block swap,
+  since a format's document is opaque to the field. The session's listener skips external
+  changes, so a load is not written back normalized (a markdown load would otherwise rewrite
+  the path on arrival).
+- The example has no status bar, so the wikilink target lands in a status label on the tab's
+  control row; the outline selects first and scrolls second, because focusing the root
+  scrolls it back to the old caret.
+- The tab's screenshots run at a 1920px viewport: at 1280px the properties area is narrower
+  than the outline and editor side by side. The Electron pass widens the area as stage 4's
+  did.
+- `setRichText` returns `this` now, so an `api_define` can chain it; `richTextFormat` joins
+  the property's STRUCT as an optional field.
 
 ### Stage 6 — optional follow-ups
 

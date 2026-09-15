@@ -1314,6 +1314,8 @@ export class Container<
           value?: string;
           massSetPath?: string;
           isRichEdit?: boolean;
+          /** The rich text format the field edits as; defaults to the property's `richTextFormat`. */
+          format?: string;
           label?: string;
         },
     /** @deprecated */
@@ -1325,14 +1327,16 @@ export class Container<
     /** @deprecated */
     label?: string
   ): TextArea<CTX> | RichTextArea<CTX> {
+    let format: string | undefined;
     if (typeof value === "object") {
       mass_set_path ??= value.massSetPath;
       isRichEdit ??= value.isRichEdit;
+      format = value.format;
       label ??= value.label;
       value = value.value;
     }
     return this.addPropLabel(
-      textareaImpl(this, datapath, value, packflag, mass_set_path, isRichEdit),
+      textareaImpl(this, datapath, value, packflag, mass_set_path, isRichEdit, format),
       label,
       packflag
     ).widget;

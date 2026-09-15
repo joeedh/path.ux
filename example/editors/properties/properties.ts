@@ -18,8 +18,11 @@ import {
   RichTextEditor,
   newBlockId,
   plainDocFromLines,
+  saveFile,
 } from "../../pathux.js";
 import type {
+  LinkInfo,
+  ListBoxChangeEvent,
   PlainDoc,
   RefusedDetail,
   ThemeEditor,
@@ -184,8 +187,10 @@ export class PropsEditor extends Editor {
   }
 
   /**
-   * Fills the Markdown tab: one editor over the sample document on its own toolstack. A spec
-   * loads another document through `window.__loadMarkdown`, which opens a fresh session.
+   * Fills the Markdown tab: an editor over the sample document on its own toolstack, with a
+   * Read-only toggle, a Save button, an outline of the headings that selects one on click,
+   * and a status line that shows a wikilink's target. A spec loads another document through
+   * `window.__loadMarkdown`, which opens a fresh session.
    */
   buildMarkdown(tab: Container) {
     const provider = new MarkdownProvider();
@@ -196,14 +201,90 @@ export class PropsEditor extends Editor {
     editor.setAttribute("data-testid", "markdown-editor");
     editor.style.width = "560px";
 
+    tab.label("A markdown document on its own toolstack; every block kind the provider renders:");
+
+    const controls = tab.row();
+    const readOnly = controls.check(undefined, "Read-only");
+    readOnly.setAttribute("data-testid", "markdown-readonly");
+    readOnly.on_change = (value: boolean) => {
+      editor.readOnly = value;
+    };
+    const save = controls.button("Save", () => {
+      const session = editor.session;
+      if (session !== undefined) {
+        saveFile(session.provider.emitDocFile(session.doc), "document.md", ["md"], "text/markdown");
+      }
+    });
+    save.setAttribute("data-testid", "markdown-save");
+    const status = controls.label("");
+    status.setAttribute("data-testid", "markdown-status");
+
+    // the outline: every heading, indented by level, selecting the block on click
+    const body = tab.row();
+    body.style.alignItems = "flex-start";
+    const side = body.col();
+    side.label("Outline");
+    const outline = side.listbox<string>();
+    outline.setAttribute("data-testid", "markdown-outline");
+    outline.style.width = "180px";
+    outline.style.height = "320px";
+    let outlineKey = "";
+    const rebuildOutline = () => {
+      const session = editor.session;
+      if (session === undefined) {
+        return;
+      }
+      const { provider: p, doc } = session;
+      const headings = p.headings?.(doc) ?? [];
+      const rows = headings.map((h) => [h.block, h.level, p.blockText(doc, h.block)] as const);
+      const key = JSON.stringify(rows);
+      if (key === outlineKey) {
+        return;
+      }
+      outlineKey = key;
+      outline.clear();
+      for (const [block, level, title] of rows) {
+        outline.addItem("\u00a0\u00a0".repeat(level - 1) + title, block);
+      }
+    };
+    outline.addEventListener("change", (e) => {
+      const block = (e as ListBoxChangeEvent<typeof this.ctx, string>).selection.id;
+      if (block === undefined || editor.session === undefined) {
+        return;
+      }
+      const pos = { block, offset: 0 };
+      // selecting first: focusing the root scrolls it back to wherever the caret was
+      editor.select({ anchor: pos, head: pos });
+      editor.scrollToBlock(block);
+    });
+
+    body.add(editor);
+
+    // a wikilink names something the app resolves; here that is the status line
+    editor.addEventListener("linkclick", (e) => {
+      const link = (e as CustomEvent<LinkInfo>).detail;
+      if (link.kind === "wiki") {
+        e.preventDefault();
+        status.text = `Wikilink: ${link.target}`;
+      }
+    });
+
+    let stopListening = () => {};
     const open = (text: string) => {
-      editor.session = new DocumentSession(markdownDocFromText(text), provider, new ToolStack());
+      stopListening();
+      const session = new DocumentSession(markdownDocFromText(text), provider, new ToolStack());
+      editor.session = session;
+      outlineKey = "";
+      rebuildOutline();
+      stopListening = session.onChange(rebuildOutline);
     };
     open(MARKDOWN_SAMPLE);
     window.__loadMarkdown = open;
 
-    tab.label("A markdown document on its own toolstack; every block kind the provider renders:");
-    tab.add(editor);
+    tab.label("A markdown property, bound through the container's textarea builder:");
+    const field = tab.prop("data.markdown");
+    field.setAttribute("data-testid", "markdown-field");
+    field.style.width = "560px";
   }
 
   exportTheme() {

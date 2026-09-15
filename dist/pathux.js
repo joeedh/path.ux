@@ -12782,6 +12782,7 @@ var init_string = __esm({
     StringPropertyBase {
       data                  : string;
       multiLineIdleTimeout ?: int;
+      richTextFormat       ?: string;
     }
   `
       );
@@ -12790,6 +12791,8 @@ var init_string = __esm({
        * Uses a default value if undefined.  In miliseconds.
        */
       multiLineIdleTimeout;
+      /** The document format a rich text field edits this string as; `undefined` is the plain block form. */
+      richTextFormat;
       constructor(type, value, apiname, uiname, description, flag, icon) {
         super(type, void 0, apiname, uiname, description, flag, icon);
         this.setValue(value ?? "");
@@ -12803,6 +12806,7 @@ var init_string = __esm({
       copyTo(b) {
         super.copyTo(b);
         b.multiLineIdleTimeout = this.multiLineIdleTimeout;
+        b.richTextFormat = this.richTextFormat;
         b.data = this.data;
       }
       getValue() {
@@ -12825,12 +12829,19 @@ var init_string = __esm({
         }
         return this;
       }
+      /**
+       * Should a rich text field edit this property? A format name (`"markdown"`) picks the
+       * document format the field uses; `true` is the plain block form.
+       */
       setRichText(state) {
-        if (state) {
-          this.flag |= PropFlags.RICH_TEXT_STRING;
-        } else {
+        if (state === false) {
           this.flag &= ~PropFlags.RICH_TEXT_STRING;
+          this.richTextFormat = void 0;
+        } else {
+          this.flag |= PropFlags.RICH_TEXT_STRING;
+          this.richTextFormat = state === true ? void 0 : state;
         }
+        return this;
       }
       /** Should a textarea be used to edit this property? */
       get multiLine() {
@@ -39874,15 +39885,21 @@ function colorPickerImpl(self2, inpath, packflag_or_args = 0, mass_set_path, the
   self2._add(ret);
   return ret;
 }
-function textareaImpl(self2, datapath, value = "", packflag = 0, mass_set_path, isRichText) {
+function textareaImpl(self2, datapath, value = "", packflag = 0, mass_set_path, isRichText, format) {
   packflag |= self2.inherit_packflag & ~PackFlags.NO_UPDATE;
   mass_set_path = self2._getMassPath(self2.ctx, datapath, mass_set_path);
   const prop = datapath ? self2.getPathMeta(self2.ctx, datapath) : void 0;
   if (prop !== void 0) {
     isRichText = isRichText ?? Boolean(prop.flag & PropFlags.RICH_TEXT_STRING);
+    if (prop instanceof StringPropertyBase) {
+      format ??= prop.richTextFormat;
+    }
   }
   const ret = UIBase.createElement(isRichText ? "rich-text-area-x" : "text-area-x");
   ret.ctx = self2.ctx;
+  if (format !== void 0 && "format" in ret) {
+    ret.format = format;
+  }
   ret.packflag |= packflag;
   if (value !== void 0) {
     ret.value = value;
@@ -41494,14 +41511,16 @@ var Container3 = class _Container extends UIBase {
     ).widget;
   }
   textarea(datapath, value, packflag = 0, mass_set_path, isRichEdit, label) {
+    let format;
     if (typeof value === "object") {
       mass_set_path ??= value.massSetPath;
       isRichEdit ??= value.isRichEdit;
+      format = value.format;
       label ??= value.label;
       value = value.value;
     }
     return this.addPropLabel(
-      textareaImpl(this, datapath, value, packflag, mass_set_path, isRichEdit),
+      textareaImpl(this, datapath, value, packflag, mass_set_path, isRichEdit, format),
       label,
       packflag
     ).widget;
@@ -47326,10 +47345,18 @@ function plainDocFromLines(lines, makeId) {
 init_ui_base();
 var LINE_BREAK = /\r\n|\r|\n/;
 var formats = /* @__PURE__ */ new Map();
+var plainFormat = {
+  provider: () => new PlainProvider(),
+  fromText: (text2) => plainDocFromLines(text2.split(LINE_BREAK), () => newBlockId()),
+  toText: (doc) => doc.blocks.map((b) => b.text).join("\n")
+};
+var plainEntry = plainFormat;
 var RichTextArea = class extends UIBase {
   editor;
-  provider = new PlainProvider();
-  doc = plainDocFromLines([""], () => newBlockId());
+  _format = "plain";
+  entry = plainEntry;
+  provider = plainEntry.provider();
+  doc = plainEntry.fromText("");
   _session;
   /** The value last written to or read from the path, so a watcher echo is not a change. */
   lastValue = "";
@@ -47370,8 +47397,32 @@ var RichTextArea = class extends UIBase {
   get session() {
     return this._session;
   }
+  /**
+   * The name of the registered format the field edits the string as. Setting it re-parses
+   * the current value into a fresh session, so the old format's edits leave the stack; a
+   * name nothing has registered throws, since the module that registers it was not imported.
+   */
+  get format() {
+    return this._format;
+  }
+  set format(name) {
+    if (name === this._format) {
+      return;
+    }
+    const entry = formats.get(name);
+    if (entry === void 0) {
+      throw new Error(`RichTextArea: no rich text format is registered as "${name}"`);
+    }
+    this._format = name;
+    this.entry = entry;
+    this.provider = entry.provider();
+    this.doc = entry.fromText(this.lastValue);
+    this._session?.dispose();
+    this._session = void 0;
+    this.openSession();
+  }
   get value() {
-    return this.doc.blocks.map((block) => block.text).join("\n");
+    return this.entry.toText(this.doc);
   }
   /** Replaces the document; the path is not written and no `change` fires. */
   set value(value) {
@@ -47414,18 +47465,24 @@ var RichTextArea = class extends UIBase {
       return;
     }
     const session = new DocumentSession(this.doc, this.provider, this.ctx.toolstack);
-    session.onChange(() => this.pushValue());
+    session.onChange((_change, info) => {
+      if (info.origin !== "external") {
+        this.pushValue();
+      }
+    });
     this._session = session;
     this.editor.session = session;
   }
+  // A path write is not an edit: the contents swap outside the stack and the session hears
+  // it as an external change, so the editor re-renders and keeps its own selection
   load(value) {
     this.lastValue = value;
-    const removedBlocks = this.doc.blocks.map((block) => block.id);
-    this.doc.blocks = plainDocFromLines(value.split(LINE_BREAK), () => newBlockId()).blocks;
-    this.provider.notifyChange(this.doc, {
-      dirtyBlocks: this.doc.blocks.map((block) => block.id),
-      removedBlocks
-    });
+    const next = this.entry.fromText(value);
+    const { dirtyBlocks, removedBlocks } = this.provider.applyEdit(
+      this.doc,
+      replaceContentsOp(this.provider, this.doc, next)
+    );
+    this._session?.deliver({ dirtyBlocks, removedBlocks }, { origin: "external" });
   }
   pushValue() {
     const value = this.value;
@@ -47449,11 +47506,7 @@ var RichTextArea = class extends UIBase {
   }
 };
 UIBase.internalRegister(RichTextArea);
-RichTextArea.registerFormat("plain", {
-  provider: () => new PlainProvider(),
-  fromText: (text2) => plainDocFromLines(text2.split(LINE_BREAK), () => newBlockId()),
-  toText: (doc) => doc.blocks.map((b) => b.text).join("\n")
-});
+RichTextArea.registerFormat("plain", plainFormat);
 
 // scripts/path-controller/curve/curve1d_utils.ts
 init_curve1d_base();

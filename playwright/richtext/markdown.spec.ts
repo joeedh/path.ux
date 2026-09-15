@@ -722,3 +722,135 @@ test("under readonly the toolbar, the checkbox, the handle and the drag are iner
   expect(await texts(editor)).toEqual(before);
   expect(await scrollTop()).toBe(held);
 });
+
+// ---- stage 5: the tab around the editor ----
+
+/** The tab from its control row to a way down the editor, so the outline, toolbar and document show together. */
+async function tabShot(page: Page, browserName: string, name: string) {
+  if (browserName !== "chromium") {
+    return;
+  }
+  const controls = (await page.locator('[data-testid="markdown-readonly"]').boundingBox())!;
+  const outline = (await page.locator('[data-testid="markdown-outline"]').boundingBox())!;
+  const editor = (await page.locator('[data-testid="markdown-editor"]').boundingBox())!;
+  const x = Math.min(controls.x, outline.x) - 2;
+  const y = controls.y - 8;
+  const view = page.viewportSize()!;
+  await page.screenshot({
+    path: `${SCEENSHOTS}/${name}.png`,
+    clip: {
+      x,
+      y,
+      width : Math.min(editor.x + editor.width + 8, view.width) - x,
+      height: Math.min(editor.y + 480, view.height) - y,
+    },
+  });
+}
+
+test("the tab holds the outline, the toolbar and the editor, and an outline click selects the heading", async ({
+  page,
+  browserName,
+}) => {
+  // wide enough for the properties area to show the outline beside the whole editor
+  await page.setViewportSize({ width: 1920, height: 1000 });
+  const editor = await openMarkdown(page);
+  const outline = page.locator('[data-testid="markdown-outline"]');
+  await expect(outline).toBeVisible();
+  await expect(editor.locator('[data-testid="richtext-kind"]')).toBeVisible();
+  await tabShot(page, browserName, "markdown-tab");
+
+  await expect(outline.getByText("The Markdown tab")).toBeVisible();
+  await expect(outline.getByText("Quotes and code")).toBeVisible();
+
+  // held to a height so the root has somewhere to scroll
+  await editor.evaluate((el) => {
+    (el as HTMLElement).style.height = "400px";
+  });
+  await outline.getByText("Quotes and code").click();
+
+  const t = await texts(editor);
+  const heading = t.findIndex((x) => x === "Quotes and code");
+  await expect
+    .poll(() => editor.evaluate((el) => (el as EditorProbe).selection()?.head.block))
+    .toBe(await blocks(editor).then((b) => b[heading]));
+  const scrollTop = await editor.evaluate((el) => (el as EditorProbe).root.scrollTop);
+  expect(scrollTop).toBeGreaterThan(0);
+  await pageShot(page, editor, browserName, "markdown-outline-click");
+});
+
+test("the Read-only toggle keeps the scroll position, Save downloads the source, and a wikilink lands in the status line", async ({
+  page,
+  browserName,
+}) => {
+  await page.setViewportSize({ width: 1920, height: 1000 });
+  const editor = await openMarkdown(page);
+  await editor.evaluate((el) => {
+    (el as HTMLElement).style.height = "400px";
+    (el as EditorProbe).root.scrollTop = 150;
+  });
+  const scrollTop = () => editor.evaluate((el) => (el as EditorProbe).root.scrollTop);
+  const held = await scrollTop();
+  expect(held).toBeGreaterThan(0);
+
+  const toggle = page.locator('[data-testid="markdown-readonly"]');
+  await pageShot(page, editor, browserName, "markdown-readonly-toggle-before");
+  await toggle.click();
+  await expect.poll(() => editor.evaluate((el) => (el as EditorProbe).readOnly)).toBe(true);
+  expect(await scrollTop()).toBe(held);
+  await pageShot(page, editor, browserName, "markdown-readonly-toggle-after");
+  await toggle.click();
+  await expect.poll(() => editor.evaluate((el) => (el as EditorProbe).readOnly)).toBe(false);
+  expect(await scrollTop()).toBe(held);
+
+  const download = page.waitForEvent("download");
+  await page.locator('[data-testid="markdown-save"]').click();
+  const file = await download;
+  expect(file.suggestedFilename()).toBe("document.md");
+  const body = await file.createReadStream();
+  const chunks: Buffer[] = [];
+  for await (const chunk of body) {
+    chunks.push(chunk as Buffer);
+  }
+  expect(Buffer.concat(chunks).toString("utf8")).toContain("# The Markdown tab");
+
+  const status = page.locator('[data-testid="markdown-status"]');
+  await editor.locator("a[data-link-kind='wiki']").first().scrollIntoViewIfNeeded();
+  await editor.locator("a[data-link-kind='wiki']").first().click();
+  await expect(status).toHaveText("Wikilink: Wiki page");
+  await expect(page.getByTestId("richtext-link-popup")).toHaveCount(0);
+});
+
+test("a markdown property bound through the container edits its source and undoes with the app", async ({
+  page,
+}) => {
+  await page.goto(PLAYWRIGHT_HOST);
+  await page.getByTestId("tab-markdown").click();
+
+  const field = page.locator('[data-testid="markdown-field"]');
+  const editor = field.locator("[part=editor]");
+  await expect(editor).toBeVisible();
+  await expect
+    .poll(() => texts(editor))
+    .toEqual(["Notes", "A bound markdown field; its source is the property."]);
+  expect(await editor.locator("h1").count()).toBe(1);
+
+  const model = () =>
+    page.evaluate(
+      () =>
+        (window as unknown as { _appstate: { viewctx: { data: { markdown: string } } } })._appstate
+          .viewctx.data.markdown
+    );
+  await selectIn(editor, 1, 0);
+  await page.keyboard.type("Edited: ");
+  await expect
+    .poll(model)
+    .toBe("# Notes\n\nEdited: A *bound* markdown field; its source is the property.\n");
+
+  await page.keyboard.press("Control+z");
+  await expect
+    .poll(model)
+    .toBe("# Notes\n\nA *bound* markdown field; its source is the property.\n");
+  await expect
+    .poll(() => texts(editor))
+    .toEqual(["Notes", "A bound markdown field; its source is the property."]);
+});
