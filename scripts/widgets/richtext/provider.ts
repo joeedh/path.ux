@@ -36,6 +36,8 @@ export interface MarkInfo {
   label: string;
   /** An `Icons.*` index. */
   icon: number;
+  /** Inline HTML drawn on the toolbar button instead of the icon, for a sheet that has no glyph for it. */
+  glyph?: string;
 }
 
 /** A value that survives `JSON.stringify`, which is how a `DocEditOp` stores its op. */

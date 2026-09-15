@@ -1,4 +1,6 @@
-import { describe, expect, test, vi } from "vitest";
+import { beforeAll, describe, expect, test, vi } from "vitest";
+import { UIBase, iconmanager } from "../../scripts/core/ui_base";
+import type { RowFrame } from "../../scripts/core/ui_containers";
 import { ATOM_CHAR, CARET_SLOT } from "../../scripts/widgets/richtext/provider";
 import type {
   DocRange,
@@ -14,9 +16,34 @@ import {
   markdownStyles,
   markdownText,
   mdBlock,
+  setLinkOp,
 } from "../../scripts/widgets/richtext/markdown";
-import type { MdBlock, MdDoc } from "../../scripts/widgets/richtext/markdown";
+import type { MdBlock, MdDoc, MdImageWidget } from "../../scripts/widgets/richtext/markdown";
 import { RichTextArea } from "../../scripts/widgets/richtext/textarea";
+import type { ToolButton } from "../../scripts/widgets/richtext/providers/toolbar";
+/* the element registrations the toolbar row and its buttons need */
+import "../../scripts/core/ui_containers";
+import "../../scripts/widgets/ui_widgets";
+
+beforeAll(() => {
+  // the kind dropdown draws its box on a 2d canvas, which happy-dom does not implement
+  const proto = HTMLCanvasElement.prototype as unknown as { getContext(kind: string): unknown };
+  proto.getContext = () =>
+    new Proxy(
+      {},
+      {
+        get: (_t, key) => (key === "measureText" ? () => ({ width: 10 }) : () => undefined),
+        set: () => true,
+      }
+    );
+
+  // no iconsheet <img> elements exist in the test DOM; the toolbar's icon CSS lookups
+  // dereference sheet.image.src, so give the sheets a stand-in
+  const sheets = (iconmanager as unknown as { iconsheets: { image: unknown }[] }).iconsheets;
+  for (const sheet of sheets) {
+    sheet.image ||= { src: "" };
+  }
+});
 
 const SOURCE = `---
 title: Test
@@ -79,14 +106,17 @@ const block = (doc: MdDoc, id: string) => {
 function fakeCtx() {
   const dispatched: EditOp[] = [];
   const clicked: LinkInfo[] = [];
+  let selection: DocRange | undefined;
   const editor = {
     dispatch: async (op: EditOp) => {
       dispatched.push(op);
       return undefined;
     },
     readOnly    : false as boolean,
-    selection   : () => undefined,
-    select      : () => {},
+    selection   : () => selection,
+    select: (range: DocRange) => {
+      selection = range;
+    },
     blockElement: () => undefined,
     posFromPoint: () => undefined,
     root        : document.createElement("div"),
@@ -210,9 +240,9 @@ describe("insertText and deleteRange", () => {
     const doc = parse();
     const result = applyAndUndo(doc, { type: "deleteRange", range: range("b9", 0, "b9", 1) });
     expect(block(doc, "b9")).toEqual({
-      id: "b9",
-      kind: "paragraph",
-      text: "",
+      id   : "b9",
+      kind : "paragraph",
+      text : "",
       marks: [],
       atoms: [],
     });
@@ -250,9 +280,9 @@ describe("insertText and deleteRange", () => {
     const doc = parse();
     const result = applyAndUndo(doc, { type: "deleteRange", range: range("b8", 21, "b12", 0) });
     expect(result).toEqual({
-      dirtyBlocks: [],
+      dirtyBlocks  : [],
       removedBlocks: ["b9", "b10", "b11"],
-      selection: caret("b8", 21),
+      selection    : caret("b8", 21),
     });
     expect(block(doc, "b8").text).toBe("let a = 1;\nlet b = 2;");
     expect(block(doc, "b12").text).toBe(`${ATOM_CHAR} after`);
@@ -270,16 +300,16 @@ describe("splitBlock", () => {
     const doc = parse();
     const result = applyAndUndo(doc, { type: "splitBlock", at: pos("b4", 1), newBlock: "n" });
     expect(block(doc, "b4")).toMatchObject({
-      kind: "listItem",
-      text: "t",
+      kind   : "listItem",
+      text   : "t",
       ordered: false,
-      depth: 0,
+      depth  : 0,
     });
     expect(block(doc, "n")).toMatchObject({
-      kind: "listItem",
-      text: "wo",
+      kind   : "listItem",
+      text   : "wo",
       ordered: false,
-      depth: 0,
+      depth  : 0,
     });
     expect(result.selection).toEqual(caret("n", 0));
   });
@@ -375,18 +405,18 @@ describe("joinWithPrevious", () => {
     const result = provider.applyEdit(doc, { type: "joinWithPrevious", block: "b5" });
     expect(block(doc, "b4")).toMatchObject({ kind: "listItem", text: "twonested" });
     expect(result).toEqual({
-      dirtyBlocks: ["b4"],
+      dirtyBlocks  : ["b4"],
       removedBlocks: ["b5"],
-      selection: caret("b4", 3),
+      selection    : caret("b4", 3),
     });
   });
 
   test("a join that would take in an opaque block selects it instead", () => {
     const doc = parse();
     const selected = (id: string) => ({
-      dirtyBlocks: [],
+      dirtyBlocks  : [],
       removedBlocks: [],
-      selection: range(id, 0, id, 1),
+      selection    : range(id, 0, id, 1),
     });
     expect(provider.applyEdit(doc, { type: "joinWithPrevious", block: "b12" })).toEqual(
       selected("b11")
@@ -492,8 +522,8 @@ describe("handleKey", () => {
     const doc = parse();
     const op = provider.handleKey(doc, caret("b2", 1), key({ key: "Enter", shiftKey: true }));
     expect(op).toMatchObject({
-      type: "custom",
-      name: "insertBreak",
+      type  : "custom",
+      name  : "insertBreak",
       shifts: [{ block: "b2", at: 1, delta: 1 }],
     });
     const result = applyAndUndo(doc, op!);
@@ -533,9 +563,9 @@ describe("custom ops", () => {
       { id: "b0", kind: "code", lang: "txt", text: "one\ntwo\nthree", marks: [], atoms: [] },
     ]);
     expect(result).toEqual({
-      dirtyBlocks: ["b0"],
+      dirtyBlocks  : ["b0"],
       removedBlocks: ["b1", "b2"],
-      selection: caret("b0", 13),
+      selection    : caret("b0", 13),
     });
   });
 
@@ -571,10 +601,10 @@ describe("custom ops", () => {
       markdownOps.setKind(["b5"], { kind: "listItem", ordered: false, task: true })
     );
     expect(block(doc, "b5")).toMatchObject({
-      kind: "listItem",
+      kind   : "listItem",
       ordered: false,
-      depth: 1,
-      task: true,
+      depth  : 1,
+      task   : true,
       checked: false,
     });
 
@@ -634,8 +664,8 @@ describe("custom ops", () => {
     const doc = parse();
     applyAndUndo(doc, markdownOps.setImage("b12", 0, { width: 120.4, alt: "picture" }));
     expect(block(doc, "b12").atoms[0].image).toEqual({
-      src: "pic.png",
-      alt: "picture",
+      src  : "pic.png",
+      alt  : "picture",
       width: 120,
     });
     provider.applyEdit(doc, markdownOps.setImage("b12", 0, { width: null }));
@@ -731,7 +761,7 @@ describe("clipboard", () => {
     ).toBeUndefined();
     expect(
       provider.fromClipboard({
-        types: ["text/plain"],
+        types  : ["text/plain"],
         getData: () => "",
       } as unknown as DataTransfer)
     ).toEqual({
@@ -745,7 +775,7 @@ describe("clipboard", () => {
     const content = { blocks: ["**in**", "- item", "  - deeper", "tail"] };
     const result = applyAndUndo(doc, {
       type: "insertContent",
-      at: caret("b0", 5),
+      at  : caret("b0", 5),
       content,
       newBlocks: ["n1", "n2", "n3"],
     });
@@ -754,9 +784,9 @@ describe("clipboard", () => {
     expect(block(doc, "n2")).toMatchObject({ depth: 1 });
     expect(marks(doc.blocks[0])).toEqual([["bold", 5, 7]]);
     expect(result).toEqual({
-      dirtyBlocks: ["b0", "n1", "n2", "n3"],
+      dirtyBlocks  : ["b0", "n1", "n2", "n3"],
       removedBlocks: [],
-      selection: caret("n3", 4),
+      selection    : caret("n3", 4),
     });
   });
 
@@ -764,18 +794,18 @@ describe("clipboard", () => {
     const empty = (): MdDoc => ({ blocks: [mdBlock("b0", { kind: "paragraph" })] });
     const doc = empty();
     provider.applyEdit(doc, {
-      type: "insertContent",
-      at: caret("b0", 0),
-      content: { blocks: ["## Two"] },
+      type     : "insertContent",
+      at       : caret("b0", 0),
+      content  : { blocks: ["## Two"] },
       newBlocks: [],
     });
     expect(doc.blocks[0]).toMatchObject({ kind: "heading", level: 2, text: "Two" });
 
     const rule = empty();
     provider.applyEdit(rule, {
-      type: "insertContent",
-      at: caret("b0", 0),
-      content: { blocks: ["---"] },
+      type     : "insertContent",
+      at       : caret("b0", 0),
+      content  : { blocks: ["---"] },
       newBlocks: [],
     });
     expect(rule.blocks[0]).toMatchObject({ kind: "hr", id: "b0" });
@@ -785,11 +815,11 @@ describe("clipboard", () => {
     const doc = parse("```\nab\n```\n");
     const content = {
       blocks: ["# not a heading", "- nor a list"],
-      text: "# not a heading\n\n- nor a list",
+      text  : "# not a heading\n\n- nor a list",
     };
     const result = provider.applyEdit(doc, {
       type: "insertContent",
-      at: caret("b0", 1),
+      at  : caret("b0", 1),
       content,
       newBlocks: ["n1"],
     });
@@ -822,14 +852,14 @@ describe("inverse and snapshots", () => {
   test("a custom op's inverse restores the whole span between its blocks", () => {
     const doc = parse();
     const inverse = provider.inverse(doc, {
-      type: "custom",
-      name: "x",
+      type  : "custom",
+      name  : "x",
       blocks: ["b4", "b2"],
-      data: {},
+      data  : {},
     });
     expect(inverse).toMatchObject({
-      type: "replaceBlocks",
-      after: "b1",
+      type  : "replaceBlocks",
+      after : "b1",
       remove: ["b2", "b3", "b4"],
     });
     expect(inverse.type === "replaceBlocks" && inverse.blocks.map((s) => s.id)).toEqual([
@@ -847,8 +877,8 @@ describe("inverse and snapshots", () => {
 
     expect(() =>
       provider.applyEdit(doc, {
-        type: "replaceBlocks",
-        after: null,
+        type  : "replaceBlocks",
+        after : null,
         blocks: [{ id: "z", state: { text: "x" } }],
         remove: [],
       })
@@ -919,7 +949,10 @@ describe("renderBlock", () => {
     expect(atom.getAttribute("contenteditable")).toBe("false");
     expect(atom.previousSibling?.textContent).toBe(CARET_SLOT);
     expect(atom.nextSibling?.textContent).toBe(CARET_SLOT);
-    expect(atom.querySelector("img")?.getAttribute("src")).toBe("pic.png");
+    const widget = atom.querySelector("md-image-x") as MdImageWidget | null;
+    expect(widget?.img.getAttribute("src")).toBe("pic.png");
+    expect(widget?.block).toBe("b12");
+    expect(widget?.offset).toBe(doc.blocks[12].atoms[0].offset);
   });
 
   test("list items carry depth and order, and the task box dispatches setTask", () => {
@@ -986,6 +1019,143 @@ describe("renderBlock", () => {
     expect(css).toContain("counter(md-ol-7)");
     expect(css).toContain("--richtext-link-color");
     expect(markdownStyles()).toBe(css);
+  });
+});
+
+describe("setLinkOp", () => {
+  test("carries the link edit as a setLink op over the range's block", () => {
+    const edit = { range: range("b2", 2, "b2", 11), kind: "url" as const, target: "old" };
+    expect(setLinkOp(edit, "http://y.test")).toEqual({
+      type  : "custom",
+      name  : "setLink",
+      blocks: ["b2"],
+      data  : { from: 2, to: 11, target: "http://y.test", kind: "url", selection: edit.range },
+    });
+    const titled = setLinkOp({ ...edit, range: range("b2", 11, "b2", 2), title: "t" }, "z");
+    expect(titled).toMatchObject({ data: { from: 2, to: 11, target: "z", title: "t" } });
+    expect(setLinkOp({ ...edit, title: "t" }, "")).not.toMatchObject({ data: { title: "t" } });
+  });
+
+  test("a setLink op from the popup applies through the provider", () => {
+    const doc = parse();
+    const op = setLinkOp(
+      { range: range("b2", 2, "b2", 11), kind: "url", target: "" },
+      "http://y.test"
+    );
+    provider.applyEdit(doc, op);
+    expect(marks(block(doc, "b2"))).toContainEqual(["link", 2, 11]);
+    provider.applyEdit(
+      doc,
+      setLinkOp({ range: range("b2", 2, "b2", 11), kind: "url", target: "" }, "")
+    );
+    expect(marks(block(doc, "b2"))).not.toContainEqual(["link", 2, 11]);
+  });
+});
+
+describe("buildToolbar", () => {
+  /** Builds the toolbar the way the editor does and hands back its parts by test id. */
+  function toolbar(doc: MdDoc) {
+    const fake = fakeCtx();
+    const row = UIBase.createElement<RowFrame<ProviderContext>>("rowframe-x");
+    row.ctx = fake.ctx;
+    const sync = provider.buildToolbar(row, fake.ctx);
+    row.checkInit();
+    document.body.append(row);
+    const part = <T extends HTMLElement>(id: string) => {
+      const el = row.shadowRoot?.querySelector(`[data-testid="${id}"]`) as T | null;
+      if (el === null || el === undefined) {
+        throw new Error(`no ${id}`);
+      }
+      return el;
+    };
+    const select = (r: DocRange) => {
+      fake.editor.select(r);
+      sync(doc, r);
+    };
+    return {
+      ...fake,
+      row,
+      sync,
+      select,
+      kinds : part<UIBase & { value: string; on_select?: (id: string) => void }>("richtext-kind"),
+      button: (id: string) => part<ToolButton>(id),
+    };
+  }
+
+  test("the kind dropdown and list buttons follow the head block", () => {
+    const doc = parse();
+    const t = toolbar(doc);
+    expect(t.kinds.value).toBe("paragraph");
+
+    t.select(caret("b1", 1));
+    expect(t.kinds.value).toBe("heading1");
+    t.select(caret("b3", 1));
+    expect(t.kinds.value).toBe("paragraph");
+    expect(t.button("richtext-list-bullet").active).toBe(true);
+    expect(t.button("richtext-list-numbered").active).toBe(false);
+    t.select(caret("b5", 1));
+    expect(t.button("richtext-list-numbered").active).toBe(true);
+    t.select(caret("b6", 1));
+    expect(t.button("richtext-list-task").active).toBe(true);
+    t.select(caret("b8", 1));
+    expect(t.kinds.value).toBe("code");
+    t.sync(doc, undefined);
+    expect(t.kinds.value).toBe("paragraph");
+    expect(t.button("richtext-list-task").active).toBe(false);
+    t.row.remove();
+  });
+
+  test("a list button dispatches setKind over the editable span, and undoes itself when lit", () => {
+    const doc = parse();
+    const t = toolbar(doc);
+    t.select(range("b2", 0, "b3", 1));
+    t.button("richtext-list-bullet").click();
+    expect(t.dispatched).toEqual([
+      {
+        type  : "custom",
+        name  : "setKind",
+        blocks: ["b2", "b3"],
+        data: {
+          kind     : "listItem",
+          ordered  : false,
+          task     : false,
+          selection: range("b2", 0, "b3", 1),
+        },
+      },
+    ]);
+
+    t.select(caret("b3", 1));
+    t.button("richtext-list-bullet").click();
+    expect(t.dispatched[1]).toMatchObject({ blocks: ["b3"], data: { kind: "paragraph" } });
+
+    // a fence leaving code needs a fresh id per extra line
+    t.select(caret("b8", 0));
+    t.button("richtext-list-numbered").click();
+    expect(t.dispatched[2]).toMatchObject({ data: { ids: [expect.any(String)] } });
+
+    t.select(caret("b11", 0));
+    t.button("richtext-list-numbered").click();
+    expect(t.dispatched).toHaveLength(3);
+
+    t.select(caret("b2", 0));
+    t.kinds.on_select?.("heading2");
+    expect(t.dispatched[3]).toMatchObject({ blocks: ["b2"], data: { kind: "heading", level: 2 } });
+    t.row.remove();
+  });
+
+  test("the link button lights inside a link and opens nothing over a collapsed selection", () => {
+    const doc = parse();
+    const t = toolbar(doc);
+    const link = t.button("richtext-link");
+    t.select(caret("b2", 30));
+    expect(link.active).toBe(true);
+    t.select(caret("b2", 3));
+    expect(link.active).toBe(false);
+
+    link.click();
+    expect(t.dispatched).toEqual([]);
+    expect(document.querySelector("link-popup-x")).toBeNull();
+    t.row.remove();
   });
 });
 

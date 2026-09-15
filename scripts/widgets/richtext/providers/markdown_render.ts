@@ -7,13 +7,15 @@ import { toMarkdown } from "mdast-util-to-markdown";
 import { gfm } from "micromark-extension-gfm";
 import { gfmFromMarkdown, gfmToMarkdown } from "mdast-util-gfm";
 import type { Table } from "mdast";
+import { UIBase } from "../../../core/ui_base";
 import { CARET_SLOT } from "../provider";
 import type { LinkInfo, ProviderContext } from "../provider";
 import { safeUrl, sanitizeAttrs, sanitizeStyle, styleText } from "./markdown_html";
+import { MdImageWidget } from "./markdown_image";
 import { inlineTree } from "./markdown_inline";
 import type { InlineNode } from "./markdown_inline";
 import { markdownDocFromText } from "./markdown_parse";
-import type { MdBlock, MdImage, MdMark } from "./markdown_model";
+import type { MdAtom, MdBlock, MdImage, MdMark } from "./markdown_model";
 
 /** What `renderMarkdownBlock` takes beyond the block: the consumer's media hook. */
 export interface MarkdownRenderOptions {
@@ -98,8 +100,10 @@ function markElement(block: MdBlock, mark: MdMark, ctx: ProviderContext): HTMLEl
 }
 
 /** The atom element for an image: the hook's element or an `<img>`, inside the opaque wrapper. */
+/** The atom element: the consumer's media element, or an `md-image-x` with its resize and move gestures. */
 function atomElement(
-  image: MdImage,
+  block: MdBlock,
+  atom: MdAtom,
   ctx: ProviderContext,
   options: MarkdownRenderOptions
 ): HTMLElement {
@@ -108,26 +112,15 @@ function atomElement(
   wrap.setAttribute("data-doc-atom", "");
   wrap.setAttribute("contenteditable", "false");
 
-  const custom = options.renderMedia?.(image, ctx);
+  const custom = options.renderMedia?.(atom.image, ctx);
   if (custom !== undefined) {
     wrap.append(custom);
     return wrap;
   }
 
-  const img = document.createElement("img");
-  const src = safeUrl(image.src, true);
-  if (src !== undefined) {
-    img.setAttribute("src", src);
-  }
-  img.setAttribute("alt", image.alt);
-  if (image.title !== undefined) {
-    img.setAttribute("title", image.title);
-  }
-  if (image.width !== undefined) {
-    img.setAttribute("width", String(image.width));
-  }
-  img.draggable = false;
-  wrap.append(img);
+  const widget = UIBase.constructElement<MdImageWidget>("md-image-x", ctx);
+  widget.setAtom(block.id, atom.offset, atom.image);
+  wrap.append(widget);
 
   return wrap;
 }
@@ -148,7 +141,7 @@ function renderInline(
     } else if (node.type === "atom") {
       into.append(
         document.createTextNode(CARET_SLOT),
-        atomElement(node.atom.image, ctx, options),
+        atomElement(block, node.atom, ctx, options),
         document.createTextNode(CARET_SLOT)
       );
     } else {
@@ -444,6 +437,7 @@ export function markdownStyles(): string {
 
     .md-image { display: inline-block; vertical-align: middle; }
     .md-image img { max-width: 100%; vertical-align: middle; }
+    [readonly] .md-image { cursor: default; }
 
     .md-opaque {
       background   : var(--richtext-opaque-background);

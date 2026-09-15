@@ -61,8 +61,12 @@ trips.
 and the block renderer behind `richtext/markdown.ts`, the `markdown` format
 registered on `RichTextArea`, rich text theme keys, a bare Markdown tab in
 the example, and the markdown Playwright spec in Chromium and Firefox.
-Stages 4 to 7 (the toolbar and inline editors, binding and docs, the
-follow-ups and the syntax reference) remain.
+[x]: the markdown toolbar and inline editors (stage 4 of the same plan):
+`buildToolbar` with the kind dropdown, mark, list and Link buttons, the
+`link-popup-x` link editor, `md-image-x` with its modal resize and move ops,
+their theme keys, the Playwright tests and screenshots, and the Electron
+pass. Stages 5 to 7 (binding and docs, the follow-ups and the syntax
+reference) remain.
 [ ]: better wrappers around the web file system APIs, to cover what
 simple_docsys did for locally served, Electron and NW.js apps. Unrelated to
 the rich text work; noted here so it is not lost when simple_docsys goes.

@@ -16038,7 +16038,28 @@ var init_theme = __esm({
           color: "rgba(35, 35, 35, 1.0)"
         }),
         "hr-color": "rgb(200, 200, 200)",
-        "opaque-background": "rgba(0, 0, 0, 0.045)"
+        "opaque-background": "rgba(0, 0, 0, 0.045)",
+        "toolbar-background": "rgb(238, 238, 238)",
+        "toolbar-border": "rgb(205, 205, 205)",
+        "toolbar-padding": 4,
+        "toolbar-gap": 2,
+        "toolbar-active-background": "rgba(70, 130, 220, 0.3)"
+      },
+      mdimage: {
+        "handle-color": "rgb(30, 100, 200)",
+        "handle-size": 10,
+        "outline-color": "rgba(30, 100, 200, 0.6)",
+        "drop-caret-color": "rgb(30, 100, 200)"
+      },
+      linkpopup: {
+        "background-color": "rgb(250, 250, 250)",
+        border: BoxBorder.withVars({
+          "color": vars.borderColor,
+          "radius": 4,
+          "style": "solid",
+          "width": 1
+        }),
+        padding: 6
       },
       screenborder: {
         "border-inner": "grey",
@@ -45550,11 +45571,92 @@ function rootReflects(root, blocks) {
   return true;
 }
 
+// scripts/widgets/richtext/link_popup.ts
+init_ui_base();
+init_theme_schema();
+function setLinkOp(edit, target) {
+  const { range } = edit;
+  const from = Math.min(range.anchor.offset, range.head.offset);
+  const to = Math.max(range.anchor.offset, range.head.offset);
+  const data = {
+    from,
+    to,
+    target,
+    kind: edit.kind,
+    selection: { anchor: { ...range.anchor }, head: { ...range.head } }
+  };
+  if (edit.title !== void 0 && target !== "") {
+    data.title = edit.title;
+  }
+  return { type: "custom", name: "setLink", blocks: [range.anchor.block], data };
+}
+var LinkPopup = class extends Container3 {
+  setCSS() {
+    super.setCSS();
+    this.setBoxCSS();
+    this.background = this.getDefault("background-color");
+    this.style.padding = `${this.getDefault("padding")}px`;
+  }
+  static define() {
+    return {
+      tagname: "link-popup-x",
+      style: "linkpopup",
+      theme: {
+        "background-color": t.color,
+        border: t.boxborder,
+        padding: t.number
+      }
+    };
+  }
+};
+UIBase.internalRegister(LinkPopup);
+function openLinkPopup(owner, editor, edit, x, y) {
+  const screen = owner.ctx.screen;
+  const popup = screen.popup(owner, x, y, "click", void 0, window);
+  popup.style.overflow = "hidden";
+  popup.style.padding = "0";
+  const body = UIBase.createElement("link-popup-x");
+  body.setAttribute("data-testid", "richtext-link-popup");
+  popup.add(body);
+  const row = body.row();
+  const kind = row.label(edit.kind);
+  kind.style.opacity = "0.7";
+  kind.style.marginRight = "6px";
+  const box = row.textbox(void 0, edit.target);
+  box.setAttribute("data-testid", "richtext-link-target");
+  box.style.width = "18em";
+  const finish = (target) => {
+    if (target !== void 0 && target !== edit.target) {
+      void editor.dispatch(setLinkOp(edit, target));
+    }
+    popup.remove();
+  };
+  box.onend = () => {
+  };
+  box.dom.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      finish(e.key === "Enter" ? box.text : void 0);
+    }
+  });
+  const apply = row.button("Apply", () => finish(box.text));
+  apply.setAttribute("data-testid", "richtext-link-apply");
+  const remove2 = row.button("Remove", () => finish(""));
+  remove2.setAttribute("data-testid", "richtext-link-remove");
+  box.focus();
+  box.select();
+  return popup;
+}
+
 // scripts/widgets/richtext/editor.ts
 init_ui_base();
 init_theme_schema();
 init_ui_theme();
 var THEME_COLORS = [
+  "toolbar-background",
+  "toolbar-border",
+  "toolbar-active-background",
   "readonly-background",
   "selection-background",
   "link-color",
@@ -45649,6 +45751,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       :host {
         display        : flex;
         flex-direction : column;
+        position       : relative;
       }
 
       .rich-text-root {
@@ -45664,6 +45767,14 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
 
       .rich-text-root[readonly] {
         background : var(--richtext-readonly-background);
+      }
+
+      [data-richtext-toolbar] {
+        flex-wrap     : wrap;
+        gap           : var(--richtext-toolbar-gap);
+        padding       : var(--richtext-toolbar-padding);
+        background    : var(--richtext-toolbar-background);
+        border-bottom : 1px solid var(--richtext-toolbar-border);
       }
 
       .rich-text-root ::selection {
@@ -45877,6 +45988,8 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       set2(key, this.getDefault(key).genCSS());
     }
     set2("code-border-radius", `${this.getDefault("code-border-radius")}px`);
+    set2("toolbar-padding", `${this.getDefault("toolbar-padding")}px`);
+    set2("toolbar-gap", `${this.getDefault("toolbar-gap")}px`);
     set2("link-underline", this.getDefault("link-underline") ? "underline" : "none");
     const c = css2color(font.color);
     const luminance = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
@@ -45923,8 +46036,19 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     }
     return proceed;
   }
-  /** The edit-mode default for a link click. Empty until the link popup lands. */
-  linkDefault(_link, _event) {
+  /** The edit-mode default for a link click: the link popup under the clicked element. */
+  linkDefault(link, event) {
+    const target = event.currentTarget;
+    const rect = target instanceof Element ? target.getBoundingClientRect() : void 0;
+    const x = rect?.left ?? event.clientX;
+    const y = rect?.bottom ?? event.clientY;
+    openLinkPopup(
+      this,
+      this.bridge,
+      { range: link.range, kind: link.kind, target: link.target },
+      x,
+      y + 4
+    );
   }
   /**
    * The document position under a viewport point. The lookup pierces the shadow root, which
@@ -46542,6 +46666,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       return;
     }
     const row = UIBase.createElement("rowframe-x");
+    row.setAttribute("data-richtext-toolbar", "");
     row.parentWidget = this;
     Object.defineProperty(row, "ctx", {
       configurable: true,
@@ -46571,6 +46696,11 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       theme: {
         DefaultText: t.font,
         "background-color": t.color,
+        "toolbar-background": t.color,
+        "toolbar-border": t.color,
+        "toolbar-padding": t.number,
+        "toolbar-gap": t.number,
+        "toolbar-active-background": t.color,
         "readonly-background": t.color,
         "selection-background": t.color,
         "link-color": t.color,
@@ -46673,11 +46803,67 @@ function markSegments(length, marks) {
 
 // scripts/widgets/richtext/providers/toolbar.ts
 init_ui_base();
+init_ui_button();
 var isCollapsed2 = ({ anchor, head }) => anchor.block === head.block && anchor.offset === head.offset;
+var ToolButton = class extends Button {
+  _active = false;
+  get active() {
+    return this._active;
+  }
+  set active(value) {
+    if (value !== this._active) {
+      this._active = value;
+      this.setCSS();
+    }
+  }
+  init() {
+    super.init();
+    this.addEventListener("pointerdown", (e) => e.preventDefault());
+  }
+  setCSS() {
+    super.setCSS();
+    const height = this.getDefault("height");
+    this.style.minWidth = `${height}px`;
+    this.style.justifyContent = "center";
+    this.style.padding = "0 4px";
+    this.style.margin = "0";
+    this.label.style.lineHeight = "1";
+    if (this._active && !this.disabled) {
+      this.style.backgroundColor = "var(--richtext-toolbar-active-background)";
+    }
+  }
+  static define() {
+    return {
+      tagname: "richtext-toolbutton-x",
+      style: "button"
+    };
+  }
+};
+UIBase.internalRegister(ToolButton);
+function addToolButton(row, glyph, label, onPress) {
+  const btn = UIBase.createElement("richtext-toolbutton-x");
+  btn.setAttribute("name", glyph);
+  btn.description = label;
+  btn.onclick = onPress;
+  row.add(btn);
+  return btn;
+}
 function addMarkButtons(row, ctx, provider, marks = provider.marks()) {
   const buttons = /* @__PURE__ */ new Map();
   let syncing = false;
+  const toggle = (mark2) => {
+    const range = ctx.editor.selection();
+    if (range !== void 0 && !isCollapsed2(range)) {
+      void ctx.editor.dispatch({ type: "toggleMark", range, mark: mark2.name });
+    }
+  };
   for (const mark2 of marks) {
+    if (mark2.glyph !== void 0) {
+      const btn2 = addToolButton(row, mark2.glyph, mark2.label, () => toggle(mark2));
+      btn2.setAttribute("data-testid", `richtext-mark-${mark2.name}`);
+      buttons.set(mark2.name, btn2);
+      continue;
+    }
     const btn = UIBase.createElement("iconcheck-x");
     btn.icon = mark2.icon;
     btn.description = mark2.label;
@@ -46686,12 +46872,8 @@ function addMarkButtons(row, ctx, provider, marks = provider.marks()) {
     btn.setAttribute("data-testid", `richtext-mark-${mark2.name}`);
     btn.dom.style.filter = "var(--richtext-icon-tint, none)";
     btn.on_change = () => {
-      if (syncing) {
-        return;
-      }
-      const range = ctx.editor.selection();
-      if (range !== void 0 && !isCollapsed2(range)) {
-        void ctx.editor.dispatch({ type: "toggleMark", range, mark: mark2.name });
+      if (!syncing) {
+        toggle(mark2);
       }
     };
     row.add(btn);
@@ -46703,7 +46885,11 @@ function addMarkButtons(row, ctx, provider, marks = provider.marks()) {
     );
     syncing = true;
     for (const [name, btn] of buttons) {
-      btn.checked = active.has(name);
+      if (btn instanceof ToolButton) {
+        btn.active = active.has(name);
+      } else {
+        btn.checked = active.has(name);
+      }
     }
     syncing = false;
   };

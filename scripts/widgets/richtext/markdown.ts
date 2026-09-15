@@ -16,6 +16,9 @@ export { MarkdownProvider, markdownOps } from "./providers/markdown_provider";
 export type { MarkdownProviderOptions, MdKindTarget } from "./providers/markdown_provider";
 export { renderMarkdownBlock, markdownStyles } from "./providers/markdown_render";
 export type { MarkdownRenderOptions } from "./providers/markdown_render";
+export { MdImageWidget, ImageResizeOp, ImageMoveOp } from "./providers/markdown_image";
+export { LinkPopup, openLinkPopup, setLinkOp } from "./link_popup";
+export type { LinkEdit } from "./link_popup";
 
 RichTextArea.registerFormat<MdDoc>("markdown", {
   provider: () => new MarkdownProvider(),

@@ -16065,7 +16065,28 @@ var init_theme = __esm({
           color: "rgba(35, 35, 35, 1.0)"
         }),
         "hr-color": "rgb(200, 200, 200)",
-        "opaque-background": "rgba(0, 0, 0, 0.045)"
+        "opaque-background": "rgba(0, 0, 0, 0.045)",
+        "toolbar-background": "rgb(238, 238, 238)",
+        "toolbar-border": "rgb(205, 205, 205)",
+        "toolbar-padding": 4,
+        "toolbar-gap": 2,
+        "toolbar-active-background": "rgba(70, 130, 220, 0.3)"
+      },
+      mdimage: {
+        "handle-color": "rgb(30, 100, 200)",
+        "handle-size": 10,
+        "outline-color": "rgba(30, 100, 200, 0.6)",
+        "drop-caret-color": "rgb(30, 100, 200)"
+      },
+      linkpopup: {
+        "background-color": "rgb(250, 250, 250)",
+        border: BoxBorder.withVars({
+          "color": vars.borderColor,
+          "radius": 4,
+          "style": "solid",
+          "width": 1
+        }),
+        padding: 6
       },
       screenborder: {
         "border-inner": "grey",
@@ -45676,11 +45697,92 @@ function rootReflects(root2, blocks) {
   return true;
 }
 
+// scripts/widgets/richtext/link_popup.ts
+init_ui_base();
+init_theme_schema();
+function setLinkOp(edit, target) {
+  const { range } = edit;
+  const from = Math.min(range.anchor.offset, range.head.offset);
+  const to = Math.max(range.anchor.offset, range.head.offset);
+  const data = {
+    from,
+    to,
+    target,
+    kind: edit.kind,
+    selection: { anchor: { ...range.anchor }, head: { ...range.head } }
+  };
+  if (edit.title !== void 0 && target !== "") {
+    data.title = edit.title;
+  }
+  return { type: "custom", name: "setLink", blocks: [range.anchor.block], data };
+}
+var LinkPopup = class extends Container3 {
+  setCSS() {
+    super.setCSS();
+    this.setBoxCSS();
+    this.background = this.getDefault("background-color");
+    this.style.padding = `${this.getDefault("padding")}px`;
+  }
+  static define() {
+    return {
+      tagname: "link-popup-x",
+      style: "linkpopup",
+      theme: {
+        "background-color": t.color,
+        border: t.boxborder,
+        padding: t.number
+      }
+    };
+  }
+};
+UIBase.internalRegister(LinkPopup);
+function openLinkPopup(owner, editor, edit, x, y) {
+  const screen = owner.ctx.screen;
+  const popup = screen.popup(owner, x, y, "click", void 0, window);
+  popup.style.overflow = "hidden";
+  popup.style.padding = "0";
+  const body = UIBase.createElement("link-popup-x");
+  body.setAttribute("data-testid", "richtext-link-popup");
+  popup.add(body);
+  const row = body.row();
+  const kind = row.label(edit.kind);
+  kind.style.opacity = "0.7";
+  kind.style.marginRight = "6px";
+  const box = row.textbox(void 0, edit.target);
+  box.setAttribute("data-testid", "richtext-link-target");
+  box.style.width = "18em";
+  const finish = (target) => {
+    if (target !== void 0 && target !== edit.target) {
+      void editor.dispatch(setLinkOp(edit, target));
+    }
+    popup.remove();
+  };
+  box.onend = () => {
+  };
+  box.dom.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      finish(e.key === "Enter" ? box.text : void 0);
+    }
+  });
+  const apply = row.button("Apply", () => finish(box.text));
+  apply.setAttribute("data-testid", "richtext-link-apply");
+  const remove2 = row.button("Remove", () => finish(""));
+  remove2.setAttribute("data-testid", "richtext-link-remove");
+  box.focus();
+  box.select();
+  return popup;
+}
+
 // scripts/widgets/richtext/editor.ts
 init_ui_base();
 init_theme_schema();
 init_ui_theme();
 var THEME_COLORS = [
+  "toolbar-background",
+  "toolbar-border",
+  "toolbar-active-background",
   "readonly-background",
   "selection-background",
   "link-color",
@@ -45775,6 +45877,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       :host {
         display        : flex;
         flex-direction : column;
+        position       : relative;
       }
 
       .rich-text-root {
@@ -45790,6 +45893,14 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
 
       .rich-text-root[readonly] {
         background : var(--richtext-readonly-background);
+      }
+
+      [data-richtext-toolbar] {
+        flex-wrap     : wrap;
+        gap           : var(--richtext-toolbar-gap);
+        padding       : var(--richtext-toolbar-padding);
+        background    : var(--richtext-toolbar-background);
+        border-bottom : 1px solid var(--richtext-toolbar-border);
       }
 
       .rich-text-root ::selection {
@@ -46003,6 +46114,8 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       set2(key, this.getDefault(key).genCSS());
     }
     set2("code-border-radius", `${this.getDefault("code-border-radius")}px`);
+    set2("toolbar-padding", `${this.getDefault("toolbar-padding")}px`);
+    set2("toolbar-gap", `${this.getDefault("toolbar-gap")}px`);
     set2("link-underline", this.getDefault("link-underline") ? "underline" : "none");
     const c = css2color(font.color);
     const luminance = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
@@ -46049,8 +46162,19 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     }
     return proceed;
   }
-  /** The edit-mode default for a link click. Empty until the link popup lands. */
-  linkDefault(_link, _event) {
+  /** The edit-mode default for a link click: the link popup under the clicked element. */
+  linkDefault(link2, event) {
+    const target = event.currentTarget;
+    const rect = target instanceof Element ? target.getBoundingClientRect() : void 0;
+    const x = rect?.left ?? event.clientX;
+    const y = rect?.bottom ?? event.clientY;
+    openLinkPopup(
+      this,
+      this.bridge,
+      { range: link2.range, kind: link2.kind, target: link2.target },
+      x,
+      y + 4
+    );
   }
   /**
    * The document position under a viewport point. The lookup pierces the shadow root, which
@@ -46668,6 +46792,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       return;
     }
     const row = UIBase.createElement("rowframe-x");
+    row.setAttribute("data-richtext-toolbar", "");
     row.parentWidget = this;
     Object.defineProperty(row, "ctx", {
       configurable: true,
@@ -46697,6 +46822,11 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       theme: {
         DefaultText: t.font,
         "background-color": t.color,
+        "toolbar-background": t.color,
+        "toolbar-border": t.color,
+        "toolbar-padding": t.number,
+        "toolbar-gap": t.number,
+        "toolbar-active-background": t.color,
         "readonly-background": t.color,
         "selection-background": t.color,
         "link-color": t.color,
@@ -46799,11 +46929,67 @@ function markSegments(length, marks) {
 
 // scripts/widgets/richtext/providers/toolbar.ts
 init_ui_base();
+init_ui_button();
 var isCollapsed2 = ({ anchor, head }) => anchor.block === head.block && anchor.offset === head.offset;
+var ToolButton = class extends Button {
+  _active = false;
+  get active() {
+    return this._active;
+  }
+  set active(value2) {
+    if (value2 !== this._active) {
+      this._active = value2;
+      this.setCSS();
+    }
+  }
+  init() {
+    super.init();
+    this.addEventListener("pointerdown", (e) => e.preventDefault());
+  }
+  setCSS() {
+    super.setCSS();
+    const height = this.getDefault("height");
+    this.style.minWidth = `${height}px`;
+    this.style.justifyContent = "center";
+    this.style.padding = "0 4px";
+    this.style.margin = "0";
+    this.label.style.lineHeight = "1";
+    if (this._active && !this.disabled) {
+      this.style.backgroundColor = "var(--richtext-toolbar-active-background)";
+    }
+  }
+  static define() {
+    return {
+      tagname: "richtext-toolbutton-x",
+      style: "button"
+    };
+  }
+};
+UIBase.internalRegister(ToolButton);
+function addToolButton(row, glyph, label, onPress) {
+  const btn = UIBase.createElement("richtext-toolbutton-x");
+  btn.setAttribute("name", glyph);
+  btn.description = label;
+  btn.onclick = onPress;
+  row.add(btn);
+  return btn;
+}
 function addMarkButtons(row, ctx, provider, marks = provider.marks()) {
   const buttons = /* @__PURE__ */ new Map();
   let syncing = false;
+  const toggle = (mark2) => {
+    const range = ctx.editor.selection();
+    if (range !== void 0 && !isCollapsed2(range)) {
+      void ctx.editor.dispatch({ type: "toggleMark", range, mark: mark2.name });
+    }
+  };
   for (const mark2 of marks) {
+    if (mark2.glyph !== void 0) {
+      const btn2 = addToolButton(row, mark2.glyph, mark2.label, () => toggle(mark2));
+      btn2.setAttribute("data-testid", `richtext-mark-${mark2.name}`);
+      buttons.set(mark2.name, btn2);
+      continue;
+    }
     const btn = UIBase.createElement("iconcheck-x");
     btn.icon = mark2.icon;
     btn.description = mark2.label;
@@ -46812,12 +46998,8 @@ function addMarkButtons(row, ctx, provider, marks = provider.marks()) {
     btn.setAttribute("data-testid", `richtext-mark-${mark2.name}`);
     btn.dom.style.filter = "var(--richtext-icon-tint, none)";
     btn.on_change = () => {
-      if (syncing) {
-        return;
-      }
-      const range = ctx.editor.selection();
-      if (range !== void 0 && !isCollapsed2(range)) {
-        void ctx.editor.dispatch({ type: "toggleMark", range, mark: mark2.name });
+      if (!syncing) {
+        toggle(mark2);
       }
     };
     row.add(btn);
@@ -46829,7 +47011,11 @@ function addMarkButtons(row, ctx, provider, marks = provider.marks()) {
     );
     syncing = true;
     for (const [name, btn] of buttons) {
-      btn.checked = active.has(name);
+      if (btn instanceof ToolButton) {
+        btn.active = active.has(name);
+      } else {
+        btn.checked = active.has(name);
+      }
     }
     syncing = false;
   };
@@ -87254,7 +87440,392 @@ function markdownText(doc) {
   });
 }
 
+// scripts/widgets/richtext/providers/markdown_image.ts
+init_ui_base();
+init_theme_schema();
+init_toolop();
+var MIN_WIDTH = 16;
+var CLICK_SLOP_PX2 = 3;
+function moveAtomOp(order, from, to) {
+  const a2 = order.indexOf(from.block);
+  const b = order.indexOf(to.block);
+  const blocks = order.slice(Math.min(a2, b), Math.max(a2, b) + 1);
+  const shifts = from.block === to.block ? [] : [
+    { block: from.block, at: from.offset, delta: -1 },
+    { block: to.block, at: to.offset, delta: 1 }
+  ];
+  return {
+    type: "custom",
+    name: "moveAtom",
+    blocks,
+    data: { from: { ...from }, to: { ...to } },
+    shifts
+  };
+}
+function blockOrder(root2) {
+  const ids = [];
+  for (const child of root2.children) {
+    const id = child.getAttribute("data-doc-block");
+    if (id !== null) {
+      ids.push(id);
+    }
+  }
+  return ids;
+}
+function acceptsAtom(el) {
+  return el.getAttribute("contenteditable") !== "false" && el.tagName !== "PRE";
+}
+function caretRect(root2, pos) {
+  const dom = fromDocPos(root2, pos);
+  if (dom === void 0) {
+    return void 0;
+  }
+  const range = document.createRange();
+  range.setStart(dom.node, dom.offset);
+  range.collapse(true);
+  const rect = range.getClientRects()[0] ?? range.getBoundingClientRect();
+  if (rect.height > 0) {
+    return rect;
+  }
+  const el = dom.node instanceof Element ? dom.node : dom.node.parentElement;
+  return el?.getBoundingClientRect();
+}
+var MdImageWidget = class extends UIBase {
+  img;
+  handle;
+  styletag;
+  block = "";
+  offset = 0;
+  constructor() {
+    super();
+    this.styletag = document.createElement("style");
+    this.styletag.textContent = `
+      :host {
+        position       : relative;
+        display        : inline-block;
+        vertical-align : middle;
+        line-height    : 0;
+      }
+      img {
+        max-width : 100%;
+        display   : block;
+      }
+      :host(:hover:not([readonly])) img {
+        outline : 2px solid var(--md-image-outline-color);
+      }
+      .handle {
+        display    : none;
+        position   : absolute;
+        right      : -2px;
+        bottom     : -2px;
+        width      : var(--md-image-handle-size);
+        height     : var(--md-image-handle-size);
+        background : var(--md-image-handle-color);
+        cursor     : nwse-resize;
+      }
+      :host(:hover:not([readonly])) .handle,
+      :host([resizing]) .handle {
+        display : block;
+      }
+      :host([resizing]) img {
+        outline : 2px solid var(--md-image-outline-color);
+      }
+    `;
+    this.shadow.appendChild(this.styletag);
+    this.img = document.createElement("img");
+    this.img.draggable = false;
+    this.img.addEventListener("dragstart", (e) => e.preventDefault());
+    this.shadow.appendChild(this.img);
+    this.handle = document.createElement("div");
+    this.handle.className = "handle";
+    this.handle.setAttribute("data-testid", "md-image-handle");
+    this.shadow.appendChild(this.handle);
+  }
+  /** Points the widget at the atom it renders and shows its image. */
+  setAtom(block, offset, image2) {
+    this.block = block;
+    this.offset = offset;
+    const src = safeUrl(image2.src, true);
+    if (src !== void 0) {
+      this.img.setAttribute("src", src);
+    } else {
+      this.img.removeAttribute("src");
+    }
+    this.img.setAttribute("alt", image2.alt);
+    if (image2.title !== void 0) {
+      this.img.setAttribute("title", image2.title);
+    } else {
+      this.img.removeAttribute("title");
+    }
+    if (image2.width !== void 0) {
+      this.img.setAttribute("width", String(image2.width));
+    } else {
+      this.img.removeAttribute("width");
+    }
+  }
+  /** The position of the atom's own character. */
+  get atomPos() {
+    return { block: this.block, offset: this.offset };
+  }
+  init() {
+    super.init();
+    this.setAttribute("data-testid", "md-image");
+    this.setCSS();
+    this.addEventListener("pointerenter", () => this.mirrorReadOnly());
+    this.handle.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.button === 0 && this.canEdit()) {
+        this.spawn(new ImageResizeOp(this, e), e);
+      }
+    });
+    this.img.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.button === 0 && this.canEdit()) {
+        this.spawn(new ImageMoveOp(this, e), e);
+      }
+    });
+  }
+  canEdit() {
+    return this.ctx !== void 0 && !this.ctx.editor.readOnly;
+  }
+  spawn(op, e) {
+    const ctx = this.ctx;
+    void ctx.toolstack.execTool(ctx, op, e);
+  }
+  mirrorReadOnly() {
+    this.toggleAttribute("readonly", this.ctx?.editor.readOnly ?? false);
+  }
+  update() {
+    super.update();
+    this.mirrorReadOnly();
+  }
+  setCSS() {
+    super.setCSS();
+    this.style.setProperty("--md-image-handle-color", this.getDefault("handle-color"));
+    this.style.setProperty(
+      "--md-image-handle-size",
+      `${this.getDefault("handle-size")}px`
+    );
+    this.style.setProperty("--md-image-outline-color", this.getDefault("outline-color"));
+  }
+  static define() {
+    return {
+      tagname: "md-image-x",
+      style: "mdimage",
+      theme: {
+        "handle-color": t.color,
+        "handle-size": t.number,
+        "outline-color": t.color,
+        "drop-caret-color": t.color
+      }
+    };
+  }
+};
+UIBase.internalRegister(MdImageWidget);
+var ImageResizeOp = class extends ToolOp {
+  widget;
+  startX = 0;
+  startWidth = 0;
+  width = 0;
+  hadWidth = false;
+  constructor(widget, e) {
+    super();
+    this.widget = widget;
+    if (widget !== void 0 && e !== void 0) {
+      this.startX = e.clientX;
+      this.startWidth = widget.img.getBoundingClientRect().width;
+      this.width = this.startWidth;
+      this.hadWidth = widget.img.hasAttribute("width");
+      widget.setAttribute("resizing", "");
+    }
+  }
+  static tooldef() {
+    return {
+      uiname: "Resize Image",
+      description: "Drag the corner handle to resize the image",
+      toolpath: "richtext.markdown.resize_image",
+      is_modal: true,
+      undoflag: UndoFlags.NO_UNDO,
+      inputs: {},
+      outputs: {}
+    };
+  }
+  on_pointermove(e) {
+    const widget = this.widget;
+    if (widget === void 0) {
+      return;
+    }
+    this.width = Math.max(MIN_WIDTH, Math.round(this.startWidth + e.clientX - this.startX));
+    widget.img.setAttribute("width", String(this.width));
+  }
+  on_pointerup(_e) {
+    const widget = this.widget;
+    if (widget !== void 0 && this.width !== Math.round(this.startWidth)) {
+      void widget.ctx.editor.dispatch({
+        type: "custom",
+        name: "setImage",
+        blocks: [widget.block],
+        data: { offset: widget.offset, width: this.width }
+      });
+    }
+    this.modalEnd(false);
+  }
+  on_pointercancel(_e) {
+    this.modalEnd(true);
+  }
+  on_keydown(e) {
+    if (e.key === "Escape") {
+      this.modalEnd(true);
+    }
+  }
+  modalEnd(was_cancelled) {
+    const widget = this.widget;
+    this.widget = void 0;
+    if (widget !== void 0) {
+      widget.removeAttribute("resizing");
+      if (was_cancelled) {
+        if (this.hadWidth) {
+          widget.img.setAttribute("width", String(Math.round(this.startWidth)));
+        } else {
+          widget.img.removeAttribute("width");
+        }
+      }
+    }
+    super.modalEnd(was_cancelled);
+  }
+};
+ToolOp.register(ImageResizeOp);
+var ImageMoveOp = class extends ToolOp {
+  widget;
+  ghost;
+  caret;
+  startX = 0;
+  startY = 0;
+  grabX = 0;
+  grabY = 0;
+  moved = false;
+  target;
+  constructor(widget, e) {
+    super();
+    this.widget = widget;
+    if (widget !== void 0 && e !== void 0) {
+      const rect = widget.img.getBoundingClientRect();
+      this.startX = e.clientX;
+      this.startY = e.clientY;
+      this.grabX = e.clientX - rect.left;
+      this.grabY = e.clientY - rect.top;
+    }
+  }
+  static tooldef() {
+    return {
+      uiname: "Move Image",
+      description: "Drag the image to another place in the text",
+      toolpath: "richtext.markdown.move_image",
+      is_modal: true,
+      undoflag: UndoFlags.NO_UNDO,
+      inputs: {},
+      outputs: {}
+    };
+  }
+  on_pointermove(e) {
+    const widget = this.widget;
+    if (widget === void 0) {
+      return;
+    }
+    if (!this.moved && Math.abs(e.clientX - this.startX) < CLICK_SLOP_PX2 && Math.abs(e.clientY - this.startY) < CLICK_SLOP_PX2) {
+      return;
+    }
+    this.moved = true;
+    const bridge = widget.ctx.editor;
+    const shadow = bridge.root.parentNode;
+    if (!(shadow instanceof ShadowRoot)) {
+      return;
+    }
+    const origin = shadow.host.getBoundingClientRect();
+    if (this.ghost === void 0) {
+      const rect2 = widget.img.getBoundingClientRect();
+      const ghost = this.ghost = document.createElement("img");
+      ghost.className = "md-image-ghost";
+      ghost.src = widget.img.src;
+      ghost.style.position = "absolute";
+      ghost.style.width = `${rect2.width}px`;
+      ghost.style.height = `${rect2.height}px`;
+      ghost.style.opacity = "0.5";
+      ghost.style.pointerEvents = "none";
+      ghost.style.zIndex = "10";
+      shadow.appendChild(ghost);
+      const caret2 = this.caret = document.createElement("div");
+      caret2.className = "md-image-drop-caret";
+      caret2.style.position = "absolute";
+      caret2.style.width = "2px";
+      caret2.style.pointerEvents = "none";
+      caret2.style.zIndex = "10";
+      caret2.style.display = "none";
+      shadow.appendChild(caret2);
+    }
+    this.ghost.style.left = `${e.clientX - this.grabX - origin.left}px`;
+    this.ghost.style.top = `${e.clientY - this.grabY - origin.top}px`;
+    const pos = bridge.posFromPoint(e.clientX, e.clientY);
+    const own6 = widget.atomPos;
+    const unchanged = pos?.block === own6.block && (pos.offset === own6.offset || pos.offset === own6.offset + 1);
+    const el = pos === void 0 ? void 0 : bridge.blockElement(pos.block);
+    const rect = pos === void 0 ? void 0 : caretRect(bridge.root, pos);
+    const caret = this.caret;
+    if (caret === void 0) {
+      return;
+    }
+    if (pos === void 0 || el === void 0 || rect === void 0 || unchanged) {
+      this.target = void 0;
+      caret.style.display = "none";
+      return;
+    }
+    const allowed = acceptsAtom(el);
+    this.target = allowed ? pos : void 0;
+    caret.style.display = "block";
+    caret.style.left = `${rect.left - 1 - origin.left}px`;
+    caret.style.top = `${rect.top - origin.top}px`;
+    caret.style.height = `${rect.height}px`;
+    caret.style.background = allowed ? widget.getDefault("drop-caret-color") : "rgba(128, 128, 128, 0.5)";
+    caret.toggleAttribute("data-refused", !allowed);
+  }
+  on_pointerup(_e) {
+    const widget = this.widget;
+    const target = this.target;
+    if (widget !== void 0) {
+      const bridge = widget.ctx.editor;
+      if (!this.moved) {
+        const own6 = widget.atomPos;
+        bridge.select({ anchor: own6, head: { block: own6.block, offset: own6.offset + 1 } });
+      } else if (target !== void 0) {
+        void bridge.dispatch(moveAtomOp(blockOrder(bridge.root), widget.atomPos, target));
+      }
+    }
+    this.modalEnd(false);
+  }
+  on_pointercancel(_e) {
+    this.modalEnd(true);
+  }
+  on_keydown(e) {
+    if (e.key === "Escape") {
+      this.modalEnd(true);
+    }
+  }
+  modalEnd(was_cancelled) {
+    this.widget = void 0;
+    this.target = void 0;
+    this.ghost?.remove();
+    this.caret?.remove();
+    this.ghost = void 0;
+    this.caret = void 0;
+    super.modalEnd(was_cancelled);
+  }
+};
+ToolOp.register(ImageMoveOp);
+
 // scripts/widgets/richtext/providers/markdown_render.ts
+init_ui_base();
 var COUNTER_DEPTHS = 8;
 var MARK_ELEMENTS = {
   bold: "strong",
@@ -87313,30 +87884,19 @@ function markElement(block, mark2, ctx) {
   applyHtml(el, mark2.style, mark2.attrs);
   return el;
 }
-function atomElement(image2, ctx, options) {
+function atomElement(block, atom, ctx, options) {
   const wrap = document.createElement("span");
   wrap.className = "md-image";
   wrap.setAttribute("data-doc-atom", "");
   wrap.setAttribute("contenteditable", "false");
-  const custom = options.renderMedia?.(image2, ctx);
+  const custom = options.renderMedia?.(atom.image, ctx);
   if (custom !== void 0) {
     wrap.append(custom);
     return wrap;
   }
-  const img = document.createElement("img");
-  const src = safeUrl(image2.src, true);
-  if (src !== void 0) {
-    img.setAttribute("src", src);
-  }
-  img.setAttribute("alt", image2.alt);
-  if (image2.title !== void 0) {
-    img.setAttribute("title", image2.title);
-  }
-  if (image2.width !== void 0) {
-    img.setAttribute("width", String(image2.width));
-  }
-  img.draggable = false;
-  wrap.append(img);
+  const widget = UIBase.constructElement("md-image-x", ctx);
+  widget.setAtom(block.id, atom.offset, atom.image);
+  wrap.append(widget);
   return wrap;
 }
 function renderInline(into, block, nodes, ctx, options) {
@@ -87348,7 +87908,7 @@ function renderInline(into, block, nodes, ctx, options) {
     } else if (node2.type === "atom") {
       into.append(
         document.createTextNode(CARET_SLOT),
-        atomElement(node2.atom.image, ctx, options),
+        atomElement(block, node2.atom, ctx, options),
         document.createTextNode(CARET_SLOT)
       );
     } else {
@@ -87588,6 +88148,7 @@ function markdownStyles() {
 
     .md-image { display: inline-block; vertical-align: middle; }
     .md-image img { max-width: 100%; vertical-align: middle; }
+    [readonly] .md-image { cursor: default; }
 
     .md-opaque {
       background   : var(--richtext-opaque-background);
@@ -87635,14 +88196,41 @@ function markdownStyles() {
 
 // scripts/widgets/richtext/providers/markdown_provider.ts
 init_icon_enum();
+init_toolprop();
 var MD_MARKS = [
-  { name: "bold", label: "Bold", icon: Icons.BOLD },
-  { name: "italic", label: "Italic", icon: Icons.ITALIC },
-  { name: "underline", label: "Underline", icon: Icons.UNDERLINE },
-  { name: "strikethrough", label: "Strikethrough", icon: Icons.STRIKETHRU },
-  // the sheet has no code glyph yet; the toolbar stage gives it one
-  { name: "code", label: "Code", icon: Icons.FILE }
+  { name: "bold", label: "Bold (Ctrl+B)", icon: Icons.BOLD, glyph: "<b>B</b>" },
+  { name: "italic", label: "Italic (Ctrl+I)", icon: Icons.ITALIC, glyph: "<i>I</i>" },
+  { name: "underline", label: "Underline (Ctrl+U)", icon: Icons.UNDERLINE, glyph: "<u>U</u>" },
+  {
+    name: "strikethrough",
+    label: "Strikethrough (Ctrl+Shift+S)",
+    icon: Icons.STRIKETHRU,
+    glyph: "<s>S</s>"
+  },
+  { name: "code", label: "Code", icon: Icons.FILE, glyph: "<code>&lt;/&gt;</code>" }
 ];
+var KIND_CHOICES = [
+  { key: "paragraph", label: "Paragraph", kind: { kind: "paragraph" } },
+  { key: "heading1", label: "Heading 1", kind: { kind: "heading", level: 1 } },
+  { key: "heading2", label: "Heading 2", kind: { kind: "heading", level: 2 } },
+  { key: "heading3", label: "Heading 3", kind: { kind: "heading", level: 3 } },
+  { key: "heading4", label: "Heading 4", kind: { kind: "heading", level: 4 } },
+  { key: "heading5", label: "Heading 5", kind: { kind: "heading", level: 5 } },
+  { key: "heading6", label: "Heading 6", kind: { kind: "heading", level: 6 } },
+  { key: "quote", label: "Quote", kind: { kind: "quote" } },
+  { key: "code", label: "Code block", kind: { kind: "code" } }
+];
+function kindKey(b) {
+  switch (b.kind) {
+    case "heading":
+      return `heading${b.level}`;
+    case "quote":
+    case "code":
+      return b.kind;
+    default:
+      return "paragraph";
+  }
+}
 var TOGGLE_NAMES = new Set(MD_MARKS.map((m) => m.name));
 var OPAQUE_KINDS = /* @__PURE__ */ new Set(["hr", "table", "raw", "frontmatter"]);
 var isOpaque = (b) => OPAQUE_KINDS.has(b.kind);
@@ -87811,6 +88399,137 @@ var MarkdownProvider = class {
   }
   styles() {
     return markdownStyles();
+  }
+  /**
+   * The kind dropdown, the mark buttons, the three list toggles and the Link button. Each edit
+   * goes over the blocks the selection spans; the sync keeps the last document and selection
+   * so a press can find them after the button has taken the pointer.
+   */
+  buildToolbar(row, ctx) {
+    let lastDoc;
+    let lastSelection;
+    const current = () => {
+      const doc = lastDoc;
+      const range = ctx.editor.selection() ?? lastSelection;
+      if (doc === void 0 || range === void 0) {
+        return void 0;
+      }
+      const r = this.order(doc, range);
+      const editable = doc.blocks.slice(r.startIndex, r.endIndex + 1).filter((b) => !isOpaque(b));
+      return editable.length === 0 ? void 0 : { doc, range, editable };
+    };
+    const setKind = (kind) => {
+      const cur = current();
+      if (cur === void 0) {
+        return;
+      }
+      const lines = kind.kind === "code" ? 0 : cur.editable.filter((b) => b.kind === "code").reduce((n, b) => n + b.text.split("\n").length - 1, 0);
+      const ids = lines > 0 ? Array.from({ length: lines }, () => newBlockId()) : void 0;
+      void ctx.editor.dispatch(
+        markdownOps.setKind(
+          cur.editable.map((b) => b.id),
+          kind,
+          { ids, selection: cur.range }
+        )
+      );
+    };
+    const kindProp = new EnumProperty(
+      "paragraph",
+      Object.fromEntries(KIND_CHOICES.map((c) => [c.key, c.key])),
+      void 0,
+      "Block"
+    ).addUINames(Object.fromEntries(KIND_CHOICES.map((c) => [c.key, c.label])));
+    const kinds = row.listenum(void 0, {
+      enumDef: kindProp,
+      callback: (id) => {
+        const choice = KIND_CHOICES.find((c) => c.key === id);
+        if (choice !== void 0) {
+          setKind(choice.kind);
+        }
+      }
+    });
+    kinds.setAttribute("data-testid", "richtext-kind");
+    kinds.setValue("paragraph");
+    addSeparator(row);
+    const syncMarks = addMarkButtons(row, ctx, this);
+    addSeparator(row);
+    const listButton = (glyph, label, testid, lit, kind) => {
+      const btn = addToolButton(row, glyph, label, () => {
+        const cur = current();
+        if (cur === void 0) {
+          return;
+        }
+        setKind(cur.editable.every(lit) ? { kind: "paragraph" } : kind);
+      });
+      btn.setAttribute("data-testid", testid);
+      return { btn, lit };
+    };
+    const lists = [
+      listButton(
+        "&bull;",
+        "Bulleted list",
+        "richtext-list-bullet",
+        (b) => b.kind === "listItem" && !b.ordered && !b.task,
+        { kind: "listItem", ordered: false, task: false }
+      ),
+      listButton(
+        "1.",
+        "Numbered list",
+        "richtext-list-numbered",
+        (b) => b.kind === "listItem" && b.ordered && !b.task,
+        { kind: "listItem", ordered: true, task: false }
+      ),
+      listButton(
+        "&#9745;",
+        "Task list",
+        "richtext-list-task",
+        (b) => b.kind === "listItem" && b.task === true,
+        { kind: "listItem", ordered: false, task: true }
+      )
+    ];
+    addSeparator(row);
+    const link2 = addToolButton(row, "Link", "Link the selection", () => {
+      const cur = current();
+      const range = cur?.range;
+      if (cur === void 0 || range === void 0 || range.anchor.block !== range.head.block) {
+        return;
+      }
+      if (range.anchor.offset === range.head.offset) {
+        return;
+      }
+      const block = cur.editable[0];
+      const from = Math.min(range.anchor.offset, range.head.offset);
+      const existing = block.marks.find(
+        (m) => m.name === "link" && m.from <= from && from < m.to
+      );
+      const rect = link2.getBoundingClientRect();
+      openLinkPopup(
+        row,
+        ctx.editor,
+        {
+          range,
+          kind: existing?.kind ?? "url",
+          target: existing?.target ?? "",
+          title: existing?.title
+        },
+        rect.left,
+        rect.bottom + 4
+      );
+    });
+    link2.setAttribute("data-testid", "richtext-link");
+    return (doc, selection) => {
+      lastDoc = doc;
+      lastSelection = selection;
+      syncMarks(doc, selection);
+      const head = selection === void 0 ? void 0 : this.block(doc, selection.head.block);
+      kinds.setValue(head === void 0 ? "paragraph" : kindKey(head));
+      for (const { btn, lit } of lists) {
+        btn.active = head !== void 0 && lit(head);
+      }
+      link2.active = head !== void 0 && selection !== void 0 && head.marks.some(
+        (m) => m.name === "link" && m.from < selection.head.offset && selection.head.offset <= m.to
+      );
+    };
   }
   /**
    * Tab and Shift+Tab on a list item change its depth; Enter in a fence adds a line, or leaves
@@ -88788,21 +89507,11 @@ var markdownOps = {
   },
   /** Moves the atom at `from` to `to`; `blocks` is the span between them in document order. */
   moveAtom(doc, from, to) {
-    const order = doc.blocks.map((b2) => b2.id);
-    const a2 = order.indexOf(from.block);
-    const b = order.indexOf(to.block);
-    const blocks = order.slice(Math.min(a2, b), Math.max(a2, b) + 1);
-    const shifts = from.block === to.block ? [] : [
-      { block: from.block, at: from.offset, delta: -1 },
-      { block: to.block, at: to.offset, delta: 1 }
-    ];
-    return {
-      type: "custom",
-      name: "moveAtom",
-      blocks,
-      data: { from: { ...from }, to: { ...to } },
-      shifts
-    };
+    return moveAtomOp(
+      doc.blocks.map((b) => b.id),
+      from,
+      to
+    );
   },
   /** A hard line break replacing `range`, which lies within one block. */
   insertBreak(range) {

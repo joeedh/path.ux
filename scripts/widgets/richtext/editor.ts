@@ -11,6 +11,7 @@ import { DocEditOp } from "./ops";
 import { blockElement, blockTextOf, fromDocPos, mapThroughPending, toDocPos } from "./positions";
 import type { DomPos, PendingDocView } from "./positions";
 import { composedEdit, rootReflects } from "./composition";
+import { openLinkPopup } from "./link_popup";
 import { ATOM_CHAR, newBlockId } from "./provider";
 import type {
   BlockId,
@@ -27,6 +28,9 @@ import type {
 
 // The color keys set as `--richtext-<key>` variables as they are, and the font keys as CSS
 const THEME_COLORS = [
+  "toolbar-background",
+  "toolbar-border",
+  "toolbar-active-background",
   "readonly-background",
   "selection-background",
   "link-color",
@@ -188,6 +192,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
       :host {
         display        : flex;
         flex-direction : column;
+        position       : relative;
       }
 
       .rich-text-root {
@@ -203,6 +208,14 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
 
       .rich-text-root[readonly] {
         background : var(--richtext-readonly-background);
+      }
+
+      [data-richtext-toolbar] {
+        flex-wrap     : wrap;
+        gap           : var(--richtext-toolbar-gap);
+        padding       : var(--richtext-toolbar-padding);
+        background    : var(--richtext-toolbar-background);
+        border-bottom : 1px solid var(--richtext-toolbar-border);
       }
 
       .rich-text-root ::selection {
@@ -455,6 +468,8 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
       set(key, (this.getDefault(key) as CSSFont).genCSS());
     }
     set("code-border-radius", `${this.getDefault("code-border-radius") as number}px`);
+    set("toolbar-padding", `${this.getDefault("toolbar-padding") as number}px`);
+    set("toolbar-gap", `${this.getDefault("toolbar-gap") as number}px`);
     set("link-underline", this.getDefault("link-underline") ? "underline" : "none");
 
     // The toolbar's sprite icons are white, so a brightness filter multiplies them to the text
@@ -517,8 +532,21 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     return proceed;
   }
 
-  /** The edit-mode default for a link click. Empty until the link popup lands. */
-  protected linkDefault(_link: LinkInfo, _event: MouseEvent): void {}
+  /** The edit-mode default for a link click: the link popup under the clicked element. */
+  protected linkDefault(link: LinkInfo, event: MouseEvent): void {
+    const target = event.currentTarget;
+    const rect = target instanceof Element ? target.getBoundingClientRect() : undefined;
+    const x = rect?.left ?? event.clientX;
+    const y = rect?.bottom ?? event.clientY;
+
+    openLinkPopup(
+      this,
+      this.bridge,
+      { range: link.range, kind: link.kind, target: link.target },
+      x,
+      y + 4
+    );
+  }
 
   /**
    * The document position under a viewport point. The lookup pierces the shadow root, which
@@ -1311,6 +1339,8 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     }
 
     const row = UIBase.createElement<RowFrame<ProviderContext>>("rowframe-x");
+    // an attribute rather than a class: a container writes its own class on init
+    row.setAttribute("data-richtext-toolbar", "");
     // the row's ctx is the document's, so its parent is typed by that context rather than CTX
     row.parentWidget = this as unknown as UIBase<ProviderContext>;
 
@@ -1344,21 +1374,26 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
       style         : "richtext",
       modalKeyEvents: true,
       theme: {
-        DefaultText           : t.font,
-        "background-color"    : t.color,
-        "readonly-background" : t.color,
-        "selection-background": t.color,
-        "link-color"          : t.color,
-        "link-underline"      : t.bool,
-        "code-font"           : t.font,
-        "code-background"     : t.color,
-        "code-border-radius"  : t.number,
-        "quote-border-color"  : t.color,
-        "quote-text-color"    : t.color,
-        "marker-color"        : t.color,
-        "heading-font"        : t.font,
-        "hr-color"            : t.color,
-        "opaque-background"   : t.color,
+        DefaultText                : t.font,
+        "background-color"         : t.color,
+        "toolbar-background"       : t.color,
+        "toolbar-border"           : t.color,
+        "toolbar-padding"          : t.number,
+        "toolbar-gap"              : t.number,
+        "toolbar-active-background": t.color,
+        "readonly-background"      : t.color,
+        "selection-background"     : t.color,
+        "link-color"               : t.color,
+        "link-underline"           : t.bool,
+        "code-font"                : t.font,
+        "code-background"          : t.color,
+        "code-border-radius"       : t.number,
+        "quote-border-color"       : t.color,
+        "quote-text-color"         : t.color,
+        "marker-color"             : t.color,
+        "heading-font"             : t.font,
+        "hr-color"                 : t.color,
+        "opaque-background"        : t.color,
       },
     };
   }

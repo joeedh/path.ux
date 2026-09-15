@@ -195,8 +195,10 @@ two. It is how a provider reaches the editor without holding a pointer to it.
 - A `linkclick` event, `detail: LinkInfo` (`{ kind, target, text, range }`), cancelable and
   non-bubbling, fires when a provider's link is clicked. The editor attaches no meaning to a
   link and never navigates; the consumer listens on the element and resolves the target.
-  Its one default, in edit mode only, is the link popup, which `preventDefault` suppresses
-  (the popup itself lands with the markdown provider); read-only has no default.
+  Its one default, in edit mode only, is the link popup (`link-popup-x`, opened by
+  `openLinkPopup` from `richtext/link_popup.ts`), which `preventDefault` suppresses; read-only
+  has no default. The popup edits the target and applies it as the provider's `setLink` op
+  through `setLinkOp`; Apply or Enter commits, Remove clears the link, Escape closes.
 - Copy and cut write the selection through `toClipboard`; paste and drop read through
   `fromClipboard`.
 - A `refused` event, `detail: { inputType }`, fires for every input the editor declined: an
@@ -259,6 +261,16 @@ through `scripts/widgets/richtext/markdown.ts`, never the barrel, because it bun
 chain. The provider's rules, its custom ops (`markdownOps`) and its rendering are described in
 [plans/rich-text-markdown.md](plans/rich-text-markdown.md) until that plan's docs stage writes
 them up here; the Markdown tab of the example app shows it running.
+
+Its toolbar holds a block-kind dropdown (Paragraph, Heading 1–6, Quote, Code), the mark
+buttons, bulleted, numbered and task list toggles, and a Link button that opens the link
+popup over the selection. An image renders as `md-image-x`: hovering shows an outline and a
+corner handle, dragging the handle resizes (a modal `ImageResizeOp`, committed as `setImage`
+on release, Escape restores), and dragging the image moves it (a modal `ImageMoveOp` with a
+ghost and a drop caret, committed as `moveAtom`; a target that refuses atoms draws the caret
+grey and the release does nothing). Under `readonly` the widgets, the task boxes and the
+handle are inert. The theme keys are `toolbar-*` on the `richtext` class and the `mdimage`
+and `linkpopup` classes.
 
 ## Composition (IME and dead keys)
 

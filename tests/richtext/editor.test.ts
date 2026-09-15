@@ -433,7 +433,10 @@ describe("linkclick", () => {
 
   test("reaches a listener on the host and preventDefault suppresses the edit-mode default", () => {
     const editor = openEditor(openSession());
-    const fallback = vi.spyOn(editor as unknown as { linkDefault(): void }, "linkDefault");
+    // the default opens a popup on the screen, which the stub context has none of
+    const fallback = vi
+      .spyOn(editor as unknown as { linkDefault(): void }, "linkDefault")
+      .mockImplementation(() => {});
     const heard: LinkInfo[] = [];
     let prevent = false;
     editor.addEventListener("linkclick", (e) => {
@@ -468,6 +471,9 @@ describe("linkclick", () => {
 
   test("does not bubble past the host", () => {
     const editor = openEditor(openSession());
+    vi.spyOn(editor as unknown as { linkDefault(): void }, "linkDefault").mockImplementation(
+      () => {}
+    );
     const heard = vi.fn();
     document.body.addEventListener("linkclick", heard);
 

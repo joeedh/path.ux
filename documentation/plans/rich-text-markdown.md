@@ -1063,7 +1063,48 @@ contains no micromark. Deviations, each with its reason:
   `markdown-image-move`, since a modal op's pointer capture is the part most likely to differ
   between shells.
 
-Status: not started.
+Status: done. `buildToolbar` in `providers/markdown_provider.ts`; `providers/markdown_image.ts`
+(`md-image-x`, `ImageResizeOp`, `ImageMoveOp`); `richtext/link_popup.ts` (`link-popup-x`,
+`openLinkPopup`, `setLinkOp`); `ToolButton` in `providers/toolbar.ts`; theme keys on
+`richtext` (`toolbar-*`) and the new `mdimage` and `linkpopup` classes, `gen:themes --strict`
+clean for both the barrel and `richtext/markdown.ts` as entry; 71 tests in
+`tests/richtext/markdownProvider.test.ts`; eight Playwright tests in Chromium and Firefox
+with the six screenshots, plus `markdown-toolbar-electron.png` and
+`markdown-image-move-electron.png` from the Electron pass (ghost and drop caret in the quote,
+the drop lands, Ctrl+Z restores). The runtime barrel is unchanged. Deviations, each with its
+reason:
+
+- The mark buttons draw a glyph (`<b>B</b>`, `<i>I</i>`, …) on a `ToolButton` rather than a
+  sprite icon, through a new optional `MarkInfo.glyph`; the icon sheet belongs to the
+  consumer, so the library has no glyph of its own to put on a sheet. A mark without a glyph
+  still gets the `IconCheck` path. `ToolButton` (`richtext-toolbutton-x`) is a `Button` with
+  an `active` state and a pointerdown that keeps the editor's focus.
+- The toolbar row is marked with a `data-richtext-toolbar` attribute, not a class, because a
+  container overwrites `class` on init.
+- The link popup lives in `richtext/link_popup.ts`, imported by the editor and the provider
+  rather than reached through the barrel, and encodes its result as the provider's `setLink`
+  op through `setLinkOp`. It offers Apply and Remove as well as Enter and Escape; the keys
+  are cancelled on the textbox, since the textbox blurs itself on them and the keystroke
+  would otherwise reach the editor root and split the paragraph. The editor's `linkDefault`
+  opens the popup for a plain click on a url link.
+- `md-image-x` sits inside the `span.md-image[data-doc-atom][contenteditable=false]` wrapper
+  instead of carrying those attributes itself, so the caret-slot and atom handling of stage 3
+  stays as it was. The handle lives in the widget's shadow, so `readonly` is mirrored onto
+  the widget as an attribute and the CSS hides the handle from it. The widget sets its
+  `data-testid` in `init()`: Electron refuses an attribute set from a custom element
+  constructor.
+- Drop validity is read off the block's DOM (`contenteditable=false` or a `<pre>` refuses),
+  since the provider's model is not the bridge's to see; a refused target draws a grey caret
+  and the release does nothing. The ghost and caret are positioned absolutely against the
+  editor host, which is now `position: relative`, because a fixed overlay is wrong inside a
+  transformed ancestor.
+- The `richtext-*` and `md-image*` test ids are set in library code, because the internal tag
+  prefix differs per host page and the Playwright and Electron passes need one locator.
+- The hover, resize and move screenshots are clipped page shots rather than element shots,
+  since an element screenshot drops the `:hover` and capture state. Stage 3's screenshots
+  changed because the row now sits above the document.
+- The Electron pass widens the properties area first: the example's default layout leaves
+  it 62px wide in the Electron window, so the drop target sat off the visible editor.
 
 ### Stage 5 — binding, example, docs
 
