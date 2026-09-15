@@ -5,6 +5,7 @@ import { ATOM_CHAR, CARET_SLOT } from "../../scripts/widgets/richtext/provider";
 import type {
   DocRange,
   EditOp,
+  EditResult,
   EditorBridge,
   LinkInfo,
   ProviderContext,
@@ -18,7 +19,12 @@ import {
   mdBlock,
   setLinkOp,
 } from "../../scripts/widgets/richtext/markdown";
-import type { MdBlock, MdDoc, MdImageWidget } from "../../scripts/widgets/richtext/markdown";
+import type {
+  MdBlock,
+  MdDoc,
+  MdImageWidget,
+  WikilinkStart,
+} from "../../scripts/widgets/richtext/markdown";
 import { RichTextArea } from "../../scripts/widgets/richtext/textarea";
 import type { ToolButton } from "../../scripts/widgets/richtext/providers/toolbar";
 /* the element registrations the toolbar row and its buttons need */
@@ -716,6 +722,120 @@ describe("custom ops", () => {
   });
 });
 
+describe("typing shortcuts", () => {
+  /** Types `text` one character at a time at the caret, the way the editor delivers it. */
+  function typeAt(doc: MdDoc, block: string, offset: number, text: string) {
+    let result: EditResult | undefined;
+    for (const ch of text) {
+      result = provider.applyEdit(doc, { type: "insertText", at: caret(block, offset), text: ch });
+      offset = result.selection.head.offset;
+    }
+    return result!;
+  }
+
+  test("a marker typed at the start of a paragraph sets its kind and keeps the rest", () => {
+    const doc = parse("Hello *there*\n");
+    expect(typeAt(doc, "b0", 0, "#").selection).toEqual(caret("b0", 1));
+    expect(kinds(doc)).toEqual(["paragraph"]);
+
+    const result = typeAt(doc, "b0", 1, " ");
+    expect(doc.blocks[0]).toMatchObject({ kind: "heading", level: 1, text: "Hello there" });
+    expect(marks(doc.blocks[0])).toEqual([["italic", 6, 11]]);
+    expect(result).toEqual({ dirtyBlocks: ["b0"], removedBlocks: [], selection: caret("b0", 0) });
+  });
+
+  test("each marker has its kind, and a fence takes the third backtick", () => {
+    const cases: [string, Partial<MdBlock>][] = [
+      ["### ", { kind: "heading", level: 3 }],
+      ["- ", { kind: "listItem", ordered: false, depth: 0 }],
+      ["* ", { kind: "listItem", ordered: false, depth: 0 }],
+      ["12. ", { kind: "listItem", ordered: true, depth: 0 }],
+      ["> ", { kind: "quote", depth: 0 }],
+      ["```", { kind: "code", lang: "" }],
+    ];
+    for (const [typed, expected] of cases) {
+      const doc = parse("body\n");
+      typeAt(doc, "b0", 0, typed);
+      expect(doc.blocks[0], typed).toMatchObject({ ...expected, text: "body" });
+    }
+  });
+
+  test("a marker elsewhere, in another kind, or with shortcuts off stays text", () => {
+    const doc = parse("a\n\n# h\n\n- i\n");
+    typeAt(doc, "b0", 1, " # ");
+    expect(doc.blocks[0]).toMatchObject({ kind: "paragraph", text: "a # " });
+    typeAt(doc, "b1", 0, "- ");
+    expect(doc.blocks[1]).toMatchObject({ kind: "heading", text: "- h" });
+    typeAt(doc, "b2", 0, "> ");
+    expect(doc.blocks[2]).toMatchObject({ kind: "listItem", text: "> i" });
+
+    const quiet = new MarkdownProvider({ shortcuts: false });
+    const other = parse("b\n");
+    quiet.applyEdit(other, { type: "insertText", at: caret("b0", 0), text: "#" });
+    quiet.applyEdit(other, { type: "insertText", at: caret("b0", 1), text: " " });
+    expect(other.blocks[0]).toMatchObject({ kind: "paragraph", text: "# b" });
+
+    // a pasted marker is not typed
+    const pasted = parse("c\n");
+    provider.applyEdit(pasted, { type: "insertText", at: caret("b0", 0), text: "# " });
+    expect(pasted.blocks[0]).toMatchObject({ kind: "paragraph", text: "# c" });
+  });
+
+  test("the shortcut's inverse restores the paragraph", () => {
+    const doc = parse("x\n");
+    provider.applyEdit(doc, { type: "insertText", at: caret("b0", 0), text: "-" });
+    applyAndUndo(doc, { type: "insertText", at: caret("b0", 1), text: " " });
+    expect(doc.blocks[0]).toMatchObject({ kind: "listItem", text: "x" });
+  });
+});
+
+describe("wikilinks", () => {
+  test("the second [ of a [[ reaches onWikilinkStart before it lands, and the key falls through", () => {
+    const starts: WikilinkStart[] = [];
+    const hooked = new MarkdownProvider({ onWikilinkStart: (start) => starts.push(start) });
+    const doc = parse("see [ here\n\n```\n[\n```\n");
+    const key = (init: KeyboardEventInit) => new KeyboardEvent("keydown", { key: "[", ...init });
+
+    expect(hooked.handleKey(doc, caret("b0", 5), key({}))).toBeUndefined();
+    expect(starts).toMatchObject([{ block: "b0", offset: 6 }]);
+
+    hooked.handleKey(doc, caret("b0", 4), key({}));
+    hooked.handleKey(doc, caret("b0", 5), key({ ctrlKey: true }));
+    hooked.handleKey(doc, range("b0", 4, "b0", 5), key({}));
+    hooked.handleKey(doc, caret("b1", 1), key({}));
+    expect(starts).toHaveLength(1);
+
+    expect(provider.handleKey(doc, caret("b0", 5), key({}))).toBeUndefined();
+  });
+
+  test("insertWikilink replaces the typed [[ with a wiki link and serializes as one", () => {
+    const doc = parse("see [[Pa here\n");
+    const op = markdownOps.insertWikilink("b0", 4, 8, "Page", "the page");
+    expect(op).toMatchObject({
+      name  : "insertWikilink",
+      blocks: ["b0"],
+      shifts: [{ block: "b0", at: 4, delta: 4 }],
+    });
+    const result = applyAndUndo(doc, op);
+    expect(doc.blocks[0].text).toBe("see the page here");
+    expect(doc.blocks[0].marks).toEqual([
+      { from: 4, to: 12, name: "link", kind: "wiki", target: "Page" },
+    ]);
+    expect(result.selection).toEqual(caret("b0", 12));
+    expect(markdownText(doc)).toBe("see [[Page|the page]] here\n");
+
+    provider.applyEdit(doc, markdownOps.insertWikilink("b0", 0, 0, "Top"));
+    expect(doc.blocks[0].text).toBe("Topsee the page here");
+    expect(marks(doc.blocks[0])).toEqual([
+      ["link", 0, 3],
+      ["link", 7, 15],
+    ]);
+    expect(provider.applyEdit(doc, markdownOps.insertWikilink("b0", 0, 0, "")).dirtyBlocks).toEqual(
+      []
+    );
+  });
+});
+
 describe("clipboard", () => {
   test("whole blocks copy as their markdown source, partial ones as inline content", () => {
     const doc = parse();
@@ -729,7 +849,7 @@ describe("clipboard", () => {
     ]);
     expect(content.text).toBe(content.blocks.join("\n"));
     expect(content.html).toBe(
-      '<p>ing</p><p>A <em>paragraph</em> with <strong>bold</strong> and a <a href="http://x.test">link</a>.</p><li>one</li><li>two</li><li>nested</li>'
+      '<div data-richtext-markdown><p>ing</p><p>A <em>paragraph</em> with <strong>bold</strong> and a <a href="http://x.test">link</a>.</p><li>one</li><li>two</li><li>nested</li></div>'
     );
   });
 
@@ -757,7 +877,7 @@ describe("clipboard", () => {
       text  : "# Title\n\n- a\n  - b\n",
     });
     expect(
-      provider.fromClipboard({ types: ["text/html"] } as unknown as DataTransfer)
+      provider.fromClipboard({ types: [], getData: () => "" } as unknown as DataTransfer)
     ).toBeUndefined();
     expect(
       provider.fromClipboard({
@@ -767,6 +887,36 @@ describe("clipboard", () => {
     ).toEqual({
       blocks: [""],
       text  : "",
+    });
+  });
+
+  test("text/html from elsewhere pastes as the blocks its elements make; the provider's own copy pastes its markdown", () => {
+    const transfer = (parts: Record<string, string>) =>
+      ({
+        types: Object.keys(parts),
+        getData: (t: string) => parts[t] ?? "",
+      }) as unknown as DataTransfer;
+
+    const web = transfer({
+      "text/html":
+        '<html><head><style>p { color: red }</style></head><body><!--StartFragment--><h1>Title</h1>\n\n<p>Some <b>bold</b> and <a href="http://x.test">a link</a></p>\n<ul><li>one</li><li>two</li></ul><!--EndFragment--></body></html>',
+      "text/plain": "Title\nSome bold and a link\none\ntwo",
+    });
+    expect(provider.fromClipboard(web)).toEqual({
+      blocks: ["# Title", "Some **bold** and [a link](http://x.test)", "- one", "- two"],
+      text  : "Title\nSome bold and a link\none\ntwo",
+    });
+
+    const own = provider.toClipboard(parse(), range("b1", 0, "b2", 5));
+    expect(
+      provider.fromClipboard(
+        transfer({ "text/html": own.html ?? "", "text/plain": own.text ?? "" })
+      )
+    ).toEqual({ blocks: ["# Heading", "A *par*"], text: "# Heading\nA *par*" });
+
+    expect(provider.fromClipboard(transfer({ "text/html": "<p>only html</p>" }))).toEqual({
+      blocks: ["only html"],
+      text  : "only html",
     });
   });
 

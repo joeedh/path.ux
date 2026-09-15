@@ -88258,6 +88258,17 @@ function markdownStyles() {
 // scripts/widgets/richtext/providers/markdown_provider.ts
 init_icon_enum();
 init_toolprop();
+var SHORTCUTS = [
+  {
+    marker: /^(#{1,6}) $/,
+    kind: (m) => ({ kind: "heading", level: m[1].length })
+  },
+  { marker: /^[-*+] $/, kind: () => ({ kind: "listItem", ordered: false, depth: 0 }) },
+  { marker: /^\d+\. $/, kind: () => ({ kind: "listItem", ordered: true, depth: 0 }) },
+  { marker: /^> $/, kind: () => ({ kind: "quote", depth: 0 }) },
+  { marker: /^```$/, kind: () => ({ kind: "code", lang: "" }) }
+];
+var OWN_HTML_MARK = "data-richtext-markdown";
 var MD_MARKS = [
   { name: "bold", label: "Bold (Ctrl+B)", icon: Icons.BOLD, glyph: "<b>B</b>" },
   { name: "italic", label: "Italic (Ctrl+I)", icon: Icons.ITALIC, glyph: "<i>I</i>" },
@@ -88403,6 +88414,9 @@ function kindOf(b) {
     default:
       return { kind: b.kind, source: b.source };
   }
+}
+function clipboardHtml(html3) {
+  return html3.replace(/<head[\s\S]*?<\/head>/i, "").replace(/<!--[\s\S]*?-->/g, "").replace(/>\s*\n(?:\s*\n)+\s*</g, ">\n<").trim();
 }
 function entryOf(block) {
   const source = markdownText({ blocks: [block] }).replace(/\n+$/, "");
@@ -88604,6 +88618,10 @@ var MarkdownProvider = class {
     const b = doc.blocks[r.startIndex];
     const single = r.startIndex === r.endIndex;
     const isCollapsed3 = single && r.start.offset === r.end.offset;
+    if (e.key === "[" && isCollapsed3 && !isOpaque(b) && b.kind !== "code" && b.text[r.start.offset - 1] === "[" && this.options.onWikilinkStart !== void 0) {
+      this.options.onWikilinkStart({ block: b.id, offset: r.start.offset + 1, event: e });
+      return void 0;
+    }
     if (e.key === "Tab") {
       if (b.kind !== "listItem") {
         return void 0;
@@ -88743,14 +88761,21 @@ var MarkdownProvider = class {
       }
       html3 += htmlForBlock(sliced);
     }
-    return { blocks, html: html3, text: blocks.join("\n") };
+    return { blocks, html: `<div ${OWN_HTML_MARK}>${html3}</div>`, text: blocks.join("\n") };
   }
   /** The plain text parsed as markdown, one entry per block it holds; `text` keeps it verbatim for a fence. */
   fromClipboard(data) {
-    if (!data.types.includes("text/plain")) {
+    const text6 = data.types.includes("text/plain") ? data.getData("text/plain").replace(/\r\n?/g, "\n") : void 0;
+    const html3 = data.types.includes("text/html") ? data.getData("text/html") : "";
+    if (html3 !== "" && !html3.includes(OWN_HTML_MARK)) {
+      const blocks2 = markdownDocFromText(clipboardHtml(html3)).blocks.map(entryOf);
+      if (blocks2.length > 0) {
+        return { blocks: blocks2, text: text6 ?? blocks2.join("\n") };
+      }
+    }
+    if (text6 === void 0) {
       return void 0;
     }
-    const text6 = data.getData("text/plain").replace(/\r\n?/g, "\n");
     const blocks = markdownDocFromText(text6).blocks.map(entryOf);
     return { blocks: blocks.length > 0 ? blocks : [""], text: text6 };
   }
@@ -88946,11 +88971,35 @@ var MarkdownProvider = class {
       }
       b.marks = fixMarks(b);
     }
+    const caret = pos + inserted.length;
+    const shortcut = inserted.length === 1 ? this.shortcutAt(b, caret) : void 0;
+    if (shortcut !== void 0) {
+      doc.blocks[this.index(doc, b.id)] = this.slice(b, caret, b.text.length, shortcut);
+      return {
+        dirtyBlocks: unique2([b.id, ...cut.dirty]),
+        removedBlocks: cut.removed,
+        selection: collapsed3(b.id, 0)
+      };
+    }
     return {
       dirtyBlocks: unique2([b.id, ...cut.dirty]),
       removedBlocks: cut.removed,
-      selection: collapsed3(b.id, pos + inserted.length)
+      selection: collapsed3(b.id, caret)
     };
+  }
+  /** The kind a typing shortcut turns `b` into when the text before `caret` is exactly a marker. */
+  shortcutAt(b, caret) {
+    if (this.options.shortcuts === false || b.kind !== "paragraph" || b.text.length === 0) {
+      return void 0;
+    }
+    const head = b.text.slice(0, caret);
+    for (const { marker, kind } of SHORTCUTS) {
+      const match = marker.exec(head);
+      if (match !== null) {
+        return kind(match);
+      }
+    }
+    return void 0;
   }
   splitBlock(doc, at, newBlock) {
     if (doc.blocks.some((b2) => b2.id === newBlock)) {
@@ -89285,6 +89334,8 @@ ${b.text}`;
       }
       case "setLink":
         return this.setLink(doc, first2, data);
+      case "insertWikilink":
+        return this.insertWikilink(doc, first2, data);
       case "setImage":
         return this.setImage(doc, first2, data);
       case "moveAtom":
@@ -89402,6 +89453,27 @@ ${b.text}`;
     };
   }
   /** Sets the link over `[from, to)` of the block, or removes links there when `target` is empty. */
+  insertWikilink(doc, b, data) {
+    const from = typeof data.from === "number" ? data.from : 0;
+    const to = typeof data.to === "number" ? data.to : from;
+    const target = typeof data.target === "string" ? data.target : "";
+    const text6 = typeof data.text === "string" && data.text !== "" ? data.text : target;
+    if (isOpaque(b) || b.kind === "code" || from > to || to > b.text.length || target === "") {
+      return { dirtyBlocks: [], removedBlocks: [], selection: collapsed3(b.id, to) };
+    }
+    const result = this.insertText(
+      doc,
+      { anchor: { block: b.id, offset: from }, head: { block: b.id, offset: to } },
+      text6,
+      false
+    );
+    const mark2 = { from, to: from + text6.length, name: "link", kind: "wiki", target };
+    b.marks = normalizeMdMarks([
+      ...cutMark(b.marks, "link", mark2.from, mark2.to, normalizeMdMarks),
+      mark2
+    ]);
+    return result;
+  }
   setLink(doc, b, data) {
     const from = typeof data.from === "number" ? data.from : 0;
     const to = typeof data.to === "number" ? data.to : from;
@@ -89554,6 +89626,21 @@ var markdownOps = {
       data.title = link2.title;
     }
     return { type: "custom", name: "setLink", blocks: [block], data };
+  },
+  /** Replaces `[from, to)` of `block` (the typed `[[` and whatever followed) with a wikilink to `target`, shown as `text` or the target. */
+  insertWikilink(block, from, to, target, text6) {
+    const shown = text6 === void 0 || text6 === "" ? target : text6;
+    const data = { from, to, target };
+    if (text6 !== void 0) {
+      data.text = text6;
+    }
+    return {
+      type: "custom",
+      name: "insertWikilink",
+      blocks: [block],
+      data,
+      shifts: [{ block, at: from, delta: shown.length - (to - from) }]
+    };
   },
   /** Patches the image at `offset`; `width: null` removes the width. */
   setImage(block, offset, patch) {
@@ -89771,7 +89858,41 @@ var PropsEditor = class extends Editor2 {
    * `window.__loadMarkdown`, which opens a fresh session.
    */
   buildMarkdown(tab2) {
-    const provider = new MarkdownProvider();
+    const completeWikilink = (start2) => {
+      const session = editor.session;
+      const anchor = editor.bridge.blockElement(start2.block);
+      if (session === void 0 || anchor === void 0) {
+        return;
+      }
+      const rect = anchor.getBoundingClientRect();
+      const popup = this.ctx.screen.popup(
+        editor,
+        rect.left,
+        rect.bottom + 2,
+        "click",
+        void 0,
+        window
+      );
+      const list8 = popup.listbox();
+      list8.setAttribute("data-testid", "markdown-wikilink-list");
+      list8.style.width = "200px";
+      list8.style.height = "120px";
+      for (const h of session.provider.headings?.(session.doc) ?? []) {
+        list8.addItem(session.provider.blockText(session.doc, h.block), h.block);
+      }
+      list8.addEventListener("change", (e) => {
+        const block = e.selection.id;
+        if (block === void 0) {
+          return;
+        }
+        const rest = session.provider.blockText(session.doc, start2.block).slice(start2.offset);
+        const to = start2.offset + (/^[^\s\]]*/.exec(rest)?.[0].length ?? 0);
+        const target = session.provider.blockText(session.doc, block);
+        void editor.dispatch(markdownOps.insertWikilink(start2.block, start2.offset - 2, to, target));
+        popup.remove();
+      });
+    };
+    const provider = new MarkdownProvider({ onWikilinkStart: completeWikilink });
     const editor = UIBase.constructElement(
       RichTextEditor.define().tagname,
       this.ctx

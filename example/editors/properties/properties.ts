@@ -38,8 +38,9 @@ import type {
 import {
   MarkdownProvider,
   markdownDocFromText,
+  markdownOps,
 } from "../../../scripts/widgets/richtext/markdown.js";
-import type { MdDoc } from "../../../scripts/widgets/richtext/markdown.js";
+import type { MdDoc, WikilinkStart } from "../../../scripts/widgets/richtext/markdown.js";
 import { Editor } from "../editor_base.js";
 import { PropsPage } from "../../page.js";
 import { theme, themeVars } from "../../theme.js";
@@ -193,7 +194,45 @@ export class PropsEditor extends Editor {
    * `window.__loadMarkdown`, which opens a fresh session.
    */
   buildMarkdown(tab: Container) {
-    const provider = new MarkdownProvider();
+    // typing [[ offers the document's headings as wikilink targets
+    const completeWikilink = (start: WikilinkStart) => {
+      const session = editor.session;
+      const anchor = editor.bridge.blockElement(start.block);
+      if (session === undefined || anchor === undefined) {
+        return;
+      }
+      const rect = anchor.getBoundingClientRect();
+      const popup = this.ctx.screen.popup(
+        editor,
+        rect.left,
+        rect.bottom + 2,
+        "click",
+        undefined,
+        window
+      );
+      const list = popup.listbox<string>();
+      list.setAttribute("data-testid", "markdown-wikilink-list");
+      list.style.width = "200px";
+      list.style.height = "120px";
+      for (const h of session.provider.headings?.(session.doc) ?? []) {
+        list.addItem(session.provider.blockText(session.doc, h.block), h.block);
+      }
+      list.addEventListener("change", (e) => {
+        const block = (e as ListBoxChangeEvent<typeof this.ctx, string>).selection.id;
+        if (block === undefined) {
+          return;
+        }
+        // the word typed after the [[ was the query, so it goes with it; the click has taken
+        // the focus, so the caret is not there to ask
+        const rest = session.provider.blockText(session.doc, start.block).slice(start.offset);
+        const to = start.offset + (/^[^\s\]]*/.exec(rest)?.[0].length ?? 0);
+        const target = session.provider.blockText(session.doc, block);
+        void editor.dispatch(markdownOps.insertWikilink(start.block, start.offset - 2, to, target));
+        popup.remove();
+      });
+    };
+
+    const provider = new MarkdownProvider({ onWikilinkStart: completeWikilink });
     const editor = UIBase.constructElement<RichTextEditor<typeof this.ctx, MdDoc>>(
       RichTextEditor.define().tagname,
       this.ctx

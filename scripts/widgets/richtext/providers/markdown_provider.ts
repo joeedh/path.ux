@@ -35,7 +35,37 @@ import { addMarkButtons, addSeparator, addToolButton } from "./toolbar";
 // markdown toolbar needs, and the clipboard as markdown source. Reached through
 // `richtext/markdown.ts`, never the barrel.
 
-export type MarkdownProviderOptions = MarkdownRenderOptions;
+/** What the app is told as a `[[` is typed, before the second `[` lands: `offset` is where the caret will then be. */
+export interface WikilinkStart {
+  block: BlockId;
+  offset: number;
+  event: KeyboardEvent;
+}
+
+export interface MarkdownProviderOptions extends MarkdownRenderOptions {
+  /** Whether a marker typed at the start of a paragraph (`# `, `- `, `1. `, `> `, three backticks) changes its kind; on by default. */
+  shortcuts?: boolean;
+  /**
+   * Called from `handleKey` as the second `[` of a `[[` is typed, so the app can open its own
+   * wikilink completion; the key still inserts. A pick lands through `markdownOps.insertWikilink`.
+   */
+  onWikilinkStart?: (start: WikilinkStart) => void;
+}
+
+/** A marker typed at the start of a paragraph and the kind it turns the paragraph into. */
+const SHORTCUTS: { marker: RegExp; kind: (match: RegExpMatchArray) => MdKind }[] = [
+  {
+    marker: /^(#{1,6}) $/,
+    kind  : (m) => ({ kind: "heading", level: m[1].length as 1 | 2 | 3 | 4 | 5 | 6 }),
+  },
+  { marker: /^[-*+] $/, kind: () => ({ kind: "listItem", ordered: false, depth: 0 }) },
+  { marker: /^\d+\. $/, kind: () => ({ kind: "listItem", ordered: true, depth: 0 }) },
+  { marker: /^> $/, kind: () => ({ kind: "quote", depth: 0 }) },
+  { marker: /^```$/, kind: () => ({ kind: "code", lang: "" }) },
+];
+
+/** Marks the HTML the provider writes to the clipboard, so a paste of its own copy reads the markdown entries instead. */
+const OWN_HTML_MARK = "data-richtext-markdown";
 
 /** The kind a `setKind` op sets; depth is kept or starts at 0, and the ids for a split fence come in `ids`. */
 export type MdKindTarget =
@@ -252,6 +282,18 @@ function kindOf(b: MdBlock): MdKind {
 }
 
 /** One clipboard entry: the block's markdown source, an item indented two spaces per depth. */
+/**
+ * Clipboard HTML made parseable as markdown: the head and comments go, and a blank line between
+ * tags is closed up, since it would end the HTML block and split the element across two.
+ */
+function clipboardHtml(html: string): string {
+  return html
+    .replace(/<head[\s\S]*?<\/head>/i, "")
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/>\s*\n(?:\s*\n)+\s*</g, ">\n<")
+    .trim();
+}
+
 function entryOf(block: MdBlock): string {
   const source = markdownText({ blocks: [block] }).replace(/\n+$/, "");
   return block.kind === "listItem" ? "  ".repeat(block.depth) + source : source;
@@ -498,6 +540,19 @@ export class MarkdownProvider implements DocumentProvider<MdDoc> {
     const single = r.startIndex === r.endIndex;
     const isCollapsed = single && r.start.offset === r.end.offset;
 
+    // the key falls through and inserts; the app hears about the [[ first
+    if (
+      e.key === "[" &&
+      isCollapsed &&
+      !isOpaque(b) &&
+      b.kind !== "code" &&
+      b.text[r.start.offset - 1] === "[" &&
+      this.options.onWikilinkStart !== undefined
+    ) {
+      this.options.onWikilinkStart({ block: b.id, offset: r.start.offset + 1, event: e });
+      return undefined;
+    }
+
     if (e.key === "Tab") {
       if (b.kind !== "listItem") {
         return undefined;
@@ -658,16 +713,28 @@ export class MarkdownProvider implements DocumentProvider<MdDoc> {
       html += htmlForBlock(sliced);
     }
 
-    return { blocks, html, text: blocks.join("\n") };
+    return { blocks, html: `<div ${OWN_HTML_MARK}>${html}</div>`, text: blocks.join("\n") };
   }
 
   /** The plain text parsed as markdown, one entry per block it holds; `text` keeps it verbatim for a fence. */
   fromClipboard(data: DataTransfer): ClipboardContent | undefined {
-    if (!data.types.includes("text/plain")) {
-      return undefined;
+    const text = data.types.includes("text/plain")
+      ? data.getData("text/plain").replace(/\r\n?/g, "\n")
+      : undefined;
+
+    // HTML from elsewhere becomes blocks through the parser's HTML rules; the provider's own
+    // copy carries the exact markdown as text, which is better than its rendering
+    const html = data.types.includes("text/html") ? data.getData("text/html") : "";
+    if (html !== "" && !html.includes(OWN_HTML_MARK)) {
+      const blocks = markdownDocFromText(clipboardHtml(html)).blocks.map(entryOf);
+      if (blocks.length > 0) {
+        return { blocks, text: text ?? blocks.join("\n") };
+      }
     }
 
-    const text = data.getData("text/plain").replace(/\r\n?/g, "\n");
+    if (text === undefined) {
+      return undefined;
+    }
     const blocks = markdownDocFromText(text).blocks.map(entryOf);
 
     return { blocks: blocks.length > 0 ? blocks : [""], text };
@@ -903,11 +970,40 @@ export class MarkdownProvider implements DocumentProvider<MdDoc> {
       b.marks = fixMarks(b);
     }
 
+    const caret = pos + inserted.length;
+    // one character at a time is typing; a longer insert is composed or dispatched text
+    const shortcut = inserted.length === 1 ? this.shortcutAt(b, caret) : undefined;
+    if (shortcut !== undefined) {
+      // the marker goes and the rest of the paragraph becomes the block, under the same id
+      doc.blocks[this.index(doc, b.id)] = this.slice(b, caret, b.text.length, shortcut);
+      return {
+        dirtyBlocks  : unique([b.id, ...cut.dirty]),
+        removedBlocks: cut.removed,
+        selection    : collapsed(b.id, 0),
+      };
+    }
+
     return {
       dirtyBlocks  : unique([b.id, ...cut.dirty]),
       removedBlocks: cut.removed,
-      selection    : collapsed(b.id, pos + inserted.length),
+      selection    : collapsed(b.id, caret),
     };
+  }
+
+  /** The kind a typing shortcut turns `b` into when the text before `caret` is exactly a marker. */
+  private shortcutAt(b: MdBlock, caret: number): MdKind | undefined {
+    if (this.options.shortcuts === false || b.kind !== "paragraph" || b.text.length === 0) {
+      return undefined;
+    }
+
+    const head = b.text.slice(0, caret);
+    for (const { marker, kind } of SHORTCUTS) {
+      const match = marker.exec(head);
+      if (match !== null) {
+        return kind(match);
+      }
+    }
+    return undefined;
   }
 
   private splitBlock(doc: MdDoc, at: DocPos, newBlock: BlockId): EditResult {
@@ -1319,6 +1415,8 @@ export class MarkdownProvider implements DocumentProvider<MdDoc> {
       }
       case "setLink":
         return this.setLink(doc, first, data);
+      case "insertWikilink":
+        return this.insertWikilink(doc, first, data);
       case "setImage":
         return this.setImage(doc, first, data);
       case "moveAtom":
@@ -1448,6 +1546,30 @@ export class MarkdownProvider implements DocumentProvider<MdDoc> {
   }
 
   /** Sets the link over `[from, to)` of the block, or removes links there when `target` is empty. */
+  private insertWikilink(doc: MdDoc, b: MdBlock, data: JsonRecord): EditResult {
+    const from = typeof data.from === "number" ? data.from : 0;
+    const to = typeof data.to === "number" ? data.to : from;
+    const target = typeof data.target === "string" ? data.target : "";
+    const text = typeof data.text === "string" && data.text !== "" ? data.text : target;
+
+    if (isOpaque(b) || b.kind === "code" || from > to || to > b.text.length || target === "") {
+      return { dirtyBlocks: [], removedBlocks: [], selection: collapsed(b.id, to) };
+    }
+
+    const result = this.insertText(
+      doc,
+      { anchor: { block: b.id, offset: from }, head: { block: b.id, offset: to } },
+      text,
+      false
+    );
+    const mark: MdMark = { from, to: from + text.length, name: "link", kind: "wiki", target };
+    b.marks = normalizeMdMarks([
+      ...cutMark(b.marks, "link", mark.from, mark.to, normalizeMdMarks),
+      mark,
+    ]);
+    return result;
+  }
+
   private setLink(doc: MdDoc, b: MdBlock, data: JsonRecord): EditResult {
     const from = typeof data.from === "number" ? data.from : 0;
     const to = typeof data.to === "number" ? data.to : from;
@@ -1629,6 +1751,22 @@ export const markdownOps = {
       data.title = link.title;
     }
     return { type: "custom", name: "setLink", blocks: [block], data };
+  },
+
+  /** Replaces `[from, to)` of `block` (the typed `[[` and whatever followed) with a wikilink to `target`, shown as `text` or the target. */
+  insertWikilink(block: BlockId, from: number, to: number, target: string, text?: string): EditOp {
+    const shown = text === undefined || text === "" ? target : text;
+    const data: JsonRecord = { from, to, target };
+    if (text !== undefined) {
+      data.text = text;
+    }
+    return {
+      type  : "custom",
+      name  : "insertWikilink",
+      blocks: [block],
+      data,
+      shifts: [{ block, at: from, delta: shown.length - (to - from) }],
+    };
   },
 
   /** Patches the image at `offset`; `width: null` removes the width. */

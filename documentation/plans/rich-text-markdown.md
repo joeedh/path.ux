@@ -1150,7 +1150,28 @@ barrel is unchanged. Deviations, each with its reason:
   a list item, ` ``` ` a fence, `[[` opens wikilink completion through a provider hook.
 - `text/html` paste converted to markdown.
 
-Status: not started.
+Status: done. Both follow-ups landed in `providers/markdown_provider.ts`: the shortcuts in
+`insertText`, `onWikilinkStart` in `handleKey` with `markdownOps.insertWikilink` for the pick,
+and `text/html` in `fromClipboard`; the example's Markdown tab offers the headings as
+completion; seven tests in `tests/richtext/markdownProvider.test.ts` and three Playwright
+tests in Chromium and Firefox; `documentation/richtext.md` describes all three. The runtime
+barrel is unchanged. Deviations, each with its reason:
+
+- The shortcut fires only for a single-character insert, so composed or dispatched text is
+  never converted; it fires only in a paragraph, and the marker set is `#`–`######`, `-`, `*`,
+  `+`, `1.`, `>` (each with a space) and three backticks. It lands inside the typing run,
+  so Ctrl+Z restores the paragraph with the marker rather than the marker alone; a separate
+  op would need the provider to push one from `applyEdit`, which it cannot.
+- The `[[` hook fires on the keydown of the second `[`, before it inserts, because
+  `handleKey` is the only provider call that carries the event; `applyEdit` has neither a
+  context nor an editor. The hook reports the offset the caret will have, and the pick is one
+  custom op (`insertWikilink`) so a completion is one undo entry.
+- `text/html` goes through `markdownDocFromText` rather than a converter of its own: micromark
+  hands each HTML block to the parser's element table, which already turns the whitelisted
+  elements into blocks and marks. The head and comments are stripped first and a blank line
+  between tags closed up, since a blank line ends an HTML block. The provider's own clipboard
+  HTML is wrapped in `<div data-richtext-markdown>` so a paste of its own copy reads the exact
+  markdown entries from `text/plain` instead of re-parsing its rendering.
 
 ### Stage 7 — the syntax reference
 

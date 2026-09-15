@@ -854,3 +854,110 @@ test("a markdown property bound through the container edits its source and undoe
     .poll(() => texts(editor))
     .toEqual(["Notes", "A bound markdown field; its source is the property."]);
 });
+
+// ---- stage 6: typing shortcuts, wikilink completion, HTML paste ----
+
+const kindsOf = (editor: Locator) =>
+  editor.evaluate((el) =>
+    ((el as EditorProbe).session.doc as { blocks: { kind: string }[] }).blocks.map((b) => b.kind)
+  );
+
+test("a marker typed at the start of a paragraph changes its kind, and Ctrl+Z gives the paragraph back", async ({
+  page,
+}) => {
+  const editor = await openMarkdown(page, "# Top\n\nfirst\n\nsecond\n\nthird\n\nfourth\n");
+  await expect.poll(() => texts(editor)).toEqual(["Top", "first", "second", "third", "fourth"]);
+
+  await selectIn(editor, 1, 0);
+  await page.keyboard.type("## Hello ");
+  await expect
+    .poll(() => texts(editor))
+    .toEqual(["Top", "Hello first", "second", "third", "fourth"]);
+  expect(await kindsOf(editor)).toEqual([
+    "heading",
+    "heading",
+    "paragraph",
+    "paragraph",
+    "paragraph",
+  ]);
+  expect(await editor.locator("h2").filter({ hasText: "Hello first" }).count()).toBe(1);
+
+  await selectIn(editor, 2, 0);
+  await page.keyboard.type("- ");
+  await selectIn(editor, 3, 0);
+  await page.keyboard.type("> ");
+  await selectIn(editor, 4, 0);
+  await page.keyboard.type("```");
+  await expect
+    .poll(() => kindsOf(editor))
+    .toEqual(["heading", "heading", "listItem", "quote", "code"]);
+  await expect
+    .poll(() => texts(editor))
+    .toEqual(["Top", "Hello first", "second", "third", "fourth"]);
+
+  await page.keyboard.press("Control+z");
+  await expect
+    .poll(() => kindsOf(editor))
+    .toEqual(["heading", "heading", "listItem", "quote", "paragraph"]);
+  await expect
+    .poll(() => texts(editor))
+    .toEqual(["Top", "Hello first", "second", "third", "fourth"]);
+});
+
+test("typing [[ offers the headings and a pick lands a wikilink", async ({ page }) => {
+  const editor = await openMarkdown(page, "# Top\n\n## Second\n\nsee \n");
+  await expect.poll(() => texts(editor)).toEqual(["Top", "Second", "see"]);
+
+  await selectIn(editor, 2, 3);
+  await page.keyboard.type(" [[Se");
+  const list = page.locator('[data-testid="markdown-wikilink-list"]');
+  await expect(list).toBeVisible();
+  await expect.poll(() => texts(editor)).toEqual(["Top", "Second", "see [[Se"]);
+
+  await list.getByText("Second").click();
+  await expect.poll(() => texts(editor)).toEqual(["Top", "Second", "see Second"]);
+  await expect(list).toHaveCount(0);
+  expect(await linksAt(editor, 2)).toEqual([{ target: "Second", from: 4, to: 10 }]);
+  expect(await editor.locator("a[data-link-kind='wiki']").count()).toBe(1);
+
+  await page.keyboard.press("Control+z");
+  await expect.poll(() => texts(editor)).toEqual(["Top", "Second", "see [[Se"]);
+});
+
+test("pasted HTML becomes the blocks its elements make", async ({ page }) => {
+  const editor = await openMarkdown(page, "before\n\nafter\n");
+  await expect.poll(() => texts(editor)).toEqual(["before", "after"]);
+
+  await selectIn(editor, 0, 6);
+  await editor.evaluate((el) => {
+    const data = new DataTransfer();
+    data.setData(
+      "text/html",
+      "<html><body><!--StartFragment--><p>tail</p><h2>A heading</h2><ul><li>one</li><li><b>two</b></li></ul><!--EndFragment--></body></html>"
+    );
+    data.setData("text/plain", "tail\nA heading\none\ntwo");
+    (el as EditorProbe).root.dispatchEvent(
+      new InputEvent("beforeinput", {
+        inputType   : "insertFromPaste",
+        dataTransfer: data,
+        cancelable  : true,
+        bubbles     : true,
+      })
+    );
+  });
+
+  await expect
+    .poll(() => texts(editor))
+    .toEqual(["beforetail", "A heading", "one", "two", "after"]);
+  expect(await kindsOf(editor)).toEqual([
+    "paragraph",
+    "heading",
+    "listItem",
+    "listItem",
+    "paragraph",
+  ]);
+  expect(await editor.locator("strong").filter({ hasText: "two" }).count()).toBe(1);
+
+  await page.keyboard.press("Control+z");
+  await expect.poll(() => texts(editor)).toEqual(["before", "after"]);
+});

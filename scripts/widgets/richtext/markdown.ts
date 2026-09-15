@@ -13,7 +13,11 @@ export { markdownDocFromText } from "./providers/markdown_parse";
 export { markdownText, markdownTree } from "./providers/markdown_serialize";
 export { sanitizeAttrs, sanitizeStyle, safeUrl } from "./providers/markdown_html";
 export { MarkdownProvider, markdownOps } from "./providers/markdown_provider";
-export type { MarkdownProviderOptions, MdKindTarget } from "./providers/markdown_provider";
+export type {
+  MarkdownProviderOptions,
+  MdKindTarget,
+  WikilinkStart,
+} from "./providers/markdown_provider";
 export { renderMarkdownBlock, markdownStyles } from "./providers/markdown_render";
 export type { MarkdownRenderOptions } from "./providers/markdown_render";
 export { MdImageWidget, ImageResizeOp, ImageMoveOp } from "./providers/markdown_image";

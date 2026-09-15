@@ -324,15 +324,30 @@ for what the parser accepts and what comes back out is the plan's last stage; un
   joins only a paragraph; a join into an opaque block does nothing.
 - `handleKey`: Tab and Shift+Tab on a list item change its depth; Enter inside a fence
   inserts a newline; Shift+Enter is a hard break in any text block.
+- Typing shortcuts: a marker typed at the start of a paragraph, one character at a time,
+  turns it into the block it names once the marker is complete: `#` to `######` and a space
+  make a heading, `-`, `*` or `+` and a space a bulleted item, a number, `.` and a space a
+  numbered item, `>` and a space a quote, and three backticks a fence. The marker goes and
+  the rest of the paragraph stays. Ctrl+Z restores the paragraph, marker and all, since the
+  shortcut lands inside the typing run. `MarkdownProviderOptions.shortcuts: false` turns them
+  off; a marker inside other text, in another kind, or arriving as a longer insert is text.
 - `markdownOps` builds the custom ops the toolbar, the inline editors and a consumer share:
   `setKind` (paragraph, heading level, list kind, quote, code; a fence splitting into lines
   takes the ids in `data`), `setDepth`, `setTask`, `setLink` (an empty target removes),
-  `setImage` (`width`, `alt`), `moveAtom` (across blocks, with `shifts`) and `insertBreak`.
-  Each inverse snapshots the span between the op's first and last block.
+  `setImage` (`width`, `alt`), `moveAtom` (across blocks, with `shifts`), `insertBreak` and
+  `insertWikilink` (replaces a range with a wiki link to a target, shown as its text or the
+  target). Each inverse snapshots the span between the op's first and last block.
+- Wikilink completion is the app's: `MarkdownProviderOptions.onWikilinkStart` is called from
+  `handleKey` as the second `[` of a `[[` is typed, with the block, the offset the caret will
+  have once the key lands, and the event; the key still inserts. The app opens whatever
+  completion it has and lands the pick through `insertWikilink` over the `[[` and the query
+  typed after it. The example's Markdown tab offers the document's headings in a popup.
 - The clipboard carries one markdown entry per block (an item with its marker and indent, a
   fence whole), so a paste re-parses into blocks; a paste into a fence takes the text verbatim,
-  and a paste into an empty paragraph adopts the first block's kind. `emitDocFile` is a
-  `text/markdown` blob.
+  and a paste into an empty paragraph adopts the first block's kind. `text/html` from
+  elsewhere (a web page, a word processor) is read through the parser's HTML rules instead,
+  so headings, lists, emphasis and links arrive as blocks and marks; the provider's own copy
+  marks its HTML and pastes as the markdown it wrote. `emitDocFile` is a `text/markdown` blob.
 - `headings(doc)` lists `{ block, level }` in document order for an outline.
 - `MarkdownProviderOptions.renderMedia(image, ctx)` supplies the element for an image atom,
   for an app whose media are not plain `<img>`s.
