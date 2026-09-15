@@ -74,6 +74,16 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
     this._onpress = this._onpress.bind(this);
   }
 
+  /** Defaults to true.  See also searchMenuMode which forcibly enables search mode. */
+  get autoSearchMode(): boolean {
+    const attr = this.getAttribute("autoSearchMode");
+    return typeof attr === "string" ? attr === "true" : true;
+  }
+
+  set autoSearchMode(v: boolean) {
+    this.setAttribute("autoSearchMode", v ? "true" : "false");
+  }
+
   get searchMenuMode() {
     return this._searchMenuMode;
   }
@@ -468,7 +478,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
       return;
     }
 
-    builtMenu.autoSearchMode = false;
+    builtMenu.autoSearchMode = this.autoSearchMode;
     builtMenu.srcWidget = this;
 
     builtMenu._dropbox = this;

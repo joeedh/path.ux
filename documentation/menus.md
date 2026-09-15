@@ -248,6 +248,11 @@ A menu with more than 15 items opens in search mode on its own, unless
 `autoSearchMode` is set to `false`. Search mode adds a text box that filters rows
 by substring, fixes the list at 300 pixels tall and scrolls it. `startSearch()`
 enters it explicitly, and `DropBox.searchMenuMode` forces it for that dropbox.
+A dropbox passes its own `autoSearchMode` (an attribute, `true` by default) to the
+menu it opens. The header menus `container.menu` and `container.dynamicMenu`
+build set it to `false`, so a menu bar never turns into a search box; the
+argument-object form, `container.menu({ title, template, autoSearchMode: true })`,
+is the only way to turn it back on for one of them.
 `startFancy()` is a deprecated alias of `startSearch()`; the old `start_fancy()`
 shim is removed.
 

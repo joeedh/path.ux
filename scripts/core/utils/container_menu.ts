@@ -12,16 +12,6 @@ import { UIBase } from "../ui_base";
 import { PathToolMeta, StdUXMeta } from "../base/ui_meta_tags";
 import type { Container } from "../ui";
 
-export function dynamicMenuImpl<CTX extends IContextBase, SELF extends string>(
-  self: Container<CTX, SELF, string>,
-  title: string,
-  list: MenuTemplate,
-  packflag = 0
-) {
-  //actually, .menu works for now
-  return self.menu(title, list, packflag);
-}
-
 /**example usage:
 
  .menu([
@@ -37,13 +27,15 @@ export function menuImpl<CTX extends IContextBase, SELF extends string>(
   self: Container<CTX, SELF, string>,
   title: string,
   list: MenuTemplate,
-  packflag = 0
+  packflag = 0,
+  autoSearchMode = false
 ) {
   const dbox = UIBase.createElement("dropbox-x") as DropBox<CTX>;
 
   dbox._name = title;
   dbox.setAttribute("simple", "true");
   dbox.setAttribute("name", title);
+  dbox.setAttribute("autoSearchMode", autoSearchMode ? "true" : "false");
 
   if (list instanceof Menu) {
     dbox._build_menu = async function (this: DropBox<CTX>) {

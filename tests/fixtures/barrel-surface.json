@@ -672,6 +672,7 @@
     "GraphContext",
     "GraphEdit",
     "GroupDesignerOpts",
+    "HeaderMenuArgs",
     "HotKeyCallback",
     "IAreaDef",
     "IBaseVector",
