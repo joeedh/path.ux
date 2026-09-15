@@ -48,6 +48,7 @@
     "@pathtx/eslint-dispatcher": "^0.0.3",
     "@pathtx/prettier": "3.10.0-dev",
     "@playwright/test": "^1.59.1",
+    "@types/mdast": "^4.0.4",
     "@types/node": "^25.6.0",
     "@typescript/native-preview": "7.0.0-dev.20260406.1",
     "comment-lint": "^0.5.0",
@@ -88,5 +89,13 @@
     "ignoredBuiltDependencies": [
       "esbuild"
     ]
+  },
+  "dependencies": {
+    "mdast-util-from-markdown": "^2.0.3",
+    "mdast-util-frontmatter": "^2.0.1",
+    "mdast-util-gfm": "^3.1.0",
+    "mdast-util-to-markdown": "^2.1.2",
+    "micromark-extension-frontmatter": "^2.0.0",
+    "micromark-extension-gfm": "^3.0.0"
   }
 }

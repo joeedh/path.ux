@@ -936,7 +936,43 @@ Deviations, each with its reason:
   and inline open/close pairing, the style tokenizer and the attribute rules.
 - Round-trip tests as above, plus flattening tests for nested lists and quotes. No DOM.
 
-Status: not started.
+Status: done. `markdown_model.ts`, `markdown_parse.ts`, `markdown_serialize.ts` and
+`markdown_html.ts` under `providers/`, reached through `richtext/markdown.ts`; the six mdast
+and micromark packages in both manifests (`build_package_new.sh` already copies the lock
+file, so it needed no change); `tests/richtext/fixtures/{kinds,html,sanitize,scene}.md` and
+`tests/richtext/markdown.test.ts` (62 tests). The barrel and `dist/pathux.js` are unchanged
+and the bundle contains no micromark. Deviations, each with its reason:
+
+- Soft line breaks are kept. The plan made every `\n` in a paragraph a hard break, which
+  would have turned the scene's `AIKO` / `[[line: L2]]` / dialogue lines into one line
+  joined by spaces; the scene fixture then could not be a fixed point after zero passes,
+  which the plan also requires. A `\n` in the text is a line break either way; a hard one
+  (a backslash or two-space break, a `<br>`) carries a `break` mark over that one character
+  and serializes as a backslash break, a bare one serializes as a bare newline. So
+  `MdMarkName` gains `break`, and `MdMark` gains `tag` for a `style` mark that carries an
+  element such as `<kbd>`, which the plan's table names but its interface could not hold.
+- `markdown_inline.ts` is a fifth module: the `InlineBuilder` the two parsers share and the
+  `inlineTree` walk both emitters share, with a field-aware `normalizeMdMarks`, since
+  `marks.ts`'s name-only merge would fuse two adjacent links into one.
+- A wikilink is emitted as a `wikilink` mdast node with its own handler rather than an
+  inline `html` node: `mdast-util-to-markdown` replaces the newline before an `html` node
+  with a space, which would have pulled a marker off its own line.
+- Media elements are cut out of an HTML block by a regex before `DOMParser` sees it and
+  restored as `raw` blocks from the cut text, because happy-dom's `DOMParser` fetched the
+  `<iframe>` source during the first run; an inline media or script tag is parsed with its
+  tag name swapped for `span` for the same reason. A media element alone in a paragraph
+  (mdast reads `<video>` as inline, since it is not in CommonMark's block list) is a `raw`
+  block too.
+- A styled list item is emitted as `- <li style="…">…</li>`, the `<li>` inside the markdown
+  item, so the list stays one markdown list; the checkbox rides in the `<li>`. A wrapper's
+  element-specific attributes (`open` on `details`) stay with the wrapper rather than
+  copying onto its children.
+- A `<u>` that never closes, and a `</em>` that closes out of order, are literal text as
+  planned; a pair that did close between them is still a mark.
+- A list item with more than one paragraph becomes one item per paragraph, and a code block
+  inside an item leaves the list, since the flat model has no item that holds blocks. That is
+  the one normalization of the stage that changes structure; a fixed point still holds after
+  one pass.
 
 ### Stage 3 — `MarkdownProvider`
 

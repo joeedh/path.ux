@@ -52,7 +52,11 @@ documentation/plans/rich-text-provider-tasks.md task 3.
 [x]: rich text provider protocol for the markdown work (stage 1 of
 documentation/plans/rich-text-markdown.md): custom ops, the editor bridge,
 provider toolbars, readOnly, viewState, session.dispatch and typed change
-notification. Stages 2 to 7 (the markdown provider, its rendering, the
+notification.
+[x]: markdown model, parse and serialize (stage 2 of the same plan):
+`richtext/markdown.ts` with the mdast chain as the library's first runtime
+dependencies, the HTML table and sanitizer, and a fixture corpus that round
+trips. Stages 3 to 7 (the provider, its toolbar and inline editors, the
 example tab and the docs) remain.
 [ ]: better wrappers around the web file system APIs, to cover what
 simple_docsys did for locally served, Electron and NW.js apps. Unrelated to
