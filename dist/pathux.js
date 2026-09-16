@@ -34929,6 +34929,7 @@ var init_ui_button = __esm({
         }
       }
       update() {
+        super.update();
         if (this._last_name !== this.name) {
           this.label.innerHTML = this.name;
           this._last_name = this.name;

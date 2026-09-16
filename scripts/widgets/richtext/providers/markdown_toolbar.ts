@@ -100,6 +100,7 @@ export function buildMarkdownToolbar(
     },
   });
   kinds.setAttribute("data-testid", "richtext-kind");
+  kinds.description = "Kind of the block at the cursor";
   kinds.setValue("paragraph");
 
   addSeparator(row);

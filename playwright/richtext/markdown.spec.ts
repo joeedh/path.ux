@@ -479,6 +479,23 @@ test("the toolbar shows the kind and the marks under the caret, and the dropdown
   await expect(editor.locator("h2").filter({ hasText: "A paragraph with" })).toHaveCount(0);
 });
 
+test("resting the pointer on a toolbar control shows its tooltip", async ({ page }) => {
+  const editor = await openMarkdown(page);
+  const tip = page.locator("pathux-tool-tip-x div");
+
+  for (const [id, text] of [
+    ["richtext-kind", "Kind of the block at the cursor"],
+    ["richtext-mark-bold", "Bold (Ctrl+B)"],
+    ["richtext-list-task", "Task list"],
+    ["richtext-link", "Link the selection"],
+  ]) {
+    await toolButton(editor, id).hover();
+    await expect(tip).toHaveText(text);
+    await page.mouse.move(0, 0);
+    await expect(tip).toHaveCount(0);
+  }
+});
+
 test("the list buttons toggle a paragraph into a list and back", async ({ page }) => {
   const editor = await openMarkdown(page);
   const at = await sampleIndexes(editor);

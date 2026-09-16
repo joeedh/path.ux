@@ -328,6 +328,8 @@ export class Button<
   }
 
   update() {
+    super.update();
+
     if (this._last_name !== this.name) {
       this.label.innerHTML = this.name;
       this._last_name = this.name;

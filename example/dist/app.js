@@ -34956,6 +34956,7 @@ var init_ui_button = __esm({
         }
       }
       update() {
+        super.update();
         if (this._last_name !== this.name) {
           this.label.innerHTML = this.name;
           this._last_name = this.name;
@@ -89415,6 +89416,7 @@ function buildMarkdownToolbar(row, ctx, provider) {
     }
   });
   kinds.setAttribute("data-testid", "richtext-kind");
+  kinds.description = "Kind of the block at the cursor";
   kinds.setValue("paragraph");
   addSeparator(row);
   const syncMarks = addMarkButtons(row, ctx, provider);

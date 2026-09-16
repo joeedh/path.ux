@@ -19,3 +19,19 @@ more than a few minutes to find.
 - **How to tell it is not your widget.** The rich text editor and every other widget paste
   through the `beforeinput` or `paste` event's `DataTransfer`, which never prompts. Grep for
   `clipboard.read` before suspecting a widget.
+
+## A widget has a description but never shows a tooltip
+
+- **Symptom.** `elem.description` reads back the text, `useNativeToolTips` is false, the
+  pointer rests on the widget, and no `pathux-tool-tip-x` popup appears. Under native
+  tooltips the same widget shows one, because `setDescription` writes `title` directly.
+- **Cause.** The widget's `update()` does not chain `super.update()`. `UIBase.update` is
+  what installs the own-tooltip hover handlers and pops the tip after 500 ms, and it is
+  also what builds the path watchers. `Button.update` skipped the chain from the day it was
+  written, so every `Button` and `ToolButton` in own-tooltip mode was mute.
+- **How to tell.** In the console, `elem._has_own_tooltips` is undefined after a hover; a
+  chained widget has it set. `elem.ctx.screen.pickElement(x, y) === elem` and
+  `elem._tooltip_ref` are the next things to check, in that order.
+- **Locating the popup from a test.** The registered tag carries the `pathux-` prefix, so
+  `page.locator("pathux-tool-tip-x div")`; the text is in the shadow root's `div`, not in
+  the host's `textContent`.
