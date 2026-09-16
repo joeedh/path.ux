@@ -4,7 +4,8 @@ import type { IContextBase } from "../../core/context_base";
 import type { RowFrame } from "../../core/ui_containers";
 import { RichTextContext } from "./context";
 import type { DocChangeInfo, DocumentSession } from "./context";
-import { DocEditOp } from "./ops";
+import { WidgetHost, widgetSlot } from "./widget_host";
+import type { WidgetOptions } from "./widget";
 import { blockElement, mapThroughPending } from "./positions";
 import type { PendingDocView } from "./positions";
 import { freezeComposition, resolveComposition } from "./composition";
@@ -66,6 +67,29 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
   static observeMutations = true;
 
   readonly root: HTMLDivElement;
+  private readonly widgetHost: WidgetHost<Doc>;
+  private _widgetOptions: WidgetOptions<Doc> = {};
+
+  get widgetOptions(): WidgetOptions<Doc> {
+    return this._widgetOptions;
+  }
+  set widgetOptions(value: WidgetOptions<Doc>) {
+    this.widgetHost.dispose();
+    this._widgetOptions = value;
+    this.refreshWidgets();
+  }
+
+  /** Rechecks instance policy and descriptor implementations. */
+  refreshWidgets(): void {
+    this.renderAll();
+  }
+
+  /** Cancels mounted generations before reevaluating a changed host policy. */
+  invalidateWidgetPolicy(): void {
+    this.widgetHost.dispose();
+    this.renderAll();
+  }
+
   private readonly styletag: HTMLStyleElement;
   /** Holds `provider.styles()`, replaced whole whenever the session or the theme changes. */
   private readonly providerStyle: HTMLStyleElement;
@@ -104,11 +128,28 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     root.contentEditable = "true";
     root.spellcheck = false;
 
+    this.widgetHost = new WidgetHost(
+      root,
+      () => this._session,
+      () => this.richCtx!,
+      () => this.readOnly || this.disabled,
+      (slot, before) => {
+        const block = slot.closest<HTMLElement>("[data-doc-block]")?.dataset.docBlock;
+        if (!block || !this._session) return;
+        this.select(
+          collapsed({
+            block,
+            offset: before ? 0 : this._session.provider.blockText(this._session.doc, block).length,
+          })
+        );
+      }
+    );
     const editor = this;
     this.bridge = {
+      widget  : widgetSlot,
       dispatch: (op) => this.dispatch(op),
       get readOnly() {
-        return editor.readOnly;
+        return editor.readOnly || editor.disabled || editor.session?.canWrite === false;
       },
       selection   : () => this.selectionThroughPending(),
       select      : (range) => this.select(range),
@@ -118,19 +159,36 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
       linkClicked: (link, event) => this.linkClicked(link, event),
     };
 
-    root.addEventListener("beforeinput", (e) => this.onBeforeInput(e));
-    root.addEventListener("keydown", (e) => this.onKeyDown(e));
-    root.addEventListener("compositionstart", () => this.onCompositionStart());
-    root.addEventListener("compositionend", () => this.onCompositionEnd());
+    root.addEventListener("beforeinput", (e) => {
+      if (!this.widgetHost.event(e)) this.onBeforeInput(e);
+    });
+    root.addEventListener("keydown", (e) => {
+      if (!this.widgetHost.event(e)) this.onKeyDown(e);
+    });
+    root.addEventListener("compositionstart", (e) => {
+      if (!this.widgetHost.event(e)) this.onCompositionStart();
+    });
+    root.addEventListener("compositionend", (e) => {
+      if (!this.widgetHost.event(e)) this.onCompositionEnd();
+    });
     root.addEventListener("blur", () => this.endRun());
-    root.addEventListener("copy", (e) => this.onCopy(e, false));
-    root.addEventListener("cut", (e) => this.onCopy(e, true));
+    root.addEventListener("copy", (e) => {
+      if (!this.widgetHost.event(e)) this.onCopy(e, false);
+    });
+    root.addEventListener("cut", (e) => {
+      if (!this.widgetHost.event(e)) this.onCopy(e, true);
+    });
+    for (const type of ["input", "paste", "drop", "pointerdown", "pointerup", "click"]) {
+      root.addEventListener(type, (e) => {
+        if (this.widgetHost.owner(e)) e.stopPropagation();
+      });
+    }
 
     this.shadow.appendChild(root);
 
     if (RichTextEditor.observeMutations) {
       this.observer = new MutationObserver((records) => {
-        if (!this.composing) {
+        if (!this.composing && records.some((record) => !this.widgetHost.ownsNode(record.target))) {
           console.error("rich-text-x: the DOM changed outside the editor", records);
         }
       });
@@ -149,6 +207,8 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     }
 
     this.unsubscribe?.();
+    this.widgetHost.dispose();
+    this.root.replaceChildren();
     this._session = session;
     this.rctx = undefined;
     this.pending.length = 0;
@@ -161,7 +221,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
       }
 
       this.docChanged(change);
-      this.announce(change, info);
+      if (info.origin !== "policy") this.announce(change, info);
     });
 
     this.providerStyle.textContent = session?.provider.styles?.() ?? "";
@@ -200,6 +260,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
   set readOnly(value: boolean) {
     this.toggleAttribute("readonly", value);
     this.applyEditable();
+    this.widgetHost.refresh();
   }
 
   /** The selection and scroll position, for a history engine to save before swapping `session` and restore after. */
@@ -281,7 +342,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
    * target, and locks the toolbar's widgets in place.
    */
   private applyEditable(): void {
-    const readOnly = this.readOnly;
+    const readOnly = this.readOnly || this._session?.canWrite === false;
     const editable = !readOnly && !this.disabled ? "true" : "false";
 
     if (this.root.getAttribute("contenteditable") !== editable) {
@@ -316,6 +377,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
   }
 
   override _ondestroy() {
+    this.widgetHost.dispose();
     document.removeEventListener("selectionchange", this.onSelectionChange);
     this.observer?.disconnect();
     this.unsubscribe?.();
@@ -354,7 +416,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
 
   /** Ends the typing run and commits `op`; resolves with its result, or `undefined` when read-only or dropped. */
   async dispatch(op: EditOp): Promise<EditResult | undefined> {
-    if (this.readOnly) {
+    if (this.readOnly || this.disabled) {
       return undefined;
     }
 
@@ -409,6 +471,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
   }
 
   async undo(): Promise<void> {
+    if (this.readOnly || this.disabled) return;
     const session = this._session;
     if (session === undefined) {
       return;
@@ -420,6 +483,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
   }
 
   async redo(): Promise<void> {
+    if (this.readOnly || this.disabled) return;
     const session = this._session;
     if (session === undefined) {
       return;
@@ -503,7 +567,8 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
       this.root.blur();
       e.preventDefault();
     } else if (e.key === "Tab") {
-      this.refuse("insertTab");
+      const range = this.selectionThroughPending();
+      if (!range || !this.widgetHost.enter(range.head, e.shiftKey)) this.refuse("insertTab");
       e.preventDefault();
     } else if (mod && e.shiftKey && key === "s") {
       this.toggleMark("strikethrough");
@@ -678,13 +743,6 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
       return undefined;
     }
 
-    const toolop = new DocEditOp(
-      op,
-      session.provider.inverse(session.doc, op),
-      session.id,
-      this.pathUndoGen
-    );
-    const result = toolop.result(this);
     const entry: PendingEntry = { op, reflected };
     this.pending.push(entry);
 
@@ -692,8 +750,13 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     try {
       // the result settles inside exec, before the stack's own promise does; a throw on the
       // way there is the only reason to wait on that one
-      const run = ctx.toolstack.foldOrExec(ctx, toolop);
-      applied = await Promise.race([result, run.then(() => result)]);
+      applied = await session.dispatch(
+        op,
+        ctx,
+        this,
+        this.pathUndoGen,
+        () => !this.readOnly && !this.disabled
+      );
     } catch (error) {
       this.dropPending(entry);
       console.error("rich-text-x: edit failed", error);
@@ -742,6 +805,10 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
 
   /** A change from elsewhere: another editor, an undo, the provider. The caret stays put. */
   private docChanged(change: DocChange): void {
+    if (this._session?.disposed) {
+      this.widgetHost.dispose();
+      return;
+    }
     const own = this.domRange();
     const view = this.view();
 
@@ -755,7 +822,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
       return;
     }
 
-    if (own !== undefined && view !== undefined) {
+    if (own !== undefined && view !== undefined && !this.widgetHost.focused) {
       this.setSelection({
         anchor: this.clampPos(own.anchor, view),
         head  : this.clampPos(own.head, view),
@@ -808,6 +875,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
   }
 
   private renderAll(): void {
+    if (this.widgetHost.hold(() => this.renderAll())) return;
     const session = this._session;
     const ctx = this.richCtx;
 
@@ -822,7 +890,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
       return;
     }
 
-    renderRoot(this.root, session.provider, session.doc, ctx);
+    renderRoot(this.root, session, ctx, this.widgetHost, this.widgetOptions);
     this.observer?.takeRecords();
     this.needsRender = false;
     this.updateEmbedded(this.root);
@@ -830,6 +898,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
 
   /** Re-renders the dirty blocks, drops the removed ones and places the selection. */
   private applyResult(result: EditResult | DocChange): void {
+    if (this.widgetHost.hold(() => this.renderAll())) return;
     const session = this._session;
     const ctx = this.richCtx;
     if (session === undefined || ctx === undefined) {
@@ -839,14 +908,28 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     // during a composition the browser owns the composed block and the caret; its render, its
     // removal and every caret write are held until compositionend renders the composition
     const held = this.composing ? this.snapshot?.block : undefined;
-    patchBlocks(this.root, session.provider, session.doc, ctx, result, held, (fresh) =>
-      this.updateEmbedded(fresh)
+    patchBlocks(
+      this.root,
+      session.provider,
+      session.doc,
+      ctx,
+      result,
+      held,
+      (fresh) => this.updateEmbedded(fresh),
+      this.widgetHost,
+      session,
+      this.widgetOptions
     );
     this.observer?.takeRecords();
 
     // hold every caret write while composing, so a result from elsewhere does not move the
     // caret out of the composition the browser is running
-    if (result.selection !== undefined && !this.composing) {
+    if (
+      result.selection !== undefined &&
+      !this.composing &&
+      !result.preserveFocus &&
+      !this.widgetHost.focused
+    ) {
       this.setSelection(result.selection);
     }
     this.syncToolbar();
@@ -863,6 +946,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
   }
 
   private domRange(): DocRange | undefined {
+    if (this.widgetHost.focused) return undefined;
     const view = this.view();
     return view === undefined ? undefined : domRange(this.root, this.shadow, view);
   }

@@ -11,7 +11,11 @@ import { StringProperty } from "../../scripts/path-controller/toolsys/toolprop";
 import { DocEditOp } from "../../scripts/widgets/richtext/ops";
 import type { EditOp } from "../../scripts/widgets/richtext/provider";
 import { RichTextArea } from "../../scripts/widgets/richtext/textarea";
-import { MarkdownProvider } from "../../scripts/widgets/richtext/markdown";
+import {
+  MarkdownProvider,
+  markdownDocFromText,
+  markdownText,
+} from "../../scripts/widgets/richtext/markdown";
 import { TextArea } from "../../scripts/widgets/ui_textarea";
 /* used only as a type above, so the element registration it performs on import needs
  * naming explicitly or the import is elided */
@@ -294,4 +298,58 @@ test("the format option and the format property re-parse the value; an unknown f
     field.format = "nope";
   }).toThrow(/registered as "nope"/);
   expect(field.format).toBe("plain");
+});
+
+test("instance formats and write policy survive new sessions without changing the registry", () => {
+  const ctx = makeCtx();
+  const field = openField(ctx);
+  const registered = RichTextArea.format("markdown");
+  const provider = new MarkdownProvider({ renderMedia: () => document.createElement("span") });
+  const options = { resolveNativeBlock: () => undefined };
+  field.widgetOptions = options;
+  field.setWriteAllowed(false);
+  field.useFormat({
+    provider: () => provider,
+    fromText: markdownDocFromText,
+    toText  : markdownText,
+  });
+  expect(field.session?.provider).toBe(provider);
+  expect(field.session?.canWrite).toBe(false);
+  expect(field.editor.widgetOptions).toBe(options);
+  expect(RichTextArea.format("markdown")).toBe(registered);
+});
+
+test("the field forwards drafts and publishes one undoable save commit", async () => {
+  const ctx = makeCtx();
+  const field = openField(ctx);
+  let pending = true;
+  field.session!.registerDraft(
+    {
+      key      : "field.answer",
+      pending  : () => pending,
+      version  : () => 0,
+      prepare: () => ({
+        status : "ready",
+        command: { resolve: () => insertAt(field, 0, 0, "draft") },
+      }),
+      recover  : () => "draft",
+      committed: () => {
+        pending = false;
+      },
+      discard: () => {
+        pending = false;
+      },
+    },
+    ctx
+  );
+  expect(field.value).toBe("Hello world\nsecond line");
+  expect(() => {
+    field.format = "markdown";
+  }).toThrow("drafts");
+  expect(field.pendingDrafts).toHaveLength(1);
+  expect((await field.prepareSave()).status).toBe("ready");
+  expect(ctx.data.text).toBe("draftHello world\nsecond line");
+  expect(ctx.toolstack).toHaveLength(1);
+  await ctx.toolstack.undo();
+  expect(ctx.data.text).toBe("Hello world\nsecond line");
 });

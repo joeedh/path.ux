@@ -1,5 +1,97 @@
 # Rich text
 
+## Embedded widget views
+
+Providers can place `ctx.editor.widget(descriptor)` inside their atom wrappers. An editor
+can also set `widgetOptions.resolveNativeBlock(session, block, context)` to supply a view
+for a native opaque block. Returning `undefined` retains ordinary provider rendering.
+Native controls, media views, and future plugin views share the per-editor mount host.
+
+`WidgetDescriptor` contains a session-stable `id`, an `implementation` token, an accessible
+`label`, a caller-supplied immutable `value` snapshot, and `create(context)`. Changing the
+implementation token disposes the old generation. `allowed: false` prevents construction;
+`editable: false` prohibits view commands. The factory returns a `WidgetView` with an
+`element`, optional `update(state)` and `focus(last)` methods, and `dispose()`. Factories
+may return promises. IDs must be distinct within a session; each editor owns separate DOM.
+
+The context supplies `signal`, `isCurrent()`, `command()`, and `registerDraft()`. Cancel
+requests on abort and check the generation before publishing asynchronous results. Late
+factory results are disposed automatically. Factories and services are trusted application
+code; these interfaces do not sandbox executable plugins. Rendering must not write defaults
+or change provider storage.
+
+`refreshWidgets()` reconciles descriptors and holds changes during widget composition.
+Call `invalidateWidgetPolicy()` when document context or render authorization changes. It
+cancels mounted generations immediately, then resolves views again. Pending drafts remain
+recoverable. Replacing `widgetOptions` also invalidates mounted generations.
+
+Connected `Element.moveBefore()` preserves input focus, selection, and iframe playback in
+the tested Chromium and Firefox versions. Other engines remount widgets in replaced blocks
+and emit `widgetremount` on `editor.root`. Applications requiring uninterrupted embeds should
+require `moveBefore`. WebKit, mobile keyboards, and physical IMEs have not been verified for
+this host; automated composition coverage uses Chromium CDP.
+
+The host recognizes composed-path input, clipboard, pointer, drop, and composition events.
+Tab from prose enters controls; Tab at the last control exits to a document boundary, and
+Shift+Tab reverses direction. Enter on the outer focus stop enters the widget. Escape returns
+to the enclosing block boundary. Inner deletion belongs to the control; document selection
+is required to delete the outer object. Closed-shadow controls should implement `focus(last)`
+and their own internal Tab order.
+
+### Commands and drafts
+
+`context.command({ resolve, authorize })` runs synchronous, side-effect-free callbacks under
+the shared history lock. `resolve()` locates the target by ID, checks its expected value or
+revision, and returns an `EditOp`. Return `undefined` for a stale or deleted target.
+`authorize()` adds host-specific checks to the generation, view, and session checks. Results
+are `applied`, `refused`, or `failed`; refusals and failures add no history entry. Only the
+resulting JSON edit and inverse remain in history, so replay invokes no resolver or renderer.
+
+Inverse capture and mutation happen together at execution time. Failed edits restore the
+provider's full block snapshot. Providers must supply complete snapshots and reliable
+`replaceBlocks` restoration; this version takes a full rollback snapshot per edit. Widget
+results can omit `selection` and set `preserveFocus: true` without fabricating a prose caret.
+
+`session.setWriteAllowed(false)` prohibits commands and shared-stack undo, redo, and rerun
+without moving the history cursor. `editor.readOnly` restricts that view; other views and
+application history can remain authorized. Disposed sessions also refuse history operations.
+Policy notifications use `origin: "policy"` without incrementing the document revision or
+publishing a field value. Custom history engines must honor `ToolOp.historyPreflight` before
+changing their cursor.
+
+A draft controller registers a field `key`, `pending()`, a `version()` token, `prepare()`,
+`committed()`, and `discard()`. `recover()` exposes authored input after detachment.
+`prepare()` returns a ready command or an `unencodable`, `conflict`, or `refused` result.
+Retain input until the command commits. Native input undo belongs to the control while a
+draft is active; after acceptance the control can route undo to document history. Do not
+create a second `DataPathSetOp` for the same change.
+
+Await `session.prepareSave()` before saving or navigating. It waits behind queued history
+work, detects competing drafts for the same field before either commits, and checks for
+concurrent changes. Earlier successful draft commits remain undoable if another draft prevents
+readiness. A ready result includes the committed revision; compare it with the serialized
+snapshot's revision before acknowledging a save. Serialization remains a pure committed read.
+
+`pendingDrafts` includes detached drafts, which refuse save until the application recovers
+them with `recoverDraft(id)` or explicitly calls `discardDraft(id)`. Retain the session while
+deciding. Keep recoverable input separately from subscriptions and requests that disposal
+must release.
+
+### Media and bound fields
+
+`renderMedia` still accepts an `HTMLElement` with its legacy rerender behavior. It may return
+a descriptor for retention and disposal. The Markdown provider supplies the atom's runtime
+ID; offsets are not identities. Default image controls use the same host. Runtime IDs survive
+moves, split/join, snapshots, and undo, and are omitted from ordinary Markdown. This adds no
+video renderer, iframe recognizer, embed fetching, or service API.
+
+`RichTextArea` forwards `widgetOptions`, `pendingDrafts`, `prepareSave()`,
+`invalidateWidgetPolicy()`, and `setWriteAllowed()`. Its `value` remains a pure committed read.
+`useFormat(format)` accepts an instance-owned `RichTextFormat`; its provider factory can
+capture one field's media callback and configuration without global registration. Resolve or
+explicitly discard drafts before changing formats. Committed changes still publish through
+one document undo entry.
+
 `rich-text-x` (`RichTextEditor`, `scripts/widgets/richtext/editor.ts`) edits a document it
 never owns. A `DocumentProvider` renders each block and applies each edit; the editor turns
 browser input into `EditOp`s, runs them through a toolstack as `DocEditOp`s, and re-renders

@@ -9,8 +9,7 @@
   - [Undo](#undo)
   - [tooldef()](#tooldef)
   - [Tool Properties](#tool-properties)
-
-<!-- regenerate with pnpm markdown-toc -->
+  - [History authorization](#history-authorization)
 
 <!-- tocstop -->
 
@@ -267,3 +266,16 @@ what properties the tool has, it's name, it's path in the data path system, etc.
 Tools have input and output slots. See toolprop.js. There are integer properties, float properties,
 various linear algebra properties (vectors, matrices), enumerations, bitflags, and in addition client code
 may provide it's own property classes.
+
+## History authorization
+
+`ToolOp.historyPreflight(ctx, action)` runs synchronously under the toolstack lock before
+execution, folding, undo, redo, or rerun changes history. Return a refusal with a `reason`
+to throw `ToolRefusedError` without moving the cursor or discarding a redo branch. Macro
+preflight checks its children before executing any child. Replay uses the same check.
+
+The hook must not mutate data, await work, or call back into the locked stack. It supplements
+`canRun`, which can perform asynchronous availability checks outside the lock. An operation
+whose phases yield must also verify authorization at its synchronous mutation boundary.
+Rich text operations resolve their retained session from the execution context, so denying
+writes protects application-level history even when another editor has focus.

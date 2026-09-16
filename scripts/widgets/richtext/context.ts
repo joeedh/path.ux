@@ -4,6 +4,9 @@ import type { Screen } from "../../screen/FrameManager";
 import type { IToolStack } from "../../path-controller/controller/controller_abstract";
 import type { IContextBase } from "../../core/context_base";
 import { DocEditOp } from "./ops";
+import { ToolRefusedError } from "../../path-controller/toolsys/toolop";
+import type { CommandResult, DocumentCommand } from "./widget";
+import type { DraftController, PendingDraft, PrepareSaveResult } from "./drafts";
 import type { DocChange, DocumentProvider, EditOp, EditorBridge, EditResult } from "./provider";
 
 /**
@@ -11,7 +14,7 @@ import type { DocChange, DocumentProvider, EditOp, EditorBridge, EditResult } fr
  * typing run at the head of the stack, `external` a change the provider reported through
  * `onExternalChange`.
  */
-export type DocChangeOrigin = "edit" | "fold" | "undo" | "redo" | "external";
+export type DocChangeOrigin = "edit" | "fold" | "undo" | "redo" | "external" | "policy";
 
 /** What the session knows about a change beyond the change itself. */
 export interface DocChangeInfo {
@@ -37,6 +40,143 @@ export class DocumentSession<Doc = unknown> {
   disposed = false;
   /** Counts every delivered change, folds included, so a client can tell local edits from none. */
   revision = 0;
+  private writable = true;
+  private draftId = 0;
+  private readonly drafts = new Map<
+    number,
+    {
+      controller: DraftController;
+      context: IContextBase;
+      detached: boolean;
+    }
+  >();
+  private saving?: Promise<PrepareSaveResult>;
+
+  get canWrite(): boolean {
+    return this.writable && !this.disposed;
+  }
+
+  /** Invalidates view policy without changing the committed document revision. */
+  setWriteAllowed(allowed: boolean): void {
+    this.writable = allowed;
+    const change = { dirtyBlocks: this.provider.blocks(this.doc), removedBlocks: [] };
+    this.notify(change, { origin: "policy" });
+  }
+
+  get pendingDrafts(): readonly PendingDraft[] {
+    return [...this.drafts]
+      .filter(([, draft]) => draft.controller.pending())
+      .map(([id, draft]) => ({ id, key: draft.controller.key, detached: draft.detached }));
+  }
+
+  registerDraft(controller: DraftController, context: IContextBase): () => void {
+    const id = ++this.draftId;
+    const entry = { controller, context, detached: false };
+    this.drafts.set(id, entry);
+    return () => {
+      if (controller.pending()) entry.detached = true;
+      else this.drafts.delete(id);
+    };
+  }
+
+  discardDraft(id: number): void {
+    const draft = this.drafts.get(id);
+    draft?.controller.discard();
+    if (draft?.detached) this.drafts.delete(id);
+  }
+
+  recoverDraft(id: number): unknown {
+    return this.drafts.get(id)?.controller.recover();
+  }
+
+  prepareSave(): Promise<PrepareSaveResult> {
+    return (this.saving ??= this.prepareDrafts().finally(() => {
+      this.saving = undefined;
+    }));
+  }
+
+  private async prepareDrafts(): Promise<PrepareSaveResult> {
+    // Wait behind commands already queued on the shared application stack
+    await this.toolstack.head;
+    const pending = this.pendingDrafts;
+    if (!pending.length) return { status: "ready", revision: this.revision };
+    if (!this.canWrite || pending.some((draft) => draft.detached)) {
+      return { status: "refused", drafts: pending };
+    }
+    if (new Set(pending.map((draft) => draft.key)).size !== pending.length) {
+      return { status: "conflict", drafts: pending };
+    }
+    const revision = this.revision;
+    const prepared = await Promise.all(
+      pending.map(async (draft) => {
+        const entry = this.drafts.get(draft.id)!;
+        const version = entry.controller.version();
+        try {
+          return { draft, entry, version, result: await entry.controller.prepare() };
+        } catch {
+          return { draft, entry, version, result: { status: "unencodable" as const } };
+        }
+      })
+    );
+    if (this.revision !== revision) return { status: "conflict", drafts: this.pendingDrafts };
+    let expectedRevision = revision;
+    for (const { draft, entry, version, result } of prepared) {
+      if (result.status !== "ready") return { ...result, drafts: [draft] };
+      if (entry.detached) return { status: "refused", drafts: [draft] };
+      if (entry.controller.version() !== version) return { status: "conflict", drafts: [draft] };
+      const committed = await this.command(
+        {
+          authorize: () => !entry.detached && (result.command.authorize?.() ?? true),
+          resolve: () =>
+            this.revision === expectedRevision &&
+            entry.controller.version() === version &&
+            this.pendingDrafts.filter((other) => other.key === draft.key).length === 1
+              ? result.command.resolve()
+              : undefined,
+        },
+        entry.context
+      );
+      if (committed.status !== "applied") {
+        return {
+          status:
+            committed.status === "refused" && committed.reason === "Stale or deleted target"
+              ? "conflict"
+              : "refused",
+          drafts: [draft],
+        };
+      }
+      expectedRevision++;
+      if (entry.controller.version() !== version) return { status: "conflict", drafts: [draft] };
+      entry.controller.committed();
+    }
+    return this.pendingDrafts.length || this.revision !== expectedRevision
+      ? { status: "conflict", drafts: this.pendingDrafts }
+      : { status: "ready", revision: this.revision };
+  }
+
+  async command(command: DocumentCommand, parentCtx: IContextBase): Promise<CommandResult> {
+    const ctx = new RichTextContext(parentCtx, this);
+    const tool = new DocEditOp(undefined, undefined, this.id, `command${++dispatchCounter}`);
+    tool.prepare = () => {
+      if (command.authorize && !command.authorize())
+        throw new ToolRefusedError("Write refused", tool);
+      const op = command.resolve();
+      if (!op) throw new ToolRefusedError("Stale or deleted target", tool);
+      return op;
+    };
+    tool.preserveFocus = true;
+    const result = tool.result();
+    try {
+      await ctx.toolstack.foldOrExec(ctx, tool);
+      return { status: "applied", result: await result };
+    } catch (error) {
+      return error instanceof ToolRefusedError
+        ? { status: "refused", reason: error.reason }
+        : { status: "failed", error };
+    } finally {
+      tool.prepare = undefined;
+    }
+  }
 
   private readonly listeners = new Set<DocChangeListener>();
   private readonly unsubscribe: () => void;
@@ -63,8 +203,7 @@ export class DocumentSession<Doc = unknown> {
   }
 
   /**
-   * The only path to the listeners. Every `DocEditOp` phase and the provider's external hook
-   * arrive here; an editor skips a change whose `submitter` is itself, having applied it already.
+   * Delivers a committed change and advances its revision. Policy notifications use notify.
    */
   deliver(change: DocChange, info: DocChangeInfo): void {
     if (this.disposed) {
@@ -72,8 +211,16 @@ export class DocumentSession<Doc = unknown> {
     }
 
     this.revision++;
+    this.notify(change, info);
+  }
+
+  private notify(change: DocChange, info: DocChangeInfo): void {
     for (const listener of [...this.listeners]) {
-      listener(change, info);
+      try {
+        listener(change, info);
+      } catch (error) {
+        console.error("Document change listener failed", error);
+      }
     }
   }
 
@@ -86,25 +233,32 @@ export class DocumentSession<Doc = unknown> {
     op: EditOp,
     parentCtx: IContextBase,
     source?: object,
-    run: number | string = `dispatch${++dispatchCounter}`
+    run: number | string = `dispatch${++dispatchCounter}`,
+    authorize?: () => boolean
   ): Promise<EditResult> {
     const ctx = new RichTextContext(parentCtx, this);
-    const toolop = new DocEditOp(op, this.provider.inverse(this.doc, op), this.id, run);
+    const toolop = new DocEditOp(op, undefined, this.id, run);
+    toolop.prepare = () => {
+      if (authorize && !authorize()) throw new ToolRefusedError("View is read-only", toolop);
+      return op;
+    };
     const result = toolop.result(source);
-    const ran = ctx.toolstack.foldOrExec(ctx, toolop);
-
-    // the result settles inside exec, before the stack's own promise does; a throw on the
-    // way there is the only reason to wait on that one
-    return Promise.race([result, ran.then(() => result)]);
+    try {
+      await ctx.toolstack.foldOrExec(ctx, toolop);
+      return await result;
+    } finally {
+      toolop.prepare = undefined;
+    }
   }
 
-  /** Marks the document closed: its ops on any stack become no-ops and nothing is delivered. */
+  /** Closes the document and refuses subsequent commands and history execution. */
   dispose(): void {
     if (this.disposed) {
       return;
     }
 
     this.disposed = true;
+    this.notify({ dirtyBlocks: [], removedBlocks: [] }, { origin: "policy" });
     this.unsubscribe();
     this.listeners.clear();
   }

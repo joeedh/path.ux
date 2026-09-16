@@ -398,7 +398,7 @@ function moveAtom(doc: MdDoc, data: JsonRecord): EditResult {
 
   dest.text = dest.text.slice(0, to) + ATOM_CHAR + dest.text.slice(to);
   dest.marks = marksAfterTyping(dest.marks, to, 1, normalizeMdMarks);
-  dest.atoms = [...atomsAfterInsert(dest.atoms, to, 1), { offset: to, image: atom.image }].sort(
+  dest.atoms = [...atomsAfterInsert(dest.atoms, to, 1), { ...atom, offset: to }].sort(
     (a, b) => a.offset - b.offset
   );
   source.marks = fixMarks(source);

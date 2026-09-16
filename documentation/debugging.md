@@ -35,3 +35,19 @@ more than a few minutes to find.
 - **Locating the popup from a test.** The registered tag carries the `pathux-` prefix, so
   `page.locator("pathux-tool-tip-x div")`; the text is in the shadow root's `div`, not in
   the host's `textContent`.
+
+## Embedded controls lose focus or restart an iframe
+
+Keeping an element reference does not preserve browser state when its subtree detaches.
+Use `moveBefore()` between connected parents. Remove obsolete wrappers only after all affected
+mounts have moved; removing the source block first breaks cross-block moves. The local
+experiment is in buildtools/richtext-movement.mjs. Widget acceptance also checks a canvas-fed
+video inside an opted-in local iframe. Hold ordinary reconciliation during composition;
+policy invalidation cancels the mounted generation.
+
+Serve parallel browser fixtures from an in-memory bundle per worker. Writing every worker's
+bundle to the same path can serve a partial script and look like intermittent missing controls.
+
+A newer pnpm can try reinstalling before running scripts. Set the process-local
+`pnpm_config_verify_deps_before_run=false` to use installed dependencies; do not accept a
+module-directory purge merely to run tests.

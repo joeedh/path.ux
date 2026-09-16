@@ -1,5 +1,6 @@
 import type { IContextBase } from "../../core/context_base";
 import type { RowFrame } from "../../core/ui_containers";
+import type { WidgetDescriptor } from "./widget";
 
 // The editor's whole view of a document is here: blocks with stable ids, flattened text per
 // block, positions into that text, and the edits the provider applies. Marks, block kinds and
@@ -106,12 +107,13 @@ export type EditOp =
       shifts?: readonly CustomShift[];
     };
 
-/** What an edit changed and where the caret lands. */
+/** What an edit changed; widget edits can retain focus without supplying a document caret. */
 export interface EditResult {
+  preserveFocus?: boolean;
   /** Blocks to re-render, new ids included. */
   dirtyBlocks: readonly BlockId[];
   removedBlocks: readonly BlockId[];
-  selection: DocRange;
+  selection?: DocRange;
 }
 
 /**
@@ -119,6 +121,7 @@ export interface EditResult {
  * its own caret.
  */
 export interface DocChange {
+  preserveFocus?: boolean;
   dirtyBlocks: readonly BlockId[];
   removedBlocks: readonly BlockId[];
   selection?: DocRange;
@@ -144,6 +147,8 @@ export interface LinkInfo {
  * widget and toolbar item is built under. One bridge per editor.
  */
 export interface EditorBridge {
+  /** Creates a placement for a retained view; omitted by legacy render-only contexts. */
+  widget?(descriptor: WidgetDescriptor): HTMLElement;
   /** Ends the typing run and commits `op` through the session's toolstack; `undefined` when read-only. */
   dispatch(op: EditOp): Promise<EditResult | undefined>;
   readonly readOnly: boolean;

@@ -48,6 +48,8 @@ export interface MdImage {
 
 /** An image, sitting at `offset` in the block's text as one `ATOM_CHAR`. */
 export interface MdAtom {
+  /** Stable within the runtime document and its history; omitted from Markdown source. */
+  id?: string;
   offset: number;
   image: MdImage;
 }

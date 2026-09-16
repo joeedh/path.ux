@@ -1,6 +1,6 @@
 # Rich text forms and front-matter integration
 
-Status: proposed design. Implementation has not started.
+Implementation status lives only in the [task list](rich-text-widget-tasks.md).
 
 This document specifies schema-driven forms and visualnovel's native YAML binding. The
 [architecture](rich-text-widgets.md) defines hosting, provider operations, history, and host

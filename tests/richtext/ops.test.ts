@@ -166,13 +166,13 @@ describe("DocumentSession", () => {
     expect(changes).toHaveLength(2);
   });
 
-  test("dispose sets the flag and stops every listener", () => {
+  test("dispose reports policy invalidation and then stops every listener", () => {
     session.dispose();
 
     expect(session.disposed).toBe(true);
     provider.notifyChange(doc, { dirtyBlocks: ["a"], removedBlocks: [] });
     session.deliver({ dirtyBlocks: ["a"], removedBlocks: [] }, { origin: "external" });
-    expect(changes).toEqual([]);
+    expect(changes).toEqual([{ dirtyBlocks: [], removedBlocks: [] }]);
   });
 
   test("ids are distinct by default", () => {
@@ -359,25 +359,19 @@ describe("DocEditOp", () => {
     expect(firstSession.id).not.toBe(session.id);
   });
 
-  test("undo after dispose is a no-op", async () => {
+  test("undo after dispose refuses without moving history", async () => {
     await submit(insert("a", 5, ","));
     session.dispose();
-
-    await ctx.toolstack.undo(ctx);
+    await expect(ctx.toolstack.undo(ctx)).rejects.toThrow("prohibited");
     expect(texts()[0]).toBe("Hello, world");
-    expect(changes).toEqual([]);
-    expect(ctx.toolstack.cur).toBe(-1);
-
-    await ctx.toolstack.redo(ctx);
-    expect(texts()[0]).toBe("Hello, world");
+    expect(ctx.toolstack.cur).toBe(0);
   });
 
   test("a disposed session refuses new edits and folds", async () => {
     await submit(insert("a", 11, "!"));
     session.dispose();
-
     const toolop = edit(insert("a", 12, "?"));
-    await ctx.toolstack.foldOrExec(ctx, toolop);
+    await expect(ctx.toolstack.foldOrExec(ctx, toolop)).rejects.toThrow("prohibited");
     expect(texts()[0]).toBe("Hello world!");
   });
 

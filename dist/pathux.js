@@ -13333,7 +13333,7 @@ EnumKeyPair {
         return digest2.get();
       }
       updateDefinition(enumdef_or_prop) {
-        const descriptions = this.descriptions;
+        const descriptions2 = this.descriptions;
         const ui_value_names = this.ui_value_names;
         this.values = {};
         this.keys = {};
@@ -13363,8 +13363,8 @@ EnumKeyPair {
             } else {
               this.ui_value_names[k] = ToolProperty.makeUIName(k);
             }
-            if (k in descriptions) {
-              this.descriptions[k] = descriptions[k];
+            if (k in descriptions2) {
+              this.descriptions[k] = descriptions2[k];
             } else {
               this.descriptions[k] = ToolProperty.makeUIName(k);
             }
@@ -20312,6 +20312,10 @@ toolsys.Refusal {
         console.warn("ToolOp.prototype.calcUndoMem: implement me!");
         return 0;
       }
+      /** Refuses synchronously under the history lock, before any cursor or document change. */
+      historyPreflight(_ctx, _action) {
+        return void 0;
+      }
       undoPre(_ctx) {
         throw new Error("implement me!");
       }
@@ -25746,6 +25750,13 @@ var init_toolmacro = __esm({
       loadDefaults(force = true) {
         return super.loadDefaults(force);
       }
+      historyPreflight(ctx, action) {
+        for (const tool of this.tools) {
+          const refusal = tool.historyPreflight(tool.execCtx ?? ctx, action);
+          if (refusal) return refusal;
+        }
+        return void 0;
+      }
       async exec(ctx) {
         this.loadDefaults(false);
         for (let i = 0; i < this.tools.length; i++) {
@@ -26092,6 +26103,7 @@ var init_toolstack = __esm({
           if (compareInputs) {
             await this._rerun(head);
           } else {
+            this._preflight(ctx, tool, "exec");
             await this._undo();
             await this._execTool(ctx, tool);
           }
@@ -26100,6 +26112,15 @@ var init_toolstack = __esm({
           await this._execTool(ctx, tool);
           return true;
         }
+      }
+      _preflight(ctx, tool, action) {
+        const refusal = tool.historyPreflight(ctx, action);
+        if (refusal)
+          throw new ToolRefusedError(
+            refusal.reason,
+            tool,
+            tool.constructor.tooldef().toolpath
+          );
       }
       getUndoFlag(toolop) {
         let undoflag = toolop.constructor.tooldef().undoflag;
@@ -26126,6 +26147,7 @@ var init_toolstack = __esm({
           const head = this[this.cur];
           const atHead = this.cur === this.length - 1;
           if (atHead && head?.constructor === toolop.constructor && isFoldableToolOp(head) && isFoldableToolOp(toolop) && head.foldKey() === toolop.foldKey()) {
+            this._preflight(ctx, toolop, "fold");
             await asyncCheck2(head.foldFrom(toolop, ctx));
             return false;
           }
@@ -26142,16 +26164,12 @@ var init_toolstack = __esm({
           return this._execTool(ctx, toolop, event);
         });
       }
-      /**
-       * Runs `toolop` and pushes it, having taken no authorization decision of its own: the three
-       * public wrappers call `_checkCanRun` before taking the lock. It must not check here — `canRun`
-       * is consumer code, and awaiting it while holding the non-reentrant lock deadlocks the stack.
-       * Undo, redo and `_rerun` reach this unchecked by design.
-       */
+      /** Runs synchronous history preflight under the lock before recording or executing the op. */
       async _execTool(ctx, toolop, event) {
         if (!this.locked) {
           throw new Error("_execTool ran outside a protected region");
         }
+        this._preflight(ctx, toolop, "exec");
         if (this.enforceMemLimit) {
           this.limitMemory(this.memLimit, ctx);
         }
@@ -26266,6 +26284,10 @@ var init_toolstack = __esm({
         return this.protect("undo", () => this._undo());
       }
       async _undo() {
+        const candidate = this[this.cur];
+        if (candidate && !(candidate.undoflag & UndoFlags.IS_UNDO_ROOT)) {
+          this._preflight(candidate.execCtx, candidate, "undo");
+        }
         if (this.enforceMemLimit) {
           this.limitMemory(this.memLimit);
         }
@@ -26280,10 +26302,11 @@ var init_toolstack = __esm({
         return this.protect("rerun", () => this._rerun(tool));
       }
       async _rerun(tool) {
+        if (tool && tool === this[this.cur]) this._preflight(tool.execCtx ?? this.ctx, tool, "rerun");
         if (this.enforceMemLimit) {
           this.limitMemory(this.memLimit);
         }
-        if (tool === this[this.cur]) {
+        if (tool && tool === this[this.cur]) {
           tool._was_redo = false;
           if (!tool.execCtx) {
             tool.execCtx = this.ctx;
@@ -26305,12 +26328,14 @@ var init_toolstack = __esm({
         return this.protect("redo", () => this._redo());
       }
       async _redo() {
+        const candidate = this[this.cur + 1];
+        if (candidate) this._preflight(candidate.execCtx ?? this.ctx, candidate, "redo");
         if (this.enforceMemLimit) {
           this.limitMemory(this.memLimit);
         }
         if (this.cur >= -1 && this.cur + 1 < this.length) {
+          const tool = this[this.cur + 1];
           this.cur++;
-          const tool = this[this.cur];
           if (!tool.execCtx) {
             tool.execCtx = this.ctx;
           }
@@ -26363,8 +26388,9 @@ var init_toolstack = __esm({
             return void 0;
           }
           if (this.cur < this.length - 1) {
+            const tool = this[this.cur + 1];
+            this._preflight(tool.execCtx ?? this.ctx, tool, "redo");
             this.cur++;
-            const tool = this[this.cur];
             if (!tool.execCtx) {
               tool.execCtx = this.ctx;
             }
@@ -35708,10 +35734,7 @@ var init_dropbox = __esm({
         if (!prop) {
           return;
         }
-        if (this.prop === void 0) {
-          this.prop = prop;
-        }
-        prop = this.prop;
+        this.prop = prop;
         let name;
         if (prop.type & (PropTypes3.ENUM | PropTypes3.FLAG)) {
           name = prop.ui_value_names[prop.keys[val]];
@@ -45012,6 +45035,20 @@ function toLockedImpl() {
 init_toolop();
 init_toolprop();
 var uniqueRun = 0;
+function checkJson(value, ancestors = /* @__PURE__ */ new Set()) {
+  if (value === null || typeof value === "string" || typeof value === "boolean") return;
+  if (typeof value === "number" && Number.isFinite(value)) return;
+  if (typeof value !== "object" || ancestors.has(value) || ancestors.size >= 100 || !Array.isArray(value) && Object.getPrototypeOf(value) !== Object.prototype && Object.getPrototypeOf(value) !== null) {
+    throw new Error("Command data must be losslessly JSON encodable");
+  }
+  ancestors.add(value);
+  for (const item of Object.values(value)) checkJson(item, ancestors);
+  ancestors.delete(value);
+}
+function encodeEdit(op) {
+  if (op.type === "custom") checkJson(op.data);
+  return JSON.stringify(op);
+}
 function foldBlock(op) {
   const range = op.type === "insertText" ? op.at : op.type === "deleteRange" ? op.range : void 0;
   if (range === void 0 || range.anchor.block !== range.head.block) {
@@ -45031,6 +45068,8 @@ var DocEditOp = class extends ToolOp {
     };
   }
   key;
+  prepare;
+  preserveFocus = false;
   resolve;
   source;
   /**
@@ -45075,25 +45114,47 @@ var DocEditOp = class extends ToolOp {
     session.deliver(result, { origin, op, submitter });
     resolve?.(result);
   }
-  /** The inverse was computed by the editor before submission; there is nothing to record. */
+  historyPreflight(ctx) {
+    return ctx.session.canWrite ? void 0 : { reason: "Document writes are prohibited" };
+  }
+  apply(session, op) {
+    if (!session.canWrite) throw new ToolRefusedError("Document writes are prohibited", this);
+    const blocks = structuredClone(session.provider.snapshots(session.doc));
+    try {
+      const result = session.provider.applyEdit(session.doc, op);
+      return this.preserveFocus ? { ...result, preserveFocus: true } : result;
+    } catch (error2) {
+      session.provider.applyEdit(session.doc, {
+        type: "replaceBlocks",
+        after: null,
+        blocks,
+        remove: [...session.provider.blocks(session.doc)]
+      });
+      throw error2;
+    }
+  }
+  resolveEdit(session) {
+    if (!session.canWrite) throw new ToolRefusedError("Document writes are prohibited", this);
+    const op = this.prepare?.() ?? this.op;
+    const encoded = encodeEdit(op);
+    this.inputs.op.setValue(encoded);
+    const decoded = this.op;
+    this.inputs.inverse.setValue(JSON.stringify(session.provider.inverse(session.doc, decoded)));
+    return decoded;
+  }
+  /** Captures the inverse beside mutation in exec, without an asynchronous gap. */
   undoPre(_ctx) {
   }
   exec(ctx) {
     const { session } = ctx;
-    if (session.disposed) {
-      return;
-    }
-    const op = this.op;
+    const op = this._was_redo ? this.op : this.resolveEdit(session);
     const origin = this._was_redo ? "redo" : "edit";
-    this.settle(session, session.provider.applyEdit(session.doc, op), origin, op);
+    this.settle(session, this.apply(session, op), origin, op);
   }
   undo(ctx) {
     const { session } = ctx;
-    if (session.disposed) {
-      return;
-    }
     const inverse = this.inverse;
-    session.deliver(session.provider.applyEdit(session.doc, inverse), {
+    session.deliver(this.apply(session, inverse), {
       origin: "undo",
       op: inverse
     });
@@ -45107,11 +45168,9 @@ var DocEditOp = class extends ToolOp {
    */
   foldFrom(next, ctx) {
     const { session } = ctx;
-    if (session.disposed) {
-      return;
-    }
     const head = this.op;
-    const delta = next.op;
+    const delta = next.resolveEdit(session);
+    const result = next.apply(session, delta);
     if (head.type === "insertText" && delta.type === "insertText") {
       this.inputs.op.setValue(JSON.stringify({ ...head, text: head.text + delta.text }));
     } else if (head.type === "deleteRange" && delta.type === "deleteRange") {
@@ -45126,12 +45185,13 @@ var DocEditOp = class extends ToolOp {
       const range = { anchor: { block, offset: start }, head: { block, offset: start + length } };
       this.inputs.op.setValue(JSON.stringify({ ...head, range }));
     }
-    next.settle(session, session.provider.applyEdit(session.doc, delta), "fold", delta);
+    next.settle(session, result, "fold", delta);
   }
 };
 ToolOp.register(DocEditOp);
 
 // scripts/widgets/richtext/context.ts
+init_toolop();
 var sessionCounter = 0;
 var dispatchCounter = 0;
 var DocumentSession = class {
@@ -45150,6 +45210,112 @@ var DocumentSession = class {
   disposed = false;
   /** Counts every delivered change, folds included, so a client can tell local edits from none. */
   revision = 0;
+  writable = true;
+  draftId = 0;
+  drafts = /* @__PURE__ */ new Map();
+  saving;
+  get canWrite() {
+    return this.writable && !this.disposed;
+  }
+  /** Invalidates view policy without changing the committed document revision. */
+  setWriteAllowed(allowed) {
+    this.writable = allowed;
+    const change = { dirtyBlocks: this.provider.blocks(this.doc), removedBlocks: [] };
+    this.notify(change, { origin: "policy" });
+  }
+  get pendingDrafts() {
+    return [...this.drafts].filter(([, draft]) => draft.controller.pending()).map(([id, draft]) => ({ id, key: draft.controller.key, detached: draft.detached }));
+  }
+  registerDraft(controller, context) {
+    const id = ++this.draftId;
+    const entry = { controller, context, detached: false };
+    this.drafts.set(id, entry);
+    return () => {
+      if (controller.pending()) entry.detached = true;
+      else this.drafts.delete(id);
+    };
+  }
+  discardDraft(id) {
+    const draft = this.drafts.get(id);
+    draft?.controller.discard();
+    if (draft?.detached) this.drafts.delete(id);
+  }
+  recoverDraft(id) {
+    return this.drafts.get(id)?.controller.recover();
+  }
+  prepareSave() {
+    return this.saving ??= this.prepareDrafts().finally(() => {
+      this.saving = void 0;
+    });
+  }
+  async prepareDrafts() {
+    await this.toolstack.head;
+    const pending = this.pendingDrafts;
+    if (!pending.length) return { status: "ready", revision: this.revision };
+    if (!this.canWrite || pending.some((draft) => draft.detached)) {
+      return { status: "refused", drafts: pending };
+    }
+    if (new Set(pending.map((draft) => draft.key)).size !== pending.length) {
+      return { status: "conflict", drafts: pending };
+    }
+    const revision = this.revision;
+    const prepared = await Promise.all(
+      pending.map(async (draft) => {
+        const entry = this.drafts.get(draft.id);
+        const version = entry.controller.version();
+        try {
+          return { draft, entry, version, result: await entry.controller.prepare() };
+        } catch {
+          return { draft, entry, version, result: { status: "unencodable" } };
+        }
+      })
+    );
+    if (this.revision !== revision) return { status: "conflict", drafts: this.pendingDrafts };
+    let expectedRevision = revision;
+    for (const { draft, entry, version, result } of prepared) {
+      if (result.status !== "ready") return { ...result, drafts: [draft] };
+      if (entry.detached) return { status: "refused", drafts: [draft] };
+      if (entry.controller.version() !== version) return { status: "conflict", drafts: [draft] };
+      const committed = await this.command(
+        {
+          authorize: () => !entry.detached && (result.command.authorize?.() ?? true),
+          resolve: () => this.revision === expectedRevision && entry.controller.version() === version && this.pendingDrafts.filter((other) => other.key === draft.key).length === 1 ? result.command.resolve() : void 0
+        },
+        entry.context
+      );
+      if (committed.status !== "applied") {
+        return {
+          status: committed.status === "refused" && committed.reason === "Stale or deleted target" ? "conflict" : "refused",
+          drafts: [draft]
+        };
+      }
+      expectedRevision++;
+      if (entry.controller.version() !== version) return { status: "conflict", drafts: [draft] };
+      entry.controller.committed();
+    }
+    return this.pendingDrafts.length || this.revision !== expectedRevision ? { status: "conflict", drafts: this.pendingDrafts } : { status: "ready", revision: this.revision };
+  }
+  async command(command, parentCtx) {
+    const ctx = new RichTextContext(parentCtx, this);
+    const tool = new DocEditOp(void 0, void 0, this.id, `command${++dispatchCounter}`);
+    tool.prepare = () => {
+      if (command.authorize && !command.authorize())
+        throw new ToolRefusedError("Write refused", tool);
+      const op = command.resolve();
+      if (!op) throw new ToolRefusedError("Stale or deleted target", tool);
+      return op;
+    };
+    tool.preserveFocus = true;
+    const result = tool.result();
+    try {
+      await ctx.toolstack.foldOrExec(ctx, tool);
+      return { status: "applied", result: await result };
+    } catch (error2) {
+      return error2 instanceof ToolRefusedError ? { status: "refused", reason: error2.reason } : { status: "failed", error: error2 };
+    } finally {
+      tool.prepare = void 0;
+    }
+  }
   listeners = /* @__PURE__ */ new Set();
   unsubscribe;
   /** Hears every change delivered through the session, an editor's own edits included. */
@@ -45160,16 +45326,22 @@ var DocumentSession = class {
     };
   }
   /**
-   * The only path to the listeners. Every `DocEditOp` phase and the provider's external hook
-   * arrive here; an editor skips a change whose `submitter` is itself, having applied it already.
+   * Delivers a committed change and advances its revision. Policy notifications use notify.
    */
   deliver(change, info) {
     if (this.disposed) {
       return;
     }
     this.revision++;
+    this.notify(change, info);
+  }
+  notify(change, info) {
     for (const listener of [...this.listeners]) {
-      listener(change, info);
+      try {
+        listener(change, info);
+      } catch (error2) {
+        console.error("Document change listener failed", error2);
+      }
     }
   }
   /**
@@ -45177,19 +45349,28 @@ var DocumentSession = class {
    * result once it has run. `run` defaults to a fresh value, so two dispatches never fold
    * into each other; pass an editor's own run to join its typing run.
    */
-  async dispatch(op, parentCtx, source, run = `dispatch${++dispatchCounter}`) {
+  async dispatch(op, parentCtx, source, run = `dispatch${++dispatchCounter}`, authorize) {
     const ctx = new RichTextContext(parentCtx, this);
-    const toolop = new DocEditOp(op, this.provider.inverse(this.doc, op), this.id, run);
+    const toolop = new DocEditOp(op, void 0, this.id, run);
+    toolop.prepare = () => {
+      if (authorize && !authorize()) throw new ToolRefusedError("View is read-only", toolop);
+      return op;
+    };
     const result = toolop.result(source);
-    const ran = ctx.toolstack.foldOrExec(ctx, toolop);
-    return Promise.race([result, ran.then(() => result)]);
+    try {
+      await ctx.toolstack.foldOrExec(ctx, toolop);
+      return await result;
+    } finally {
+      toolop.prepare = void 0;
+    }
   }
-  /** Marks the document closed: its ops on any stack become no-ops and nothing is delivered. */
+  /** Closes the document and refuses subsequent commands and history execution. */
   dispose() {
     if (this.disposed) {
       return;
     }
     this.disposed = true;
+    this.notify({ dirtyBlocks: [], removedBlocks: [] }, { origin: "policy" });
     this.unsubscribe();
     this.listeners.clear();
   }
@@ -45547,6 +45728,277 @@ function mapThroughPending(pos, pending, doc) {
   return mapper.pos;
 }
 
+// scripts/widgets/richtext/widget_host.ts
+var descriptions = /* @__PURE__ */ new WeakMap();
+function widgetSlot(descriptor) {
+  const slot = document.createElement("span");
+  slot.contentEditable = "false";
+  slot.dataset.docWidget = descriptor.id;
+  slot.setAttribute("role", "group");
+  slot.setAttribute("aria-label", descriptor.label);
+  slot.tabIndex = 0;
+  descriptions.set(slot, descriptor);
+  return slot;
+}
+var WidgetHost = class {
+  constructor(root, session, context, readOnly, exit) {
+    this.root = root;
+    this.session = session;
+    this.context = context;
+    this.readOnly = readOnly;
+    this.exit = exit;
+  }
+  root;
+  session;
+  context;
+  readOnly;
+  exit;
+  mounts = /* @__PURE__ */ new Map();
+  composing = /* @__PURE__ */ new Set();
+  deferred;
+  retired = [];
+  get composingNow() {
+    return this.composing.size > 0;
+  }
+  hold(reconcile) {
+    if (!this.composingNow) return false;
+    this.deferred = reconcile;
+    return true;
+  }
+  owner(event) {
+    return event.composedPath().find(
+      (node) => node instanceof HTMLElement && node.hasAttribute("data-doc-widget")
+    );
+  }
+  ownsNode(node) {
+    return node instanceof Element ? !!node.closest("[data-doc-widget]") : !!node.parentElement?.closest("[data-doc-widget]");
+  }
+  get focused() {
+    if (!this.root.isConnected || !this.mounts.size) return false;
+    const tree = this.root.getRootNode();
+    return !!tree.activeElement && this.ownsNode(tree.activeElement);
+  }
+  event(event) {
+    const slot = this.owner(event);
+    if (!slot) return false;
+    event.stopPropagation();
+    if (event.type === "compositionstart") this.composing.add(slot);
+    if (event.type === "compositionend") {
+      this.composing.delete(slot);
+      const reconcile = this.deferred;
+      this.deferred = void 0;
+      if (reconcile) queueMicrotask(reconcile);
+    }
+    if (event instanceof KeyboardEvent && !event.isComposing && !this.composingNow) {
+      const mount2 = this.mounts.get(slot.dataset.docWidget);
+      if (event.key === "Escape") {
+        event.preventDefault();
+        this.exit(slot, false);
+      } else if ((event.key === "Enter" || event.key === "Tab") && event.composedPath()[0] === slot) {
+        event.preventDefault();
+        this.focus(mount2, event.shiftKey);
+      } else if (event.key === "Tab") {
+        const controls = this.controls(slot);
+        const target = event.composedPath()[0];
+        if (target === controls[event.shiftKey ? 0 : controls.length - 1]) {
+          event.preventDefault();
+          this.exit(slot, event.shiftKey);
+        }
+      }
+    }
+    return true;
+  }
+  enter(position, backward) {
+    const block = position.block;
+    const blocks = [...this.root.children];
+    const start = blocks.findIndex((node) => node.getAttribute("data-doc-block") === block);
+    const mounts = [...this.root.querySelectorAll("[data-doc-widget]")];
+    if (backward) mounts.reverse();
+    const slot = mounts.find((slot2) => {
+      const parent = slot2.closest("[data-doc-block]");
+      const index = parent ? blocks.indexOf(parent) : -1;
+      if (index !== start) return backward ? index < start : index > start;
+      const at = toDocPos(this.root, slot2, 0);
+      return at !== void 0 && (backward ? at.offset < position.offset : at.offset >= position.offset);
+    });
+    if (!slot) return false;
+    slot.focus();
+    this.focus(this.mounts.get(slot.dataset.docWidget), backward);
+    return true;
+  }
+  controls(root) {
+    const result = [];
+    const walk = (node) => {
+      for (const child of node.children) {
+        if (child instanceof HTMLElement && child.tabIndex >= 0 && !child.matches(":disabled,[hidden],[inert]"))
+          result.push(child);
+        walk(child.shadowRoot ?? child);
+      }
+    };
+    walk(root);
+    return result;
+  }
+  focus(mount2, last) {
+    if (!mount2) return;
+    if (mount2.view?.focus) mount2.view.focus(last);
+    else {
+      const controls = this.controls(mount2.slot);
+      controls[last ? controls.length - 1 : 0]?.focus();
+    }
+  }
+  state(mount2) {
+    return {
+      value: mount2.descriptor.value,
+      readOnly: this.readOnly() || !this.session()?.canWrite || mount2.descriptor.editable === false
+    };
+  }
+  /** Replaces a block only after its old mounts have moved into connected destinations. */
+  replace(old, fresh, insert) {
+    insert();
+    const slots = [...fresh.querySelectorAll("[data-doc-widget]")];
+    for (const slot of slots) {
+      const descriptor = descriptions.get(slot);
+      if (!descriptor) continue;
+      let mount2 = this.mounts.get(descriptor.id);
+      if (mount2 && (mount2.descriptor.implementation !== descriptor.implementation || descriptor.allowed === false)) {
+        this.disposeMount(mount2);
+        mount2 = void 0;
+      }
+      if (descriptor.allowed === false) {
+        slot.textContent = `${descriptor.label} (unavailable)`;
+        continue;
+      }
+      if (mount2) {
+        const parent = slot.parentElement;
+        if (typeof parent.moveBefore === "function" && mount2.slot.isConnected && parent.isConnected) {
+          parent.moveBefore(mount2.slot, slot);
+          slot.remove();
+        } else {
+          this.root.dispatchEvent(
+            new CustomEvent("widgetremount", { detail: { id: descriptor.id } })
+          );
+          this.disposeMount(mount2);
+          mount2 = void 0;
+        }
+      }
+      if (!mount2) {
+        mount2 = { slot, descriptor, abort: new AbortController(), drafts: /* @__PURE__ */ new Set() };
+        this.mounts.set(descriptor.id, mount2);
+        this.create(mount2);
+      } else {
+        mount2.descriptor = descriptor;
+        mount2.slot.setAttribute("aria-label", descriptor.label);
+        this.update(mount2);
+      }
+    }
+    if (old) this.retired.push(old);
+  }
+  create(mount2) {
+    const session = this.session();
+    if (!session) return;
+    const current = () => !mount2.abort.signal.aborted && !session.disposed && this.session() === session;
+    const accept = (view) => {
+      if (!current()) {
+        view.dispose();
+        return;
+      }
+      mount2.view = view;
+      mount2.slot.replaceChildren(view.element);
+      this.update(mount2);
+    };
+    try {
+      const result = mount2.descriptor.create({
+        signal: mount2.abort.signal,
+        isCurrent: current,
+        command: (command) => session.command(
+          {
+            resolve: command.resolve,
+            authorize: () => current() && !this.state(mount2).readOnly && mount2.descriptor.allowed !== false && (command.authorize?.() ?? true)
+          },
+          this.context()
+        ),
+        registerDraft: (controller) => {
+          const unregister2 = session.registerDraft(
+            {
+              key: controller.key,
+              pending: () => controller.pending(),
+              version: () => controller.version(),
+              discard: () => controller.discard(),
+              recover: () => controller.recover(),
+              committed: () => controller.committed(),
+              prepare: async () => {
+                const prepared = await controller.prepare();
+                if (prepared.status !== "ready") return prepared;
+                return {
+                  status: "ready",
+                  command: {
+                    resolve: prepared.command.resolve,
+                    authorize: () => current() && !this.state(mount2).readOnly && (prepared.command.authorize?.() ?? true)
+                  }
+                };
+              }
+            },
+            this.context()
+          );
+          if (!current()) {
+            unregister2();
+            return () => {
+            };
+          }
+          mount2.drafts.add(unregister2);
+          return () => {
+            mount2.drafts.delete(unregister2);
+            unregister2();
+          };
+        }
+      });
+      if (result instanceof Promise) void result.then(accept, () => this.fail(mount2));
+      else accept(result);
+    } catch {
+      this.fail(mount2);
+    }
+  }
+  update(mount2) {
+    try {
+      mount2.view?.update?.(this.state(mount2));
+    } catch {
+      this.fail(mount2);
+    }
+  }
+  fail(mount2) {
+    if (mount2.abort.signal.aborted) return;
+    this.disposeMount(mount2);
+    mount2.slot.textContent = `${mount2.descriptor.label} (unavailable)`;
+  }
+  refresh() {
+    for (const mount2 of this.mounts.values()) this.update(mount2);
+  }
+  sweep() {
+    for (const old of this.retired) old.remove();
+    this.retired.length = 0;
+    for (const mount2 of this.mounts.values()) {
+      if (!this.root.contains(mount2.slot)) this.disposeMount(mount2);
+    }
+  }
+  disposeMount(mount2) {
+    if (mount2.abort.signal.aborted) return;
+    mount2.abort.abort();
+    this.mounts.delete(mount2.descriptor.id);
+    for (const unregister2 of mount2.drafts) unregister2();
+    mount2.drafts.clear();
+    try {
+      mount2.view?.dispose();
+    } catch {
+    }
+  }
+  dispose() {
+    for (const mount2 of this.mounts.values()) this.disposeMount(mount2);
+    this.retired.length = 0;
+    this.composing.clear();
+    this.deferred = void 0;
+  }
+};
+
 // scripts/widgets/richtext/composition.ts
 function commonPrefix(a2, b) {
   const max = Math.min(a2.length, b.length);
@@ -45859,34 +46311,70 @@ function mapDelete(e, type, host) {
 }
 
 // scripts/widgets/richtext/editor_render.ts
-function renderRoot(root, provider, doc, ctx) {
-  root.replaceChildren(...provider.blocks(doc).map((id) => provider.renderBlock(doc, id, ctx)));
-}
-function patchBlocks(root, provider, doc, ctx, result, held, onFresh) {
-  for (const id of result.removedBlocks) {
-    if (id !== held) {
-      blockElement(root, id)?.remove();
+function renderBlock(session, id, ctx, options) {
+  try {
+    const descriptor = options?.resolveNativeBlock?.(session, id, ctx);
+    if (descriptor) {
+      const block = document.createElement("div");
+      block.dataset.docBlock = id;
+      block.contentEditable = "false";
+      block.append(widgetSlot(descriptor));
+      return block;
     }
+    return session.provider.renderBlock(session.doc, id, ctx);
+  } catch {
+    const block = document.createElement("div");
+    block.dataset.docBlock = id;
+    block.contentEditable = "false";
+    block.textContent = "Widget unavailable";
+    return block;
   }
+}
+function renderRoot(root, session, ctx, host, options) {
+  const ids = session.provider.blocks(session.doc);
+  patchBlocks(
+    root,
+    session.provider,
+    session.doc,
+    ctx,
+    {
+      dirtyBlocks: ids,
+      removedBlocks: [...root.children].map((el) => el.getAttribute("data-doc-block")).filter((id) => !ids.includes(id))
+    },
+    void 0,
+    () => {
+    },
+    host,
+    session,
+    options
+  );
+}
+function patchBlocks(root, provider, doc, ctx, result, held, onFresh, host, session, options) {
   const order = provider.blocks(doc);
   const dirty2 = result.dirtyBlocks.filter((id) => id !== held).map((id) => ({ id, index: order.indexOf(id) })).filter((entry) => entry.index >= 0).sort((a2, b) => a2.index - b.index);
   for (const { id, index } of dirty2) {
-    const fresh = provider.renderBlock(doc, id, ctx);
+    const fresh = renderBlock(session, id, ctx, options);
     const old = blockElement(root, id);
-    if (old !== void 0) {
-      old.replaceWith(fresh);
-    } else if (index === 0) {
-      root.prepend(fresh);
-    } else {
-      const prev = blockElement(root, order[index - 1]);
-      if (prev !== void 0) {
-        prev.after(fresh);
+    host.replace(old, fresh, () => {
+      if (old !== void 0) {
+        old.before(fresh);
+      } else if (index === 0) {
+        root.prepend(fresh);
       } else {
-        root.append(fresh);
+        const prev = blockElement(root, order[index - 1]);
+        if (prev !== void 0) {
+          prev.after(fresh);
+        } else {
+          root.append(fresh);
+        }
       }
-    }
+    });
     onFresh(fresh);
   }
+  for (const id of result.removedBlocks) {
+    if (id !== held) blockElement(root, id)?.remove();
+  }
+  host.sweep();
 }
 
 // scripts/widgets/richtext/editor_style.ts
@@ -46069,6 +46557,25 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
   /** Logs any DOM mutation the editor did not make, so a missed inputType shows up. */
   static observeMutations = true;
   root;
+  widgetHost;
+  _widgetOptions = {};
+  get widgetOptions() {
+    return this._widgetOptions;
+  }
+  set widgetOptions(value) {
+    this.widgetHost.dispose();
+    this._widgetOptions = value;
+    this.refreshWidgets();
+  }
+  /** Rechecks instance policy and descriptor implementations. */
+  refreshWidgets() {
+    this.renderAll();
+  }
+  /** Cancels mounted generations before reevaluating a changed host policy. */
+  invalidateWidgetPolicy() {
+    this.widgetHost.dispose();
+    this.renderAll();
+  }
   styletag;
   /** Holds `provider.styles()`, replaced whole whenever the session or the theme changes. */
   providerStyle;
@@ -46103,11 +46610,28 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     root.className = "rich-text-root";
     root.contentEditable = "true";
     root.spellcheck = false;
+    this.widgetHost = new WidgetHost(
+      root,
+      () => this._session,
+      () => this.richCtx,
+      () => this.readOnly || this.disabled,
+      (slot, before) => {
+        const block = slot.closest("[data-doc-block]")?.dataset.docBlock;
+        if (!block || !this._session) return;
+        this.select(
+          collapsed({
+            block,
+            offset: before ? 0 : this._session.provider.blockText(this._session.doc, block).length
+          })
+        );
+      }
+    );
     const editor = this;
     this.bridge = {
+      widget: widgetSlot,
       dispatch: (op) => this.dispatch(op),
       get readOnly() {
-        return editor.readOnly;
+        return editor.readOnly || editor.disabled || editor.session?.canWrite === false;
       },
       selection: () => this.selectionThroughPending(),
       select: (range) => this.select(range),
@@ -46116,17 +46640,34 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       root,
       linkClicked: (link, event) => this.linkClicked(link, event)
     };
-    root.addEventListener("beforeinput", (e) => this.onBeforeInput(e));
-    root.addEventListener("keydown", (e) => this.onKeyDown(e));
-    root.addEventListener("compositionstart", () => this.onCompositionStart());
-    root.addEventListener("compositionend", () => this.onCompositionEnd());
+    root.addEventListener("beforeinput", (e) => {
+      if (!this.widgetHost.event(e)) this.onBeforeInput(e);
+    });
+    root.addEventListener("keydown", (e) => {
+      if (!this.widgetHost.event(e)) this.onKeyDown(e);
+    });
+    root.addEventListener("compositionstart", (e) => {
+      if (!this.widgetHost.event(e)) this.onCompositionStart();
+    });
+    root.addEventListener("compositionend", (e) => {
+      if (!this.widgetHost.event(e)) this.onCompositionEnd();
+    });
     root.addEventListener("blur", () => this.endRun());
-    root.addEventListener("copy", (e) => this.onCopy(e, false));
-    root.addEventListener("cut", (e) => this.onCopy(e, true));
+    root.addEventListener("copy", (e) => {
+      if (!this.widgetHost.event(e)) this.onCopy(e, false);
+    });
+    root.addEventListener("cut", (e) => {
+      if (!this.widgetHost.event(e)) this.onCopy(e, true);
+    });
+    for (const type of ["input", "paste", "drop", "pointerdown", "pointerup", "click"]) {
+      root.addEventListener(type, (e) => {
+        if (this.widgetHost.owner(e)) e.stopPropagation();
+      });
+    }
     this.shadow.appendChild(root);
     if (_RichTextEditor.observeMutations) {
       this.observer = new MutationObserver((records) => {
-        if (!this.composing) {
+        if (!this.composing && records.some((record) => !this.widgetHost.ownsNode(record.target))) {
           console.error("rich-text-x: the DOM changed outside the editor", records);
         }
       });
@@ -46142,6 +46683,8 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       return;
     }
     this.unsubscribe?.();
+    this.widgetHost.dispose();
+    this.root.replaceChildren();
     this._session = session;
     this.rctx = void 0;
     this.pending.length = 0;
@@ -46152,7 +46695,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
         return;
       }
       this.docChanged(change);
-      this.announce(change, info);
+      if (info.origin !== "policy") this.announce(change, info);
     });
     this.providerStyle.textContent = session?.provider.styles?.() ?? "";
     this.buildToolbar();
@@ -46182,6 +46725,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
   set readOnly(value) {
     this.toggleAttribute("readonly", value);
     this.applyEditable();
+    this.widgetHost.refresh();
   }
   /** The selection and scroll position, for a history engine to save before swapping `session` and restore after. */
   get viewState() {
@@ -46253,7 +46797,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
    * target, and locks the toolbar's widgets in place.
    */
   applyEditable() {
-    const readOnly = this.readOnly;
+    const readOnly = this.readOnly || this._session?.canWrite === false;
     const editable = !readOnly && !this.disabled ? "true" : "false";
     if (this.root.getAttribute("contenteditable") !== editable) {
       this.root.contentEditable = editable;
@@ -46283,6 +46827,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     }
   }
   _ondestroy() {
+    this.widgetHost.dispose();
     document.removeEventListener("selectionchange", this.onSelectionChange);
     this.observer?.disconnect();
     this.unsubscribe?.();
@@ -46314,7 +46859,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
   }
   /** Ends the typing run and commits `op`; resolves with its result, or `undefined` when read-only or dropped. */
   async dispatch(op) {
-    if (this.readOnly) {
+    if (this.readOnly || this.disabled) {
       return void 0;
     }
     this.endRun();
@@ -46360,6 +46905,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     return caret === null ? void 0 : this.docPos(caret.offsetNode, caret.offset);
   }
   async undo() {
+    if (this.readOnly || this.disabled) return;
     const session = this._session;
     if (session === void 0) {
       return;
@@ -46369,6 +46915,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     this.endRun();
   }
   async redo() {
+    if (this.readOnly || this.disabled) return;
     const session = this._session;
     if (session === void 0) {
       return;
@@ -46434,7 +46981,8 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       this.root.blur();
       e.preventDefault();
     } else if (e.key === "Tab") {
-      this.refuse("insertTab");
+      const range = this.selectionThroughPending();
+      if (!range || !this.widgetHost.enter(range.head, e.shiftKey)) this.refuse("insertTab");
       e.preventDefault();
     } else if (mod && e.shiftKey && key === "s") {
       this.toggleMark("strikethrough");
@@ -46571,19 +47119,17 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     if (session === void 0 || ctx === void 0) {
       return void 0;
     }
-    const toolop = new DocEditOp(
-      op,
-      session.provider.inverse(session.doc, op),
-      session.id,
-      this.pathUndoGen
-    );
-    const result = toolop.result(this);
     const entry = { op, reflected };
     this.pending.push(entry);
     let applied;
     try {
-      const run = ctx.toolstack.foldOrExec(ctx, toolop);
-      applied = await Promise.race([result, run.then(() => result)]);
+      applied = await session.dispatch(
+        op,
+        ctx,
+        this,
+        this.pathUndoGen,
+        () => !this.readOnly && !this.disabled
+      );
     } catch (error2) {
       this.dropPending(entry);
       console.error("rich-text-x: edit failed", error2);
@@ -46623,13 +47169,17 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
   }
   /** A change from elsewhere: another editor, an undo, the provider. The caret stays put. */
   docChanged(change) {
+    if (this._session?.disposed) {
+      this.widgetHost.dispose();
+      return;
+    }
     const own = this.domRange();
     const view = this.view();
     this.applyResult({ ...change, selection: void 0 });
     if (this.composing) {
       return;
     }
-    if (own !== void 0 && view !== void 0) {
+    if (own !== void 0 && view !== void 0 && !this.widgetHost.focused) {
       this.setSelection({
         anchor: this.clampPos(own.anchor, view),
         head: this.clampPos(own.head, view)
@@ -46671,6 +47221,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     return { blocks: provider.blocks(doc), blockText: (block) => provider.blockText(doc, block) };
   }
   renderAll() {
+    if (this.widgetHost.hold(() => this.renderAll())) return;
     const session = this._session;
     const ctx = this.richCtx;
     if (session === void 0) {
@@ -46683,13 +47234,14 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       this.needsRender = true;
       return;
     }
-    renderRoot(this.root, session.provider, session.doc, ctx);
+    renderRoot(this.root, session, ctx, this.widgetHost, this.widgetOptions);
     this.observer?.takeRecords();
     this.needsRender = false;
     this.updateEmbedded(this.root);
   }
   /** Re-renders the dirty blocks, drops the removed ones and places the selection. */
   applyResult(result) {
+    if (this.widgetHost.hold(() => this.renderAll())) return;
     const session = this._session;
     const ctx = this.richCtx;
     if (session === void 0 || ctx === void 0) {
@@ -46703,10 +47255,13 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       ctx,
       result,
       held,
-      (fresh) => this.updateEmbedded(fresh)
+      (fresh) => this.updateEmbedded(fresh),
+      this.widgetHost,
+      session,
+      this.widgetOptions
     );
     this.observer?.takeRecords();
-    if (result.selection !== void 0 && !this.composing) {
+    if (result.selection !== void 0 && !this.composing && !result.preserveFocus && !this.widgetHost.focused) {
       this.setSelection(result.selection);
     }
     this.syncToolbar();
@@ -46720,6 +47275,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     return view === void 0 ? void 0 : docPosIn(this.root, view, node, offset);
   }
   domRange() {
+    if (this.widgetHost.focused) return void 0;
     const view = this.view();
     return view === void 0 ? void 0 : domRange(this.root, this.shadow, view);
   }
@@ -47413,6 +47969,26 @@ var plainFormat = {
 };
 var plainEntry = plainFormat;
 var RichTextArea = class extends UIBase {
+  get widgetOptions() {
+    return this.editor.widgetOptions;
+  }
+  set widgetOptions(options) {
+    this.editor.widgetOptions = options;
+  }
+  get pendingDrafts() {
+    return this._session?.pendingDrafts ?? [];
+  }
+  prepareSave() {
+    return this._session?.prepareSave() ?? Promise.resolve({ status: "ready", revision: 0 });
+  }
+  invalidateWidgetPolicy() {
+    this.editor.invalidateWidgetPolicy();
+  }
+  writeAllowed = true;
+  setWriteAllowed(allowed) {
+    this.writeAllowed = allowed;
+    this._session?.setWriteAllowed(allowed);
+  }
   editor;
   _format = "plain";
   entry = plainEntry;
@@ -47474,10 +48050,19 @@ var RichTextArea = class extends UIBase {
     if (entry === void 0) {
       throw new Error(`RichTextArea: no rich text format is registered as "${name}"`);
     }
+    this.useFormat(entry);
     this._format = name;
+  }
+  /** Uses instance-owned provider configuration without registering application state globally. */
+  useFormat(format) {
+    if (this.pendingDrafts.length)
+      throw new Error("Prepare or discard drafts before changing format");
+    const entry = format;
+    const provider = entry.provider();
+    const doc = entry.fromText(this.lastValue);
     this.entry = entry;
-    this.provider = entry.provider();
-    this.doc = entry.fromText(this.lastValue);
+    this.provider = provider;
+    this.doc = doc;
     this._session?.dispose();
     this._session = void 0;
     this.openSession();
@@ -47526,8 +48111,9 @@ var RichTextArea = class extends UIBase {
       return;
     }
     const session = new DocumentSession(this.doc, this.provider, this.ctx.toolstack);
+    session.setWriteAllowed(this.writeAllowed);
     session.onChange((_change, info) => {
-      if (info.origin !== "external") {
+      if (info.origin !== "external" && info.origin !== "policy") {
         this.pushValue();
       }
     });

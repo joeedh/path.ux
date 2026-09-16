@@ -27,6 +27,8 @@ export * from "./widgets/ui_button";
 export * from "./widgets/ui_richedit";
 export * from "./widgets/richtext/provider";
 export * from "./widgets/richtext/context";
+export * from "./widgets/richtext/widget";
+export * from "./widgets/richtext/drafts";
 export * from "./widgets/richtext/ops";
 export * from "./widgets/richtext/editor";
 export * from "./widgets/richtext/textarea";

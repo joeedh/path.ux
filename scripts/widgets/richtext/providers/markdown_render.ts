@@ -1,3 +1,5 @@
+import type { WidgetDescriptor } from "../widget";
+import { newBlockId } from "../provider";
 // The DOM for a markdown block, and the stylesheet the blocks need. One element per block, the
 // inline runs from the shared tree walk; bullets and numbers are drawn by CSS alone, so nothing
 // but the block's own text ever counts in the position walk.
@@ -23,7 +25,10 @@ export interface MarkdownRenderOptions {
    * The element for an image atom, called for every one; `undefined` falls back to `<img>`.
    * The provider wraps what comes back in the atom element, so the atom contract stays its own.
    */
-  renderMedia?: (image: MdImage, ctx: ProviderContext) => HTMLElement | undefined;
+  renderMedia?: (
+    image: MdImage,
+    ctx: ProviderContext
+  ) => HTMLElement | WidgetDescriptor | undefined;
 }
 
 /** Depths the numbering rules are generated for; a deeper item still lists, without a counter. */
@@ -112,16 +117,46 @@ function atomElement(
   wrap.setAttribute("data-doc-atom", "");
   wrap.setAttribute("contenteditable", "false");
 
+  atom.id ??= newBlockId();
   const custom = options.renderMedia?.(atom.image, ctx);
-  if (custom !== undefined) {
-    wrap.append(custom);
+  if (custom instanceof HTMLElement) {
+    wrap.append(
+      ctx.editor.widget
+        ? ctx.editor.widget({
+            id            : atom.id,
+            implementation: {},
+            label         : atom.image.alt || "Media",
+            create        : () => ({ element: custom, dispose: () => custom.remove() }),
+          })
+        : custom
+    );
     return wrap;
   }
-
-  const widget = UIBase.constructElement<MdImageWidget>("md-image-x", ctx);
-  widget.setAtom(block.id, atom.offset, atom.image);
-  wrap.append(widget);
-
+  const descriptor: WidgetDescriptor = custom
+    ? { ...custom, id: atom.id }
+    : {
+        id            : atom.id,
+        implementation: MdImageWidget,
+        label         : atom.image.alt || "Image",
+        value: { block: block.id, offset: atom.offset, image: structuredClone(atom.image) },
+        create: () => {
+          const widget = UIBase.constructElement<MdImageWidget>("md-image-x", ctx);
+          return {
+            element: widget,
+            update: ({ value }) => {
+              const state = value as { block: string; offset: number; image: MdImage };
+              widget.setAtom(state.block, state.offset, state.image);
+            },
+            dispose: () => widget.remove(),
+          };
+        },
+      };
+  if (ctx.editor.widget) wrap.append(ctx.editor.widget(descriptor));
+  else {
+    const widget = UIBase.constructElement<MdImageWidget>("md-image-x", ctx);
+    widget.setAtom(block.id, atom.offset, atom.image);
+    wrap.append(widget);
+  }
   return wrap;
 }
 

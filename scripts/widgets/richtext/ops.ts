@@ -1,4 +1,4 @@
-import { ToolOp } from "../../path-controller/toolsys/toolop";
+import { ToolOp, ToolRefusedError } from "../../path-controller/toolsys/toolop";
 import type { FoldableToolOp } from "../../path-controller/toolsys/toolop";
 import { StringProperty } from "../../path-controller/toolsys/toolprop";
 import type { DocChangeInfo, DocumentSession, RichTextContext } from "./context";
@@ -7,6 +7,29 @@ import type { EditOp, EditResult } from "./provider";
 // A run of typing folds into one entry. Every other kind of edit pushes, which the key
 // arranges by giving it a number no other op will carry.
 let uniqueRun = 0;
+
+function checkJson(value: unknown, ancestors = new Set<object>()): void {
+  if (value === null || typeof value === "string" || typeof value === "boolean") return;
+  if (typeof value === "number" && Number.isFinite(value)) return;
+  if (
+    typeof value !== "object" ||
+    ancestors.has(value) ||
+    ancestors.size >= 100 ||
+    (!Array.isArray(value) &&
+      Object.getPrototypeOf(value) !== Object.prototype &&
+      Object.getPrototypeOf(value) !== null)
+  ) {
+    throw new Error("Command data must be losslessly JSON encodable");
+  }
+  ancestors.add(value);
+  for (const item of Object.values(value)) checkJson(item, ancestors);
+  ancestors.delete(value);
+}
+
+function encodeEdit(op: EditOp): string {
+  if (op.type === "custom") checkJson(op.data);
+  return JSON.stringify(op);
+}
 
 type EditInputs = { op: StringProperty; inverse: StringProperty };
 
@@ -22,7 +45,7 @@ function foldBlock(op: EditOp) {
 
 /**
  * One `EditOp` on the undo stack. The document comes from `ctx.session`, and both phases
- * are no-ops once that session is disposed. An editor reads the `EditResult` of the op it
+ * refuse once that session is disposed. An editor reads the `EditResult` of the op it
  * submitted through `result()`; every result also reaches the session's listeners.
  */
 export class DocEditOp extends ToolOp<EditInputs, {}, RichTextContext> implements FoldableToolOp {
@@ -38,6 +61,8 @@ export class DocEditOp extends ToolOp<EditInputs, {}, RichTextContext> implement
   }
 
   private readonly key: string;
+  prepare?: () => EditOp;
+  preserveFocus = false;
   private resolve?: (result: EditResult) => void;
   private source?: object;
 
@@ -100,29 +125,52 @@ export class DocEditOp extends ToolOp<EditInputs, {}, RichTextContext> implement
     resolve?.(result);
   }
 
-  /** The inverse was computed by the editor before submission; there is nothing to record. */
+  override historyPreflight(ctx: RichTextContext) {
+    return ctx.session.canWrite ? undefined : { reason: "Document writes are prohibited" };
+  }
+
+  private apply(session: DocumentSession, op: EditOp): EditResult {
+    if (!session.canWrite) throw new ToolRefusedError("Document writes are prohibited", this);
+    const blocks = structuredClone(session.provider.snapshots(session.doc));
+    try {
+      const result = session.provider.applyEdit(session.doc, op);
+      return this.preserveFocus ? { ...result, preserveFocus: true } : result;
+    } catch (error) {
+      session.provider.applyEdit(session.doc, {
+        type : "replaceBlocks",
+        after: null,
+        blocks,
+        remove: [...session.provider.blocks(session.doc)],
+      });
+      throw error;
+    }
+  }
+
+  private resolveEdit(session: DocumentSession): EditOp {
+    if (!session.canWrite) throw new ToolRefusedError("Document writes are prohibited", this);
+    const op = this.prepare?.() ?? this.op;
+    const encoded = encodeEdit(op);
+    this.inputs.op.setValue(encoded);
+    const decoded = this.op;
+    this.inputs.inverse.setValue(JSON.stringify(session.provider.inverse(session.doc, decoded)));
+    return decoded;
+  }
+
+  /** Captures the inverse beside mutation in exec, without an asynchronous gap. */
   override undoPre(_ctx: RichTextContext): void {}
 
   override exec(ctx: RichTextContext): void {
     const { session } = ctx;
-    if (session.disposed) {
-      return;
-    }
-
-    const op = this.op;
+    const op = this._was_redo ? this.op : this.resolveEdit(session);
     // the toolstack marks a redo before re-running exec; the resolver is unset by then
     const origin = this._was_redo ? "redo" : "edit";
-    this.settle(session, session.provider.applyEdit(session.doc, op), origin, op);
+    this.settle(session, this.apply(session, op), origin, op);
   }
 
   override undo(ctx: RichTextContext): void {
     const { session } = ctx;
-    if (session.disposed) {
-      return;
-    }
-
     const inverse = this.inverse;
-    session.deliver(session.provider.applyEdit(session.doc, inverse), {
+    session.deliver(this.apply(session, inverse), {
       origin: "undo",
       op    : inverse,
     });
@@ -138,12 +186,9 @@ export class DocEditOp extends ToolOp<EditInputs, {}, RichTextContext> implement
    */
   foldFrom(next: this, ctx: RichTextContext): void {
     const { session } = ctx;
-    if (session.disposed) {
-      return;
-    }
-
     const head = this.op;
-    const delta = next.op;
+    const delta = next.resolveEdit(session);
+    const result = next.apply(session, delta);
 
     if (head.type === "insertText" && delta.type === "insertText") {
       this.inputs.op.setValue(JSON.stringify({ ...head, text: head.text + delta.text }));
@@ -163,7 +208,7 @@ export class DocEditOp extends ToolOp<EditInputs, {}, RichTextContext> implement
       this.inputs.op.setValue(JSON.stringify({ ...head, range }));
     }
 
-    next.settle(session, session.provider.applyEdit(session.doc, delta), "fold", delta);
+    next.settle(session, result, "fold", delta);
   }
 }
 

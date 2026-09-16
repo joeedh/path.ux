@@ -129,6 +129,13 @@ export class MarkdownProvider implements DocumentProvider<MdDoc> {
   }
 
   renderBlock(doc: MdDoc, block: BlockId, ctx: ProviderContext): HTMLElement {
+    const identities = new Set<string>();
+    for (const item of doc.blocks) {
+      for (const atom of item.atoms) {
+        if (!atom.id || identities.has(atom.id)) atom.id = newBlockId();
+        identities.add(atom.id);
+      }
+    }
     return renderMarkdownBlock(blockOf(doc, block), ctx, this.options);
   }
 

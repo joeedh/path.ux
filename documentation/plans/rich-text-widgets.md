@@ -1,6 +1,6 @@
 # Embedded rich text widgets
 
-Status: proposed design. No implementation stages are complete.
+Implementation status and acceptance evidence live only in the [task list](rich-text-widget-tasks.md).
 
 ## Reading guide
 
@@ -201,6 +201,25 @@ reference representation and a defined policy for copying only part of a documen
 
 ## Lifecycle and input ownership
 
+Stage 1 uses `WidgetDescriptor` with a session-stable `id`, an implementation token,
+an accessible label, an immutable value snapshot, and a factory. The factory receives an
+abort signal, a generation check, guarded commands, and draft registration. It returns an
+element with update/dispose hooks; asynchronous factories are allowed and late results are
+disposed. A per-editor native-block resolver can decline without changing provider rendering.
+Providers can supply the same descriptor through `ctx.editor.widget()`; media callbacks may
+return a descriptor instead of an element. Runtime Markdown atom IDs survive snapshots,
+offset changes, split/join, and moves, but are not written into ordinary Markdown.
+
+The connected-DOM prototype in buildtools/richtext-movement.mjs passed in the installed
+Chromium and Firefox engines: `moveBefore()` retained input focus, its selection range, and
+the local iframe's document identity. `append()` lost focus and replaced the iframe document.
+The host uses connected moves where available, keeps unchanged mount positions on other
+engines, and reports a remount when an unsupported move is necessary. Playback continuity
+is therefore supported only for retained connected mounts; a remount restarts embedded media.
+The acceptance fixture also verifies continued playback of a local canvas stream inside the iframe.
+Widget composition holds reconciliation until composition ends. `preserveFocus` on a change (with optional `selection`)
+suppresses document caret restoration; other views keep their own focus owner.
+
 The host creates a view with an element, an update method, and an idempotent dispose method.
 Identity is scoped by session, editor view, and widget ID. Provider-native blocks can use
 their block ID; inline media needs an identity independent of its offset. Rebinding a
@@ -362,8 +381,7 @@ by an explicitly registered plugin over an external table with a different comma
 ## Delivery and verification
 
 The [task list](rich-text-widget-tasks.md#delivery-and-verification) owns the stage schedule,
-acceptance checks, current-work status, blockers, and completion log. Implementation has not
-started. Update status there rather than duplicating it in the design documents.
+acceptance checks, current-work status, blockers, and completion log. Update status there rather than duplicating it in the design documents.
 
 ## Implementation task list
 
@@ -373,8 +391,6 @@ true inline plugins, and the separate visualnovel migration using stable task ID
 
 ## Decisions still requiring implementation prototypes
 
-- Finalize the lifecycle descriptor and connected-DOM reconciliation strategy, including
-  browser behavior when an active mount must move across blocks.
 - Finalize the Markdown envelope grammar, payload limits, duplicate-ID repair, and structured
   clipboard format before implementing persistence.
 - Specify true inline plugin syntax separately; do not encode arbitrary payloads in image

@@ -728,7 +728,7 @@ describe("typing shortcuts", () => {
     let result: EditResult | undefined;
     for (const ch of text) {
       result = provider.applyEdit(doc, { type: "insertText", at: caret(block, offset), text: ch });
-      offset = result.selection.head.offset;
+      offset = result.selection!.head.offset;
     }
     return result!;
   }
@@ -893,7 +893,7 @@ describe("clipboard", () => {
   test("text/html from elsewhere pastes as the blocks its elements make; the provider's own copy pastes its markdown", () => {
     const transfer = (parts: Record<string, string>) =>
       ({
-        types: Object.keys(parts),
+        types  : Object.keys(parts),
         getData: (t: string) => parts[t] ?? "",
       }) as unknown as DataTransfer;
 

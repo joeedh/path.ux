@@ -1,6 +1,6 @@
 # Embedded rich text widget tasks
 
-Status: implementation has not started.
+Status: Stage 1 is in progress.
 
 This is the sole status and completion tracker for the [widget architecture](rich-text-widgets.md)
 and [forms/front-matter design](rich-text-widget-forms.md). Task IDs and existing completion
@@ -13,7 +13,7 @@ proposed; update their status here when implementation begins.
 
 | Stage                  | Status      | Deliverable and acceptance condition                                                                                               |
 | ---------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| 1. Hosting             | Not started | Keyed mounts, disposal, input ownership, focus-preserving changes, and a synthetic editable widget work in two views               |
+| 1. Hosting             | In progress | Keyed mounts, disposal, input ownership, focus-preserving changes, and a synthetic editable widget work in two views               |
 | 2. Native table        | Not started | GFM table cells and structure edit through document history and round-trip formatting                                              |
 | 3. Plugin storage      | Not started | Registry, session host, command validation, Markdown envelopes, unknown-record preservation, and structured clipboard              |
 | 4. Local forms         | Not started | Standalone form control, Zod adapter, embedded and native front-matter bindings, source preservation, drafts, validation, and undo |
@@ -50,8 +50,7 @@ unit/browser checks when implementation changes the public surface.
 
 This checklist is the implementation tracker. The stage table above summarizes the same
 work. Update both when a stage changes; do not maintain a second independent task list.
-Implementation has not started. Creating this tracker does not start the visualnovel
-migration or any other implementation work.
+Stage 1 is authorized. Later stages and the visualnovel migration remain outside this run.
 
 Task IDs remain stable when work is split or reordered. Before starting a task, record its
 ID in the current-work entry below. Mark a checkbox complete only after its acceptance
@@ -59,8 +58,9 @@ condition is demonstrated, and record the relevant commit and checks in the comp
 Record blockers with the affected task ID and the concrete dependency needed to continue.
 Tasks without a checkbox marked complete are pending, including partially implemented work.
 
-- Current work: none.
-- Next task: H1, once implementation begins.
+- Current work: H9 — Chromium acceptance passed; extend Firefox and regression coverage.
+  H1–H8 implementation is under review; checkboxes remain pending until final acceptance.
+- Next task: finish Stage 1 verification and record commits; then stop before T1.
 - Blockers: none recorded; the [open design decisions](rich-text-widgets.md#decisions-still-requiring-implementation-prototypes)
   are scheduled work, not completed decisions.
 

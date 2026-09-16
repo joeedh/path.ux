@@ -1,17 +1,64 @@
+import type { WidgetHost } from "./widget_host";
+import type { WidgetOptions } from "./widget";
+import type { DocumentSession } from "./context";
+import { widgetSlot } from "./widget_host";
 import { blockElement } from "./positions";
 import type { BlockId, DocChange, DocumentProvider, EditResult, ProviderContext } from "./provider";
 
 // The editable root's DOM as a projection of the document: rendered whole, or patched block
 // by block from an edit's result. The editor decides when; nothing here reads the selection.
 
-/** Replaces the root's children with every block rendered afresh. */
+function renderBlock<Doc>(
+  session: DocumentSession<Doc>,
+  id: BlockId,
+  ctx: ProviderContext,
+  options?: WidgetOptions<Doc>
+): HTMLElement {
+  try {
+    const descriptor = options?.resolveNativeBlock?.(session, id, ctx);
+    if (descriptor) {
+      const block = document.createElement("div");
+      block.dataset.docBlock = id;
+      block.contentEditable = "false";
+      block.append(widgetSlot(descriptor));
+      return block;
+    }
+    return session.provider.renderBlock(session.doc, id, ctx);
+  } catch {
+    const block = document.createElement("div");
+    block.dataset.docBlock = id;
+    block.contentEditable = "false";
+    block.textContent = "Widget unavailable";
+    return block;
+  }
+}
+
+/** Reconciles every block through the same mount host as incremental edits. */
 export function renderRoot<Doc>(
   root: HTMLElement,
-  provider: DocumentProvider<Doc>,
-  doc: Doc,
-  ctx: ProviderContext
+  session: DocumentSession<Doc>,
+  ctx: ProviderContext,
+  host: WidgetHost<Doc>,
+  options?: WidgetOptions<Doc>
 ): void {
-  root.replaceChildren(...provider.blocks(doc).map((id) => provider.renderBlock(doc, id, ctx)));
+  const ids = session.provider.blocks(session.doc);
+  patchBlocks(
+    root,
+    session.provider,
+    session.doc,
+    ctx,
+    {
+      dirtyBlocks  : ids,
+      removedBlocks: [...root.children]
+        .map((el) => el.getAttribute("data-doc-block")!)
+        .filter((id) => !ids.includes(id)),
+    },
+    undefined,
+    () => {},
+    host,
+    session,
+    options
+  );
 }
 
 /**
@@ -26,14 +73,11 @@ export function patchBlocks<Doc>(
   ctx: ProviderContext,
   result: EditResult | DocChange,
   held: BlockId | undefined,
-  onFresh: (element: HTMLElement) => void
+  onFresh: (element: HTMLElement) => void,
+  host: WidgetHost<Doc>,
+  session: DocumentSession<Doc>,
+  options?: WidgetOptions<Doc>
 ): void {
-  for (const id of result.removedBlocks) {
-    if (id !== held) {
-      blockElement(root, id)?.remove();
-    }
-  }
-
   const order = provider.blocks(doc);
   const dirty = result.dirtyBlocks
     .filter((id) => id !== held)
@@ -42,21 +86,27 @@ export function patchBlocks<Doc>(
     .sort((a, b) => a.index - b.index);
 
   for (const { id, index } of dirty) {
-    const fresh = provider.renderBlock(doc, id, ctx);
+    const fresh = renderBlock(session, id, ctx, options);
     const old = blockElement(root, id);
 
-    if (old !== undefined) {
-      old.replaceWith(fresh);
-    } else if (index === 0) {
-      root.prepend(fresh);
-    } else {
-      const prev = blockElement(root, order[index - 1]);
-      if (prev !== undefined) {
-        prev.after(fresh);
+    host.replace(old, fresh, () => {
+      if (old !== undefined) {
+        old.before(fresh);
+      } else if (index === 0) {
+        root.prepend(fresh);
       } else {
-        root.append(fresh);
+        const prev = blockElement(root, order[index - 1]);
+        if (prev !== undefined) {
+          prev.after(fresh);
+        } else {
+          root.append(fresh);
+        }
       }
-    }
+    });
     onFresh(fresh);
   }
+  for (const id of result.removedBlocks) {
+    if (id !== held) blockElement(root, id)?.remove();
+  }
+  host.sweep();
 }

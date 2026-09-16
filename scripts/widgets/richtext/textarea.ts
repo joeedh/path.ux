@@ -1,3 +1,4 @@
+import type { WidgetOptions } from "./widget";
 import { UIBase } from "../../core/ui_base";
 import type { IContextBase } from "../../core/context_base";
 import type { UIBaseDefinition } from "../../core/base/ui_base_types";
@@ -52,6 +53,30 @@ export class RichTextArea<CTX extends IContextBase = IContextBase> extends UIBas
   string,
   "RichTextArea"
 > {
+  get widgetOptions(): WidgetOptions {
+    return this.editor.widgetOptions;
+  }
+  set widgetOptions(options: WidgetOptions) {
+    this.editor.widgetOptions = options;
+  }
+  get pendingDrafts() {
+    return this._session?.pendingDrafts ?? [];
+  }
+  prepareSave() {
+    return (
+      this._session?.prepareSave() ?? Promise.resolve({ status: "ready" as const, revision: 0 })
+    );
+  }
+  invalidateWidgetPolicy(): void {
+    this.editor.invalidateWidgetPolicy();
+  }
+
+  private writeAllowed = true;
+  setWriteAllowed(allowed: boolean): void {
+    this.writeAllowed = allowed;
+    this._session?.setWriteAllowed(allowed);
+  }
+
   readonly editor: RichTextEditor<CTX, unknown>;
   private _format = "plain";
   private entry = plainEntry;
@@ -125,10 +150,20 @@ export class RichTextArea<CTX extends IContextBase = IContextBase> extends UIBas
       throw new Error(`RichTextArea: no rich text format is registered as "${name}"`);
     }
 
+    this.useFormat(entry);
     this._format = name;
+  }
+
+  /** Uses instance-owned provider configuration without registering application state globally. */
+  useFormat<Doc>(format: RichTextFormat<Doc>): void {
+    if (this.pendingDrafts.length)
+      throw new Error("Prepare or discard drafts before changing format");
+    const entry = format as RichTextFormat<unknown>;
+    const provider = entry.provider();
+    const doc = entry.fromText(this.lastValue);
     this.entry = entry;
-    this.provider = entry.provider();
-    this.doc = entry.fromText(this.lastValue);
+    this.provider = provider;
+    this.doc = doc;
     this._session?.dispose();
     this._session = undefined;
     this.openSession();
@@ -189,9 +224,10 @@ export class RichTextArea<CTX extends IContextBase = IContextBase> extends UIBas
     }
 
     const session = new DocumentSession(this.doc, this.provider, this.ctx.toolstack);
+    session.setWriteAllowed(this.writeAllowed);
     // a load is the path's own value arriving, so it is not written back normalized
     session.onChange((_change, info) => {
-      if (info.origin !== "external") {
+      if (info.origin !== "external" && info.origin !== "policy") {
         this.pushValue();
       }
     });
