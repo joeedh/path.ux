@@ -288,9 +288,10 @@ chain; importing the module also registers the `markdown` format on `RichTextAre
 Markdown tab of the example app (`example/editors/properties/properties.ts`) shows it running:
 an editor on its own toolstack with a Read-only toggle, a Save button over `emitDocFile`, an
 outline built from `headings()` that selects a heading on click, a status line fed by
-`linkclick`, and a bound field over a `setRichText("markdown")` property. The syntax reference
-for what the parser accepts and what comes back out is the plan's last stage; until it lands,
-[plans/rich-text-markdown.md](plans/rich-text-markdown.md) holds the detail.
+`linkclick`, and a bound field over a `setRichText("markdown")` property.
+[markdown_syntax.md](markdown_syntax.md) is the syntax reference: what the parser accepts,
+construct by construct, what each becomes in the model, what comes back out, and what is
+dropped. Its samples are a test fixture, so it tracks the parser.
 
 ### The document
 

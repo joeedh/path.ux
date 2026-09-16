@@ -415,6 +415,9 @@ leaving the old callback in place and `@deprecated`.
   and the per-document or shared toolstack, the editing loop over `beforeinput`, and what is
   refused (composition) until the IME plan lands. `RichTextArea` is the datapath-bound form
   that `Container.textarea` builds for a `RICH_TEXT_STRING` property.
+  [Markdown syntax](documentation/markdown_syntax.md) is the reference for the markdown
+  format: what `MarkdownProvider` reads, what it writes back and what it drops; every sample
+  in it is a test fixture (`tests/richtext/markdownSyntax.test.ts`).
 - [Dock panels](documentation/dock_panels.md) — dockable/floatable editor
   panels (`PanelManager` in `scripts/screen/dock_panels.ts`): editors declare
   panels in `definePanels()`, users drag them between edge regions, float

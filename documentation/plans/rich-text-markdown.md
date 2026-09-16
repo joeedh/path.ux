@@ -1193,7 +1193,28 @@ that landed and none that was cut. `documentation/markdown_syntax.md`:
   so the guide cannot drift from the parser without failing a test.
 - `documentation/richtext.md` links to it, and so does the example app's Markdown tab.
 
-Status: not started.
+Status: done. `documentation/markdown_syntax.md` has a section per construct, each with a
+source fence, the model it becomes and the form it comes back in, the HTML rules
+(elements, attributes, styles, custom attributes, preserved media) and the list of what is
+refused or dropped; `tests/richtext/markdownSyntax.test.ts` parses all 49 fences;
+`documentation/richtext.md` and `CLAUDE.md` link to the guide and the example's sample
+document ends with a link to it. The runtime barrel is unchanged. Deviations, each with its
+reason:
+
+- The prose names the kinds and marks in a machine-readable `<!-- expect: kinds=…; marks=…;
+out=same|next -->` comment under each fence rather than in the sentences themselves, so
+  the test reads one line per sample instead of parsing English. `out=next` pins the
+  serializer's output as the next fence, which is then a fixture of its own with `out=same`,
+  so every normalized form in the guide is also checked to be a fixed point.
+- `.prettierrc` turns `embeddedLanguageFormatting` off for the guide, since prettier
+  otherwise rewrites the samples inside the fences into its own markdown style (`_em_`, `-`
+  bullets, ATX headings) and strips the trailing spaces of a two-space hard break; the
+  two-space form is described in prose without a sample for that reason.
+- Writing the guide from the code surfaced three normalizations worth a note rather than a
+  fix in a documentation stage, each recorded in the guide: `<br>` before a newline keeps the
+  newline as a soft break, so it comes back as a backslash and an empty line; a thematic break
+  as the first block is written as `---`, which the next parse reads as front matter; and a
+  block inside a list item or a list inside a quote is flattened.
 
 ## Findings
 

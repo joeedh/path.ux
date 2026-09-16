@@ -5,5 +5,11 @@
   "singleQuote"        : false,
   "quoteProps"         : "preserve",
   "alignPropertyValues": "group",
-  "printWidth"         : 100
+  "printWidth"         : 100,
+  "overrides": [
+    {
+      "files"  : "documentation/markdown_syntax.md",
+      "options": { "embeddedLanguageFormatting": "off" }
+    }
+  ]
 }

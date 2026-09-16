@@ -73,7 +73,14 @@ the rich text doc's Render-only, Link clicks and Markdown sections.
 [x]: markdown follow-ups (stage 6 of the same plan): typing shortcuts for
 headings, lists, quotes and fences, the `[[` completion hook with
 `insertWikilink`, and `text/html` paste through the parser's HTML rules.
-Stage 7 (the syntax reference) remains.
+[x]: markdown syntax reference (stage 7 of the same plan, its last):
+`documentation/markdown_syntax.md`, one section per construct with what
+comes back out and what is dropped, every fence checked by
+`tests/richtext/markdownSyntax.test.ts`.
+[ ]: markdown serializer warts the syntax reference records: `<br>` before a
+newline comes back as a backslash and an empty line, and a thematic break as
+the first block is written as `---`, which the next parse reads as front
+matter.
 [ ]: better wrappers around the web file system APIs, to cover what
 simple_docsys did for locally served, Electron and NW.js apps. Unrelated to
 the rich text work; noted here so it is not lost when simple_docsys goes.

@@ -50,4 +50,7 @@ function greet(name: string) {
 <video src="trailer.mp4" controls></video>
 
 ![A tiny icon](myicon2.png) sits inline after the raw block, with \`width\` kept as HTML: <img src="myicon2.png" width="32" alt="the same, sized">.
+
+The syntax this editor reads and writes is documented in
+[markdown_syntax.md](https://github.com/joeedh/path.ux/blob/master/documentation/markdown_syntax.md).
 `;
