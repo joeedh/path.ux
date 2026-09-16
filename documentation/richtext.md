@@ -10,7 +10,9 @@ what the provider says changed. The design and its reasoning live in
 
 The [embedded-widget design](plans/rich-text-widgets.md) proposes shared hosting for native
 table editors, host-supplied media views, and schema-driven form plugins. It describes future
-work; the contracts below describe the current implementation.
+work, with separate [forms and front-matter notes](plans/rich-text-widget-forms.md) and an
+[implementation checklist](plans/rich-text-widget-tasks.md). The contracts below describe
+the current implementation.
 
 Everything below is exported from the `pathux` barrel: `RichTextEditor`, `RichTextArea`,
 `DocumentSession`, `RichTextContext`, `DocEditOp`, `replaceContentsOp`, `PlainProvider`,

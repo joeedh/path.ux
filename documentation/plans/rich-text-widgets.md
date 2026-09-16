@@ -2,6 +2,14 @@
 
 Status: proposed design. No implementation stages are complete.
 
+## Reading guide
+
+- This document defines the shared architecture, persistence, lifecycle, history, host policy,
+  and native table integration.
+- [Forms and front matter](rich-text-widget-forms.md) defines schema adapters and the
+  visualnovel integration.
+- [Implementation tasks](rich-text-widget-tasks.md) owns all task status and completion evidence.
+
 ## Purpose
 
 Rich text documents need interactive forms, native table editing, charts, and views of
@@ -323,146 +331,15 @@ remain subject to separate host policy. This proposal ships no YouTube or video 
 
 ## Schema-driven forms
 
-Build a reusable form control and a rich text plugin wrapping it. The form has three
-independent inputs: its schema, its values, and presentation metadata such as field order,
-labels, groups, and control preferences.
-
-Separate the form's value binding from its renderer and schema adapter. A binding reads a
-versioned snapshot, reports changes, and submits commands against its backing store. Support
-three binding targets: a plugin record's embedded values, native provider-owned fields such
-as YAML front matter, and a host-owned external resource. The first two use document history;
-the third uses the resource service's transaction rules. Native bindings need no duplicate
-values or serialized plugin record just to display a form.
-
-Use one normalized `FormSchema` for rendering with adapters from Zod and nstructjs. The
-adapter also supplies validation, defaults, and encoding/decoding of editable values. It
-must report unsupported constructs rather than silently weakening validation. Preserve
-input and output types separately when validation transforms a value.
-
-Do not promise lossless conversion between arbitrary Zod schemas and nstructjs structs.
-Zod supports executable refinements and transforms; its
-[JSON Schema conversion](https://zod.dev/json-schema) documents unrepresentable constructs.
-nstructjs serialization expressions and object references do not necessarily describe
-editable fields. Source-specific validation and codecs remain in trusted application code.
-An nstructjs adapter may generate Zod validation for its supported subset if Zod is chosen
-as the runtime backend, without changing the renderer contract.
-
-An embedded schema is a versioned declarative description of the supported form subset.
-Never evaluate Zod code, struct helper expressions, or constructors supplied by a document.
-A referenced schema identifies a host-registered schema and version. Unsupported runtime
-behavior requires that registered implementation and otherwise produces an inert fallback.
-Dates, large integers, references, and class instances require explicit JSON-compatible
-codecs before they can enter widget records or document history.
-
-Schema and values independently support embedded data or external references. For example:
-
-```json
-{
-  "schema": { "kind": "reference", "id": "customer-intake", "version": 3 },
-  "values": { "kind": "embedded", "data": { "name": "", "priority": "normal" } },
-  "layout": { "fields": ["name", "priority"] }
-}
-```
-
-Embedded values belong to document history. External values belong to the host's data
-service and its conflict/versioning rules. Refreshing a chart or external form does not
-dirty the document unless the user explicitly saves a snapshot. External submission is an
-explicit action with pending, success, and failure states; document undo never repeats or
-reverses a remote request. Redo does not resubmit a form.
-
-Reuse path.ux controls and property metadata where useful. Any `DataAPI` mapping belongs to
-its own API instance. Controls edit drafts or call the document command adapter; they must
-not directly mutate saved payloads through ordinary property bindings.
-
-Distinguish designing the form, filling values, and submitting. Existing `editor.readOnly`
-continues to prohibit document mutation, including embedded answers. An application wanting
-locked layout with editable answers uses a narrower structure-edit permission, not an
-exception to `readOnly`. It is a per-view restriction: a read-only view cannot originate
-mutations, but another authorized view or application-level history may change the shared
-document. A session-wide write prohibition applies to all views and history entry points.
-External interactions require their own explicit host permission.
+The [forms design](rich-text-widget-forms.md#schema-driven-forms) specifies the reusable
+control, normalized schema adapters, native and plugin value bindings, and validation rules.
+It shares this document's hosting, history, and authorization contracts.
 
 ## Visualnovel: forms over YAML front matter
 
-The motivating checkout is C:/dev/visualnovel. The following paths are relative to that
-repository and describe the inspected implementation, not dependencies path.ux should import:
-
-- packages/types/src/schemas.ts defines Zod schemas and the document entity discriminator
-  `type`. Character and location directories imply a type; a conflicting explicit tag is an
-  error, not an override.
-- packages/parse/src/frontmatter.ts splits YAML front matter from the authored body and
-  preserves the original prefix for body-only edits. Its general stringify helper rebuilds
-  YAML, so that helper alone does not provide source-preserving field edits.
-- apps/desktop/renderer/pathux/editors/wiki.ts currently edits whole Markdown source in a
-  textarea. Its command layer permits incomplete field values with diagnostics and protects
-  document identity when saving.
-- apps/desktop/renderer/pathux/doctree/docbuffer.ts delegates reads and writes to `doc.read`
-  and `doc.write`, uses `seenHash` to refuse overwriting external changes, and retains drafts
-  beyond the lifetime of a pane. Saving runs through the application's commit machinery.
-
-Start with wiki notes and character/location sheets. The application's `doc.write` refuses
-scene documents, which have their own `story.*` write path; this integration does not reroute
-those documents through a generic file save.
-
-For this integration, the application chooses a host-registered schema using its existing
-path/content classification and mounts the shared form control over the provider's native
-front-matter block. Form edits patch the YAML fields through document operations. Body edits
-and front-matter edits share the same session and undo order. The file remains front matter
-plus its authored body, with no second copy of those values in a `pathux.form` envelope.
-
-The provider integration needs an opt-in native-block view resolver or equivalent explicit
-adapter, so the application can supply a form for a recognized front-matter block without
-forking the Markdown parser. It receives the block identity and a scoped native-data binding
-along with document context. It may decline and leave the ordinary inert front-matter view.
-The host supplies YAML interpretation and schema selection; the base Markdown provider
-continues to preserve front-matter source without a mandatory YAML or Zod dependency.
-
-Changing a path or discriminator invalidates the selected schema and field configuration.
-Reuse the application's existing classification rules; do not guess a schema from the
-folder alone or let a document name arbitrary executable schema code. Resolve a pending
-draft before switching bindings. Incompatible or conflicting types produce diagnostics and
-a raw-source view rather than dropping fields or rewriting the tag automatically.
-
-Keep an authored-source representation alongside the projected form values. Opening the
-form must not write schema defaults, remove unknown keys, or serialize transformed Zod output
-back over the author's YAML. A field change applies the smallest supported source patch,
-preserving comments, ordering, quoting, and untouched fields. Body-only edits preserve the
-front-matter prefix. A metadata-only edit must also preserve untouched body source; the
-current Markdown serializer can normalize the body, so source retention or a source patch
-layer is an explicit integration prerequisite. Undo restores source as well as projected
-values. Tests must cover CRLF and document-prefix handling.
-
-Malformed YAML, unsupported tags/aliases, or structures the field patcher cannot safely
-update retain their source and remain editable through the raw-source path. A form must
-not repair or flatten these structures silently. Apply bounded parsing and the host's YAML
-policy before projection. Keep authored input separate from validated model output, and
-report validation errors without discarding incomplete answers. Visualnovel's command-level
-identity protections still decide which file writes are acceptable.
-
-The migration preserves the application's authoritative save path. `prepareSave()` flushes
-view drafts into the session; serialization produces a source snapshot; the application
-submits that snapshot to `doc.write` with its last accepted `seenHash`. Only a successful
-write advances that baseline. A conflict leaves the unsaved session intact. A matching
-session revision proves which local snapshot was saved but does not replace the disk hash
-check. Later local edits remain dirty even if an earlier snapshot finishes saving.
-
-Refactor the current buffer's draft ownership into one document session per open document,
-retained independently of panes, or adapt the buffer to that session. Avoid independently
-writable text and form caches. A raw-source editor and the form are views of the same
-document; parsed projections refresh after source edits, and malformed source disables the
-structured view until it can be parsed again. Preserve reload, quit protection, and command
-notifications rather than replacing them with a widget-specific save mechanism.
-
-Use actual character/location schema fixtures to prove path/content selection, optional
-fields, nested arrays/objects, discriminated unions, defaults, and refinements. Test adding
-front matter to a file without it as one undoable operation. Also test a metadata-only edit
-with comments and unknown keys, body-only edits, type conflicts, incomplete answers, raw/form
-switching, two views, and an external rewrite between load and save. Schema adapter support
-must match the Zod major version used by the consuming project; do not assume a Zod 4-only
-API for the inspected client, which declares Zod 3.
-
-This is an intended application migration, not authorization to change the visualnovel
-checkout as part of this design task. Its code and domain schemas remain application-owned.
+The [visualnovel integration](rich-text-widget-forms.md#visualnovel-forms-over-yaml-front-matter)
+binds existing YAML fields without duplicating them in plugin records. It specifies source
+preservation, schema selection, retained sessions, and the application's save/conflict boundary.
 
 ## Markdown tables
 
@@ -484,242 +361,15 @@ by an explicitly registered plugin over an external table with a different comma
 
 ## Delivery and verification
 
-Implementation is not authorized by this design document alone. The following stages are
-proposed; update their status here when implementation begins.
-
-| Stage                  | Status      | Deliverable and acceptance condition                                                                                               |
-| ---------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| 1. Hosting             | Not started | Keyed mounts, disposal, input ownership, focus-preserving changes, and a synthetic editable widget work in two views               |
-| 2. Native table        | Not started | GFM table cells and structure edit through document history and round-trip formatting                                              |
-| 3. Plugin storage      | Not started | Registry, session host, command validation, Markdown envelopes, unknown-record preservation, and structured clipboard              |
-| 4. Local forms         | Not started | Standalone form control, Zod adapter, embedded and native front-matter bindings, source preservation, drafts, validation, and undo |
-| 5. Additional adapters | Not started | Second schema adapter and declarative embedded schemas with explicit unsupported cases                                             |
-| 6. External data       | Not started | Host-supplied resource services, policy invalidation, conflicts, cancellation, and explicit submission                             |
-
-Stage 1 includes a review of serialization at the toolstack boundary before later stages
-depend on widget commands. Begin forms with a host-supplied Zod schema; add nstructjs against
-the same rendering and validation contract. This choice does not make Zod part of the base
-rich text bundle. Shared contracts stay lightweight; schema adapters and form controls are
-optional imports. Media policy remains unchanged throughout these stages.
-
-Provider tests cover record validation, unknown and malformed source, duplicate IDs,
-snapshots, migrations, stale commands, clipboard identities, and Markdown round trips.
-Browser tests cover typing beside and inside widgets, IME, Tab/Escape, inner versus outer
-selection, copy/paste, deletion/undo, focus across updates, and two editors on one session.
-Verify that a retained opted-in iframe is not reloaded by unrelated text edits using a
-local test fixture rather than an external service.
-
-Security regression tests cover URL and HTML sanitization, hostile payload keys and depth,
-unregistered or disallowed records, policy changes during async work, and denial before
-renderer construction. In the default configuration, video and iframe source remains inert,
-video media references create no player, and no embed API script is loaded. Table and form
-tests also verify that values are rendered as text rather than inserted as HTML.
-
-Additional acceptance cases include saving with drafts in multiple views, saving partially
-filled required fields and cross-field validation failures, cancellation on navigation, undo
-after plugin removal, future payload versions, remote failure without a document edit, and
-redo without external submission. Application-level undo against a session whose write
-permission was revoked must preserve both the document and the history cursor. Follow the repository's full typecheck and applicable
-unit/browser checks when implementation changes the public surface.
+The [task list](rich-text-widget-tasks.md#delivery-and-verification) owns the stage schedule,
+acceptance checks, current-work status, blockers, and completion log. Implementation has not
+started. Update status there rather than duplicating it in the design documents.
 
 ## Implementation task list
 
-This checklist is the implementation tracker. The stage table above summarizes the same
-work. Update both when a stage changes; do not maintain a second independent task list.
-Implementation has not started. Creating this tracker does not start the visualnovel
-migration or any other implementation work.
-
-Task IDs remain stable when work is split or reordered. Before starting a task, record its
-ID in the current-work entry below. Mark a checkbox complete only after its acceptance
-condition is demonstrated, and record the relevant commit and checks in the completion log.
-Record blockers with the affected task ID and the concrete dependency needed to continue.
-Tasks without a checkbox marked complete are pending, including partially implemented work.
-
-- Current work: none.
-- Next task: H1, once implementation begins.
-- Blockers: none recorded; the decisions listed below are scheduled work, not completed decisions.
-
-### Preparation
-
-- [x] P1. Document the ownership split between native provider widgets, media references,
-      and plugin records, with host authorization and safe default media behavior.
-- [x] P2. Inspect visualnovel and record native YAML binding, Zod compatibility, source
-      preservation, and application save/conflict requirements.
-- [x] P3. Pressure-test the design with fresh context and incorporate the findings about
-      incomplete answers, draft barriers, and shared history authorization.
-
-### Stage 1: hosting and shared editing contracts
-
-Dependencies: P1–P3. Complete this stage before native tables or plugin views depend on the
-host. These tasks include the draft/history prerequisites needed by both tables and forms.
-
-- [ ] H1. Finalize the lifecycle descriptor, stable identities, native-block resolver, and
-      focus-preserving change result. Prototype connected-DOM reconciliation with an input and
-      an explicitly opted-in local iframe; document which moves preserve focus and playback.
-- [ ] H2. Implement per-view mount reconciliation, update, error fallback, and idempotent
-      disposal. Verify deletion, session replacement, implementation changes, and late async
-      results without leaked subscriptions or requests.
-- [ ] H3. Implement event ownership across shadow DOM for input, clipboard, pointer, drop,
-      and composition events. Verify the surrounding editor never treats field edits as prose.
-- [ ] H4. Implement keyboard entry/exit, Tab, Escape, inner versus outer selection, and
-      deletion boundaries. Verify accessible naming and focus survive neighboring text edits.
-- [ ] H5. Serialize target resolution, authorization, inverse capture, and mutation at the
-      command execution boundary. Prove stale/deleted targets settle with no history entry and
-      failed edits leave document state unchanged.
-- [ ] H6. Add history preflight refusal where needed, including the shared application
-      stack. Verify revoked document-write permission blocks undo/redo/rerun without moving
-      history or mutating data, while per-view read-only remains a separate restriction.
-- [ ] H7. Implement draft registration, pending status, `prepareSave()`, conflicts between
-      views, and control-versus-document undo ownership. Verify serialization remains a pure
-      read of committed data and refused or unencodable drafts remain recoverable.
-- [ ] H8. Adapt existing provider widgets and `renderMedia` to the hosting interface while
-      retaining legacy callback behavior. Forward instance configuration and draft barriers
-      through `RichTextArea` without global policy or credential state.
-- [ ] H9. Run browser acceptance cases with a synthetic editable widget in two views,
-      including IME, save/navigation with drafts, policy changes, and opted-in iframe retention.
-      Record the browser coverage and any unsupported movement behavior before closing stage 1.
-
-### Stage 2: native Markdown table editing
-
-Dependencies: H1–H9. Tables retain ordinary GFM syntax and need no plugin envelope.
-
-- [ ] T1. Define the reusable table model and command adapter, with header/alignment
-      semantics and a cell editing representation that preserves supported inline formatting.
-- [ ] T2. Implement cell editing, cell selection, keyboard navigation, and cell drafts on
-      the common host. Verify the document still treats the outer table as one opaque block.
-- [ ] T3. Implement row/column insertion and removal, alignment changes, and rectangular
-      cell paste as undoable provider operations with complete snapshots and correct inverses.
-- [ ] T4. Implement inner TSV/text clipboard behavior and outer document-table copy/paste.
-      Verify cell handlers and document handlers do not both consume one clipboard event.
-- [ ] T5. Add parse/edit/save fixtures for escaped pipes, inline formatting, header cells,
-      empty values, and unsupported constructs. Verify unsupported source is retained.
-- [ ] T6. Demonstrate cell focus, two-view updates, structural undo/redo, and raw Markdown
-      round trips in the example application and browser tests; document the supported subset.
-
-### Stage 3: plugin records and host policy
-
-Dependencies: H1–H9. T1–T6 should validate native hosting before the plugin API is finalized.
-
-- [ ] W1. Finalize the versioned Markdown block envelope and structured clipboard grammar,
-      payload limits, fence escaping, and duplicate-ID repair. Add fixtures before implementing
-      parsing, including unknown and future versions.
-- [ ] W2. Define the explicit plugin registry and session document host. Implement duplicate
-      type detection, per-document context, policy invalidation, and separate insert/mount/edit/
-      external-action decisions with denial before renderer construction or resource access.
-- [ ] W3. Implement the optional provider widget-storage capability and immutable record
-      reads. Add insert/update/remove commands by stable ID with revision preconditions and
-      snapshots; verify behavior through the H5/H6 execution and history boundaries.
-- [ ] W4. Add Markdown parsing and serialization for block records, with canonical supported
-      output and verbatim unsupported source. Verify malformed/oversized envelopes remain inert
-      and bounded, and ordinary code fences retain their existing meaning.
-- [ ] W5. Add structured clipboard plumbing and provider fallbacks. Verify fresh IDs on copy,
-      retained IDs on moves and undo, preserved external references, and explicit unsupported
-      target behavior without silently dropping saved values.
-- [ ] W6. Implement explicit undoable migrations with validated output. Verify plugin removal,
-      policy denial, and unavailable versions preserve records and do not prevent data-only
-      undo/redo or cause migration during rendering.
-- [ ] W7. Add tests for malicious keys/depth, HTML/URL handling, stale policy decisions, and
-      cancellation after revocation. Verify default video references create no players, literal
-      video/iframe HTML stays inert, and no embed scripts or services load automatically.
-- [ ] W8. Document provider opt-in, host configuration, and an application-supplied plugin
-      example. Verify ordinary editors without a host retain their existing behavior.
-
-### Stage 4: Zod forms and native front-matter bindings
-
-Dependencies: H1–H9 and W1–W8 for embedded plugin values. Native front-matter forms also
-require source retention; the current canonical Markdown serializer is not sufficient.
-
-- [ ] F1. Finalize the normalized form schema, presentation metadata, value codecs, and
-      binding interface against real fixtures. Separate authored input, editable representation,
-      and transformed validation output; specify unsupported constructs explicitly.
-- [ ] F2. Implement the optional Zod adapter with support for the consumer's Zod major
-      version. Test required/optional values, defaults, nested objects/arrays, unions, and
-      refinements without silently weakening validation or writing defaults on mount.
-- [ ] F3. Implement the standalone form control using path.ux controls and command-backed
-      drafts. Verify incomplete answers can be saved, full validation gates submission, and no
-      duplicate `DataPathSetOp` or direct saved-payload mutation occurs.
-- [ ] F4. Wrap the form as a block plugin with a host-supplied schema and embedded answers.
-      Verify payload/schema version separation, history, read-only modes, and two-view updates.
-- [ ] F5. Implement or expose the source-retention and patch integration needed by native
-      front matter. Verify metadata-only edits preserve body source, body-only edits preserve
-      YAML, and undo restores comments, ordering, unknown fields, line endings, and prefixes.
-- [ ] F6. Bind the shared form to a native front-matter block through the opt-in resolver,
-      with host-owned bounded YAML parsing and schema selection. Test missing front matter,
-      path/type conflicts, malformed YAML, unsupported aliases/tags, and raw-source fallback.
-- [ ] F7. Demonstrate form/raw-source views sharing one session and draft barrier. Verify a
-      schema switch resolves drafts, external changes cannot be overwritten by stale blur, and
-      save preparation does not bypass the application's disk conflict checks.
-- [ ] F8. Add an example using visualnovel-shaped fixtures and document both binding routes.
-      Run schema/provider tests and browser form tests, including partially filled required
-      fields and cross-field errors, before closing stage 4.
-
-### Stage 5: additional schema adapters
-
-Dependencies: F1–F8. Adapters remain optional imports, outside the base rich text bundle.
-
-- [ ] A1. Implement the nstructjs adapter for a documented subset, with explicit diagnostics
-      for helper expressions, references, and unsupported class/value encodings.
-- [ ] A2. Implement versioned declarative embedded schemas without evaluating document code.
-      Verify unsupported runtime behavior requires a host-registered implementation.
-- [ ] A3. Add shared form fixtures for both adapters and schema-version migrations. Verify
-      validation behavior and source/value codecs, and document limitations and bundle boundaries.
-
-### Stage 6: external data and actions
-
-Dependencies: W1–W8 and F1–F8. This stage introduces no default video or service renderer.
-
-- [ ] E1. Define host-supplied resource/schema services with scoped references, credentials
-      outside documents, destination authorization, cancellation, and version/conflict results.
-- [ ] E2. Implement reference-backed form values and read-only external views. Verify
-      refresh does not dirty the document and saving a snapshot is an explicit document edit.
-- [ ] E3. Implement explicit submission with pending/success/failure states. Verify neither
-      document undo nor redo submits, repeats, or reverses external requests.
-- [ ] E4. Test document rebinding, path changes, policy revocation, redirects, and late
-      responses. Verify disallowed work never mounts or starts a request and stale results are
-      discarded without corrupting document or view state.
-- [ ] E5. Document the service contract with a local fake service and browser example,
-      including offline/failure behavior and externally versioned value conflicts.
-
-### Follow-up: true inline plugin records
-
-Status: deferred from the block implementation, still required to complete inline plugin
-support. Existing image atoms are not a substitute for this work. Dependencies: stages 1,
-3, and 4; revisit the stage schedule after their browser and persistence results.
-
-- [ ] I1. Finalize a bounded, escaped inline record syntax and supported placements without
-      putting arbitrary payloads in URLs or accepting executable custom HTML.
-- [ ] I2. Implement inline parsing, serialization, insertion, movement, and clipboard transfer,
-      with stable identity through split/join, range replacement, adjacent atoms, and undo/redo.
-- [ ] I3. Verify caret slots, composition, keyboard entry/exit, focus retention, unknown-record
-      preservation, and cross-provider fallback using inline controls in browser tests.
-
-### Follow-up: visualnovel application migration
-
-Status: planned consumer work in a separate repository; not started by this tracker.
-Dependencies: stages 1, 3, and 4 and the application's own integration workflow. Preserve
-existing command-layer identity checks and the separate `story.*` route for scene documents.
-
-- [ ] V1. Connect the approved path.ux implementation in visualnovel and map existing schema
-      classification to the native front-matter binding. Verify the installed Zod version and
-      fixtures before replacing the current Wiki editor surface.
-- [ ] V2. Adapt document buffer ownership to retained sessions and raw/form views, preserving
-      reload, quit protection, command notifications, and unsaved state beyond pane lifetime.
-- [ ] V3. Integrate `prepareSave()` with `doc.write` and `seenHash`. Verify conflicts retain
-      unsaved work, successful saves advance only the accepted baseline, and later local edits
-      remain dirty when an earlier save completes.
-- [ ] V4. Run the consumer's required checks and migration cases for character/location
-      sheets and notes, including source fidelity, partial answers, two views, and external writes.
-
-### Completion log
-
-| Tasks  | Evidence                                                                                                  |
-| ------ | --------------------------------------------------------------------------------------------------------- |
-| P1, P3 | `92769e71`: design written and reviewed; formatting, prose, and local-link checks passed                  |
-| P2     | `35153e66`: visualnovel inspected and incorporated; follow-up review, formatting, and prose checks passed |
-
-For every implementation stage, record focused acceptance results here and run the full
-library/example typecheck plus applicable unit and browser checks. A task marked complete
-does not imply its stage is complete until all stage tasks and their acceptance checks pass.
+Use the [implementation checklist](rich-text-widget-tasks.md#implementation-task-list).
+It tracks common hosting, native tables, plugin storage, schema adapters, external data,
+true inline plugins, and the separate visualnovel migration using stable task IDs.
 
 ## Decisions still requiring implementation prototypes
 
@@ -750,3 +400,7 @@ and conflict boundary, shared draft ownership, and compatibility with its Zod ma
 
 The implementation checklist was reviewed against the design for coverage, dependency
 cycles, completion evidence, and follow-up scope. No additional issues were found.
+
+The split into architecture, forms, and task documents was reviewed for lost requirements,
+changed task status, and broken references. All 49 checklist entries were preserved; one
+relative section reference was replaced with a link to the architecture document.
