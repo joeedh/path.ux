@@ -223,6 +223,36 @@ test("the sample document renders every kind, and reads as a page when read-only
   expect(await texts(editor)).toEqual(before);
 });
 
+test("the example table shares edits, history and committed source with its second view", async ({
+  page,
+  browserName,
+}) => {
+  const source = "# Tables\n\n| Name | Value |\n| --- | --- |\n| *first* | 1 |";
+  const editor = await openMarkdown(page, source);
+  await page.getByTestId("markdown-show-second").click();
+  const second = page.getByTestId("markdown-second-view");
+  const input = editor.getByRole("textbox", { name: "Row 1 column 1", exact: true });
+  await input.fill("**edited**");
+  await input.press("Enter");
+  await expect(second.getByRole("textbox", { name: "Row 1 column 1", exact: true })).toHaveValue(
+    "**edited**"
+  );
+  await expect(page.getByTestId("markdown-source")).toContainText("**edited**");
+  await editor.getByRole("button", { name: "Insert row below" }).click();
+  await expect(second.getByRole("textbox", { name: "Row 2 column 1", exact: true })).toHaveValue(
+    ""
+  );
+  await input.focus();
+  await input.press("Control+z");
+  await expect(second.getByRole("textbox", { name: "Row 2 column 1", exact: true })).toHaveCount(0);
+  await input.press("Control+z");
+  await expect(second.getByRole("textbox", { name: "Row 1 column 1", exact: true })).toHaveValue(
+    "*first*"
+  );
+  if (browserName === "chromium")
+    await editor.screenshot({ path: test.info().outputPath("table-editor.png") });
+});
+
 test("lists at three depths, with bullets, numbers and tasks", async ({ page, browserName }) => {
   const editor = await openMarkdown(page, LISTS);
   await expect.poll(() => texts(editor).then((t) => t.length)).toBe(13);

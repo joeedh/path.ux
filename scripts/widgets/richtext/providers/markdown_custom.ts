@@ -18,6 +18,7 @@ import {
   withKind,
 } from "./markdown_doc";
 import type { JsonRecord } from "./markdown_ops";
+import { parseMarkdownTable } from "./markdown_table";
 
 // The provider's side of its custom ops: the JSON `data` a `markdownOps` builder wrote, read
 // back and applied to the document.
@@ -89,6 +90,20 @@ export function applyCustom(
   }
 
   switch (op.name) {
+    case "table": {
+      if (
+        op.blocks.length !== 1 ||
+        first.kind !== "table" ||
+        first.source !== data.expected ||
+        typeof data.source !== "string" ||
+        !parseMarkdownTable(first.source) ||
+        !parseMarkdownTable(data.source)
+      ) {
+        throw new Error("Invalid or stale table edit");
+      }
+      first.source = data.source;
+      return { dirtyBlocks: [first.id], removedBlocks: [], preserveFocus: true };
+    }
     case "setKind":
       return setKind(doc, span, data);
     case "setDepth": {

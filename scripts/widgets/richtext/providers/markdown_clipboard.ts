@@ -99,7 +99,15 @@ export function toClipboard(doc: MdDoc, range: DocRange): ClipboardContent {
   return { blocks, html: `<div ${OWN_HTML_MARK}>${html}</div>`, text: blocks.join("\n") };
 }
 
-/** The plain text parsed as markdown, one entry per block it holds; `text` keeps it verbatim for a fence. */
+/** Reserves prose carriers around table edges so insertion never merges a table into text. */
+function pasteEntries(blocks: readonly MdBlock[]): string[] {
+  const entries = blocks.map(entryOf);
+  if (blocks[0]?.kind === "table") entries.unshift("");
+  if (blocks.at(-1)?.kind === "table") entries.push("");
+  return entries;
+}
+
+/** Parses clipboard blocks with table boundary carriers; `text` stays verbatim for a fence. */
 export function fromClipboard(data: DataTransfer): ClipboardContent | undefined {
   const text = data.types.includes("text/plain")
     ? data.getData("text/plain").replace(/\r\n?/g, "\n")
@@ -109,7 +117,7 @@ export function fromClipboard(data: DataTransfer): ClipboardContent | undefined 
   // copy carries the exact markdown as text, which is better than its rendering
   const html = data.types.includes("text/html") ? data.getData("text/html") : "";
   if (html !== "" && !html.includes(OWN_HTML_MARK)) {
-    const blocks = markdownDocFromText(clipboardHtml(html)).blocks.map(entryOf);
+    const blocks = pasteEntries(markdownDocFromText(clipboardHtml(html)).blocks);
     if (blocks.length > 0) {
       return { blocks, text: text ?? blocks.join("\n") };
     }
@@ -118,7 +126,7 @@ export function fromClipboard(data: DataTransfer): ClipboardContent | undefined 
   if (text === undefined) {
     return undefined;
   }
-  const blocks = markdownDocFromText(text).blocks.map(entryOf);
+  const blocks = pasteEntries(markdownDocFromText(text).blocks);
 
   return { blocks: blocks.length > 0 ? blocks : [""], text };
 }

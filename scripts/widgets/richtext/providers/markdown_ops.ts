@@ -1,6 +1,7 @@
 import type { BlockId, DocPos, DocRange, EditOp, JsonValue } from "../provider";
 import { moveAtomOp } from "./markdown_image";
 import type { MdDoc } from "./markdown_model";
+import { markdownTableChange } from "./markdown_table";
 
 // The provider's custom ops as a consumer builds them: each is a `custom` EditOp whose JSON
 // `data` the provider reads back in `markdown_custom.ts`.
@@ -17,6 +18,8 @@ export type MdKindTarget =
 
 /** Builders for the provider's custom ops, so a toolbar or a test never writes the JSON by hand. */
 export const markdownOps = {
+  /** Changes a table against its complete expected source. */
+  table: markdownTableChange,
   /** Sets the kind over `blocks`; `ids` supplies one unused id per line beyond the first when a fence splits. */
   setKind(
     blocks: readonly BlockId[],

@@ -88905,6 +88905,18 @@ function markdownStyles() {
       padding: 0.25em 0.6em;
     }
     .md-table th { background: var(--richtext-code-background); }
+    .table-editor input {
+      color: inherit;
+      background: transparent;
+      border: 0;
+      font: inherit;
+      min-width: 6em;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .table-editor [data-selected] { outline: 1px solid var(--richtext-link-color); outline-offset: -1px; }
+    .table-editor [role="toolbar"] { display: flex; flex-wrap: wrap; gap: 0.25em; margin: 0.4em 0; }
+    .table-editor [role="status"] { display: block; font-size: 0.85em; white-space: normal; }
     .md-raw, .md-frontmatter {
       font   : var(--richtext-code-font);
       color  : var(--richtext-quote-text-color);
@@ -89167,11 +89179,17 @@ function toClipboard(doc, range) {
   }
   return { blocks, html: `<div ${OWN_HTML_MARK}>${html3}</div>`, text: blocks.join("\n") };
 }
+function pasteEntries(blocks) {
+  const entries = blocks.map(entryOf);
+  if (blocks[0]?.kind === "table") entries.unshift("");
+  if (blocks.at(-1)?.kind === "table") entries.push("");
+  return entries;
+}
 function fromClipboard(data) {
   const text6 = data.types.includes("text/plain") ? data.getData("text/plain").replace(/\r\n?/g, "\n") : void 0;
   const html3 = data.types.includes("text/html") ? data.getData("text/html") : "";
   if (html3 !== "" && !html3.includes(OWN_HTML_MARK)) {
-    const blocks2 = markdownDocFromText(clipboardHtml(html3)).blocks.map(entryOf);
+    const blocks2 = pasteEntries(markdownDocFromText(clipboardHtml(html3)).blocks);
     if (blocks2.length > 0) {
       return { blocks: blocks2, text: text6 ?? blocks2.join("\n") };
     }
@@ -89179,7 +89197,7 @@ function fromClipboard(data) {
   if (text6 === void 0) {
     return void 0;
   }
-  const blocks = markdownDocFromText(text6).blocks.map(entryOf);
+  const blocks = pasteEntries(markdownDocFromText(text6).blocks);
   return { blocks: blocks.length > 0 ? blocks : [""], text: text6 };
 }
 
@@ -89533,6 +89551,168 @@ function replaceBlocks(doc, after, snapshots, remove2) {
   };
 }
 
+// scripts/widgets/richtext/table_model.ts
+function validateTable(model) {
+  const width = model.align.length;
+  if (!width || !model.rows.length || width * model.rows.length > 1e4 || model.align.some((a2) => a2 !== null && a2 !== "left" && a2 !== "center" && a2 !== "right") || model.rows.some((r) => r.length !== width || r.some((c) => typeof c !== "string")) || model.rows.reduce((n, r) => n + r.reduce((m, c) => m + c.length, 0), 0) > 1e6) {
+    throw new Error(
+      "Table must be rectangular, with a header and at most 10,000 cells / 1 MB of source"
+    );
+  }
+}
+function changeTable(model, change) {
+  validateTable(model);
+  const rows = model.rows.map((r) => [...r]);
+  const align = [...model.align];
+  const index2 = (value2, limit) => {
+    if (!Number.isInteger(value2) || value2 < 0 || value2 >= limit)
+      throw new Error("Invalid table index");
+  };
+  if ("row" in change) index2(change.row, rows.length + (change.type === "insertRow" ? 1 : 0));
+  if ("column" in change)
+    index2(change.column, align.length + (change.type === "insertColumn" ? 1 : 0));
+  switch (change.type) {
+    case "cell":
+      rows[change.row][change.column] = change.value;
+      break;
+    case "insertRow":
+      if (change.row === 0) throw new Error("Insert body rows after the header");
+      rows.splice(
+        change.row,
+        0,
+        align.map(() => "")
+      );
+      break;
+    case "removeRow":
+      if (change.row === 0) throw new Error("The header cannot be removed");
+      rows.splice(change.row, 1);
+      break;
+    case "insertColumn":
+      align.splice(change.column, 0, null);
+      rows.forEach((r) => r.splice(change.column, 0, ""));
+      break;
+    case "removeColumn":
+      if (align.length === 1) throw new Error("The last column cannot be removed");
+      align.splice(change.column, 1);
+      rows.forEach((r) => r.splice(change.column, 1));
+      break;
+    case "align":
+      align[change.column] = change.value;
+      break;
+    case "paste": {
+      const width = change.cells[0]?.length ?? 0;
+      if (!width || change.cells.some((r) => r.length !== width) || change.row + change.cells.length > rows.length || change.column + width > align.length) {
+        throw new Error("Paste a rectangle that fits the existing table");
+      }
+      change.cells.forEach(
+        (r, y) => r.forEach((v, x) => rows[change.row + y][change.column + x] = v)
+      );
+      break;
+    }
+  }
+  const result = { rows, align };
+  validateTable(result);
+  return result;
+}
+
+// scripts/widgets/richtext/providers/markdown_table.ts
+function supported(node2) {
+  switch (node2.type) {
+    case "text":
+    case "inlineCode":
+      return true;
+    case "strong":
+    case "emphasis":
+    case "delete":
+    case "link":
+      return node2.children.every(supported);
+    default:
+      return false;
+  }
+}
+function parseMarkdownTable(source) {
+  if (source.length > 1e6) return void 0;
+  const tree = fromMarkdown(source, { extensions: [gfm()], mdastExtensions: [gfmFromMarkdown()] });
+  const node2 = tree.children[0];
+  if (tree.children.length !== 1 || node2?.type !== "table") return void 0;
+  const align = node2.align ?? node2.children[0].children.map(() => null);
+  if (node2.children.length * align.length > 1e4) return void 0;
+  const rows = [];
+  for (const row of node2.children) {
+    if (row.children.length > align.length) return void 0;
+    const cells = [];
+    for (const cell of row.children) {
+      if (!cell.children.every(supported)) return void 0;
+      if (!cell.children.length) {
+        cells.push("");
+        continue;
+      }
+      const start2 = cell.children[0].position?.start.offset;
+      const end = cell.children.at(-1)?.position?.end.offset;
+      if (start2 === void 0 || end === void 0) return void 0;
+      cells.push(source.slice(start2, end).trim());
+    }
+    while (cells.length < align.length) cells.push("");
+    rows.push(cells);
+  }
+  const result = { rows, align };
+  try {
+    validateTable(result);
+  } catch {
+    return void 0;
+  }
+  return result;
+}
+function cellSource(value2) {
+  if (/[\r\n\t]/.test(value2)) throw new Error("Cells must contain one line of inline Markdown");
+  let result = "";
+  let slashes = 0;
+  for (const char of value2.trim()) {
+    if (char === "|" && slashes % 2 === 0) result += "\\";
+    result += char;
+    slashes = char === "\\" ? slashes + 1 : 0;
+  }
+  if (slashes % 2) result += "\\";
+  return result;
+}
+function serializeMarkdownTable(model) {
+  validateTable(model);
+  const rows = model.rows.map((r) => r.map(cellSource));
+  const line = (r) => `| ${r.join(" | ")} |`;
+  const separator = model.align.map(
+    (a2) => a2 === "center" ? ":---:" : a2 === "left" ? ":---" : a2 === "right" ? "---:" : "---"
+  );
+  const source = [line(rows[0]), line(separator), ...rows.slice(1).map(line)].join("\n");
+  const parsed = parseMarkdownTable(source);
+  if (!parsed || JSON.stringify(parsed.rows) !== JSON.stringify(rows)) {
+    throw new Error("Unsupported inline table content");
+  }
+  return source;
+}
+function tableEditOp(block, expected, model) {
+  if (!parseMarkdownTable(expected)) throw new Error("Unsupported table source");
+  return {
+    type: "custom",
+    name: "table",
+    blocks: [block],
+    data: { expected, source: serializeMarkdownTable(model) }
+  };
+}
+function tableCommand(doc, block, expected, model) {
+  const op = tableEditOp(block, expected, model);
+  return {
+    resolve: () => {
+      const current = doc.blocks.find((b) => b.id === block);
+      return current?.kind === "table" && current.source === expected ? op : void 0;
+    }
+  };
+}
+function markdownTableChange(block, expected, change) {
+  const model = parseMarkdownTable(expected);
+  if (!model) throw new Error("Unsupported table source");
+  return tableEditOp(block, expected, changeTable(model, change));
+}
+
 // scripts/widgets/richtext/providers/markdown_custom.ts
 function objectOf(v) {
   return typeof v === "object" && v !== null && !Array.isArray(v) ? v : void 0;
@@ -89577,6 +89757,13 @@ function applyCustom(doc, op, shortcuts) {
     throw new Error(`MarkdownProvider: ${op.name} names no block`);
   }
   switch (op.name) {
+    case "table": {
+      if (op.blocks.length !== 1 || first2.kind !== "table" || first2.source !== data.expected || typeof data.source !== "string" || !parseMarkdownTable(first2.source) || !parseMarkdownTable(data.source)) {
+        throw new Error("Invalid or stale table edit");
+      }
+      first2.source = data.source;
+      return { dirtyBlocks: [first2.id], removedBlocks: [], preserveFocus: true };
+    }
     case "setKind":
       return setKind(doc, span, data);
     case "setDepth": {
@@ -89863,6 +90050,8 @@ function moveAtom(doc, data) {
 
 // scripts/widgets/richtext/providers/markdown_ops.ts
 var markdownOps = {
+  /** Changes a table against its complete expected source. */
+  table: markdownTableChange,
   /** Sets the kind over `blocks`; `ids` supplies one unused id per line beyond the first when a fence splits. */
   setKind(blocks, kind, extra = {}) {
     const data = { ...kind };
@@ -90114,6 +90303,318 @@ function buildMarkdownToolbar(row, ctx, provider) {
   };
 }
 
+// scripts/widgets/richtext/table_editor.ts
+var TableEditor = class {
+  constructor(snapshot, key, context, adapter) {
+    this.context = context;
+    this.adapter = adapter;
+    this.latest = this.base = snapshot;
+    this.model = structuredClone(snapshot.model);
+    this.element.className = "table-editor";
+    this.table.setAttribute("aria-label", "Table cells (inline Markdown)");
+    this.toolbar.setAttribute("role", "toolbar");
+    this.toolbar.setAttribute("aria-label", "Table operations");
+    this.status.setAttribute("role", "status");
+    this.element.append(this.table, this.toolbar, this.status);
+    this.button("Apply cells", () => void this.commit());
+    this.button("Discard drafts", () => this.discard(), true);
+    this.button("Insert row below", () => this.edit({ type: "insertRow", row: this.head.row + 1 }));
+    this.button("Remove row", () => this.edit({ type: "removeRow", row: this.head.row }));
+    this.button(
+      "Insert column after",
+      () => this.edit({ type: "insertColumn", column: this.head.column + 1 })
+    );
+    this.button(
+      "Remove column",
+      () => this.edit({ type: "removeColumn", column: this.head.column })
+    );
+    for (const value2 of [null, "left", "center", "right"]) {
+      this.button(
+        `Align ${value2 ?? "default"}`,
+        () => this.edit({ type: "align", column: this.head.column, value: value2 })
+      );
+    }
+    this.element.addEventListener("compositionstart", () => this.composing = true);
+    this.element.addEventListener("compositionend", () => this.composing = false);
+    this.element.addEventListener("copy", (e) => this.copy(e, false));
+    this.element.addEventListener("cut", (e) => this.copy(e, true));
+    this.element.addEventListener("paste", (e) => this.paste(e));
+    this.unregister = context.registerDraft({
+      key,
+      pending: () => this.dirty,
+      version: () => this.version,
+      prepare: () => this.prepare(),
+      committed: () => this.committed(),
+      discard: () => this.discard(),
+      recover: () => ({ base: structuredClone(this.base), model: structuredClone(this.model) })
+    });
+    this.draw();
+  }
+  context;
+  adapter;
+  element = document.createElement("div");
+  table = document.createElement("table");
+  toolbar = document.createElement("div");
+  status = document.createElement("span");
+  inputs = [];
+  latest;
+  base;
+  model;
+  dirty = false;
+  version = 0;
+  readOnly = false;
+  busy = false;
+  composing = false;
+  anchor = { row: 0, column: 0 };
+  head = { row: 0, column: 0 };
+  unregister;
+  button(label, action, recovery = false) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = label;
+    button.dataset.recovery = String(recovery);
+    button.addEventListener("click", () => {
+      if (!this.busy && !this.composing && (recovery || !this.readOnly)) action();
+    });
+    this.toolbar.append(button);
+  }
+  prepare() {
+    if (this.composing || this.busy || this.readOnly || !this.context.isCurrent())
+      return { status: "refused" };
+    if (this.latest.revision !== this.base.revision)
+      return {
+        status: "conflict",
+        reason: "Table changed in another view; copy or discard this draft"
+      };
+    try {
+      return { status: "ready", command: this.adapter.command(this.base, this.model) };
+    } catch (error2) {
+      return { status: "unencodable", reason: String(error2) };
+    }
+  }
+  committed() {
+    this.dirty = false;
+    this.base = this.latest;
+    this.model = structuredClone(this.latest.model);
+    this.status.textContent = "";
+    this.draw();
+  }
+  discard() {
+    this.version++;
+    this.committed();
+  }
+  async commit() {
+    if (!this.dirty) return;
+    const prepared = this.prepare();
+    if (prepared.status !== "ready") {
+      this.status.textContent = prepared.reason ?? prepared.status;
+      return;
+    }
+    const version = this.version;
+    this.busy = true;
+    this.draw();
+    const result = await this.context.command(prepared.command);
+    this.busy = false;
+    if (result.status === "applied" && version === this.version) this.committed();
+    else
+      this.status.textContent = result.status === "applied" ? "Draft changed during commit" : result.status;
+    this.draw();
+  }
+  edit(change) {
+    if (this.readOnly || this.busy || this.composing) return;
+    try {
+      const next = changeTable(this.model, change);
+      if (JSON.stringify(next) === JSON.stringify(this.model) && !this.dirty) return;
+      this.adapter.command(this.base, next);
+      this.model = next;
+      this.dirty = true;
+      this.version++;
+      this.draw();
+      void this.commit();
+    } catch (error2) {
+      this.status.textContent = String(error2);
+    }
+  }
+  selection() {
+    return {
+      top: Math.min(this.anchor.row, this.head.row),
+      bottom: Math.max(this.anchor.row, this.head.row),
+      left: Math.min(this.anchor.column, this.head.column),
+      right: Math.max(this.anchor.column, this.head.column)
+    };
+  }
+  copy(event, cut) {
+    const target = event.composedPath()[0];
+    if (!(target instanceof HTMLInputElement) || !event.clipboardData) return;
+    if (target.selectionStart !== target.selectionEnd) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const { top, bottom, left, right } = this.selection();
+    const cells = this.model.rows.slice(top, bottom + 1).map((r) => r.slice(left, right + 1));
+    event.clipboardData.setData("text/plain", cells.map((r) => r.join("	")).join("\n"));
+    if (cut)
+      this.edit({
+        type: "paste",
+        row: top,
+        column: left,
+        cells: cells.map((r) => r.map(() => ""))
+      });
+  }
+  paste(event) {
+    if (!(event.composedPath()[0] instanceof HTMLInputElement) || !event.clipboardData) return;
+    const text6 = event.clipboardData.getData("text/plain").replace(/\r\n?/g, "\n");
+    if (!/[\t\n]/.test(text6)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (text6.length > 1e6) {
+      this.status.textContent = "Paste exceeds 1 MB";
+      return;
+    }
+    const { top, left } = this.selection();
+    this.edit({
+      type: "paste",
+      row: top,
+      column: left,
+      cells: text6.replace(/\n$/, "").split("\n").map((r) => r.split("	"))
+    });
+  }
+  key(event, row, column) {
+    if (event.isComposing || this.composing) return;
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z" && !this.dirty) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (!this.readOnly && !this.busy) {
+        try {
+          void Promise.resolve(this.adapter.history?.(event.shiftKey)).catch(
+            (error2) => this.status.textContent = String(error2)
+          );
+        } catch (error2) {
+          this.status.textContent = String(error2);
+        }
+      }
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      event.stopPropagation();
+      void this.commit();
+      return;
+    }
+    let nextRow = row;
+    let nextColumn = column;
+    if (event.key === "Tab") {
+      const index2 = row * this.model.align.length + column + (event.shiftKey ? -1 : 1);
+      if (index2 < 0 || index2 >= this.model.rows.length * this.model.align.length) {
+        void this.commit();
+        return;
+      }
+      nextRow = Math.floor(index2 / this.model.align.length);
+      nextColumn = index2 % this.model.align.length;
+      void this.commit();
+    } else if (event.altKey && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
+      nextRow += event.key === "ArrowDown" ? 1 : event.key === "ArrowUp" ? -1 : 0;
+      nextColumn += event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
+    } else return;
+    event.preventDefault();
+    event.stopPropagation();
+    const input = this.inputs[nextRow]?.[nextColumn];
+    if (!input) return;
+    const anchor = this.anchor;
+    input.focus();
+    this.head = { row: nextRow, column: nextColumn };
+    this.anchor = event.altKey && event.shiftKey ? anchor : this.head;
+    this.draw();
+  }
+  draw() {
+    const height = this.model.rows.length;
+    const width = this.model.align.length;
+    const shapeChanged = this.inputs.length !== height || this.inputs[0]?.length !== width;
+    const tree = this.element.getRootNode();
+    const restoreFocus = shapeChanged && !!tree.activeElement && this.table.contains(tree.activeElement);
+    if (shapeChanged) {
+      this.table.replaceChildren();
+      this.inputs = this.model.rows.map((row, r) => {
+        const tr = document.createElement("tr");
+        const inputs = row.map((_, c) => {
+          const cell = document.createElement(r === 0 ? "th" : "td");
+          if (r === 0) cell.scope = "col";
+          const input = document.createElement("input");
+          input.type = "text";
+          input.setAttribute("aria-label", `${r === 0 ? "Header" : `Row ${r}`} column ${c + 1}`);
+          input.addEventListener("focus", () => {
+            this.anchor = this.head = { row: r, column: c };
+            this.draw();
+          });
+          input.addEventListener("pointerdown", (e) => {
+            if (!e.shiftKey) return;
+            e.preventDefault();
+            const anchor = this.anchor;
+            input.focus();
+            this.anchor = anchor;
+            this.head = { row: r, column: c };
+            this.draw();
+          });
+          input.addEventListener("input", () => {
+            this.model = {
+              align: this.model.align,
+              rows: this.model.rows.map(
+                (row2, y) => row2.map((value2, x) => y === r && x === c ? input.value : value2)
+              )
+            };
+            this.dirty = JSON.stringify(this.model) !== JSON.stringify(this.base.model);
+            this.version++;
+            this.status.textContent = this.dirty ? "Uncommitted cell source; Enter or Apply cells to commit" : "";
+          });
+          input.addEventListener("keydown", (e) => this.key(e, r, c));
+          cell.append(input);
+          tr.append(cell);
+          return input;
+        });
+        (r === 0 ? this.table.createTHead() : this.table.tBodies[0] ?? this.table.createTBody()).append(tr);
+        return inputs;
+      });
+      this.anchor = this.head = {
+        row: Math.min(this.head.row, height - 1),
+        column: Math.min(this.head.column, width - 1)
+      };
+    }
+    const rect = this.selection();
+    this.inputs.forEach(
+      (row, r) => row.forEach((input, c) => {
+        if (input.value !== this.model.rows[r][c]) input.value = this.model.rows[r][c];
+        input.readOnly = this.readOnly || this.busy;
+        input.style.textAlign = this.model.align[c] ?? "left";
+        input.parentElement.toggleAttribute(
+          "data-selected",
+          r >= rect.top && r <= rect.bottom && c >= rect.left && c <= rect.right
+        );
+      })
+    );
+    for (const button of this.toolbar.querySelectorAll("button")) {
+      button.disabled = this.readOnly && button.dataset.recovery !== "true";
+      button.setAttribute("aria-disabled", String(this.busy || button.disabled));
+    }
+    if (restoreFocus) this.inputs[this.head.row]?.[this.head.column]?.focus();
+  }
+  update(state) {
+    this.latest = state.value;
+    this.readOnly = state.readOnly;
+    if (!this.dirty) {
+      this.base = this.latest;
+      this.model = structuredClone(this.latest.model);
+    } else if (this.base.revision !== this.latest.revision)
+      this.status.textContent = "Table changed; draft retained until committed or discarded";
+    this.draw();
+  }
+  focus(last) {
+    (last ? this.inputs.at(-1)?.at(-1) : this.inputs[0]?.[0])?.focus();
+  }
+  dispose() {
+    this.unregister();
+    this.element.remove();
+  }
+};
+
 // scripts/widgets/richtext/providers/markdown_provider.ts
 var MarkdownProvider = class {
   constructor(options = {}) {
@@ -90163,13 +90664,37 @@ var MarkdownProvider = class {
   }
   renderBlock(doc, block, ctx) {
     const identities = /* @__PURE__ */ new Set();
-    for (const item of doc.blocks) {
-      for (const atom of item.atoms) {
+    for (const item2 of doc.blocks) {
+      for (const atom of item2.atoms) {
         if (!atom.id || identities.has(atom.id)) atom.id = newBlockId();
         identities.add(atom.id);
       }
     }
-    return renderMarkdownBlock(blockOf(doc, block), ctx, this.options);
+    const item = blockOf(doc, block);
+    if (item.kind === "table" && ctx.editor.widget) {
+      const model = parseMarkdownTable(item.source);
+      if (model) {
+        const snapshot = { revision: item.source, model };
+        const el = document.createElement("div");
+        el.className = "md-table md-opaque";
+        el.contentEditable = "false";
+        el.dataset.docBlock = block;
+        el.append(
+          ctx.editor.widget({
+            id: block,
+            implementation: TableEditor,
+            label: "Markdown table",
+            value: snapshot,
+            create: (context) => new TableEditor(snapshot, `table:${block}`, context, {
+              command: (expected, next) => tableCommand(doc, block, expected.revision, next),
+              history: (redo) => redo ? ctx.toolstack.redo(ctx) : ctx.toolstack.undo(ctx)
+            })
+          })
+        );
+        return el;
+      }
+    }
+    return renderMarkdownBlock(item, ctx, this.options);
   }
   styles() {
     return markdownStyles();
@@ -90568,9 +91093,14 @@ var PropsEditor = class extends Editor2 {
     readOnly.on_change = (value2) => {
       editor.readOnly = value2;
     };
-    const save = controls.button("Save", () => {
+    const save = controls.button("Save", async () => {
       const session = editor.session;
       if (session !== void 0) {
+        const prepared = await session.prepareSave();
+        if (prepared.status !== "ready") {
+          status.text = `Save blocked: ${prepared.status}`;
+          return;
+        }
         saveFile(session.provider.emitDocFile(session.doc), "document.md", ["md"], "text/markdown");
       }
     });
@@ -90614,6 +91144,26 @@ var PropsEditor = class extends Editor2 {
       editor.scrollToBlock(block);
     });
     body.add(editor);
+    const tableDemo = tab2.col();
+    tableDemo.label(
+      "Table cells edit inline Markdown. Enter/Tab applies; Alt+arrows navigate; Shift extends cell selection."
+    );
+    const second = UIBase.constructElement(
+      "rich-text-x",
+      this.ctx
+    );
+    second.setAttribute("data-testid", "markdown-second-view");
+    second.style.width = "560px";
+    const showSecond = tableDemo.check(void 0, "Show second view and committed source");
+    showSecond.setAttribute("data-testid", "markdown-show-second");
+    const comparison = tableDemo.col();
+    comparison.add(second);
+    const source = document.createElement("pre");
+    source.setAttribute("data-testid", "markdown-source");
+    source.style.cssText = "white-space:pre-wrap;max-width:560px;user-select:text";
+    comparison.shadow.append(source);
+    comparison.style.display = "none";
+    showSecond.on_change = (value2) => comparison.style.display = value2 ? "" : "none";
     editor.addEventListener("linkclick", (e) => {
       const link2 = e.detail;
       if (link2.kind === "wiki") {
@@ -90624,12 +91174,21 @@ var PropsEditor = class extends Editor2 {
     let stopListening = () => {
     };
     const open = (text6) => {
+      if (editor.session?.pendingDrafts.length) {
+        status.text = "Apply or discard table drafts before replacing the document";
+        return;
+      }
       stopListening();
       const session = new DocumentSession(markdownDocFromText(text6), provider, new ToolStack());
       editor.session = session;
+      second.session = session;
+      source.textContent = markdownText(session.doc);
       outlineKey = "";
       rebuildOutline();
-      stopListening = session.onChange(rebuildOutline);
+      stopListening = session.onChange(() => {
+        rebuildOutline();
+        source.textContent = markdownText(session.doc);
+      });
     };
     open(MARKDOWN_SAMPLE);
     window.__loadMarkdown = open;

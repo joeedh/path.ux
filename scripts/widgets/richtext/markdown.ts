@@ -16,6 +16,15 @@ export { MarkdownProvider } from "./providers/markdown_provider";
 export type { MarkdownProviderOptions, WikilinkStart } from "./providers/markdown_provider";
 export { markdownOps } from "./providers/markdown_ops";
 export type { MdKindTarget } from "./providers/markdown_ops";
+export { TableEditor } from "./table_editor";
+export type { TableAdapter, TableSnapshot } from "./table_editor";
+export { changeTable } from "./table_model";
+export type { TableModel, TableChange } from "./table_model";
+export {
+  parseMarkdownTable,
+  serializeMarkdownTable,
+  tableCommand,
+} from "./providers/markdown_table";
 export { renderMarkdownBlock, markdownStyles } from "./providers/markdown_render";
 export type { MarkdownRenderOptions } from "./providers/markdown_render";
 export { MdImageWidget, ImageResizeOp, ImageMoveOp } from "./providers/markdown_image";

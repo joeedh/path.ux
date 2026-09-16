@@ -439,9 +439,12 @@ Above the breaks.
 
 ## Tables
 
-A GFM table is a `table` block that keeps its source verbatim. The editor renders it and
-does not edit it; the source comes back byte for byte. An HTML `<table>` is kept the same
-way.
+A GFM table is one opaque `table` block. Until edited, its source comes back byte for
+byte. Supported tables offer inline Markdown cell inputs, body row/column operations,
+alignment, and rectangular TSV paste through document history. Edits retain supported
+inline formatting and serialize ordinary GFM; undo restores the original source. HTML
+tables and cells containing HTML or images remain read-only with preserved source. See
+[table editing](richtext.md#native-markdown-tables) for keyboard and draft behavior.
 
 ```markdown
 | Name | Value |
@@ -680,7 +683,8 @@ while parsing and comes back as the character.
 - Footnotes, definition lists, `^superscript^`, `==highlight==` and `:emoji:` shortcodes are
   not extensions the parser reads; each is literal text. A single tilde pair `~x~` is GFM
   strikethrough.
-- A table is not editable; its source is shown and kept.
+- GFM table cells edit a supported inline-source subset. HTML tables and unsupported
+  cell content remain read-only with their original source.
 - Composition input (IME) is refused by the editor for every format, as
   [richtext.md](richtext.md) describes.
 

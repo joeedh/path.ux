@@ -606,3 +606,52 @@ device:
 - macOS, Safari and Chrome: paste the snippet, then hold `e` until the accent popover shows
   and pick `é`. What matters is whether the accent arrives as a composition, as
   `insertReplacementText` over the base letter, or as a plain `insertText`.
+
+## Native Markdown tables
+
+Supported GFM tables mount `TableEditor` through the shared widget host. Cells show editable
+inline Markdown source, including emphasis, strong, strikeout, code spans and inline links.
+The table remains one opaque document block, with a stable identity and separate draft and
+selection state in each view. Opening a table does not rewrite its source.
+
+- Enter or Apply cells commits the draft. Tab commits and moves between cells, then reaches
+  the table toolbar. Shift+Tab moves backward. Escape returns to the document and keeps the
+  draft. Blur also keeps drafts; call `session.prepareSave()` before saving or navigating.
+- Alt+arrows moves to adjacent cells. Alt+Shift+arrows and Shift+click extend a rectangular
+  selection. Row zero is the header. Insert row below adds a body row; removing the header or
+  final column is refused. Alignment applies to the selected column.
+- Copy/cut uses native selected text when present; otherwise it copies the selected cells
+  as TSV containing inline Markdown. Multiline/tabbed paste replaces a rectangle and must
+  fit the existing table. Add rows or columns first when needed. One paste makes one undo
+  entry, including any current local draft. Single-line text uses native input paste.
+- While a cell has a draft, Ctrl/Cmd+Z stays with its native text undo. After commit, it undoes
+  document history; Shift adds redo. Structural edits use complete source snapshots, so undo
+  restores original spacing and all cells. Per-view read-only and session write authorization
+  apply to these commands and shared application history.
+
+Drafts conflict at table granularity. Two pending views of the same table must be resolved
+before save, even if their edited cells differ. A stale draft remains visible and recoverable
+until copied or discarded. Deletion or view disposal retains pending data through
+`session.recoverDraft()`. Serialization reads only committed source. The example Markdown tab
+provides a second view and committed-source display, and its Save button uses the draft barrier.
+
+HTML tables, HTML/image cell content, and rows wider than their header retain their source
+and static rendering. Missing body cells become empty cells on edit. Nested block content,
+merged cells and formulas are unsupported. Leading/trailing cell padding is canonicalized
+on edit, pipes are escaped, and newlines/tabs within a cell are refused. A table may contain
+at most 10,000 cells and one million source characters. Unrecognized inline syntax remains
+literal when GFM parses it as text; external reference definitions are outside this editor's
+supported subset.
+
+The optional Markdown entry point exports `TableEditor`, `TableModel`, `TableChange`,
+`TableSnapshot`, `TableAdapter`, `changeTable`, `parseMarkdownTable`,
+`serializeMarkdownTable`, and `tableCommand`. No table symbols enter the base pathux barrel.
+A standalone host can supply its own `WidgetContext` and `TableAdapter`; the adapter encodes
+a model into a guarded `DocumentCommand`, and the host delivers committed snapshots through
+`update({value: snapshot, readOnly})`. Commands must notify views synchronously before their
+promise settles. Draft registration and history routing use that host's session.
+
+For a direct provider edit, use `markdownOps.table(blockId, expectedSource, change)`. For a
+widget or delayed action, use `tableCommand(doc, blockId, expectedSource, nextModel)` through
+`session.command()` so stale targets settle as refusals without history entries. The source
+comparison is an optimistic concurrency check over the entire table.

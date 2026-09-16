@@ -493,6 +493,18 @@ export function markdownStyles(): string {
       padding: 0.25em 0.6em;
     }
     .md-table th { background: var(--richtext-code-background); }
+    .table-editor input {
+      color: inherit;
+      background: transparent;
+      border: 0;
+      font: inherit;
+      min-width: 6em;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .table-editor [data-selected] { outline: 1px solid var(--richtext-link-color); outline-offset: -1px; }
+    .table-editor [role="toolbar"] { display: flex; flex-wrap: wrap; gap: 0.25em; margin: 0.4em 0; }
+    .table-editor [role="status"] { display: block; font-size: 0.85em; white-space: normal; }
     .md-raw, .md-frontmatter {
       font   : var(--richtext-code-font);
       color  : var(--richtext-quote-text-color);

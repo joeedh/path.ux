@@ -39,6 +39,7 @@ import {
   MarkdownProvider,
   markdownDocFromText,
   markdownOps,
+  markdownText,
 } from "../../../scripts/widgets/richtext/markdown.js";
 import type { MdDoc, WikilinkStart } from "../../../scripts/widgets/richtext/markdown.js";
 import { Editor } from "../editor_base.js";
@@ -248,9 +249,14 @@ export class PropsEditor extends Editor {
     readOnly.on_change = (value: boolean) => {
       editor.readOnly = value;
     };
-    const save = controls.button("Save", () => {
+    const save = controls.button("Save", async () => {
       const session = editor.session;
       if (session !== undefined) {
+        const prepared = await session.prepareSave();
+        if (prepared.status !== "ready") {
+          status.text = `Save blocked: ${prepared.status}`;
+          return;
+        }
         saveFile(session.provider.emitDocFile(session.doc), "document.md", ["md"], "text/markdown");
       }
     });
@@ -299,6 +305,27 @@ export class PropsEditor extends Editor {
 
     body.add(editor);
 
+    const tableDemo = tab.col();
+    tableDemo.label(
+      "Table cells edit inline Markdown. Enter/Tab applies; Alt+arrows navigate; Shift extends cell selection."
+    );
+    const second = UIBase.constructElement<RichTextEditor<typeof this.ctx, MdDoc>>(
+      "rich-text-x",
+      this.ctx
+    );
+    second.setAttribute("data-testid", "markdown-second-view");
+    second.style.width = "560px";
+    const showSecond = tableDemo.check(undefined, "Show second view and committed source");
+    showSecond.setAttribute("data-testid", "markdown-show-second");
+    const comparison = tableDemo.col();
+    comparison.add(second);
+    const source = document.createElement("pre");
+    source.setAttribute("data-testid", "markdown-source");
+    source.style.cssText = "white-space:pre-wrap;max-width:560px;user-select:text";
+    comparison.shadow.append(source);
+    comparison.style.display = "none";
+    showSecond.on_change = (value: boolean) => (comparison.style.display = value ? "" : "none");
+
     // a wikilink names something the app resolves; here that is the status line
     editor.addEventListener("linkclick", (e) => {
       const link = (e as CustomEvent<LinkInfo>).detail;
@@ -310,12 +337,21 @@ export class PropsEditor extends Editor {
 
     let stopListening = () => {};
     const open = (text: string) => {
+      if (editor.session?.pendingDrafts.length) {
+        status.text = "Apply or discard table drafts before replacing the document";
+        return;
+      }
       stopListening();
       const session = new DocumentSession(markdownDocFromText(text), provider, new ToolStack());
       editor.session = session;
+      second.session = session;
+      source.textContent = markdownText(session.doc);
       outlineKey = "";
       rebuildOutline();
-      stopListening = session.onChange(rebuildOutline);
+      stopListening = session.onChange(() => {
+        rebuildOutline();
+        source.textContent = markdownText(session.doc);
+      });
     };
     open(MARKDOWN_SAMPLE);
     window.__loadMarkdown = open;

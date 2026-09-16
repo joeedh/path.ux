@@ -44,6 +44,8 @@ import {
 } from "./markdown_edits";
 import { markdownOps } from "./markdown_ops";
 import { buildMarkdownToolbar } from "./markdown_toolbar";
+import { TableEditor } from "../table_editor";
+import { parseMarkdownTable, tableCommand } from "./markdown_table";
 
 // The provider over `MdDoc`: the protocol surface, with the standard ops in
 // `markdown_edits.ts`, the custom ops in `markdown_custom.ts`, the clipboard in
@@ -136,7 +138,32 @@ export class MarkdownProvider implements DocumentProvider<MdDoc> {
         identities.add(atom.id);
       }
     }
-    return renderMarkdownBlock(blockOf(doc, block), ctx, this.options);
+    const item = blockOf(doc, block);
+    if (item.kind === "table" && ctx.editor.widget) {
+      const model = parseMarkdownTable(item.source);
+      if (model) {
+        const snapshot = { revision: item.source, model };
+        const el = document.createElement("div");
+        el.className = "md-table md-opaque";
+        el.contentEditable = "false";
+        el.dataset.docBlock = block;
+        el.append(
+          ctx.editor.widget({
+            id            : block,
+            implementation: TableEditor,
+            label         : "Markdown table",
+            value         : snapshot,
+            create: (context) =>
+              new TableEditor(snapshot, `table:${block}`, context, {
+                command: (expected, next) => tableCommand(doc, block, expected.revision, next),
+                history: (redo) => (redo ? ctx.toolstack.redo(ctx) : ctx.toolstack.undo(ctx)),
+              }),
+          })
+        );
+        return el;
+      }
+    }
+    return renderMarkdownBlock(item, ctx, this.options);
   }
 
   styles() {

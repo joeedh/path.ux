@@ -51,3 +51,22 @@ bundle to the same path can serve a partial script and look like intermittent mi
 A newer pnpm can try reinstalling before running scripts. Set the process-local
 `pnpm_config_verify_deps_before_run=false` to use installed dependencies; do not accept a
 module-directory purge merely to run tests.
+
+### GFM cells and browser clipboard fixtures
+
+GFM `tableCell.position` spans separator pipes. To retain inline source, slice between the
+first and last inline child's positions; an empty cell has no children. Using the cell's
+outer range duplicates separators when serialized. Test code spans with escaped pipes,
+empty cells, body rows shorter than the header, and rows with extra authored cells.
+
+Firefox's constructed `ClipboardEvent` ignores a DataTransfer supplied by its initializer.
+The original DataTransfer retains text while `event.clipboardData.getData()` is empty. For
+synthetic clipboard routing tests, define the event's `clipboardData` property explicitly.
+Also test real keyboard copy/paste in Chromium so fixture behavior cannot mask clipboard
+ownership failures.
+
+A clipboard table at the first entry used to be spliced into paragraph text, which discarded
+its opaque kind when the paragraph was nonempty. Table clipboard parsing now reserves empty
+prose entries at the outer edges. The existing editor allocator supplies IDs for the table
+and suffix before dispatch, so snapshots and redo include all blocks. Exercise a real paste
+into the middle of text; testing only adoption by an empty paragraph misses this loss.

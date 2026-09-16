@@ -49,8 +49,8 @@ widget and do not inherit its resize or move controls. The source remains a medi
 Ordinary links and bare URLs do not pass through this hook. Literal video and iframe HTML
 is preserved as inert raw block source, not instantiated.
 
-Markdown tables currently occupy opaque blocks containing their Markdown source. Their
-rendered tables are static. [Block rendering](../../scripts/widgets/richtext/editor_render.ts)
+Markdown tables occupy opaque blocks containing their Markdown source. Supported GFM
+tables mount the reusable cell editor; unsupported tables retain the static fallback. [Block rendering](../../scripts/widgets/richtext/editor_render.ts)
 replaces dirty block elements wholesale. The editor also handles input events at its root
 and restores document selection after edits. Those behaviors need explicit support for
 interactive children before forms or table cells can be edited reliably.
@@ -362,9 +362,12 @@ preservation, schema selection, retained sessions, and the application's save/co
 
 ## Markdown tables
 
-Create a reusable `TableEditor` with a table model and edit callbacks. The Markdown provider
-parses the table's source into rows, cells, and alignments and translates commands such as
-`setTableCell`, row/column insertion, and alignment changes into undoable provider edits.
+The reusable `TableEditor` receives a `TableSnapshot`, a `WidgetContext`, and a
+`TableAdapter`. Its model contains rectangular rows of authored inline Markdown and column
+alignments; row zero is always the header. The Markdown adapter translates `TableChange`
+values into a `markdownOps.table` provider operation with complete expected and replacement
+source. `tableCommand` resolves the stable block ID and expected source under the history
+lock. A stale table never overwrites a later edit.
 The surrounding document sees one opaque block; the widget owns cell interaction.
 
 The first version supports ordinary GFM tables, including header and alignment semantics.
@@ -377,6 +380,35 @@ Editing a table writes normal Markdown table syntax. Its history snapshots inclu
 changed table content and restore row/column structure. It requires no plugin registration,
 external service, or active HTML from the document. The same control could later be used
 by an explicitly registered plugin over an external table with a different command adapter.
+
+The cell editor uses native text inputs containing inline Markdown. Supported formatting
+includes emphasis, strong, strikethrough, code spans, and inline links/autolinks. Existing
+escapes are retained; unescaped pipes become escaped delimiters. The parser reads the
+inline nodes' source positions because GFM cell positions include separator pipes. Empty
+body cells are padded to the header width; extra authored cells, HTML, and image syntax
+make the table read-only. HTML tables remain preserved source. Unknown Markdown syntax
+that GFM treats as literal text remains literal. No new media renderer is involved.
+
+Enter, Tab, Apply cells, and the session save barrier commit drafts. Blur and Escape keep
+uncommitted input recoverable. Each view registers one draft for the entire table, so edits
+in separate views conflict even if they touch different cells. Structural commands and
+rectangular paste include the current local draft in one undo entry. The header cannot be
+removed, body rows insert after it, and one column must remain. Paste must fit the existing
+rectangle; it never silently truncates cells or grows the table.
+
+Tab visits cells, Alt+arrows moves between cells, and Alt+Shift+arrows or Shift+click selects
+a rectangle. A selected native text range owns text copy/cut. Otherwise cell selection owns
+TSV copy/cut; multiline or tabbed paste is one provider edit. Clipboard cell values are inline
+Markdown source. Outer document selection uses the existing whole-table Markdown clipboard.
+Clipboard parsing adds empty prose carriers around table edges so a paste into a nonempty
+paragraph preserves both the table and surrounding text. Their preallocated IDs enter the
+same insertion snapshot. The host owns Escape and entry/exit. Clean-cell undo/redo goes to document history; dirty
+inputs retain native undo. Model limits are 10,000 cells and one million source characters.
+
+Chromium and Firefox exercises resolve the input/focus and clipboard choices. In Firefox,
+constructed ClipboardEvents ignore their initializer's DataTransfer; synthetic tests install
+that property explicitly. Chromium also exercises real keyboard clipboard operations and
+CDP composition. Exact coverage and completion evidence live in the task list.
 
 ## Delivery and verification
 

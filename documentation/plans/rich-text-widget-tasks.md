@@ -1,6 +1,6 @@
 # Embedded rich text widget tasks
 
-Status: Stage 1 is complete. Stopped at the Stage 1 boundary.
+Status: Stages 1 and 2 are complete. Stopped at the Stage 2 boundary.
 
 This is the sole status and completion tracker for the [widget architecture](rich-text-widgets.md)
 and [forms/front-matter design](rich-text-widget-forms.md). Task IDs and existing completion
@@ -14,7 +14,7 @@ proposed; update their status here when implementation begins.
 | Stage                  | Status      | Deliverable and acceptance condition                                                                                               |
 | ---------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | 1. Hosting             | Complete    | Keyed mounts, disposal, input ownership, focus-preserving changes, and a synthetic editable widget work in two views               |
-| 2. Native table        | Not started | GFM table cells and structure edit through document history and round-trip formatting                                              |
+| 2. Native table        | Complete    | GFM table cells and structure edit through document history and round-trip formatting                                              |
 | 3. Plugin storage      | Not started | Registry, session host, command validation, Markdown envelopes, unknown-record preservation, and structured clipboard              |
 | 4. Local forms         | Not started | Standalone form control, Zod adapter, embedded and native front-matter bindings, source preservation, drafts, validation, and undo |
 | 5. Additional adapters | Not started | Second schema adapter and declarative embedded schemas with explicit unsupported cases                                             |
@@ -50,7 +50,7 @@ unit/browser checks when implementation changes the public surface.
 
 This checklist is the implementation tracker. The stage table above summarizes the same
 work. Update both when a stage changes; do not maintain a second independent task list.
-Stage 1 is authorized. Later stages and the visualnovel migration remain outside this run.
+Stages 1 and 2 are authorized. Stop after T6; later stages and visualnovel remain outside this run.
 
 Task IDs remain stable when work is split or reordered. Before starting a task, record its
 ID in the current-work entry below. Mark a checkbox complete only after its acceptance
@@ -58,9 +58,9 @@ condition is demonstrated, and record the relevant commit and checks in the comp
 Record blockers with the affected task ID and the concrete dependency needed to continue.
 Tasks without a checkbox marked complete are pending, including partially implemented work.
 
-- Current work: none; H1–H9 are complete and verified.
-- Next task: T1, define the native table model and command adapter in Stage 2.
-- Blockers: none for Stage 1. Remaining [design decisions](rich-text-widgets.md#decisions-still-requiring-implementation-prototypes)
+- Current work: none; T1–T6 are complete and verified.
+- Next task: W1, finalize the versioned Markdown block envelope and clipboard grammar.
+- Blockers: none for Stage 2. Remaining [design decisions](rich-text-widgets.md#decisions-still-requiring-implementation-prototypes)
   belong to later stages.
 
 ### Preparation
@@ -107,17 +107,17 @@ host. These tasks include the draft/history prerequisites needed by both tables 
 
 Dependencies: H1–H9. Tables retain ordinary GFM syntax and need no plugin envelope.
 
-- [ ] T1. Define the reusable table model and command adapter, with header/alignment
+- [x] T1. Define the reusable table model and command adapter, with header/alignment
       semantics and a cell editing representation that preserves supported inline formatting.
-- [ ] T2. Implement cell editing, cell selection, keyboard navigation, and cell drafts on
+- [x] T2. Implement cell editing, cell selection, keyboard navigation, and cell drafts on
       the common host. Verify the document still treats the outer table as one opaque block.
-- [ ] T3. Implement row/column insertion and removal, alignment changes, and rectangular
+- [x] T3. Implement row/column insertion and removal, alignment changes, and rectangular
       cell paste as undoable provider operations with complete snapshots and correct inverses.
-- [ ] T4. Implement inner TSV/text clipboard behavior and outer document-table copy/paste.
+- [x] T4. Implement inner TSV/text clipboard behavior and outer document-table copy/paste.
       Verify cell handlers and document handlers do not both consume one clipboard event.
-- [ ] T5. Add parse/edit/save fixtures for escaped pipes, inline formatting, header cells,
+- [x] T5. Add parse/edit/save fixtures for escaped pipes, inline formatting, header cells,
       empty values, and unsupported constructs. Verify unsupported source is retained.
-- [ ] T6. Demonstrate cell focus, two-view updates, structural undo/redo, and raw Markdown
+- [x] T6. Demonstrate cell focus, two-view updates, structural undo/redo, and raw Markdown
       round trips in the example application and browser tests; document the supported subset.
 
 ### Stage 3: plugin records and host policy
@@ -273,3 +273,35 @@ and visualnovel changes remain outside this completed stage.
 For every implementation stage, record focused acceptance results here and run the full
 library/example typecheck plus applicable unit and browser checks. A task marked complete
 does not imply its stage is complete until all stage tasks and their acceptance checks pass.
+
+Stage 2 completion on 2026-09-16:
+
+| Tasks  | Commit and acceptance evidence                                                                                                                                                                                                                                                                                                                                                            |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| T1, T5 | `PENDING_STAGE2_COMMIT`: reusable table model, source snapshot adapter and GFM codec. Twenty-five table tests cover headers, alignment, empty cells, escaping, inline formatting, unsupported source, complete inverses, stale targets and policy refusal.                                                                                                                                |
+| T2     | `PENDING_STAGE2_COMMIT`: native cell inputs use the common host, independent per-view drafts, table-level conflicts, keyboard selection and navigation. Browser cases verify focus, native text undo, save barriers, stale drafts, deletion recovery and Chromium composition.                                                                                                            |
+| T3, T4 | `PENDING_STAGE2_COMMIT`: cell, row, column, alignment and rectangular paste operations carry complete source snapshots. Two-engine TSV tests and Chromium real clipboard tests verify single ownership and undo. Clipboard ingress reserves prose carriers so pasting a table inside text preserves both surrounding fragments. The final provider/table regression passes all 103 tests. |
+| T6     | `PENDING_STAGE2_COMMIT`: the Markdown example demonstrates two views, committed source, structural undo and draft-aware saving. Full library/example typecheck and build pass. All 995 unit tests pass across 73 files. The full rich-text browser run passes 124 tests with 5 skips; the final toolbar-focus/Tab checks pass all 4 cases in Chromium and Firefox.                        |
+
+Verification used `pnpm run typecheck`, `pnpm run build`, `pnpm run test`, focused Vitest
+runs of the table and Markdown provider suites, and
+`pnpm exec playwright test playwright/richtext --workers=2 --reporter=line`. The table-only
+browser run passed 20 tests with 2 skips; the example second-view cases passed in both engines.
+The final focused browser command selected `structure,|Tab navigation` from the table spec.
+The rendered example table was also inspected visually. `pnpm run lint:check` passes with
+seven existing datapath warnings and zero prose findings. Changed-file Prettier passes;
+full `pnpm run format:check` still reports the same 66 untouched path-controller files.
+Diff whitespace checks use `core.whitespace=cr-at-eol` for the repository's tracked CRLF files.
+
+Review covered source extraction, table boundaries in clipboard insertion, immutable command
+capture, history authorization, draft retention and conflicts, DOM focus during commits,
+unsupported-source fallbacks and the optional entry point. The main pathux barrel is unchanged.
+Only the example bundle changes; no path-controller commit or gitlink update is needed.
+Generated regression screenshots were restored after verification. Visualnovel was not modified.
+
+Cells edit inline Markdown source rather than a nested rich-text surface. Draft conflicts are
+conservative at table granularity; paste must fit existing dimensions. HTML/image cells,
+HTML tables and extra authored columns remain read-only. The existing three Firefox skips
+remain, plus two table cases that require Chromium's clipboard permissions or CDP composition.
+WebKit, physical/mobile IMEs and movement without `Element.moveBefore` remain unverified.
+Stage 3 and later work is pending; no plugin persistence or media service behavior was added.
