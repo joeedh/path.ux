@@ -1,6 +1,6 @@
 # Embedded rich text widget tasks
 
-Status: Stage 1 is in progress.
+Status: Stage 1 is complete. Stopped at the Stage 1 boundary.
 
 This is the sole status and completion tracker for the [widget architecture](rich-text-widgets.md)
 and [forms/front-matter design](rich-text-widget-forms.md). Task IDs and existing completion
@@ -13,7 +13,7 @@ proposed; update their status here when implementation begins.
 
 | Stage                  | Status      | Deliverable and acceptance condition                                                                                               |
 | ---------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| 1. Hosting             | In progress | Keyed mounts, disposal, input ownership, focus-preserving changes, and a synthetic editable widget work in two views               |
+| 1. Hosting             | Complete    | Keyed mounts, disposal, input ownership, focus-preserving changes, and a synthetic editable widget work in two views               |
 | 2. Native table        | Not started | GFM table cells and structure edit through document history and round-trip formatting                                              |
 | 3. Plugin storage      | Not started | Registry, session host, command validation, Markdown envelopes, unknown-record preservation, and structured clipboard              |
 | 4. Local forms         | Not started | Standalone form control, Zod adapter, embedded and native front-matter bindings, source preservation, drafts, validation, and undo |
@@ -58,11 +58,10 @@ condition is demonstrated, and record the relevant commit and checks in the comp
 Record blockers with the affected task ID and the concrete dependency needed to continue.
 Tasks without a checkbox marked complete are pending, including partially implemented work.
 
-- Current work: H9 — Chromium acceptance passed; extend Firefox and regression coverage.
-  H1–H8 implementation is under review; checkboxes remain pending until final acceptance.
-- Next task: finish Stage 1 verification and record commits; then stop before T1.
-- Blockers: none recorded; the [open design decisions](rich-text-widgets.md#decisions-still-requiring-implementation-prototypes)
-  are scheduled work, not completed decisions.
+- Current work: none; H1–H9 are complete and verified.
+- Next task: T1, define the native table model and command adapter in Stage 2.
+- Blockers: none for Stage 1. Remaining [design decisions](rich-text-widgets.md#decisions-still-requiring-implementation-prototypes)
+  belong to later stages.
 
 ### Preparation
 
@@ -78,29 +77,29 @@ Tasks without a checkbox marked complete are pending, including partially implem
 Dependencies: P1–P3. Complete this stage before native tables or plugin views depend on the
 host. These tasks include the draft/history prerequisites needed by both tables and forms.
 
-- [ ] H1. Finalize the lifecycle descriptor, stable identities, native-block resolver, and
+- [x] H1. Finalize the lifecycle descriptor, stable identities, native-block resolver, and
       focus-preserving change result. Prototype connected-DOM reconciliation with an input and
       an explicitly opted-in local iframe; document which moves preserve focus and playback.
-- [ ] H2. Implement per-view mount reconciliation, update, error fallback, and idempotent
+- [x] H2. Implement per-view mount reconciliation, update, error fallback, and idempotent
       disposal. Verify deletion, session replacement, implementation changes, and late async
       results without leaked subscriptions or requests.
-- [ ] H3. Implement event ownership across shadow DOM for input, clipboard, pointer, drop,
+- [x] H3. Implement event ownership across shadow DOM for input, clipboard, pointer, drop,
       and composition events. Verify the surrounding editor never treats field edits as prose.
-- [ ] H4. Implement keyboard entry/exit, Tab, Escape, inner versus outer selection, and
+- [x] H4. Implement keyboard entry/exit, Tab, Escape, inner versus outer selection, and
       deletion boundaries. Verify accessible naming and focus survive neighboring text edits.
-- [ ] H5. Serialize target resolution, authorization, inverse capture, and mutation at the
+- [x] H5. Serialize target resolution, authorization, inverse capture, and mutation at the
       command execution boundary. Prove stale/deleted targets settle with no history entry and
       failed edits leave document state unchanged.
-- [ ] H6. Add history preflight refusal where needed, including the shared application
+- [x] H6. Add history preflight refusal where needed, including the shared application
       stack. Verify revoked document-write permission blocks undo/redo/rerun without moving
       history or mutating data, while per-view read-only remains a separate restriction.
-- [ ] H7. Implement draft registration, pending status, `prepareSave()`, conflicts between
+- [x] H7. Implement draft registration, pending status, `prepareSave()`, conflicts between
       views, and control-versus-document undo ownership. Verify serialization remains a pure
       read of committed data and refused or unencodable drafts remain recoverable.
-- [ ] H8. Adapt existing provider widgets and `renderMedia` to the hosting interface while
+- [x] H8. Adapt existing provider widgets and `renderMedia` to the hosting interface while
       retaining legacy callback behavior. Forward instance configuration and draft barriers
       through `RichTextArea` without global policy or credential state.
-- [ ] H9. Run browser acceptance cases with a synthetic editable widget in two views,
+- [x] H9. Run browser acceptance cases with a synthetic editable widget in two views,
       including IME, save/navigation with drafts, policy changes, and opted-in iframe retention.
       Record the browser coverage and any unsupported movement behavior before closing stage 1.
 
@@ -241,6 +240,35 @@ existing command-layer identity checks and the separate `story.*` route for scen
 | ------ | --------------------------------------------------------------------------------------------------------- |
 | P1, P3 | `92769e71`: design written and reviewed; formatting, prose, and local-link checks passed                  |
 | P2     | `35153e66`: visualnovel inspected and incorporated; follow-up review, formatting, and prose checks passed |
+
+Stage 1 completion on 2026-09-16:
+
+| Tasks  | Commit and acceptance evidence                                                                                                                                                                                                                                                                                                                                                    |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| H1     | `5500c3d4`: finalized descriptor, native resolver, runtime identities, optional caret and `preserveFocus`. The connected-DOM experiment in buildtools/richtext-movement.mjs passed in Chromium and Firefox: `moveBefore` retained input focus/selection and iframe document identity; `append` lost both.                                                                         |
+| H2     | `5500c3d4`: per-view mounts, generation aborts, failure placeholders, and idempotent disposal. Unit tests cover denial before construction and late async disposal; browser tests cover deletion/undo, session replacement, implementation replacement, and policy invalidation.                                                                                                  |
+| H3, H4 | `5500c3d4`: composed-path event ownership, native field undo, Tab entry/exit, Escape, and independent inner/outer selection. Chromium and Firefox preserve field focus and selection across commits. Chromium CDP verifies composition, deferred refresh, and cancellation on policy invalidation.                                                                                |
+| H5, H6 | `5500c3d4` with path-controller `6de53ad`: command resolution, authorization, inverse capture, mutation, and rollback share the history boundary. Tests cover queued edits, deleted/stale targets, unencodable data, partial provider failure, and shared-stack undo/redo/rerun refusal without cursor movement.                                                                  |
+| H7, H8 | `5500c3d4`: save barriers wait behind queued history, detect competing drafts, preserve partial commits and recover detached input. Bound-field tests prove pure reads, instance configuration, and one undo entry. Browser tests verify stale acceptance, read-only separation, and legacy media rerender compatibility with shared event ownership.                             |
+| H9     | `5500c3d4`: full library/example typecheck and build passed; all 970 unit tests passed across 72 files. The rich-text browser regression run passed 100 tests with 3 skips. The final widget run, including legacy media, passed 19 tests with 1 skip. Both engines retained local iframe identity and continued playing its canvas-fed video across edits and cross-block moves. |
+
+Verification commands were `pnpm run typecheck`, `pnpm run build`, `pnpm run test`,
+`pnpm exec playwright test playwright/richtext --workers=2 --reporter=line`, and the final
+focused run of playwright/richtext/widgets.spec.ts with the same browser settings.
+`pnpm run lint:check` passed (seven existing datapath warnings, zero prose findings).
+Changed-file Prettier and `git diff --check` passed. Repository-wide `pnpm run format:check`
+reports 66 unchanged path-controller files; this pre-existing formatting baseline was left
+untouched. The public-surface fixture records twelve intentional new types and no new
+runtime exports. Implementation review also checked cleanup ordering, shared-stack entry
+points, the legacy callback path, and draft recovery after detachment.
+
+The two existing Firefox Markdown skips remain. The new Firefox composition case is skipped
+because its injection uses Chromium CDP; ordinary Firefox widget keyboard/focus tests pass.
+WebKit, mobile/physical IMEs, and uninterrupted movement without `Element.moveBefore` remain
+unverified. Engines without that API explicitly remount views in replaced blocks. Legacy
+`HTMLElement` callbacks still rerender; retention requires the descriptor form. Rollback takes
+a full document block snapshot per edit. Plugin persistence, native tables, schema adapters,
+and visualnovel changes remain outside this completed stage.
 
 For every implementation stage, record focused acceptance results here and run the full
 library/example typecheck plus applicable unit and browser checks. A task marked complete
