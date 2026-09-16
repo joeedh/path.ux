@@ -8,6 +8,10 @@ what the provider says changed. The design and its reasoning live in
 [plans/rich-text-markdown.md](plans/rich-text-markdown.md) and composition in
 [plans/rich-text-ime.md](plans/rich-text-ime.md); this page is the consumer's view.
 
+The [embedded-widget design](plans/rich-text-widgets.md) proposes shared hosting for native
+table editors, host-supplied media views, and schema-driven form plugins. It describes future
+work; the contracts below describe the current implementation.
+
 Everything below is exported from the `pathux` barrel: `RichTextEditor`, `RichTextArea`,
 `DocumentSession`, `RichTextContext`, `DocEditOp`, `replaceContentsOp`, `PlainProvider`,
 `plainDocFromLines`, `newBlockId`, `ATOM_CHAR`, `CARET_SLOT` and the interfaces. The helpers

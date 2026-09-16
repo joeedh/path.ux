@@ -1,0 +1,453 @@
+# Embedded rich text widgets
+
+Status: proposed design. No implementation stages are complete.
+
+## Purpose
+
+Rich text documents need interactive forms, native table editing, charts, and views of
+external data. These features share requirements for focus, lifecycle, selection, and undo,
+but they do not all need the same storage format.
+
+Build a common embedded-widget host. Native provider widgets, host-supplied media renderers,
+and registered plugins use that host. Providers retain ownership of document structure and
+serialization. Applications explicitly supply plugin implementations and authorize external
+embeds. The default Markdown editor does not acquire video players or iframe support.
+
+The motivating plugin is a form driven by a Zod schema or an nstructjs struct. The form
+control should also work outside rich text. A Markdown table editor is a native provider
+widget and is a second test of the shared hosting contract.
+
+## Existing behavior
+
+The [provider contract](../../scripts/widgets/richtext/provider.ts) exposes a flat sequence
+of blocks. Inline atoms contribute one `ATOM_CHAR`; opaque blocks are selected and deleted
+as a unit. Providers render atom wrappers with `data-doc-atom` and
+`contenteditable="false"`, with caret slots around inline atoms.
+
+`DocumentSession` references a per-document or shared application toolstack and owns its
+document change notifications. `DocEditOp` stores
+edits and inverses as JSON. Provider `custom` operations already support native operations
+such as changing an image's width. Embedded path.ux controls receive a `ProviderContext`
+whose `ctx.editor` bridge submits edits and whose toolstack belongs to the session.
+
+The Markdown provider already exposes `renderMedia(image, ctx)`. It calls this synchronous
+hook for image atoms, including references written as `![video](clip.mp4)`. The host may
+return an element; `undefined` selects `MdImageWidget`. Custom elements replace the image
+widget and do not inherit its resize or move controls. The source remains a media reference.
+Ordinary links and bare URLs do not pass through this hook. Literal video and iframe HTML
+is preserved as inert raw block source, not instantiated.
+
+Markdown tables currently occupy opaque blocks containing their Markdown source. Their
+rendered tables are static. [Block rendering](../../scripts/widgets/richtext/editor_render.ts)
+replaces dirty block elements wholesale. The editor also handles input events at its root
+and restores document selection after edits. Those behaviors need explicit support for
+interactive children before forms or table cells can be edited reliably.
+
+## Ownership
+
+| Component            | Owns                                                                                                       |
+| -------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Document provider    | Native structure, widget placement and storage, operations, snapshots, serialization, clipboard conversion |
+| Embedded-widget host | Mounted instances, lifecycle, input ownership, focus, selection coordination, error fallback               |
+| Plugin definition    | Payload interpretation, validation, supported versions, migrations, renderer factory                       |
+| Application          | Available plugins, document-specific policy, schema catalog, external services, credentials                |
+| Widget view          | Local interaction state and drafts; requests to change authoritative data                                  |
+
+Plugin definitions are ordinary imported modules. The framework supplies contracts and
+hosting primitives; optional packages or application modules supply implementations. A
+document names a plugin but never supplies a module URL or executable implementation.
+
+Registries are explicit objects supplied by the application, not a process-wide mutable
+catalog. Registration checks duplicate type identifiers. One registry can serve several
+documents. A document host attached to a session supplies policy and services for that
+document. Each editor has its own mounted instances, so two views share saved data without
+sharing DOM, focus, drafts, or pending view requests.
+
+`RichTextArea` must expose the same instance configuration and carry it across the sessions
+it creates. A global format registration must not capture one field's credentials, document
+path, or policy. Existing applications that supply no host retain current behavior.
+
+## Three ways to create an embedded view
+
+### Native provider widgets
+
+A provider renders a native object through a reusable control and translates the control's
+commands into provider operations. A Markdown table uses this route. It remains a Markdown
+table on disk and does not gain a plugin record solely to obtain focus or lifecycle support.
+
+### Media references
+
+Keep `renderMedia` as an explicit application extension point. Its result can be hosted by
+the common lifecycle machinery without changing the saved media reference into a plugin.
+The hook remains synchronous; a host can return a loading view that resolves data later.
+
+An existing callback returning only an `HTMLElement` remains supported with its existing
+re-render semantics. A new descriptor form can opt into keyed updates and disposal. Providers
+must supply a stable runtime identity for these views; an atom's current offset is not an
+identity because neighboring edits move it. No default media recognizer is introduced.
+
+### Plugin records
+
+A plugin record is a provider-independent value. A proposed envelope is:
+
+```ts
+interface WidgetRecord {
+  id: string;
+  type: string;
+  version: number;
+  payload: JsonValue;
+}
+```
+
+`id` identifies this instance within the document. `type` is a stable namespaced identifier
+such as `pathux.form`. `version` versions the plugin payload independently of the provider's
+file format. The envelope has its own format version in the serialized container.
+
+Placement belongs to the provider: a record may occupy an inline atom or an opaque block.
+Plugins declare supported placements; insertion requires both provider and plugin support.
+Forms and tables start as block widgets. Inline plugins remain part of the design, but their
+Markdown syntax is deferred until the block implementation proves the hosting contract.
+
+Payloads contain saved configuration, values, and resource references. They contain no DOM,
+credentials, constructors, functions, or active requests. Focus, validation display, loading
+state, and other temporary UI state belong to the view.
+
+## Provider capability and edit flow
+
+Add an optional widget-storage capability alongside `DocumentProvider`. A provider opting
+in must locate records by ID, report placement, insert/update/remove records through edits,
+include them in snapshots, and preserve them in its file format and supported clipboard
+representations. Existing providers need not implement this capability.
+
+Providers can use shared operation builders and validators while retaining their own model.
+Rendering, serialization, and ordinary deletion must work without the plugin implementation
+being installed. A plugin is generic across providers implementing this capability; a
+plain-text format cannot claim support if saving loses the records.
+
+The view receives an immutable record snapshot and scoped host commands such as
+`updatePayload`, rather than a mutable pointer to provider storage. Each request identifies
+the widget and its expected revision. The host resolves its current location, checks
+permissions, validates the record and editable value representation, and submits the provider edit through the
+session. Native widgets use the same flow with provider-specific commands.
+
+Resolve identity, authorize, capture the inverse, and apply the change against the same
+current state at the serialized commit boundary. A check performed when a palette opens or
+before an asynchronous wait is insufficient. Rejected, stale, or deleted targets produce a
+settled refusal result and no history entry. A failed operation must not partially mutate
+the document. This is a new requirement for widget commands; the current dispatch path
+computes inverses before submitting to the toolstack and will need review.
+
+Use a per-widget revision or relevant-value precondition so unrelated text edits do not
+invalidate every request. Concurrent edits to the same value are refused and refreshed
+instead of silently overwriting another view. This design does not introduce collaborative
+operational transformation or automatic merging of arbitrary payloads.
+
+Initial widget operations can use provider `custom` edits. They must declare the complete
+touched block span and position shifts. A later public operation type is justified only if
+it reduces duplicated provider code. Raw plugin mutations and a second `DataPathSetOp` for
+the same change are prohibited: one logical change produces one document history entry.
+
+## Persistence and clipboard
+
+The first Markdown implementation uses a reserved, versioned fenced block containing a
+JSON envelope, with an info string such as `pathux-widget-v1`. The exact grammar and escaping
+fixtures must be finalized before parser implementation. Fence length must safely contain
+payload text, including backticks. This is a Markdown extension, not an ordinary GFM table
+or arbitrary HTML tag.
+
+Parsing recognizes the envelope without loading a plugin. Unknown types, future versions,
+and disallowed instances render inert placeholders and retain their data. Malformed or
+oversized envelopes remain preserved source rather than becoming executable content or
+partially interpreted records. Bound parsing depth and allocation; retaining source does
+not require eagerly materializing an unbounded payload.
+
+Unedited unsupported source is preserved verbatim. Supported records may use a canonical
+serialization. Plugin availability or a policy change never triggers data deletion or a
+silent migration. Migrations validate their output and run as explicit undoable document
+changes. Schema version changes within a form are separate from plugin payload migrations.
+
+Copy/paste within capable providers preserves the record and creates a fresh instance ID.
+Moving within a document preserves identity. Loading detects duplicate IDs and gives each
+occurrence a distinct runtime identity before mounting. The format must define how duplicate
+persisted IDs are repaired without changing opaque unknown payloads. Undo restores the
+original identity of a deleted instance.
+
+Use a versioned structured clipboard flavor for provider-independent transfers, with
+plain-text and sanitized static HTML fallbacks. Clipboard input is untrusted and follows
+the same parsing and authorization rules as loaded documents. Unsupported targets receive
+an explicit fallback, not a successful insertion that silently loses saved values.
+
+The current `ClipboardContent` supports block strings and HTML; structured transfer requires
+extending that contract and the editor's clipboard plumbing. Native table cell selection
+uses its own TSV/text clipboard behavior, while selecting the outer block copies the
+document table. A cell paste is one undoable operation.
+
+External resource references intentionally survive copying. The initial plugin format does
+not support hidden cross-widget references inside opaque payloads: generic ID remapping
+cannot safely rewrite them. If cross-widget references are added later, they need a standard
+reference representation and a defined policy for copying only part of a document.
+
+## Lifecycle and input ownership
+
+The host creates a view with an element, an update method, and an idempotent dispose method.
+Identity is scoped by session, editor view, and widget ID. Provider-native blocks can use
+their block ID; inline media needs an identity independent of its offset. Rebinding a
+session or changing the implementation invalidates its mounted generation.
+
+Dirty blocks must reconcile existing widget mounts instead of replacing them as incidental
+children of freshly rendered blocks. Keeping the same JavaScript element reference alone
+is insufficient: detaching an iframe can reload it, and moving an active input can disturb
+focus or composition. Preserve live mount positions where possible and verify actual
+browser behavior for necessary moves. Active compositions defer structural reconciliation
+until they can be committed or explicitly canceled.
+
+Views are updated from document changes, including undo, redo, and external reconciliation.
+Disposal releases subscriptions, timers, object URLs, and requests on deletion, session
+replacement, permission revocation, or editor destruction. Async work carries an abort signal
+and generation token. A result for a deleted, replaced, or rebound instance is discarded.
+Failures in one view produce a local placeholder while preserving its record.
+
+The host recognizes widget-owned events through the composed event path, including shadow
+DOM. Typing, pointer interaction, paste, drop, Tab, and IME inside a control belong to that
+control. The surrounding editor must not translate them into text operations. Mutation
+diagnostics ignore legitimate mutations inside a hosted view while continuing to check
+document-owned wrappers and text.
+
+Tab moves through controls and then exits the widget. Escape leaves widget interaction and
+returns focus to a defined document boundary. Backspace or Delete within a field edits the
+field; deletion of the entire widget requires outer document selection. Accessible names,
+keyboard entry and exit, and visible selection distinguish the two interaction contexts.
+
+Widget commits keep field focus and selection. Extend change/selection handling so a widget
+update can explicitly preserve the current focus owner; do not use a fabricated text caret
+as the result of every payload edit. Other editors receiving the change retain their own
+focus and selection. Read-only and permission changes update mounted views without requiring
+document reserialization.
+
+## History and drafts
+
+Form controls and table cells may hold incomplete input locally while a field is being
+edited. The first implementation commits on explicit acceptance or blur and groups a cell
+paste or structural action into one operation. A form's saved answers may be incomplete or
+fail business validation. Record validation checks the envelope and supported editable value
+representation; full schema validation reports errors and gates submission. Required fields
+and cross-field refinements must not prevent saving progress one field at a time. Input that
+cannot yet be encoded as an editable value remains a draft.
+
+Add a session-wide asynchronous `prepareSave()` barrier. Each view registers its draft
+controller with the session and unregisters on disposal. The barrier commits encodable,
+nonconflicting drafts and returns a typed result distinguishing ready, unencodable input,
+conflicting drafts, and refused writes. The ready result identifies the committed session
+revision. The application awaits this barrier before saving or navigation and checks that
+the revision still matches the snapshot it saves. Any partial draft commits remain ordinary
+undoable edits even when another draft prevents the barrier from becoming ready.
+
+Two views holding drafts for the same field must resolve the conflict explicitly rather
+than committing in view enumeration order. Concurrent changes arriving during the barrier
+also produce a conflict or require a new barrier. Rebuilding or navigating away must not
+silently discard drafts. The host exposes pending-draft status so navigation and close flows
+can call the barrier or request explicit discard.
+
+Serialization and `RichTextArea.value` remain synchronous reads of committed state. Automatic
+datapath publication does not imply that every view's draft has been saved. `RichTextArea`
+forwards the barrier and pending-draft status to applications. Applications with autosave
+must choose committed-state autosave or invoke the barrier; the framework does not run an
+asynchronous save protocol from a property getter.
+
+While a draft is active, Ctrl+Z first uses the control's draft undo. Once committed, document
+undo restores the saved value. Cancel restores the committed value. Controls without native
+draft history must implement equivalent behavior or commit through a documented transaction
+model; they must not accidentally use both histories. Custom operations do not currently
+fold, so per-keystroke persistence requires an explicit future transaction design.
+
+External changes to a field with a local draft require a conflict indication and refresh or
+explicit replacement. A stale blur must not overwrite the external change. Removing or
+locking the widget cancels its ability to commit; the host must surface any displaced draft
+according to the application's navigation/conflict policy.
+
+Undo and redo replay recorded data changes without loading plugins, invoking migrations,
+fetching remote data, or submitting forms. A revoked render permission leaves restored data
+inert. Applications can additionally prohibit document writes, in which case undo/redo
+must be refused before moving the history cursor. This check belongs at the history
+execution boundary and resolves the target operation's session. It covers the application's
+shared toolstack, undo/redo menus, and operation reruns as well as editor shortcuts. A check
+only in `EditorBridge.dispatch` or the mounted view is insufficient. If the toolstack lacks a
+preflight refusal contract, adding one is a prerequisite; silently skipping an operation
+while moving the cursor is not acceptable. Hiding a palette entry alone does not
+invalidate history or prevent ordinary document deletion.
+
+## Host policy and security defaults
+
+path.ux is responsible for the safety of its parser, sanitizer, fallback renderer, envelope
+handling, and generic hosting machinery. An extension point is not a substitute for those
+responsibilities. The goal is a safe default editor with bounded, testable behavior, not a
+claim that any implementation can guarantee the absence of all vulnerabilities.
+
+Default Markdown rendering adds no video player, iframe embedding, service detection,
+automatic embed fetching, or document-directed code loading. Existing image rendering is
+unchanged and may make image requests; this design does not claim the default editor has
+no network activity. A document never grants itself capabilities by naming a plugin.
+
+Hosts explicitly provide trusted renderer code. That code runs with the application's
+privileges; the registry and service interfaces are not a sandbox for hostile JavaScript.
+Supporting untrusted third-party executable plugins would require a separate isolation
+design and is outside this proposal.
+
+Distinguish insertion availability, permission to mount an existing widget, permission to
+edit its configuration or values, and permission to invoke external actions. Registry
+membership alone is not authorization for every instance. Parsing, saving, copying, and
+rendering a placeholder do not require activating a plugin.
+
+The document host receives an application-defined document descriptor with URI/path,
+metadata, and an explicit invalidation mechanism. The application may inspect contents
+through its own model. Reevaluate decisions when relevant content, path, policy, or resource
+references change. Stop affected views and pending work when authorization is revoked.
+Evaluate policy before constructing a view or starting resource requests, and again when a
+command executes. Limit each view to the services and configuration approved for it.
+
+Resource identifiers and credentials remain separate. The document stores a reference;
+host services resolve it and supply authentication. Reference resolution must apply host
+policy to the actual destination, including redirects or a changed document base path.
+Schema retrieval is also resource access and requires authorization.
+
+YouTube illustrates the intended boundary. Supported browser embeds use an iframe, created
+directly or by the [IFrame Player API](https://developers.google.com/youtube/iframe_api_reference).
+A host may opt in by validating a supported reference, extracting a video ID, and constructing
+an iframe with a fixed approved origin and host-controlled attributes. The Markdown parser
+still does not instantiate iframe HTML from the document. Uploaded videos and other services
+remain subject to separate host policy. This proposal ships no YouTube or video renderer.
+
+## Schema-driven forms
+
+Build a reusable form control and a rich text plugin wrapping it. The form has three
+independent inputs: its schema, its values, and presentation metadata such as field order,
+labels, groups, and control preferences.
+
+Use one normalized `FormSchema` for rendering with adapters from Zod and nstructjs. The
+adapter also supplies validation, defaults, and encoding/decoding of editable values. It
+must report unsupported constructs rather than silently weakening validation. Preserve
+input and output types separately when validation transforms a value.
+
+Do not promise lossless conversion between arbitrary Zod schemas and nstructjs structs.
+Zod supports executable refinements and transforms; its
+[JSON Schema conversion](https://zod.dev/json-schema) documents unrepresentable constructs.
+nstructjs serialization expressions and object references do not necessarily describe
+editable fields. Source-specific validation and codecs remain in trusted application code.
+An nstructjs adapter may generate Zod validation for its supported subset if Zod is chosen
+as the runtime backend, without changing the renderer contract.
+
+An embedded schema is a versioned declarative description of the supported form subset.
+Never evaluate Zod code, struct helper expressions, or constructors supplied by a document.
+A referenced schema identifies a host-registered schema and version. Unsupported runtime
+behavior requires that registered implementation and otherwise produces an inert fallback.
+Dates, large integers, references, and class instances require explicit JSON-compatible
+codecs before they can enter widget records or document history.
+
+Schema and values independently support embedded data or external references. For example:
+
+```json
+{
+  "schema": { "kind": "reference", "id": "customer-intake", "version": 3 },
+  "values": { "kind": "embedded", "data": { "name": "", "priority": "normal" } },
+  "layout": { "fields": ["name", "priority"] }
+}
+```
+
+Embedded values belong to document history. External values belong to the host's data
+service and its conflict/versioning rules. Refreshing a chart or external form does not
+dirty the document unless the user explicitly saves a snapshot. External submission is an
+explicit action with pending, success, and failure states; document undo never repeats or
+reverses a remote request. Redo does not resubmit a form.
+
+Reuse path.ux controls and property metadata where useful. Any `DataAPI` mapping belongs to
+its own API instance. Controls edit drafts or call the document command adapter; they must
+not directly mutate saved payloads through ordinary property bindings.
+
+Distinguish designing the form, filling values, and submitting. Existing `editor.readOnly`
+continues to prohibit document mutation, including embedded answers. An application wanting
+locked layout with editable answers uses a narrower structure-edit permission, not an
+exception to `readOnly`. It is a per-view restriction: a read-only view cannot originate
+mutations, but another authorized view or application-level history may change the shared
+document. A session-wide write prohibition applies to all views and history entry points.
+External interactions require their own explicit host permission.
+
+## Markdown tables
+
+Create a reusable `TableEditor` with a table model and edit callbacks. The Markdown provider
+parses the table's source into rows, cells, and alignments and translates commands such as
+`setTableCell`, row/column insertion, and alignment changes into undoable provider edits.
+The surrounding document sees one opaque block; the widget owns cell interaction.
+
+The first version supports ordinary GFM tables, including header and alignment semantics.
+Cell edits preserve supported inline formatting and escape pipes and other syntax during
+serialization. Treating every cell as plain text and silently dropping formatting is not
+acceptable. Nested block widgets, merged cells, spreadsheets, and formulas are outside the
+first version. Unsupported table constructs remain preserved and read-only.
+
+Editing a table writes normal Markdown table syntax. Its history snapshots include all
+changed table content and restore row/column structure. It requires no plugin registration,
+external service, or active HTML from the document. The same control could later be used
+by an explicitly registered plugin over an external table with a different command adapter.
+
+## Delivery and verification
+
+Implementation is not authorized by this design document alone. The following stages are
+proposed; update their status here when implementation begins.
+
+| Stage                  | Status      | Deliverable and acceptance condition                                                                                  |
+| ---------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------- |
+| 1. Hosting             | Not started | Keyed mounts, disposal, input ownership, focus-preserving changes, and a synthetic editable widget work in two views  |
+| 2. Native table        | Not started | GFM table cells and structure edit through document history and round-trip formatting                                 |
+| 3. Plugin storage      | Not started | Registry, session host, command validation, Markdown envelopes, unknown-record preservation, and structured clipboard |
+| 4. Local forms         | Not started | Standalone form control, one schema adapter, client-supplied schemas, embedded answers, drafts, validation, and undo  |
+| 5. Additional adapters | Not started | Second schema adapter and declarative embedded schemas with explicit unsupported cases                                |
+| 6. External data       | Not started | Host-supplied resource services, policy invalidation, conflicts, cancellation, and explicit submission                |
+
+Stage 1 includes a review of serialization at the toolstack boundary before later stages
+depend on widget commands. Begin forms with a host-supplied Zod schema; add nstructjs against
+the same rendering and validation contract. This choice does not make Zod part of the base
+rich text bundle. Shared contracts stay lightweight; schema adapters and form controls are
+optional imports. Media policy remains unchanged throughout these stages.
+
+Provider tests cover record validation, unknown and malformed source, duplicate IDs,
+snapshots, migrations, stale commands, clipboard identities, and Markdown round trips.
+Browser tests cover typing beside and inside widgets, IME, Tab/Escape, inner versus outer
+selection, copy/paste, deletion/undo, focus across updates, and two editors on one session.
+Verify that a retained opted-in iframe is not reloaded by unrelated text edits using a
+local test fixture rather than an external service.
+
+Security regression tests cover URL and HTML sanitization, hostile payload keys and depth,
+unregistered or disallowed records, policy changes during async work, and denial before
+renderer construction. In the default configuration, video and iframe source remains inert,
+video media references create no player, and no embed API script is loaded. Table and form
+tests also verify that values are rendered as text rather than inserted as HTML.
+
+Additional acceptance cases include saving with drafts in multiple views, saving partially
+filled required fields and cross-field validation failures, cancellation on navigation, undo
+after plugin removal, future payload versions, remote failure without a document edit, and
+redo without external submission. Application-level undo against a session whose write
+permission was revoked must preserve both the document and the history cursor. Follow the repository's full typecheck and applicable
+unit/browser checks when implementation changes the public surface.
+
+## Decisions still requiring implementation prototypes
+
+- Finalize the lifecycle descriptor and connected-DOM reconciliation strategy, including
+  browser behavior when an active mount must move across blocks.
+- Finalize the Markdown envelope grammar, payload limits, duplicate-ID repair, and structured
+  clipboard format before implementing persistence.
+- Specify true inline plugin syntax separately; do not encode arbitrary payloads in image
+  URLs or accept executable custom HTML as a shortcut.
+- Define the normalized form schema subset and adapter diagnostics using real Zod and
+  nstructjs fixtures, including arrays, nested objects, unions, and reference fields.
+
+## Design review
+
+Fresh-context review completed on 2026-09-16 against the current provider, editor, session,
+operation, and bound-field implementations. Three findings were incorporated:
+
+- Separate record and editable-value validation from full form submission validation so
+  incomplete forms can be saved.
+- Define a session-wide draft barrier and distinguish committed serialization from drafts
+  held by one or more views.
+- Enforce session write authorization at shared history execution boundaries, and distinguish
+  per-view read-only state from a session-wide write prohibition.
