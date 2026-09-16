@@ -45603,6 +45603,385 @@ function rootReflects(root, blocks) {
   }
   return true;
 }
+function freezeComposition(root, range, view, pending) {
+  const block = range.head.block;
+  const element = blockElement(root, block);
+  if (element === void 0) {
+    return void 0;
+  }
+  const blocks = [...view.blocks];
+  const texts = new Map(blocks.map((id) => [id, view.blockText(id)]));
+  return {
+    block,
+    text: blockTextOf(element),
+    selection: range,
+    pending,
+    view: { blocks, blockText: (id) => texts.get(id) ?? "" }
+  };
+}
+function resolveComposition(snapshot, root, view) {
+  const element = blockElement(root, snapshot.block);
+  if (element === void 0 || !rootReflects(root, view.blocks)) {
+    return { kind: "refuse" };
+  }
+  const sel = snapshot.selection;
+  if (sel.anchor.block !== snapshot.block || sel.head.block !== snapshot.block) {
+    return { kind: "refuse" };
+  }
+  const edit = composedEdit(snapshot.text, blockTextOf(element), [
+    sel.anchor.offset,
+    sel.head.offset
+  ]);
+  if (edit === void 0) {
+    return { kind: "rerender" };
+  }
+  if ("refused" in edit) {
+    return { kind: "refuse" };
+  }
+  const map3 = (offset) => mapThroughPending({ block: snapshot.block, offset }, snapshot.pending, snapshot.view);
+  const range = { anchor: map3(edit.range[0]), head: map3(edit.range[1]) };
+  const op = edit.text.length > 0 ? { type: "insertText", at: range, text: edit.text } : { type: "deleteRange", range };
+  return { kind: "op", op };
+}
+
+// scripts/widgets/richtext/dom_selection.ts
+function domSelection(shadow) {
+  const scoped = shadow;
+  return scoped.getSelection?.() ?? document.getSelection();
+}
+function isBackward(sel, range) {
+  if (sel.anchorNode === null || sel.focusNode === null) {
+    return false;
+  }
+  if (sel.anchorNode === sel.focusNode) {
+    return sel.anchorOffset > sel.focusOffset;
+  }
+  return sel.anchorNode === range.endContainer && sel.anchorOffset === range.endOffset;
+}
+function selectionEndpoints(shadow) {
+  const sel = domSelection(shadow);
+  if (sel === null || sel.rangeCount === 0) {
+    return void 0;
+  }
+  const composed = sel.getComposedRanges?.({ shadowRoots: [shadow] });
+  if (composed !== void 0 && composed.length > 0) {
+    const r = composed[0];
+    const backward = isBackward(sel, r);
+    const start = { node: r.startContainer, offset: r.startOffset };
+    const end = { node: r.endContainer, offset: r.endOffset };
+    return backward ? { anchor: end, head: start } : { anchor: start, head: end };
+  }
+  if (sel.anchorNode === null || sel.focusNode === null) {
+    return void 0;
+  }
+  return {
+    anchor: { node: sel.anchorNode, offset: sel.anchorOffset },
+    head: { node: sel.focusNode, offset: sel.focusOffset }
+  };
+}
+function docPosIn(root, view, node, offset) {
+  if (node === root) {
+    const kids = root.children;
+    if (offset < kids.length) {
+      const block = kids[offset].getAttribute("data-doc-block");
+      return block === null ? void 0 : { block, offset: 0 };
+    }
+    const last = view.blocks[view.blocks.length - 1];
+    return last === void 0 ? void 0 : { block: last, offset: view.blockText(last).length };
+  }
+  return toDocPos(root, node, offset);
+}
+function domRange(root, shadow, view) {
+  const ends = selectionEndpoints(shadow);
+  if (ends === void 0) {
+    return void 0;
+  }
+  const anchor = docPosIn(root, view, ends.anchor.node, ends.anchor.offset);
+  const head = docPosIn(root, view, ends.head.node, ends.head.offset);
+  return anchor !== void 0 && head !== void 0 ? { anchor, head } : void 0;
+}
+function setDomSelection(root, shadow, range) {
+  const anchor = fromDocPos(root, range.anchor);
+  const head = fromDocPos(root, range.head);
+  const sel = domSelection(shadow);
+  if (anchor === void 0 || head === void 0 || sel === null) {
+    return;
+  }
+  sel.setBaseAndExtent(anchor.node, anchor.offset, head.node, head.offset);
+}
+
+// scripts/widgets/richtext/editor_input.ts
+var FORMAT_MARKS = {
+  formatBold: "bold",
+  formatItalic: "italic",
+  formatUnderline: "underline",
+  formatStrikeThrough: "strikethrough"
+};
+var BACKWARD_DELETES = /* @__PURE__ */ new Set([
+  "deleteContentBackward",
+  "deleteWordBackward",
+  "deleteSoftLineBackward"
+]);
+var FORWARD_DELETES = /* @__PURE__ */ new Set([
+  "deleteContentForward",
+  "deleteWordForward",
+  "deleteSoftLineForward"
+]);
+var WORD_DELETES = /* @__PURE__ */ new Set(["deleteWordBackward", "deleteWordForward"]);
+var samePos = (a2, b) => a2.block === b.block && a2.offset === b.offset;
+var isCollapsed = (range) => samePos(range.anchor, range.head);
+function orderRange(range, view) {
+  const ai = view.blocks.indexOf(range.anchor.block);
+  const hi = view.blocks.indexOf(range.head.block);
+  const forward = ai < hi || ai === hi && range.anchor.offset <= range.head.offset;
+  return forward ? { start: range.anchor, end: range.head } : { start: range.head, end: range.anchor };
+}
+function deleteBoundary(text2, offset, granularity, backward) {
+  if (typeof Intl.Segmenter !== "function") {
+    return backward ? Math.max(0, offset - 1) : Math.min(text2.length, offset + 1);
+  }
+  const segments = [...new Intl.Segmenter(void 0, { granularity }).segment(text2)];
+  const wordLike = (i2) => segments[i2].segment === ATOM_CHAR || segments[i2].isWordLike !== false;
+  if (backward) {
+    let i2 = segments.findLastIndex((s) => s.index < offset);
+    if (i2 < 0) {
+      return 0;
+    }
+    if (granularity === "word") {
+      while (i2 > 0 && !wordLike(i2)) {
+        i2--;
+      }
+    }
+    return segments[i2].index;
+  }
+  let i = segments.findIndex((s) => s.index + s.segment.length > offset);
+  if (i < 0) {
+    return text2.length;
+  }
+  if (granularity === "word") {
+    while (i + 1 < segments.length && !wordLike(i)) {
+      i++;
+    }
+  }
+  return segments[i].index + segments[i].segment.length;
+}
+function mapInput(e, host) {
+  const { view } = host;
+  const type = e.inputType;
+  if (type === "historyUndo") {
+    void host.undo();
+    return [];
+  }
+  if (type === "historyRedo") {
+    void host.redo();
+    return [];
+  }
+  const mark2 = FORMAT_MARKS[type];
+  if (mark2 !== void 0) {
+    if (!host.hasMark(mark2)) {
+      return host.refuse(type);
+    }
+    const range = host.inputRange(e);
+    return range === void 0 || isCollapsed(range) ? [] : [{ type: "toggleMark", range, mark: mark2 }];
+  }
+  if (type === "insertText") {
+    const range = host.inputRange(e);
+    if (typeof e.data !== "string" || range === void 0) {
+      return host.refuse(type);
+    }
+    return [{ type: "insertText", at: range, text: e.data }];
+  }
+  if (type === "insertParagraph" || type === "insertLineBreak") {
+    const range = host.inputRange(e);
+    if (range === void 0) {
+      return host.refuse(type);
+    }
+    const ops = [];
+    const start = orderRange(range, view).start;
+    if (!isCollapsed(range)) {
+      ops.push({ type: "deleteRange", range });
+    }
+    ops.push({ type: "splitBlock", at: start, newBlock: newBlockId() });
+    return ops;
+  }
+  if (type === "insertFromPaste" || type === "insertFromDrop") {
+    const range = host.inputRange(e);
+    const content = e.dataTransfer ? host.fromClipboard(e.dataTransfer) : void 0;
+    if (range === void 0 || content === void 0 || content.blocks.length === 0) {
+      return host.refuse(type);
+    }
+    const newBlocks = content.blocks.slice(1).map(() => newBlockId());
+    return [{ type: "insertContent", at: range, content, newBlocks }];
+  }
+  if (BACKWARD_DELETES.has(type) || FORWARD_DELETES.has(type) || type === "deleteByCut") {
+    return mapDelete(e, type, host);
+  }
+  return host.refuse(type);
+}
+function mapDelete(e, type, host) {
+  const { view } = host;
+  const range = host.inputRange(e);
+  if (range === void 0) {
+    return host.refuse(type);
+  }
+  let { start, end } = orderRange(range, view);
+  if (samePos(start, end)) {
+    if (type === "deleteByCut" || e.getTargetRanges().length > 0) {
+      return [];
+    }
+    const text2 = view.blockText(start.block);
+    const index = view.blocks.indexOf(start.block);
+    const granularity = WORD_DELETES.has(type) ? "word" : "grapheme";
+    if (BACKWARD_DELETES.has(type)) {
+      if (start.offset === 0) {
+        return index > 0 ? [{ type: "joinWithPrevious", block: start.block }] : [];
+      }
+      start = {
+        block: start.block,
+        offset: deleteBoundary(text2, start.offset, granularity, true)
+      };
+    } else {
+      if (end.offset >= text2.length) {
+        const next = view.blocks[index + 1];
+        return next === void 0 ? [] : [{ type: "joinWithPrevious", block: next }];
+      }
+      end = { block: end.block, offset: deleteBoundary(text2, end.offset, granularity, false) };
+    }
+  }
+  const si = view.blocks.indexOf(start.block);
+  const ei = view.blocks.indexOf(end.block);
+  const boundaryOnly = ei === si + 1 && start.offset >= view.blockText(start.block).length && end.offset === 0;
+  if (boundaryOnly) {
+    return [{ type: "joinWithPrevious", block: end.block }];
+  }
+  return [{ type: "deleteRange", range: { anchor: start, head: end } }];
+}
+
+// scripts/widgets/richtext/editor_render.ts
+function renderRoot(root, provider, doc, ctx) {
+  root.replaceChildren(...provider.blocks(doc).map((id) => provider.renderBlock(doc, id, ctx)));
+}
+function patchBlocks(root, provider, doc, ctx, result, held, onFresh) {
+  for (const id of result.removedBlocks) {
+    if (id !== held) {
+      blockElement(root, id)?.remove();
+    }
+  }
+  const order = provider.blocks(doc);
+  const dirty2 = result.dirtyBlocks.filter((id) => id !== held).map((id) => ({ id, index: order.indexOf(id) })).filter((entry) => entry.index >= 0).sort((a2, b) => a2.index - b.index);
+  for (const { id, index } of dirty2) {
+    const fresh = provider.renderBlock(doc, id, ctx);
+    const old = blockElement(root, id);
+    if (old !== void 0) {
+      old.replaceWith(fresh);
+    } else if (index === 0) {
+      root.prepend(fresh);
+    } else {
+      const prev = blockElement(root, order[index - 1]);
+      if (prev !== void 0) {
+        prev.after(fresh);
+      } else {
+        root.append(fresh);
+      }
+    }
+    onFresh(fresh);
+  }
+}
+
+// scripts/widgets/richtext/editor_style.ts
+init_theme_schema();
+init_ui_theme();
+var EDITOR_CSS = `
+  :host {
+    display        : flex;
+    flex-direction : column;
+    position       : relative;
+  }
+
+  .rich-text-root {
+    flex          : 1 1 auto;
+    min-height    : 6em;
+    overflow-y    : auto;
+    padding       : 5px;
+    outline       : none;
+    white-space   : pre-wrap;
+    overflow-wrap : anywhere;
+    background    : var(--richtext-background);
+  }
+
+  .rich-text-root[readonly] {
+    background : var(--richtext-readonly-background);
+  }
+
+  [data-richtext-toolbar] {
+    flex-wrap     : wrap;
+    gap           : var(--richtext-toolbar-gap);
+    padding       : var(--richtext-toolbar-padding);
+    background    : var(--richtext-toolbar-background);
+    border-bottom : 1px solid var(--richtext-toolbar-border);
+  }
+
+  .rich-text-root ::selection {
+    background : var(--richtext-selection-background);
+  }
+`;
+var EDITOR_THEME = {
+  DefaultText: t.font,
+  "background-color": t.color,
+  "toolbar-background": t.color,
+  "toolbar-border": t.color,
+  "toolbar-padding": t.number,
+  "toolbar-gap": t.number,
+  "toolbar-active-background": t.color,
+  "readonly-background": t.color,
+  "selection-background": t.color,
+  "link-color": t.color,
+  "link-underline": t.bool,
+  "code-font": t.font,
+  "code-background": t.color,
+  "code-border-radius": t.number,
+  "quote-border-color": t.color,
+  "quote-text-color": t.color,
+  "marker-color": t.color,
+  "heading-font": t.font,
+  "hr-color": t.color,
+  "opaque-background": t.color
+};
+var THEME_COLORS = [
+  "toolbar-background",
+  "toolbar-border",
+  "toolbar-active-background",
+  "readonly-background",
+  "selection-background",
+  "link-color",
+  "code-background",
+  "quote-border-color",
+  "quote-text-color",
+  "marker-color",
+  "hr-color",
+  "opaque-background"
+];
+var THEME_FONTS = ["code-font", "heading-font"];
+function applyEditorTheme(host, root, theme3) {
+  const font = theme3.getDefault("DefaultText");
+  root.style.font = font.genCSS();
+  root.style.color = font.color;
+  const set2 = (name, value) => host.style.setProperty(`--richtext-${name}`, value);
+  set2("background", theme3.getDefault("background-color"));
+  for (const key of THEME_COLORS) {
+    set2(key, theme3.getDefault(key));
+  }
+  for (const key of THEME_FONTS) {
+    set2(key, theme3.getDefault(key).genCSS());
+  }
+  set2("code-border-radius", `${theme3.getDefault("code-border-radius")}px`);
+  set2("toolbar-padding", `${theme3.getDefault("toolbar-padding")}px`);
+  set2("toolbar-gap", `${theme3.getDefault("toolbar-gap")}px`);
+  set2("link-underline", theme3.getDefault("link-underline") ? "underline" : "none");
+  const c = css2color(font.color);
+  const luminance = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  host.style.setProperty("--richtext-icon-tint", `brightness(${luminance.toFixed(3)})`);
+}
 
 // scripts/widgets/richtext/link_popup.ts
 init_ui_base();
@@ -45684,72 +46063,7 @@ function openLinkPopup(owner, editor, edit, x, y) {
 
 // scripts/widgets/richtext/editor.ts
 init_ui_base();
-init_theme_schema();
-init_ui_theme();
-var THEME_COLORS = [
-  "toolbar-background",
-  "toolbar-border",
-  "toolbar-active-background",
-  "readonly-background",
-  "selection-background",
-  "link-color",
-  "code-background",
-  "quote-border-color",
-  "quote-text-color",
-  "marker-color",
-  "hr-color",
-  "opaque-background"
-];
-var THEME_FONTS = ["code-font", "heading-font"];
-var FORMAT_MARKS = {
-  formatBold: "bold",
-  formatItalic: "italic",
-  formatUnderline: "underline",
-  formatStrikeThrough: "strikethrough"
-};
-var BACKWARD_DELETES = /* @__PURE__ */ new Set([
-  "deleteContentBackward",
-  "deleteWordBackward",
-  "deleteSoftLineBackward"
-]);
-var FORWARD_DELETES = /* @__PURE__ */ new Set([
-  "deleteContentForward",
-  "deleteWordForward",
-  "deleteSoftLineForward"
-]);
-var WORD_DELETES = /* @__PURE__ */ new Set(["deleteWordBackward", "deleteWordForward"]);
-var samePos = (a2, b) => a2.block === b.block && a2.offset === b.offset;
-var isCollapsed = (range) => samePos(range.anchor, range.head);
 var collapsed = (pos) => ({ anchor: pos, head: pos });
-function deleteBoundary(text2, offset, granularity, backward) {
-  if (typeof Intl.Segmenter !== "function") {
-    return backward ? Math.max(0, offset - 1) : Math.min(text2.length, offset + 1);
-  }
-  const segments = [...new Intl.Segmenter(void 0, { granularity }).segment(text2)];
-  const wordLike = (i2) => segments[i2].segment === ATOM_CHAR || segments[i2].isWordLike !== false;
-  if (backward) {
-    let i2 = segments.findLastIndex((s) => s.index < offset);
-    if (i2 < 0) {
-      return 0;
-    }
-    if (granularity === "word") {
-      while (i2 > 0 && !wordLike(i2)) {
-        i2--;
-      }
-    }
-    return segments[i2].index;
-  }
-  let i = segments.findIndex((s) => s.index + s.segment.length > offset);
-  if (i < 0) {
-    return text2.length;
-  }
-  if (granularity === "word") {
-    while (i + 1 < segments.length && !wordLike(i)) {
-      i++;
-    }
-  }
-  return segments[i].index + segments[i].segment.length;
-}
 var RichTextEditor = class _RichTextEditor extends UIBase {
   /** Logs any DOM mutation the editor did not make, so a missed inputType shows up. */
   static observeMutations = true;
@@ -45780,40 +46094,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
   constructor() {
     super();
     this.styletag = document.createElement("style");
-    this.styletag.textContent = `
-      :host {
-        display        : flex;
-        flex-direction : column;
-        position       : relative;
-      }
-
-      .rich-text-root {
-        flex          : 1 1 auto;
-        min-height    : 6em;
-        overflow-y    : auto;
-        padding       : 5px;
-        outline       : none;
-        white-space   : pre-wrap;
-        overflow-wrap : anywhere;
-        background    : var(--richtext-background);
-      }
-
-      .rich-text-root[readonly] {
-        background : var(--richtext-readonly-background);
-      }
-
-      [data-richtext-toolbar] {
-        flex-wrap     : wrap;
-        gap           : var(--richtext-toolbar-gap);
-        padding       : var(--richtext-toolbar-padding);
-        background    : var(--richtext-toolbar-background);
-        border-bottom : 1px solid var(--richtext-toolbar-border);
-      }
-
-      .rich-text-root ::selection {
-        background : var(--richtext-selection-background);
-      }
-    `;
+    this.styletag.textContent = EDITOR_CSS;
     this.shadow.appendChild(this.styletag);
     this.providerStyle = document.createElement("style");
     this.shadow.appendChild(this.providerStyle);
@@ -46009,24 +46290,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
   }
   setCSS() {
     super.setCSS();
-    const font = this.getDefault("DefaultText");
-    this.root.style.font = font.genCSS();
-    this.root.style.color = font.color;
-    const set2 = (name, value) => this.style.setProperty(`--richtext-${name}`, value);
-    set2("background", this.getDefault("background-color"));
-    for (const key of THEME_COLORS) {
-      set2(key, this.getDefault(key));
-    }
-    for (const key of THEME_FONTS) {
-      set2(key, this.getDefault(key).genCSS());
-    }
-    set2("code-border-radius", `${this.getDefault("code-border-radius")}px`);
-    set2("toolbar-padding", `${this.getDefault("toolbar-padding")}px`);
-    set2("toolbar-gap", `${this.getDefault("toolbar-gap")}px`);
-    set2("link-underline", this.getDefault("link-underline") ? "underline" : "none");
-    const c = css2color(font.color);
-    const luminance = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
-    this.style.setProperty("--richtext-icon-tint", `brightness(${luminance.toFixed(3)})`);
+    applyEditorTheme(this, this.root, this);
     this.providerStyle.textContent = this._session?.provider.styles?.() ?? "";
   }
   /** Focuses the editable root and places the selection. */
@@ -46135,10 +46399,22 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       return;
     }
     e.preventDefault();
-    if (this._session === void 0 || this._session.disposed || this.readOnly) {
+    const session = this._session;
+    const view = this.view();
+    if (session === void 0 || session.disposed || view === void 0 || this.readOnly) {
       return;
     }
-    for (const op of this.mapInput(e)) {
+    const { provider } = session;
+    const ops = mapInput(e, {
+      view,
+      hasMark: (name) => provider.marks().some((m) => m.name === name),
+      fromClipboard: (data) => provider.fromClipboard(data),
+      inputRange: (event) => this.inputRange(event),
+      refuse: (type) => this.refuse(type),
+      undo: () => this.undo(),
+      redo: () => this.redo()
+    });
+    for (const op of ops) {
       this.submit(op);
     }
   }
@@ -46217,20 +46493,8 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     if (range === void 0 || view === void 0) {
       return;
     }
-    const block = range.head.block;
-    const element = blockElement(this.root, block);
-    if (element === void 0) {
-      return;
-    }
-    const blocks = [...view.blocks];
-    const texts = new Map(blocks.map((id) => [id, view.blockText(id)]));
-    this.snapshot = {
-      block,
-      text: blockTextOf(element),
-      selection: range,
-      pending: this.pending.filter((e) => !e.reflected).map((e) => e.op),
-      view: { blocks, blockText: (id) => texts.get(id) ?? "" }
-    };
+    const pending = this.pending.filter((e) => !e.reflected).map((e) => e.op);
+    this.snapshot = freezeComposition(this.root, range, view, pending);
   }
   /** Diffs the composed block back into an edit and submits it, or falls back to a re-render. */
   onCompositionEnd() {
@@ -46238,37 +46502,19 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     this.composing = false;
     const snapshot = this.snapshot;
     this.snapshot = void 0;
-    if (snapshot === void 0 || this._session === void 0 || this._session.disposed) {
-      this.refuseComposition(snapshot);
-      return;
-    }
-    const element = blockElement(this.root, snapshot.block);
     const view = this.view();
-    if (element === void 0 || view === void 0 || !rootReflects(this.root, view.blocks)) {
+    if (snapshot === void 0 || view === void 0 || this._session === void 0 || this._session.disposed) {
       this.refuseComposition(snapshot);
       return;
     }
-    const sel = snapshot.selection;
-    if (sel.anchor.block !== snapshot.block || sel.head.block !== snapshot.block) {
+    const outcome = resolveComposition(snapshot, this.root, view);
+    if (outcome.kind === "refuse") {
       this.refuseComposition(snapshot);
-      return;
-    }
-    const edit = composedEdit(snapshot.text, blockTextOf(element), [
-      sel.anchor.offset,
-      sel.head.offset
-    ]);
-    if (edit === void 0) {
+    } else if (outcome.kind === "rerender") {
       this.rerenderComposed(snapshot);
-      return;
+    } else {
+      this.submit(outcome.op, true);
     }
-    if ("refused" in edit) {
-      this.refuseComposition(snapshot);
-      return;
-    }
-    const map3 = (offset) => mapThroughPending({ block: snapshot.block, offset }, snapshot.pending, snapshot.view);
-    const range = { anchor: map3(edit.range[0]), head: map3(edit.range[1]) };
-    const op = edit.text.length > 0 ? { type: "insertText", at: range, text: edit.text } : { type: "deleteRange", range };
-    this.submit(op, true);
   }
   /** Re-renders the composed block from the provider and restores the snapshot's caret. */
   rerenderComposed(snapshot) {
@@ -46295,101 +46541,6 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       }
     }
     this.refuse("insertCompositionText");
-  }
-  /** The `EditOp`s one input event asks for: none when it is refused or handled directly. */
-  mapInput(e) {
-    const session = this._session;
-    const view = this.view();
-    if (session === void 0 || view === void 0) {
-      return [];
-    }
-    const type = e.inputType;
-    if (type === "historyUndo") {
-      void this.undo();
-      return [];
-    }
-    if (type === "historyRedo") {
-      void this.redo();
-      return [];
-    }
-    const mark2 = FORMAT_MARKS[type];
-    if (mark2 !== void 0) {
-      if (!session.provider.marks().some((m) => m.name === mark2)) {
-        return this.refuse(type);
-      }
-      const range = this.inputRange(e);
-      return range === void 0 || isCollapsed(range) ? [] : [{ type: "toggleMark", range, mark: mark2 }];
-    }
-    if (type === "insertText") {
-      const range = this.inputRange(e);
-      if (typeof e.data !== "string" || range === void 0) {
-        return this.refuse(type);
-      }
-      return [{ type: "insertText", at: range, text: e.data }];
-    }
-    if (type === "insertParagraph" || type === "insertLineBreak") {
-      const range = this.inputRange(e);
-      if (range === void 0) {
-        return this.refuse(type);
-      }
-      const ops = [];
-      const start = this.orderRange(range, view).start;
-      if (!isCollapsed(range)) {
-        ops.push({ type: "deleteRange", range });
-      }
-      ops.push({ type: "splitBlock", at: start, newBlock: newBlockId() });
-      return ops;
-    }
-    if (type === "insertFromPaste" || type === "insertFromDrop") {
-      const range = this.inputRange(e);
-      const content = e.dataTransfer ? session.provider.fromClipboard(e.dataTransfer) : void 0;
-      if (range === void 0 || content === void 0 || content.blocks.length === 0) {
-        return this.refuse(type);
-      }
-      const newBlocks = content.blocks.slice(1).map(() => newBlockId());
-      return [{ type: "insertContent", at: range, content, newBlocks }];
-    }
-    if (BACKWARD_DELETES.has(type) || FORWARD_DELETES.has(type) || type === "deleteByCut") {
-      return this.mapDelete(e, type, view);
-    }
-    return this.refuse(type);
-  }
-  mapDelete(e, type, view) {
-    const range = this.inputRange(e);
-    if (range === void 0) {
-      return this.refuse(type);
-    }
-    let { start, end } = this.orderRange(range, view);
-    if (samePos(start, end)) {
-      if (type === "deleteByCut" || e.getTargetRanges().length > 0) {
-        return [];
-      }
-      const text2 = view.blockText(start.block);
-      const index = view.blocks.indexOf(start.block);
-      const granularity = WORD_DELETES.has(type) ? "word" : "grapheme";
-      if (BACKWARD_DELETES.has(type)) {
-        if (start.offset === 0) {
-          return index > 0 ? [{ type: "joinWithPrevious", block: start.block }] : [];
-        }
-        start = {
-          block: start.block,
-          offset: deleteBoundary(text2, start.offset, granularity, true)
-        };
-      } else {
-        if (end.offset >= text2.length) {
-          const next = view.blocks[index + 1];
-          return next === void 0 ? [] : [{ type: "joinWithPrevious", block: next }];
-        }
-        end = { block: end.block, offset: deleteBoundary(text2, end.offset, granularity, false) };
-      }
-    }
-    const si = view.blocks.indexOf(start.block);
-    const ei = view.blocks.indexOf(end.block);
-    const boundaryOnly = ei === si + 1 && start.offset >= view.blockText(start.block).length && end.offset === 0;
-    if (boundaryOnly) {
-      return [{ type: "joinWithPrevious", block: end.block }];
-    }
-    return [{ type: "deleteRange", range: { anchor: start, head: end } }];
   }
   /** Ends the run in progress unless `op` continues it, then commits `op`. */
   submit(op, reflected = false) {
@@ -46518,12 +46669,6 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     const { provider, doc } = session;
     return { blocks: provider.blocks(doc), blockText: (block) => provider.blockText(doc, block) };
   }
-  orderRange(range, view) {
-    const ai = view.blocks.indexOf(range.anchor.block);
-    const hi = view.blocks.indexOf(range.head.block);
-    const forward = ai < hi || ai === hi && range.anchor.offset <= range.head.offset;
-    return forward ? { start: range.anchor, end: range.head } : { start: range.head, end: range.anchor };
-  }
   renderAll() {
     const session = this._session;
     const ctx = this.richCtx;
@@ -46537,10 +46682,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       this.needsRender = true;
       return;
     }
-    const { provider, doc } = session;
-    this.root.replaceChildren(
-      ...provider.blocks(doc).map((id) => provider.renderBlock(doc, id, ctx))
-    );
+    renderRoot(this.root, session.provider, session.doc, ctx);
     this.observer?.takeRecords();
     this.needsRender = false;
     this.updateEmbedded(this.root);
@@ -46552,33 +46694,16 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     if (session === void 0 || ctx === void 0) {
       return;
     }
-    const { provider, doc } = session;
-    const root = this.root;
     const held = this.composing ? this.snapshot?.block : void 0;
-    for (const id of result.removedBlocks) {
-      if (id !== held) {
-        blockElement(root, id)?.remove();
-      }
-    }
-    const order = provider.blocks(doc);
-    const dirty2 = result.dirtyBlocks.filter((id) => id !== held).map((id) => ({ id, index: order.indexOf(id) })).filter((entry) => entry.index >= 0).sort((a2, b) => a2.index - b.index);
-    for (const { id, index } of dirty2) {
-      const fresh = provider.renderBlock(doc, id, ctx);
-      const old = blockElement(root, id);
-      if (old !== void 0) {
-        old.replaceWith(fresh);
-      } else if (index === 0) {
-        root.prepend(fresh);
-      } else {
-        const prev = blockElement(root, order[index - 1]);
-        if (prev !== void 0) {
-          prev.after(fresh);
-        } else {
-          root.append(fresh);
-        }
-      }
-      this.updateEmbedded(fresh);
-    }
+    patchBlocks(
+      this.root,
+      session.provider,
+      session.doc,
+      ctx,
+      result,
+      held,
+      (fresh) => this.updateEmbedded(fresh)
+    );
     this.observer?.takeRecords();
     if (result.selection !== void 0 && !this.composing) {
       this.setSelection(result.selection);
@@ -46586,74 +46711,16 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     this.syncToolbar();
   }
   setSelection(range) {
-    const anchor = fromDocPos(this.root, range.anchor);
-    const head = fromDocPos(this.root, range.head);
-    const sel = this.domSelection();
-    if (anchor === void 0 || head === void 0 || sel === null) {
-      return;
-    }
-    sel.setBaseAndExtent(anchor.node, anchor.offset, head.node, head.offset);
-  }
-  domSelection() {
-    const shadow = this.shadow;
-    return shadow.getSelection?.() ?? document.getSelection();
-  }
-  /** The selection's endpoints as DOM positions inside the root, if it is there. */
-  selectionEndpoints() {
-    const sel = this.domSelection();
-    if (sel === null || sel.rangeCount === 0) {
-      return void 0;
-    }
-    const composed = sel.getComposedRanges?.({ shadowRoots: [this.shadow] });
-    if (composed !== void 0 && composed.length > 0) {
-      const r = composed[0];
-      const backward = this.isBackward(sel, r);
-      const start = { node: r.startContainer, offset: r.startOffset };
-      const end = { node: r.endContainer, offset: r.endOffset };
-      return backward ? { anchor: end, head: start } : { anchor: start, head: end };
-    }
-    if (sel.anchorNode === null || sel.focusNode === null) {
-      return void 0;
-    }
-    return {
-      anchor: { node: sel.anchorNode, offset: sel.anchorOffset },
-      head: { node: sel.focusNode, offset: sel.focusOffset }
-    };
-  }
-  isBackward(sel, range) {
-    if (sel.anchorNode === null || sel.focusNode === null) {
-      return false;
-    }
-    if (sel.anchorNode === sel.focusNode) {
-      return sel.anchorOffset > sel.focusOffset;
-    }
-    return sel.anchorNode === range.endContainer && sel.anchorOffset === range.endOffset;
+    setDomSelection(this.root, this.shadow, range);
   }
   /** A DOM position to a document one; a position on the root itself lands on a block edge. */
   docPos(node, offset) {
     const view = this.view();
-    if (view === void 0) {
-      return void 0;
-    }
-    if (node === this.root) {
-      const kids = this.root.children;
-      if (offset < kids.length) {
-        const block = kids[offset].getAttribute("data-doc-block");
-        return block === null ? void 0 : { block, offset: 0 };
-      }
-      const last = view.blocks[view.blocks.length - 1];
-      return last === void 0 ? void 0 : { block: last, offset: view.blockText(last).length };
-    }
-    return toDocPos(this.root, node, offset);
+    return view === void 0 ? void 0 : docPosIn(this.root, view, node, offset);
   }
   domRange() {
-    const ends = this.selectionEndpoints();
-    if (ends === void 0) {
-      return void 0;
-    }
-    const anchor = this.docPos(ends.anchor.node, ends.anchor.offset);
-    const head = this.docPos(ends.head.node, ends.head.offset);
-    return anchor !== void 0 && head !== void 0 ? { anchor, head } : void 0;
+    const view = this.view();
+    return view === void 0 ? void 0 : domRange(this.root, this.shadow, view);
   }
   throughPending(range) {
     const view = this.view();
@@ -46726,28 +46793,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       tagname: "rich-text-x",
       style: "richtext",
       modalKeyEvents: true,
-      theme: {
-        DefaultText: t.font,
-        "background-color": t.color,
-        "toolbar-background": t.color,
-        "toolbar-border": t.color,
-        "toolbar-padding": t.number,
-        "toolbar-gap": t.number,
-        "toolbar-active-background": t.color,
-        "readonly-background": t.color,
-        "selection-background": t.color,
-        "link-color": t.color,
-        "link-underline": t.bool,
-        "code-font": t.font,
-        "code-background": t.color,
-        "code-border-radius": t.number,
-        "quote-border-color": t.color,
-        "quote-text-color": t.color,
-        "marker-color": t.color,
-        "heading-font": t.font,
-        "hr-color": t.color,
-        "opaque-background": t.color
-      }
+      theme: EDITOR_THEME
     };
   }
 };

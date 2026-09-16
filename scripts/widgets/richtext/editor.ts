@@ -1,18 +1,19 @@
 import { UIBase } from "../../core/ui_base";
 import type { UIBaseDefinition } from "../../core/base/ui_base_types";
 import type { IContextBase } from "../../core/context_base";
-import type { CSSFont } from "../../core/cssfont";
 import type { RowFrame } from "../../core/ui_containers";
-import { t } from "../../core/theme_schema";
-import { css2color } from "../../core/ui_theme";
 import { RichTextContext } from "./context";
 import type { DocChangeInfo, DocumentSession } from "./context";
 import { DocEditOp } from "./ops";
-import { blockElement, blockTextOf, fromDocPos, mapThroughPending, toDocPos } from "./positions";
-import type { DomPos, PendingDocView } from "./positions";
-import { composedEdit, rootReflects } from "./composition";
+import { blockElement, mapThroughPending } from "./positions";
+import type { PendingDocView } from "./positions";
+import { freezeComposition, resolveComposition } from "./composition";
+import type { CompositionSnapshot } from "./composition";
+import { docPosIn, domRange, setDomSelection } from "./dom_selection";
+import { isCollapsed, mapInput, samePos } from "./editor_input";
+import { patchBlocks, renderRoot } from "./editor_render";
+import { applyEditorTheme, EDITOR_CSS, EDITOR_THEME } from "./editor_style";
 import { openLinkPopup } from "./link_popup";
-import { ATOM_CHAR, newBlockId } from "./provider";
 import type {
   BlockId,
   DocChange,
@@ -26,43 +27,6 @@ import type {
   ToolbarSync,
 } from "./provider";
 
-// The color keys set as `--richtext-<key>` variables as they are, and the font keys as CSS
-const THEME_COLORS = [
-  "toolbar-background",
-  "toolbar-border",
-  "toolbar-active-background",
-  "readonly-background",
-  "selection-background",
-  "link-color",
-  "code-background",
-  "quote-border-color",
-  "quote-text-color",
-  "marker-color",
-  "hr-color",
-  "opaque-background",
-] as const;
-const THEME_FONTS = ["code-font", "heading-font"] as const;
-
-// What each formatting inputType asks for, in the provider's naming
-const FORMAT_MARKS: Record<string, string> = {
-  formatBold         : "bold",
-  formatItalic       : "italic",
-  formatUnderline    : "underline",
-  formatStrikeThrough: "strikethrough",
-};
-
-const BACKWARD_DELETES = new Set([
-  "deleteContentBackward",
-  "deleteWordBackward",
-  "deleteSoftLineBackward",
-]);
-const FORWARD_DELETES = new Set([
-  "deleteContentForward",
-  "deleteWordForward",
-  "deleteSoftLineForward",
-]);
-const WORD_DELETES = new Set(["deleteWordBackward", "deleteWordForward"]);
-
 /** The detail of the `refused` event: the input the editor declined to handle. */
 export interface RefusedDetail {
   inputType: string;
@@ -75,70 +39,12 @@ export interface RichTextChangeDetail<Doc = unknown> {
   session: DocumentSession<Doc>;
 }
 
-const samePos = (a: DocPos, b: DocPos) => a.block === b.block && a.offset === b.offset;
-const isCollapsed = (range: DocRange) => samePos(range.anchor, range.head);
 const collapsed = (pos: DocPos): DocRange => ({ anchor: pos, head: pos });
 
 /** An op whose result has not been applied. `reflected` marks one the composed block's DOM already shows. */
 interface PendingEntry {
   op: EditOp;
   reflected: boolean;
-}
-
-/** What the editor froze at `compositionstart`, so the composed block can be diffed at the end. */
-interface CompositionSnapshot {
-  block: BlockId;
-  /** The block's flattened text when the composition began. */
-  text: string;
-  /** The selection then, in DOM coordinates (before the pending ops), as `domRange()` read it. */
-  selection: DocRange;
-  /** The non-reflected ops pending then; the composed block's DOM does not reflect these. */
-  pending: EditOp[];
-  /** The document as it stood then, for mapping the composed edit through `pending`. */
-  view: PendingDocView;
-}
-
-/** The offset a delete of one unit reaches from `offset`, going backward or forward. */
-function deleteBoundary(
-  text: string,
-  offset: number,
-  granularity: "grapheme" | "word",
-  backward: boolean
-): number {
-  if (typeof Intl.Segmenter !== "function") {
-    return backward ? Math.max(0, offset - 1) : Math.min(text.length, offset + 1);
-  }
-
-  const segments = [...new Intl.Segmenter(undefined, { granularity }).segment(text)];
-  // an atom is a unit of its own for a word delete, so a delete stops at it
-  const wordLike = (i: number) =>
-    segments[i].segment === ATOM_CHAR || segments[i].isWordLike !== false;
-
-  if (backward) {
-    let i = segments.findLastIndex((s) => s.index < offset);
-    if (i < 0) {
-      return 0;
-    }
-    if (granularity === "word") {
-      while (i > 0 && !wordLike(i)) {
-        i--;
-      }
-    }
-
-    return segments[i].index;
-  }
-
-  let i = segments.findIndex((s) => s.index + s.segment.length > offset);
-  if (i < 0) {
-    return text.length;
-  }
-  if (granularity === "word") {
-    while (i + 1 < segments.length && !wordLike(i)) {
-      i++;
-    }
-  }
-
-  return segments[i].index + segments[i].segment.length;
 }
 
 /**
@@ -188,40 +94,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     super();
 
     this.styletag = document.createElement("style");
-    this.styletag.textContent = `
-      :host {
-        display        : flex;
-        flex-direction : column;
-        position       : relative;
-      }
-
-      .rich-text-root {
-        flex          : 1 1 auto;
-        min-height    : 6em;
-        overflow-y    : auto;
-        padding       : 5px;
-        outline       : none;
-        white-space   : pre-wrap;
-        overflow-wrap : anywhere;
-        background    : var(--richtext-background);
-      }
-
-      .rich-text-root[readonly] {
-        background : var(--richtext-readonly-background);
-      }
-
-      [data-richtext-toolbar] {
-        flex-wrap     : wrap;
-        gap           : var(--richtext-toolbar-gap);
-        padding       : var(--richtext-toolbar-padding);
-        background    : var(--richtext-toolbar-background);
-        border-bottom : 1px solid var(--richtext-toolbar-border);
-      }
-
-      .rich-text-root ::selection {
-        background : var(--richtext-selection-background);
-      }
-    `;
+    this.styletag.textContent = EDITOR_CSS;
     this.shadow.appendChild(this.styletag);
     this.providerStyle = document.createElement("style");
     this.shadow.appendChild(this.providerStyle);
@@ -452,33 +325,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
 
   setCSS() {
     super.setCSS();
-
-    const font = this.getDefault("DefaultText") as CSSFont;
-    this.root.style.font = font.genCSS();
-    this.root.style.color = font.color;
-
-    // every theme key becomes a variable on the host, so a provider's static sheet reads them
-    const set = (name: string, value: string) =>
-      this.style.setProperty(`--richtext-${name}`, value);
-    set("background", this.getDefault("background-color") as string);
-    for (const key of THEME_COLORS) {
-      set(key, this.getDefault(key) as string);
-    }
-    for (const key of THEME_FONTS) {
-      set(key, (this.getDefault(key) as CSSFont).genCSS());
-    }
-    set("code-border-radius", `${this.getDefault("code-border-radius") as number}px`);
-    set("toolbar-padding", `${this.getDefault("toolbar-padding") as number}px`);
-    set("toolbar-gap", `${this.getDefault("toolbar-gap") as number}px`);
-    set("link-underline", this.getDefault("link-underline") ? "underline" : "none");
-
-    // The toolbar's sprite icons are white, so a brightness filter multiplies them to the text
-    // color's luminance, which reads in a light theme and a dark one alike; the toolbar
-    // helpers put the variable on each icon div, so a button's own background keeps its color
-    const c = css2color(font.color);
-    const luminance = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
-    this.style.setProperty("--richtext-icon-tint", `brightness(${luminance.toFixed(3)})`);
-
+    applyEditorTheme(this, this.root, this);
     // setCSS re-runs on every theme update, so the provider's sheet is replaced, not appended
     this.providerStyle.textContent = this._session?.provider.styles?.() ?? "";
   }
@@ -615,11 +462,23 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
 
     e.preventDefault();
 
-    if (this._session === undefined || this._session.disposed || this.readOnly) {
+    const session = this._session;
+    const view = this.view();
+    if (session === undefined || session.disposed || view === undefined || this.readOnly) {
       return;
     }
 
-    for (const op of this.mapInput(e)) {
+    const { provider } = session;
+    const ops = mapInput(e, {
+      view,
+      hasMark      : (name) => provider.marks().some((m) => m.name === name),
+      fromClipboard: (data) => provider.fromClipboard(data),
+      inputRange   : (event) => this.inputRange(event),
+      refuse       : (type) => this.refuse(type),
+      undo         : () => this.undo(),
+      redo         : () => this.redo(),
+    });
+    for (const op of ops) {
       this.submit(op);
     }
   }
@@ -716,22 +575,8 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
       return;
     }
 
-    const block = range.head.block;
-    const element = blockElement(this.root, block);
-    if (element === undefined) {
-      return;
-    }
-
-    const blocks = [...view.blocks];
-    const texts = new Map(blocks.map((id) => [id, view.blockText(id)]));
-
-    this.snapshot = {
-      block,
-      text     : blockTextOf(element),
-      selection: range,
-      pending  : this.pending.filter((e) => !e.reflected).map((e) => e.op),
-      view     : { blocks, blockText: (id) => texts.get(id) ?? "" },
-    };
+    const pending = this.pending.filter((e) => !e.reflected).map((e) => e.op);
+    this.snapshot = freezeComposition(this.root, range, view, pending);
   }
 
   /** Diffs the composed block back into an edit and submits it, or falls back to a re-render. */
@@ -744,51 +589,27 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     const snapshot = this.snapshot;
     this.snapshot = undefined;
 
-    if (snapshot === undefined || this._session === undefined || this._session.disposed) {
-      this.refuseComposition(snapshot);
-      return;
-    }
-
-    const element = blockElement(this.root, snapshot.block);
     const view = this.view();
-    if (element === undefined || view === undefined || !rootReflects(this.root, view.blocks)) {
+    if (
+      snapshot === undefined ||
+      view === undefined ||
+      this._session === undefined ||
+      this._session.disposed
+    ) {
       this.refuseComposition(snapshot);
       return;
     }
 
-    const sel = snapshot.selection;
-    if (sel.anchor.block !== snapshot.block || sel.head.block !== snapshot.block) {
+    const outcome = resolveComposition(snapshot, this.root, view);
+    if (outcome.kind === "refuse") {
       this.refuseComposition(snapshot);
-      return;
-    }
-
-    const edit = composedEdit(snapshot.text, blockTextOf(element), [
-      sel.anchor.offset,
-      sel.head.offset,
-    ]);
-
-    if (edit === undefined) {
-      // nothing composed, or an abandoned composition: the DOM is back to the block's text, but
-      // a held result may have moved the document on, so re-render the block and restore the caret
+    } else if (outcome.kind === "rerender") {
       this.rerenderComposed(snapshot);
-      return;
+    } else {
+      // the browser already put the composed text in the block, so this op's DOM write is a
+      // no-op; mark it reflected so a position read before its result does not shift by it
+      this.submit(outcome.op, true);
     }
-    if ("refused" in edit) {
-      this.refuseComposition(snapshot);
-      return;
-    }
-
-    const map = (offset: number): DocPos =>
-      mapThroughPending({ block: snapshot.block, offset }, snapshot.pending, snapshot.view);
-    const range: DocRange = { anchor: map(edit.range[0]), head: map(edit.range[1]) };
-    const op: EditOp =
-      edit.text.length > 0
-        ? { type: "insertText", at: range, text: edit.text }
-        : { type: "deleteRange", range };
-
-    // the browser already put the composed text in the block, so this op's DOM write is a
-    // no-op; mark it reflected so a position read before its result does not shift by it
-    this.submit(op, true);
   }
 
   /** Re-renders the composed block from the provider and restores the snapshot's caret. */
@@ -823,124 +644,6 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     }
 
     this.refuse("insertCompositionText");
-  }
-
-  /** The `EditOp`s one input event asks for: none when it is refused or handled directly. */
-  mapInput(e: InputEvent): EditOp[] {
-    const session = this._session;
-    const view = this.view();
-    if (session === undefined || view === undefined) {
-      return [];
-    }
-
-    const type = e.inputType;
-
-    if (type === "historyUndo") {
-      void this.undo();
-      return [];
-    }
-    if (type === "historyRedo") {
-      void this.redo();
-      return [];
-    }
-
-    const mark = FORMAT_MARKS[type];
-    if (mark !== undefined) {
-      if (!session.provider.marks().some((m) => m.name === mark)) {
-        return this.refuse(type);
-      }
-      const range = this.inputRange(e);
-      return range === undefined || isCollapsed(range) ? [] : [{ type: "toggleMark", range, mark }];
-    }
-
-    if (type === "insertText") {
-      const range = this.inputRange(e);
-      if (typeof e.data !== "string" || range === undefined) {
-        return this.refuse(type);
-      }
-
-      return [{ type: "insertText", at: range, text: e.data }];
-    }
-
-    if (type === "insertParagraph" || type === "insertLineBreak") {
-      const range = this.inputRange(e);
-      if (range === undefined) {
-        return this.refuse(type);
-      }
-
-      const ops: EditOp[] = [];
-      const start = this.orderRange(range, view).start;
-      if (!isCollapsed(range)) {
-        ops.push({ type: "deleteRange", range });
-      }
-      ops.push({ type: "splitBlock", at: start, newBlock: newBlockId() });
-
-      return ops;
-    }
-
-    if (type === "insertFromPaste" || type === "insertFromDrop") {
-      const range = this.inputRange(e);
-      const content = e.dataTransfer ? session.provider.fromClipboard(e.dataTransfer) : undefined;
-      if (range === undefined || content === undefined || content.blocks.length === 0) {
-        return this.refuse(type);
-      }
-
-      const newBlocks = content.blocks.slice(1).map(() => newBlockId());
-      return [{ type: "insertContent", at: range, content, newBlocks }];
-    }
-
-    if (BACKWARD_DELETES.has(type) || FORWARD_DELETES.has(type) || type === "deleteByCut") {
-      return this.mapDelete(e, type, view);
-    }
-
-    return this.refuse(type);
-  }
-
-  private mapDelete(e: InputEvent, type: string, view: PendingDocView): EditOp[] {
-    const range = this.inputRange(e);
-    if (range === undefined) {
-      return this.refuse(type);
-    }
-
-    let { start, end } = this.orderRange(range, view);
-
-    if (samePos(start, end)) {
-      // a collapsed target range is the browser saying there is nothing to delete
-      if (type === "deleteByCut" || e.getTargetRanges().length > 0) {
-        return [];
-      }
-
-      const text = view.blockText(start.block);
-      const index = view.blocks.indexOf(start.block);
-      const granularity = WORD_DELETES.has(type) ? "word" : "grapheme";
-
-      if (BACKWARD_DELETES.has(type)) {
-        if (start.offset === 0) {
-          return index > 0 ? [{ type: "joinWithPrevious", block: start.block }] : [];
-        }
-        start = {
-          block : start.block,
-          offset: deleteBoundary(text, start.offset, granularity, true),
-        };
-      } else {
-        if (end.offset >= text.length) {
-          const next = view.blocks[index + 1];
-          return next === undefined ? [] : [{ type: "joinWithPrevious", block: next }];
-        }
-        end = { block: end.block, offset: deleteBoundary(text, end.offset, granularity, false) };
-      }
-    }
-
-    const si = view.blocks.indexOf(start.block);
-    const ei = view.blocks.indexOf(end.block);
-    const boundaryOnly =
-      ei === si + 1 && start.offset >= view.blockText(start.block).length && end.offset === 0;
-
-    if (boundaryOnly) {
-      return [{ type: "joinWithPrevious", block: end.block }];
-    }
-
-    return [{ type: "deleteRange", range: { anchor: start, head: end } }];
   }
 
   /** Ends the run in progress unless `op` continues it, then commits `op`. */
@@ -1104,16 +807,6 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     return { blocks: provider.blocks(doc), blockText: (block) => provider.blockText(doc, block) };
   }
 
-  private orderRange(range: DocRange, view: PendingDocView) {
-    const ai = view.blocks.indexOf(range.anchor.block);
-    const hi = view.blocks.indexOf(range.head.block);
-    const forward = ai < hi || (ai === hi && range.anchor.offset <= range.head.offset);
-
-    return forward
-      ? { start: range.anchor, end: range.head }
-      : { start: range.head, end: range.anchor };
-  }
-
   private renderAll(): void {
     const session = this._session;
     const ctx = this.richCtx;
@@ -1129,10 +822,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
       return;
     }
 
-    const { provider, doc } = session;
-    this.root.replaceChildren(
-      ...provider.blocks(doc).map((id) => provider.renderBlock(doc, id, ctx))
-    );
+    renderRoot(this.root, session.provider, session.doc, ctx);
     this.observer?.takeRecords();
     this.needsRender = false;
     this.updateEmbedded(this.root);
@@ -1146,45 +836,12 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
       return;
     }
 
-    const { provider, doc } = session;
-    const root = this.root;
-
     // during a composition the browser owns the composed block and the caret; its render, its
     // removal and every caret write are held until compositionend renders the composition
     const held = this.composing ? this.snapshot?.block : undefined;
-
-    for (const id of result.removedBlocks) {
-      if (id !== held) {
-        blockElement(root, id)?.remove();
-      }
-    }
-
-    const order = provider.blocks(doc);
-    const dirty = result.dirtyBlocks
-      .filter((id) => id !== held)
-      .map((id) => ({ id, index: order.indexOf(id) }))
-      .filter((entry) => entry.index >= 0)
-      .sort((a, b) => a.index - b.index);
-
-    for (const { id, index } of dirty) {
-      const fresh = provider.renderBlock(doc, id, ctx);
-      const old = blockElement(root, id);
-
-      if (old !== undefined) {
-        old.replaceWith(fresh);
-      } else if (index === 0) {
-        root.prepend(fresh);
-      } else {
-        const prev = blockElement(root, order[index - 1]);
-        if (prev !== undefined) {
-          prev.after(fresh);
-        } else {
-          root.append(fresh);
-        }
-      }
-      this.updateEmbedded(fresh);
-    }
-
+    patchBlocks(this.root, session.provider, session.doc, ctx, result, held, (fresh) =>
+      this.updateEmbedded(fresh)
+    );
     this.observer?.takeRecords();
 
     // hold every caret write while composing, so a result from elsewhere does not move the
@@ -1196,93 +853,18 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
   }
 
   private setSelection(range: DocRange): void {
-    const anchor = fromDocPos(this.root, range.anchor);
-    const head = fromDocPos(this.root, range.head);
-    const sel = this.domSelection();
-    if (anchor === undefined || head === undefined || sel === null) {
-      return;
-    }
-
-    sel.setBaseAndExtent(anchor.node, anchor.offset, head.node, head.offset);
-  }
-
-  private domSelection(): Selection | null {
-    const shadow = this.shadow as ShadowRoot & { getSelection?(): Selection | null };
-    return shadow.getSelection?.() ?? document.getSelection();
-  }
-
-  /** The selection's endpoints as DOM positions inside the root, if it is there. */
-  private selectionEndpoints(): { anchor: DomPos; head: DomPos } | undefined {
-    const sel = this.domSelection();
-    if (sel === null || sel.rangeCount === 0) {
-      return undefined;
-    }
-
-    const composed = (
-      sel as Selection & {
-        getComposedRanges?(options: { shadowRoots: ShadowRoot[] }): StaticRange[];
-      }
-    ).getComposedRanges?.({ shadowRoots: [this.shadow] });
-
-    if (composed !== undefined && composed.length > 0) {
-      const r = composed[0];
-      const backward = this.isBackward(sel, r);
-      const start = { node: r.startContainer, offset: r.startOffset };
-      const end = { node: r.endContainer, offset: r.endOffset };
-      return backward ? { anchor: end, head: start } : { anchor: start, head: end };
-    }
-
-    if (sel.anchorNode === null || sel.focusNode === null) {
-      return undefined;
-    }
-
-    return {
-      anchor: { node: sel.anchorNode, offset: sel.anchorOffset },
-      head  : { node: sel.focusNode, offset: sel.focusOffset },
-    };
-  }
-
-  private isBackward(sel: Selection, range: StaticRange): boolean {
-    if (sel.anchorNode === null || sel.focusNode === null) {
-      return false;
-    }
-    if (sel.anchorNode === sel.focusNode) {
-      return sel.anchorOffset > sel.focusOffset;
-    }
-
-    return sel.anchorNode === range.endContainer && sel.anchorOffset === range.endOffset;
+    setDomSelection(this.root, this.shadow, range);
   }
 
   /** A DOM position to a document one; a position on the root itself lands on a block edge. */
   private docPos(node: Node, offset: number): DocPos | undefined {
     const view = this.view();
-    if (view === undefined) {
-      return undefined;
-    }
-
-    if (node === this.root) {
-      const kids = this.root.children;
-      if (offset < kids.length) {
-        const block = kids[offset].getAttribute("data-doc-block");
-        return block === null ? undefined : { block, offset: 0 };
-      }
-
-      const last = view.blocks[view.blocks.length - 1];
-      return last === undefined ? undefined : { block: last, offset: view.blockText(last).length };
-    }
-
-    return toDocPos(this.root, node, offset);
+    return view === undefined ? undefined : docPosIn(this.root, view, node, offset);
   }
 
   private domRange(): DocRange | undefined {
-    const ends = this.selectionEndpoints();
-    if (ends === undefined) {
-      return undefined;
-    }
-
-    const anchor = this.docPos(ends.anchor.node, ends.anchor.offset);
-    const head = this.docPos(ends.head.node, ends.head.offset);
-    return anchor !== undefined && head !== undefined ? { anchor, head } : undefined;
+    const view = this.view();
+    return view === undefined ? undefined : domRange(this.root, this.shadow, view);
   }
 
   private throughPending(range: DocRange): DocRange | undefined {
@@ -1373,28 +955,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
       tagname       : "rich-text-x",
       style         : "richtext",
       modalKeyEvents: true,
-      theme: {
-        DefaultText                : t.font,
-        "background-color"         : t.color,
-        "toolbar-background"       : t.color,
-        "toolbar-border"           : t.color,
-        "toolbar-padding"          : t.number,
-        "toolbar-gap"              : t.number,
-        "toolbar-active-background": t.color,
-        "readonly-background"      : t.color,
-        "selection-background"     : t.color,
-        "link-color"               : t.color,
-        "link-underline"           : t.bool,
-        "code-font"                : t.font,
-        "code-background"          : t.color,
-        "code-border-radius"       : t.number,
-        "quote-border-color"       : t.color,
-        "quote-text-color"         : t.color,
-        "marker-color"             : t.color,
-        "heading-font"             : t.font,
-        "hr-color"                 : t.color,
-        "opaque-background"        : t.color,
-      },
+      theme         : EDITOR_THEME,
     };
   }
 }

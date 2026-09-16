@@ -1,5 +1,7 @@
+import { blockElement, blockTextOf, mapThroughPending } from "./positions";
+import type { PendingDocView } from "./positions";
 import { ATOM_CHAR, CARET_SLOT } from "./provider";
-import type { BlockId } from "./provider";
+import type { BlockId, DocPos, DocRange, EditOp } from "./provider";
 
 // What a composition did to one block, recovered by diffing the block's flattened text against
 // the snapshot taken at compositionstart. See documentation/plans/rich-text-ime.md, "The diff,
@@ -114,4 +116,94 @@ export function rootReflects(root: ParentNode, blocks: readonly BlockId[]): bool
   }
 
   return true;
+}
+
+/** What the editor froze at `compositionstart`, so the composed block can be diffed at the end. */
+export interface CompositionSnapshot {
+  block: BlockId;
+  /** The block's flattened text when the composition began. */
+  text: string;
+  /** The selection then, in DOM coordinates (before the pending ops), as the editor read it. */
+  selection: DocRange;
+  /** The non-reflected ops pending then; the composed block's DOM does not reflect these. */
+  pending: EditOp[];
+  /** The document as it stood then, for mapping the composed edit through `pending`. */
+  view: PendingDocView;
+}
+
+/**
+ * Freezes the block under `range` and the document as `view` shows it, or `undefined` when
+ * the block is not rendered. `pending` is the non-reflected ops in flight.
+ */
+export function freezeComposition(
+  root: ParentNode,
+  range: DocRange,
+  view: PendingDocView,
+  pending: EditOp[]
+): CompositionSnapshot | undefined {
+  const block = range.head.block;
+  const element = blockElement(root, block);
+  if (element === undefined) {
+    return undefined;
+  }
+
+  const blocks = [...view.blocks];
+  const texts = new Map(blocks.map((id) => [id, view.blockText(id)]));
+
+  return {
+    block,
+    text     : blockTextOf(element),
+    selection: range,
+    pending,
+    view: { blocks, blockText: (id) => texts.get(id) ?? "" },
+  };
+}
+
+/** What `compositionend` resolves to: an op to submit, a re-render of the composed block, or a refusal. */
+export type CompositionOutcome =
+  { kind: "op"; op: EditOp } | { kind: "rerender" } | { kind: "refuse" };
+
+/**
+ * Diffs the composed block against `snapshot` and maps the edit through the ops that were
+ * pending, with `view` the document now. Refuses when the root no longer shows the document's
+ * blocks, the selection spanned blocks, or the diff cannot attribute what the browser did.
+ */
+export function resolveComposition(
+  snapshot: CompositionSnapshot,
+  root: ParentNode,
+  view: PendingDocView
+): CompositionOutcome {
+  const element = blockElement(root, snapshot.block);
+  if (element === undefined || !rootReflects(root, view.blocks)) {
+    return { kind: "refuse" };
+  }
+
+  const sel = snapshot.selection;
+  if (sel.anchor.block !== snapshot.block || sel.head.block !== snapshot.block) {
+    return { kind: "refuse" };
+  }
+
+  const edit = composedEdit(snapshot.text, blockTextOf(element), [
+    sel.anchor.offset,
+    sel.head.offset,
+  ]);
+
+  if (edit === undefined) {
+    // nothing composed, or an abandoned composition: the DOM is back to the block's text, but
+    // a held result may have moved the document on, so the block is re-rendered
+    return { kind: "rerender" };
+  }
+  if ("refused" in edit) {
+    return { kind: "refuse" };
+  }
+
+  const map = (offset: number): DocPos =>
+    mapThroughPending({ block: snapshot.block, offset }, snapshot.pending, snapshot.view);
+  const range: DocRange = { anchor: map(edit.range[0]), head: map(edit.range[1]) };
+  const op: EditOp =
+    edit.text.length > 0
+      ? { type: "insertText", at: range, text: edit.text }
+      : { type: "deleteRange", range };
+
+  return { kind: "op", op };
 }

@@ -2340,9 +2340,9 @@ function unpackByteTyped(data, etype, len, uctx) {
     return null;
   }
   const abs = data.byteOffset + uctx.i;
-  const slice = data.buffer.slice(abs, abs + len);
+  const slice2 = data.buffer.slice(abs, abs + len);
   uctx.i += len;
-  return etype === StructEnum.BYTE ? new Uint8Array(slice) : new Int8Array(slice);
+  return etype === StructEnum.BYTE ? new Uint8Array(slice2) : new Int8Array(slice2);
 }
 function fmt_type(type) {
   return StructFieldTypeMap[type.type].format(type);
@@ -4606,12 +4606,12 @@ var init_nstructjs_es6 = __esm({
         const byteLength = unpack_int(data, uctx);
         packer_debug("-arraybuffer bytes " + byteLength);
         const abs = data.byteOffset + uctx.i;
-        const slice = data.buffer.slice(abs, abs + byteLength);
+        const slice2 = data.buffer.slice(abs, abs + byteLength);
         uctx.i += byteLength;
         if (elem.size > 1 && STRUCT_ENDIAN !== PLATFORM_LITTLE_ENDIAN) {
-          byteswapElems(new Uint8Array(slice), elem.size);
+          byteswapElems(new Uint8Array(slice2), elem.size);
         }
-        return new elem.ctor(slice, 0, byteLength / elem.size | 0);
+        return new elem.ctor(slice2, 0, byteLength / elem.size | 0);
       }
       static toJSON(manager22, val, obj, field, type) {
         if (val === void 0 || val === null) {
@@ -17832,32 +17832,32 @@ function getStyleRecord(elem, styleClass, key, inherit2 = true) {
 }
 function hasClassDefault(elem, key) {
   const style = elem.getStyleClass();
-  const record2 = getStyleRecord(elem, style, key);
-  return record2 !== void 0 && key in record2;
+  const record = getStyleRecord(elem, style, key);
+  return record !== void 0 && key in record;
 }
 function getClassDefault(elem, key, checkForMobile = true, defaultval, inherit2 = true) {
   const style = elem.getStyleClass();
   if (style === "none") {
     return void 0;
   }
-  let record2 = getStyleRecord(elem, style, key, inherit2);
-  let value2 = record2 ? record2[key] : void 0;
+  let record = getStyleRecord(elem, style, key, inherit2);
+  let value2 = record ? record[key] : void 0;
   if (value2 === void 0 && defaultval !== void 0) {
     return defaultval;
   } else if (value2 === void 0 && inherit2) {
     if (elem._override_class !== void 0) {
-      const record22 = getStyleRecord(elem, elem.getStyleClass(true), key, inherit2);
-      value2 = record22 ? record22[key] : void 0;
+      const record2 = getStyleRecord(elem, elem.getStyleClass(true), key, inherit2);
+      value2 = record2 ? record2[key] : void 0;
       if (value2 !== void 0) {
-        record2 = record22;
+        record = record2;
       }
     }
     const def = elem.constructor.define();
     if (value2 === void 0 && def.parentStyle) {
-      const record22 = getStyleRecord(elem, def.parentStyle, key, inherit2);
-      value2 = record22 ? record22[key] : void 0;
+      const record2 = getStyleRecord(elem, def.parentStyle, key, inherit2);
+      value2 = record2 ? record2[key] : void 0;
       if (value2 !== void 0) {
-        record2 = record22;
+        record = record2;
       }
     }
   }
@@ -17866,12 +17866,12 @@ function getClassDefault(elem, key, checkForMobile = true, defaultval, inherit2 
       const th = i2 ? elem._themeOverride : theme;
       if (typeof th?.base === "object" && key in th.base) {
         value2 = th.base[key];
-        record2 = th.base;
+        record = th.base;
         break;
       }
     }
   }
-  return checkForMobile ? elem._doMobileDefault(key, value2, record2) : value2;
+  return checkForMobile ? elem._doMobileDefault(key, value2, record) : value2;
 }
 function overrideTheme(elem, themeOverride) {
   elem._themeOverride = themeOverride;
@@ -27767,15 +27767,15 @@ var init_controller = __esm({
         root2.clear();
         for (const [toolpath, entry] of this.toolPaths) {
           const def = entry.cls._getFinalToolDef();
-          const segments = toolpath.trim().split(".").filter((f2) => f2.trim().length > 0);
-          if (segments.length === 0) {
+          const segments2 = toolpath.trim().split(".").filter((f2) => f2.trim().length > 0);
+          if (segments2.length === 0) {
             continue;
           }
           let obj = view.accessors;
           let st = root2;
-          for (let i2 = 0; i2 < segments.length; i2++) {
-            const k = segments[i2];
-            const last = i2 === segments.length - 1;
+          for (let i2 = 0; i2 < segments2.length; i2++) {
+            const k = segments2[i2];
+            const last = i2 === segments2.length - 1;
             if (!(k in obj)) {
               obj[k] = last ? entry.registry.defaults.valuesFor(toolpath.trim()) : {};
             }
@@ -37199,13 +37199,13 @@ var init_platform_base = __esm({
         while (base.endsWith("/")) {
           base = base.slice(0, base.length - 1).trim();
         }
-        const segments = (base + "/" + path2).split("/");
+        const segments2 = (base + "/" + path2).split("/");
         const path22 = [];
-        for (let i2 = 0; i2 < segments.length; i2++) {
-          if (segments[i2] === "..") {
+        for (let i2 = 0; i2 < segments2.length; i2++) {
+          if (segments2[i2] === "..") {
             path22.pop();
           } else {
-            path22.push(segments[i2]);
+            path22.push(segments2[i2]);
           }
         }
         return path22.join("/");
@@ -45729,6 +45729,385 @@ function rootReflects(root2, blocks) {
   }
   return true;
 }
+function freezeComposition(root2, range, view, pending) {
+  const block = range.head.block;
+  const element2 = blockElement(root2, block);
+  if (element2 === void 0) {
+    return void 0;
+  }
+  const blocks = [...view.blocks];
+  const texts = new Map(blocks.map((id) => [id, view.blockText(id)]));
+  return {
+    block,
+    text: blockTextOf(element2),
+    selection: range,
+    pending,
+    view: { blocks, blockText: (id) => texts.get(id) ?? "" }
+  };
+}
+function resolveComposition(snapshot, root2, view) {
+  const element2 = blockElement(root2, snapshot.block);
+  if (element2 === void 0 || !rootReflects(root2, view.blocks)) {
+    return { kind: "refuse" };
+  }
+  const sel = snapshot.selection;
+  if (sel.anchor.block !== snapshot.block || sel.head.block !== snapshot.block) {
+    return { kind: "refuse" };
+  }
+  const edit = composedEdit(snapshot.text, blockTextOf(element2), [
+    sel.anchor.offset,
+    sel.head.offset
+  ]);
+  if (edit === void 0) {
+    return { kind: "rerender" };
+  }
+  if ("refused" in edit) {
+    return { kind: "refuse" };
+  }
+  const map6 = (offset) => mapThroughPending({ block: snapshot.block, offset }, snapshot.pending, snapshot.view);
+  const range = { anchor: map6(edit.range[0]), head: map6(edit.range[1]) };
+  const op = edit.text.length > 0 ? { type: "insertText", at: range, text: edit.text } : { type: "deleteRange", range };
+  return { kind: "op", op };
+}
+
+// scripts/widgets/richtext/dom_selection.ts
+function domSelection(shadow) {
+  const scoped = shadow;
+  return scoped.getSelection?.() ?? document.getSelection();
+}
+function isBackward(sel, range) {
+  if (sel.anchorNode === null || sel.focusNode === null) {
+    return false;
+  }
+  if (sel.anchorNode === sel.focusNode) {
+    return sel.anchorOffset > sel.focusOffset;
+  }
+  return sel.anchorNode === range.endContainer && sel.anchorOffset === range.endOffset;
+}
+function selectionEndpoints(shadow) {
+  const sel = domSelection(shadow);
+  if (sel === null || sel.rangeCount === 0) {
+    return void 0;
+  }
+  const composed = sel.getComposedRanges?.({ shadowRoots: [shadow] });
+  if (composed !== void 0 && composed.length > 0) {
+    const r = composed[0];
+    const backward = isBackward(sel, r);
+    const start2 = { node: r.startContainer, offset: r.startOffset };
+    const end = { node: r.endContainer, offset: r.endOffset };
+    return backward ? { anchor: end, head: start2 } : { anchor: start2, head: end };
+  }
+  if (sel.anchorNode === null || sel.focusNode === null) {
+    return void 0;
+  }
+  return {
+    anchor: { node: sel.anchorNode, offset: sel.anchorOffset },
+    head: { node: sel.focusNode, offset: sel.focusOffset }
+  };
+}
+function docPosIn(root2, view, node2, offset) {
+  if (node2 === root2) {
+    const kids = root2.children;
+    if (offset < kids.length) {
+      const block = kids[offset].getAttribute("data-doc-block");
+      return block === null ? void 0 : { block, offset: 0 };
+    }
+    const last = view.blocks[view.blocks.length - 1];
+    return last === void 0 ? void 0 : { block: last, offset: view.blockText(last).length };
+  }
+  return toDocPos(root2, node2, offset);
+}
+function domRange(root2, shadow, view) {
+  const ends = selectionEndpoints(shadow);
+  if (ends === void 0) {
+    return void 0;
+  }
+  const anchor = docPosIn(root2, view, ends.anchor.node, ends.anchor.offset);
+  const head = docPosIn(root2, view, ends.head.node, ends.head.offset);
+  return anchor !== void 0 && head !== void 0 ? { anchor, head } : void 0;
+}
+function setDomSelection(root2, shadow, range) {
+  const anchor = fromDocPos(root2, range.anchor);
+  const head = fromDocPos(root2, range.head);
+  const sel = domSelection(shadow);
+  if (anchor === void 0 || head === void 0 || sel === null) {
+    return;
+  }
+  sel.setBaseAndExtent(anchor.node, anchor.offset, head.node, head.offset);
+}
+
+// scripts/widgets/richtext/editor_input.ts
+var FORMAT_MARKS = {
+  formatBold: "bold",
+  formatItalic: "italic",
+  formatUnderline: "underline",
+  formatStrikeThrough: "strikethrough"
+};
+var BACKWARD_DELETES = /* @__PURE__ */ new Set([
+  "deleteContentBackward",
+  "deleteWordBackward",
+  "deleteSoftLineBackward"
+]);
+var FORWARD_DELETES = /* @__PURE__ */ new Set([
+  "deleteContentForward",
+  "deleteWordForward",
+  "deleteSoftLineForward"
+]);
+var WORD_DELETES = /* @__PURE__ */ new Set(["deleteWordBackward", "deleteWordForward"]);
+var samePos = (a2, b) => a2.block === b.block && a2.offset === b.offset;
+var isCollapsed = (range) => samePos(range.anchor, range.head);
+function orderRange(range, view) {
+  const ai = view.blocks.indexOf(range.anchor.block);
+  const hi = view.blocks.indexOf(range.head.block);
+  const forward = ai < hi || ai === hi && range.anchor.offset <= range.head.offset;
+  return forward ? { start: range.anchor, end: range.head } : { start: range.head, end: range.anchor };
+}
+function deleteBoundary(text6, offset, granularity, backward) {
+  if (typeof Intl.Segmenter !== "function") {
+    return backward ? Math.max(0, offset - 1) : Math.min(text6.length, offset + 1);
+  }
+  const segments2 = [...new Intl.Segmenter(void 0, { granularity }).segment(text6)];
+  const wordLike = (i3) => segments2[i3].segment === ATOM_CHAR || segments2[i3].isWordLike !== false;
+  if (backward) {
+    let i3 = segments2.findLastIndex((s) => s.index < offset);
+    if (i3 < 0) {
+      return 0;
+    }
+    if (granularity === "word") {
+      while (i3 > 0 && !wordLike(i3)) {
+        i3--;
+      }
+    }
+    return segments2[i3].index;
+  }
+  let i2 = segments2.findIndex((s) => s.index + s.segment.length > offset);
+  if (i2 < 0) {
+    return text6.length;
+  }
+  if (granularity === "word") {
+    while (i2 + 1 < segments2.length && !wordLike(i2)) {
+      i2++;
+    }
+  }
+  return segments2[i2].index + segments2[i2].segment.length;
+}
+function mapInput(e, host) {
+  const { view } = host;
+  const type = e.inputType;
+  if (type === "historyUndo") {
+    void host.undo();
+    return [];
+  }
+  if (type === "historyRedo") {
+    void host.redo();
+    return [];
+  }
+  const mark2 = FORMAT_MARKS[type];
+  if (mark2 !== void 0) {
+    if (!host.hasMark(mark2)) {
+      return host.refuse(type);
+    }
+    const range = host.inputRange(e);
+    return range === void 0 || isCollapsed(range) ? [] : [{ type: "toggleMark", range, mark: mark2 }];
+  }
+  if (type === "insertText") {
+    const range = host.inputRange(e);
+    if (typeof e.data !== "string" || range === void 0) {
+      return host.refuse(type);
+    }
+    return [{ type: "insertText", at: range, text: e.data }];
+  }
+  if (type === "insertParagraph" || type === "insertLineBreak") {
+    const range = host.inputRange(e);
+    if (range === void 0) {
+      return host.refuse(type);
+    }
+    const ops = [];
+    const start2 = orderRange(range, view).start;
+    if (!isCollapsed(range)) {
+      ops.push({ type: "deleteRange", range });
+    }
+    ops.push({ type: "splitBlock", at: start2, newBlock: newBlockId() });
+    return ops;
+  }
+  if (type === "insertFromPaste" || type === "insertFromDrop") {
+    const range = host.inputRange(e);
+    const content3 = e.dataTransfer ? host.fromClipboard(e.dataTransfer) : void 0;
+    if (range === void 0 || content3 === void 0 || content3.blocks.length === 0) {
+      return host.refuse(type);
+    }
+    const newBlocks = content3.blocks.slice(1).map(() => newBlockId());
+    return [{ type: "insertContent", at: range, content: content3, newBlocks }];
+  }
+  if (BACKWARD_DELETES.has(type) || FORWARD_DELETES.has(type) || type === "deleteByCut") {
+    return mapDelete(e, type, host);
+  }
+  return host.refuse(type);
+}
+function mapDelete(e, type, host) {
+  const { view } = host;
+  const range = host.inputRange(e);
+  if (range === void 0) {
+    return host.refuse(type);
+  }
+  let { start: start2, end } = orderRange(range, view);
+  if (samePos(start2, end)) {
+    if (type === "deleteByCut" || e.getTargetRanges().length > 0) {
+      return [];
+    }
+    const text6 = view.blockText(start2.block);
+    const index2 = view.blocks.indexOf(start2.block);
+    const granularity = WORD_DELETES.has(type) ? "word" : "grapheme";
+    if (BACKWARD_DELETES.has(type)) {
+      if (start2.offset === 0) {
+        return index2 > 0 ? [{ type: "joinWithPrevious", block: start2.block }] : [];
+      }
+      start2 = {
+        block: start2.block,
+        offset: deleteBoundary(text6, start2.offset, granularity, true)
+      };
+    } else {
+      if (end.offset >= text6.length) {
+        const next = view.blocks[index2 + 1];
+        return next === void 0 ? [] : [{ type: "joinWithPrevious", block: next }];
+      }
+      end = { block: end.block, offset: deleteBoundary(text6, end.offset, granularity, false) };
+    }
+  }
+  const si = view.blocks.indexOf(start2.block);
+  const ei = view.blocks.indexOf(end.block);
+  const boundaryOnly = ei === si + 1 && start2.offset >= view.blockText(start2.block).length && end.offset === 0;
+  if (boundaryOnly) {
+    return [{ type: "joinWithPrevious", block: end.block }];
+  }
+  return [{ type: "deleteRange", range: { anchor: start2, head: end } }];
+}
+
+// scripts/widgets/richtext/editor_render.ts
+function renderRoot(root2, provider, doc, ctx) {
+  root2.replaceChildren(...provider.blocks(doc).map((id) => provider.renderBlock(doc, id, ctx)));
+}
+function patchBlocks(root2, provider, doc, ctx, result, held, onFresh) {
+  for (const id of result.removedBlocks) {
+    if (id !== held) {
+      blockElement(root2, id)?.remove();
+    }
+  }
+  const order = provider.blocks(doc);
+  const dirty2 = result.dirtyBlocks.filter((id) => id !== held).map((id) => ({ id, index: order.indexOf(id) })).filter((entry) => entry.index >= 0).sort((a2, b) => a2.index - b.index);
+  for (const { id, index: index2 } of dirty2) {
+    const fresh = provider.renderBlock(doc, id, ctx);
+    const old = blockElement(root2, id);
+    if (old !== void 0) {
+      old.replaceWith(fresh);
+    } else if (index2 === 0) {
+      root2.prepend(fresh);
+    } else {
+      const prev = blockElement(root2, order[index2 - 1]);
+      if (prev !== void 0) {
+        prev.after(fresh);
+      } else {
+        root2.append(fresh);
+      }
+    }
+    onFresh(fresh);
+  }
+}
+
+// scripts/widgets/richtext/editor_style.ts
+init_theme_schema();
+init_ui_theme();
+var EDITOR_CSS = `
+  :host {
+    display        : flex;
+    flex-direction : column;
+    position       : relative;
+  }
+
+  .rich-text-root {
+    flex          : 1 1 auto;
+    min-height    : 6em;
+    overflow-y    : auto;
+    padding       : 5px;
+    outline       : none;
+    white-space   : pre-wrap;
+    overflow-wrap : anywhere;
+    background    : var(--richtext-background);
+  }
+
+  .rich-text-root[readonly] {
+    background : var(--richtext-readonly-background);
+  }
+
+  [data-richtext-toolbar] {
+    flex-wrap     : wrap;
+    gap           : var(--richtext-toolbar-gap);
+    padding       : var(--richtext-toolbar-padding);
+    background    : var(--richtext-toolbar-background);
+    border-bottom : 1px solid var(--richtext-toolbar-border);
+  }
+
+  .rich-text-root ::selection {
+    background : var(--richtext-selection-background);
+  }
+`;
+var EDITOR_THEME = {
+  DefaultText: t.font,
+  "background-color": t.color,
+  "toolbar-background": t.color,
+  "toolbar-border": t.color,
+  "toolbar-padding": t.number,
+  "toolbar-gap": t.number,
+  "toolbar-active-background": t.color,
+  "readonly-background": t.color,
+  "selection-background": t.color,
+  "link-color": t.color,
+  "link-underline": t.bool,
+  "code-font": t.font,
+  "code-background": t.color,
+  "code-border-radius": t.number,
+  "quote-border-color": t.color,
+  "quote-text-color": t.color,
+  "marker-color": t.color,
+  "heading-font": t.font,
+  "hr-color": t.color,
+  "opaque-background": t.color
+};
+var THEME_COLORS = [
+  "toolbar-background",
+  "toolbar-border",
+  "toolbar-active-background",
+  "readonly-background",
+  "selection-background",
+  "link-color",
+  "code-background",
+  "quote-border-color",
+  "quote-text-color",
+  "marker-color",
+  "hr-color",
+  "opaque-background"
+];
+var THEME_FONTS = ["code-font", "heading-font"];
+function applyEditorTheme(host, root2, theme4) {
+  const font = theme4.getDefault("DefaultText");
+  root2.style.font = font.genCSS();
+  root2.style.color = font.color;
+  const set2 = (name, value2) => host.style.setProperty(`--richtext-${name}`, value2);
+  set2("background", theme4.getDefault("background-color"));
+  for (const key of THEME_COLORS) {
+    set2(key, theme4.getDefault(key));
+  }
+  for (const key of THEME_FONTS) {
+    set2(key, theme4.getDefault(key).genCSS());
+  }
+  set2("code-border-radius", `${theme4.getDefault("code-border-radius")}px`);
+  set2("toolbar-padding", `${theme4.getDefault("toolbar-padding")}px`);
+  set2("toolbar-gap", `${theme4.getDefault("toolbar-gap")}px`);
+  set2("link-underline", theme4.getDefault("link-underline") ? "underline" : "none");
+  const c = css2color(font.color);
+  const luminance = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  host.style.setProperty("--richtext-icon-tint", `brightness(${luminance.toFixed(3)})`);
+}
 
 // scripts/widgets/richtext/link_popup.ts
 init_ui_base();
@@ -45810,72 +46189,7 @@ function openLinkPopup(owner, editor, edit, x, y) {
 
 // scripts/widgets/richtext/editor.ts
 init_ui_base();
-init_theme_schema();
-init_ui_theme();
-var THEME_COLORS = [
-  "toolbar-background",
-  "toolbar-border",
-  "toolbar-active-background",
-  "readonly-background",
-  "selection-background",
-  "link-color",
-  "code-background",
-  "quote-border-color",
-  "quote-text-color",
-  "marker-color",
-  "hr-color",
-  "opaque-background"
-];
-var THEME_FONTS = ["code-font", "heading-font"];
-var FORMAT_MARKS = {
-  formatBold: "bold",
-  formatItalic: "italic",
-  formatUnderline: "underline",
-  formatStrikeThrough: "strikethrough"
-};
-var BACKWARD_DELETES = /* @__PURE__ */ new Set([
-  "deleteContentBackward",
-  "deleteWordBackward",
-  "deleteSoftLineBackward"
-]);
-var FORWARD_DELETES = /* @__PURE__ */ new Set([
-  "deleteContentForward",
-  "deleteWordForward",
-  "deleteSoftLineForward"
-]);
-var WORD_DELETES = /* @__PURE__ */ new Set(["deleteWordBackward", "deleteWordForward"]);
-var samePos = (a2, b) => a2.block === b.block && a2.offset === b.offset;
-var isCollapsed = (range) => samePos(range.anchor, range.head);
 var collapsed = (pos) => ({ anchor: pos, head: pos });
-function deleteBoundary(text6, offset, granularity, backward) {
-  if (typeof Intl.Segmenter !== "function") {
-    return backward ? Math.max(0, offset - 1) : Math.min(text6.length, offset + 1);
-  }
-  const segments = [...new Intl.Segmenter(void 0, { granularity }).segment(text6)];
-  const wordLike = (i3) => segments[i3].segment === ATOM_CHAR || segments[i3].isWordLike !== false;
-  if (backward) {
-    let i3 = segments.findLastIndex((s) => s.index < offset);
-    if (i3 < 0) {
-      return 0;
-    }
-    if (granularity === "word") {
-      while (i3 > 0 && !wordLike(i3)) {
-        i3--;
-      }
-    }
-    return segments[i3].index;
-  }
-  let i2 = segments.findIndex((s) => s.index + s.segment.length > offset);
-  if (i2 < 0) {
-    return text6.length;
-  }
-  if (granularity === "word") {
-    while (i2 + 1 < segments.length && !wordLike(i2)) {
-      i2++;
-    }
-  }
-  return segments[i2].index + segments[i2].segment.length;
-}
 var RichTextEditor = class _RichTextEditor extends UIBase {
   /** Logs any DOM mutation the editor did not make, so a missed inputType shows up. */
   static observeMutations = true;
@@ -45906,40 +46220,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
   constructor() {
     super();
     this.styletag = document.createElement("style");
-    this.styletag.textContent = `
-      :host {
-        display        : flex;
-        flex-direction : column;
-        position       : relative;
-      }
-
-      .rich-text-root {
-        flex          : 1 1 auto;
-        min-height    : 6em;
-        overflow-y    : auto;
-        padding       : 5px;
-        outline       : none;
-        white-space   : pre-wrap;
-        overflow-wrap : anywhere;
-        background    : var(--richtext-background);
-      }
-
-      .rich-text-root[readonly] {
-        background : var(--richtext-readonly-background);
-      }
-
-      [data-richtext-toolbar] {
-        flex-wrap     : wrap;
-        gap           : var(--richtext-toolbar-gap);
-        padding       : var(--richtext-toolbar-padding);
-        background    : var(--richtext-toolbar-background);
-        border-bottom : 1px solid var(--richtext-toolbar-border);
-      }
-
-      .rich-text-root ::selection {
-        background : var(--richtext-selection-background);
-      }
-    `;
+    this.styletag.textContent = EDITOR_CSS;
     this.shadow.appendChild(this.styletag);
     this.providerStyle = document.createElement("style");
     this.shadow.appendChild(this.providerStyle);
@@ -46135,24 +46416,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
   }
   setCSS() {
     super.setCSS();
-    const font = this.getDefault("DefaultText");
-    this.root.style.font = font.genCSS();
-    this.root.style.color = font.color;
-    const set2 = (name, value2) => this.style.setProperty(`--richtext-${name}`, value2);
-    set2("background", this.getDefault("background-color"));
-    for (const key of THEME_COLORS) {
-      set2(key, this.getDefault(key));
-    }
-    for (const key of THEME_FONTS) {
-      set2(key, this.getDefault(key).genCSS());
-    }
-    set2("code-border-radius", `${this.getDefault("code-border-radius")}px`);
-    set2("toolbar-padding", `${this.getDefault("toolbar-padding")}px`);
-    set2("toolbar-gap", `${this.getDefault("toolbar-gap")}px`);
-    set2("link-underline", this.getDefault("link-underline") ? "underline" : "none");
-    const c = css2color(font.color);
-    const luminance = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
-    this.style.setProperty("--richtext-icon-tint", `brightness(${luminance.toFixed(3)})`);
+    applyEditorTheme(this, this.root, this);
     this.providerStyle.textContent = this._session?.provider.styles?.() ?? "";
   }
   /** Focuses the editable root and places the selection. */
@@ -46261,10 +46525,22 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       return;
     }
     e.preventDefault();
-    if (this._session === void 0 || this._session.disposed || this.readOnly) {
+    const session = this._session;
+    const view = this.view();
+    if (session === void 0 || session.disposed || view === void 0 || this.readOnly) {
       return;
     }
-    for (const op of this.mapInput(e)) {
+    const { provider } = session;
+    const ops = mapInput(e, {
+      view,
+      hasMark: (name) => provider.marks().some((m) => m.name === name),
+      fromClipboard: (data) => provider.fromClipboard(data),
+      inputRange: (event) => this.inputRange(event),
+      refuse: (type) => this.refuse(type),
+      undo: () => this.undo(),
+      redo: () => this.redo()
+    });
+    for (const op of ops) {
       this.submit(op);
     }
   }
@@ -46343,20 +46619,8 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     if (range === void 0 || view === void 0) {
       return;
     }
-    const block = range.head.block;
-    const element2 = blockElement(this.root, block);
-    if (element2 === void 0) {
-      return;
-    }
-    const blocks = [...view.blocks];
-    const texts = new Map(blocks.map((id) => [id, view.blockText(id)]));
-    this.snapshot = {
-      block,
-      text: blockTextOf(element2),
-      selection: range,
-      pending: this.pending.filter((e) => !e.reflected).map((e) => e.op),
-      view: { blocks, blockText: (id) => texts.get(id) ?? "" }
-    };
+    const pending = this.pending.filter((e) => !e.reflected).map((e) => e.op);
+    this.snapshot = freezeComposition(this.root, range, view, pending);
   }
   /** Diffs the composed block back into an edit and submits it, or falls back to a re-render. */
   onCompositionEnd() {
@@ -46364,37 +46628,19 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     this.composing = false;
     const snapshot = this.snapshot;
     this.snapshot = void 0;
-    if (snapshot === void 0 || this._session === void 0 || this._session.disposed) {
-      this.refuseComposition(snapshot);
-      return;
-    }
-    const element2 = blockElement(this.root, snapshot.block);
     const view = this.view();
-    if (element2 === void 0 || view === void 0 || !rootReflects(this.root, view.blocks)) {
+    if (snapshot === void 0 || view === void 0 || this._session === void 0 || this._session.disposed) {
       this.refuseComposition(snapshot);
       return;
     }
-    const sel = snapshot.selection;
-    if (sel.anchor.block !== snapshot.block || sel.head.block !== snapshot.block) {
+    const outcome = resolveComposition(snapshot, this.root, view);
+    if (outcome.kind === "refuse") {
       this.refuseComposition(snapshot);
-      return;
-    }
-    const edit = composedEdit(snapshot.text, blockTextOf(element2), [
-      sel.anchor.offset,
-      sel.head.offset
-    ]);
-    if (edit === void 0) {
+    } else if (outcome.kind === "rerender") {
       this.rerenderComposed(snapshot);
-      return;
+    } else {
+      this.submit(outcome.op, true);
     }
-    if ("refused" in edit) {
-      this.refuseComposition(snapshot);
-      return;
-    }
-    const map6 = (offset) => mapThroughPending({ block: snapshot.block, offset }, snapshot.pending, snapshot.view);
-    const range = { anchor: map6(edit.range[0]), head: map6(edit.range[1]) };
-    const op = edit.text.length > 0 ? { type: "insertText", at: range, text: edit.text } : { type: "deleteRange", range };
-    this.submit(op, true);
   }
   /** Re-renders the composed block from the provider and restores the snapshot's caret. */
   rerenderComposed(snapshot) {
@@ -46421,101 +46667,6 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       }
     }
     this.refuse("insertCompositionText");
-  }
-  /** The `EditOp`s one input event asks for: none when it is refused or handled directly. */
-  mapInput(e) {
-    const session = this._session;
-    const view = this.view();
-    if (session === void 0 || view === void 0) {
-      return [];
-    }
-    const type = e.inputType;
-    if (type === "historyUndo") {
-      void this.undo();
-      return [];
-    }
-    if (type === "historyRedo") {
-      void this.redo();
-      return [];
-    }
-    const mark2 = FORMAT_MARKS[type];
-    if (mark2 !== void 0) {
-      if (!session.provider.marks().some((m) => m.name === mark2)) {
-        return this.refuse(type);
-      }
-      const range = this.inputRange(e);
-      return range === void 0 || isCollapsed(range) ? [] : [{ type: "toggleMark", range, mark: mark2 }];
-    }
-    if (type === "insertText") {
-      const range = this.inputRange(e);
-      if (typeof e.data !== "string" || range === void 0) {
-        return this.refuse(type);
-      }
-      return [{ type: "insertText", at: range, text: e.data }];
-    }
-    if (type === "insertParagraph" || type === "insertLineBreak") {
-      const range = this.inputRange(e);
-      if (range === void 0) {
-        return this.refuse(type);
-      }
-      const ops = [];
-      const start2 = this.orderRange(range, view).start;
-      if (!isCollapsed(range)) {
-        ops.push({ type: "deleteRange", range });
-      }
-      ops.push({ type: "splitBlock", at: start2, newBlock: newBlockId() });
-      return ops;
-    }
-    if (type === "insertFromPaste" || type === "insertFromDrop") {
-      const range = this.inputRange(e);
-      const content3 = e.dataTransfer ? session.provider.fromClipboard(e.dataTransfer) : void 0;
-      if (range === void 0 || content3 === void 0 || content3.blocks.length === 0) {
-        return this.refuse(type);
-      }
-      const newBlocks = content3.blocks.slice(1).map(() => newBlockId());
-      return [{ type: "insertContent", at: range, content: content3, newBlocks }];
-    }
-    if (BACKWARD_DELETES.has(type) || FORWARD_DELETES.has(type) || type === "deleteByCut") {
-      return this.mapDelete(e, type, view);
-    }
-    return this.refuse(type);
-  }
-  mapDelete(e, type, view) {
-    const range = this.inputRange(e);
-    if (range === void 0) {
-      return this.refuse(type);
-    }
-    let { start: start2, end } = this.orderRange(range, view);
-    if (samePos(start2, end)) {
-      if (type === "deleteByCut" || e.getTargetRanges().length > 0) {
-        return [];
-      }
-      const text6 = view.blockText(start2.block);
-      const index2 = view.blocks.indexOf(start2.block);
-      const granularity = WORD_DELETES.has(type) ? "word" : "grapheme";
-      if (BACKWARD_DELETES.has(type)) {
-        if (start2.offset === 0) {
-          return index2 > 0 ? [{ type: "joinWithPrevious", block: start2.block }] : [];
-        }
-        start2 = {
-          block: start2.block,
-          offset: deleteBoundary(text6, start2.offset, granularity, true)
-        };
-      } else {
-        if (end.offset >= text6.length) {
-          const next = view.blocks[index2 + 1];
-          return next === void 0 ? [] : [{ type: "joinWithPrevious", block: next }];
-        }
-        end = { block: end.block, offset: deleteBoundary(text6, end.offset, granularity, false) };
-      }
-    }
-    const si = view.blocks.indexOf(start2.block);
-    const ei = view.blocks.indexOf(end.block);
-    const boundaryOnly = ei === si + 1 && start2.offset >= view.blockText(start2.block).length && end.offset === 0;
-    if (boundaryOnly) {
-      return [{ type: "joinWithPrevious", block: end.block }];
-    }
-    return [{ type: "deleteRange", range: { anchor: start2, head: end } }];
   }
   /** Ends the run in progress unless `op` continues it, then commits `op`. */
   submit(op, reflected = false) {
@@ -46644,12 +46795,6 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     const { provider, doc } = session;
     return { blocks: provider.blocks(doc), blockText: (block) => provider.blockText(doc, block) };
   }
-  orderRange(range, view) {
-    const ai = view.blocks.indexOf(range.anchor.block);
-    const hi = view.blocks.indexOf(range.head.block);
-    const forward = ai < hi || ai === hi && range.anchor.offset <= range.head.offset;
-    return forward ? { start: range.anchor, end: range.head } : { start: range.head, end: range.anchor };
-  }
   renderAll() {
     const session = this._session;
     const ctx = this.richCtx;
@@ -46663,10 +46808,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       this.needsRender = true;
       return;
     }
-    const { provider, doc } = session;
-    this.root.replaceChildren(
-      ...provider.blocks(doc).map((id) => provider.renderBlock(doc, id, ctx))
-    );
+    renderRoot(this.root, session.provider, session.doc, ctx);
     this.observer?.takeRecords();
     this.needsRender = false;
     this.updateEmbedded(this.root);
@@ -46678,33 +46820,16 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     if (session === void 0 || ctx === void 0) {
       return;
     }
-    const { provider, doc } = session;
-    const root2 = this.root;
     const held = this.composing ? this.snapshot?.block : void 0;
-    for (const id of result.removedBlocks) {
-      if (id !== held) {
-        blockElement(root2, id)?.remove();
-      }
-    }
-    const order = provider.blocks(doc);
-    const dirty2 = result.dirtyBlocks.filter((id) => id !== held).map((id) => ({ id, index: order.indexOf(id) })).filter((entry) => entry.index >= 0).sort((a2, b) => a2.index - b.index);
-    for (const { id, index: index2 } of dirty2) {
-      const fresh = provider.renderBlock(doc, id, ctx);
-      const old = blockElement(root2, id);
-      if (old !== void 0) {
-        old.replaceWith(fresh);
-      } else if (index2 === 0) {
-        root2.prepend(fresh);
-      } else {
-        const prev = blockElement(root2, order[index2 - 1]);
-        if (prev !== void 0) {
-          prev.after(fresh);
-        } else {
-          root2.append(fresh);
-        }
-      }
-      this.updateEmbedded(fresh);
-    }
+    patchBlocks(
+      this.root,
+      session.provider,
+      session.doc,
+      ctx,
+      result,
+      held,
+      (fresh) => this.updateEmbedded(fresh)
+    );
     this.observer?.takeRecords();
     if (result.selection !== void 0 && !this.composing) {
       this.setSelection(result.selection);
@@ -46712,74 +46837,16 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     this.syncToolbar();
   }
   setSelection(range) {
-    const anchor = fromDocPos(this.root, range.anchor);
-    const head = fromDocPos(this.root, range.head);
-    const sel = this.domSelection();
-    if (anchor === void 0 || head === void 0 || sel === null) {
-      return;
-    }
-    sel.setBaseAndExtent(anchor.node, anchor.offset, head.node, head.offset);
-  }
-  domSelection() {
-    const shadow = this.shadow;
-    return shadow.getSelection?.() ?? document.getSelection();
-  }
-  /** The selection's endpoints as DOM positions inside the root, if it is there. */
-  selectionEndpoints() {
-    const sel = this.domSelection();
-    if (sel === null || sel.rangeCount === 0) {
-      return void 0;
-    }
-    const composed = sel.getComposedRanges?.({ shadowRoots: [this.shadow] });
-    if (composed !== void 0 && composed.length > 0) {
-      const r = composed[0];
-      const backward = this.isBackward(sel, r);
-      const start2 = { node: r.startContainer, offset: r.startOffset };
-      const end = { node: r.endContainer, offset: r.endOffset };
-      return backward ? { anchor: end, head: start2 } : { anchor: start2, head: end };
-    }
-    if (sel.anchorNode === null || sel.focusNode === null) {
-      return void 0;
-    }
-    return {
-      anchor: { node: sel.anchorNode, offset: sel.anchorOffset },
-      head: { node: sel.focusNode, offset: sel.focusOffset }
-    };
-  }
-  isBackward(sel, range) {
-    if (sel.anchorNode === null || sel.focusNode === null) {
-      return false;
-    }
-    if (sel.anchorNode === sel.focusNode) {
-      return sel.anchorOffset > sel.focusOffset;
-    }
-    return sel.anchorNode === range.endContainer && sel.anchorOffset === range.endOffset;
+    setDomSelection(this.root, this.shadow, range);
   }
   /** A DOM position to a document one; a position on the root itself lands on a block edge. */
   docPos(node2, offset) {
     const view = this.view();
-    if (view === void 0) {
-      return void 0;
-    }
-    if (node2 === this.root) {
-      const kids = this.root.children;
-      if (offset < kids.length) {
-        const block = kids[offset].getAttribute("data-doc-block");
-        return block === null ? void 0 : { block, offset: 0 };
-      }
-      const last = view.blocks[view.blocks.length - 1];
-      return last === void 0 ? void 0 : { block: last, offset: view.blockText(last).length };
-    }
-    return toDocPos(this.root, node2, offset);
+    return view === void 0 ? void 0 : docPosIn(this.root, view, node2, offset);
   }
   domRange() {
-    const ends = this.selectionEndpoints();
-    if (ends === void 0) {
-      return void 0;
-    }
-    const anchor = this.docPos(ends.anchor.node, ends.anchor.offset);
-    const head = this.docPos(ends.head.node, ends.head.offset);
-    return anchor !== void 0 && head !== void 0 ? { anchor, head } : void 0;
+    const view = this.view();
+    return view === void 0 ? void 0 : domRange(this.root, this.shadow, view);
   }
   throughPending(range) {
     const view = this.view();
@@ -46852,28 +46919,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       tagname: "rich-text-x",
       style: "richtext",
       modalKeyEvents: true,
-      theme: {
-        DefaultText: t.font,
-        "background-color": t.color,
-        "toolbar-background": t.color,
-        "toolbar-border": t.color,
-        "toolbar-padding": t.number,
-        "toolbar-gap": t.number,
-        "toolbar-active-background": t.color,
-        "readonly-background": t.color,
-        "selection-background": t.color,
-        "link-color": t.color,
-        "link-underline": t.bool,
-        "code-font": t.font,
-        "code-background": t.color,
-        "code-border-radius": t.number,
-        "quote-border-color": t.color,
-        "quote-text-color": t.color,
-        "marker-color": t.color,
-        "heading-font": t.font,
-        "hr-color": t.color,
-        "opaque-background": t.color
-      }
+      theme: EDITOR_THEME
     };
   }
 };
@@ -47113,20 +47159,20 @@ var PlainProvider = class {
         (name) => marks.some((m) => m.name === name && m.from < pos && pos <= m.to)
       );
     }
-    const segments = [];
+    const segments2 = [];
     for (let i2 = r.startIndex; i2 <= r.endIndex; i2++) {
       const block = doc.blocks[i2];
       const from = i2 === r.startIndex ? r.start.offset : 0;
       const to = i2 === r.endIndex ? r.end.offset : block.text.length;
       if (from < to) {
-        segments.push({ marks: block.marks, from, to });
+        segments2.push({ marks: block.marks, from, to });
       }
     }
-    if (segments.length === 0) {
+    if (segments2.length === 0) {
       return [];
     }
     return [...names].filter(
-      (name) => segments.every(({ marks, from, to }) => hasMark(marks, name, from, to))
+      (name) => segments2.every(({ marks, from, to }) => hasMark(marks, name, from, to))
     );
   }
   renderBlock(doc, block, ctx) {
@@ -47379,20 +47425,20 @@ var PlainProvider = class {
   /** Removes the mark when every character of the range already has it, adds it otherwise. */
   toggleMark(doc, range, mark2) {
     const r = this.order(doc, range);
-    const segments = [];
+    const segments2 = [];
     for (let i2 = r.startIndex; i2 <= r.endIndex; i2++) {
       const block = doc.blocks[i2];
       const from = i2 === r.startIndex ? r.start.offset : 0;
       const to = i2 === r.endIndex ? r.end.offset : block.text.length;
       if (from < to) {
-        segments.push({ block, from, to });
+        segments2.push({ block, from, to });
       }
     }
-    if (segments.length === 0) {
+    if (segments2.length === 0) {
       return { dirtyBlocks: [], removedBlocks: [], selection: range };
     }
-    const covered = segments.every(({ block, from, to }) => hasMark(block.marks, mark2, from, to));
-    for (const { block, from, to } of segments) {
+    const covered = segments2.every(({ block, from, to }) => hasMark(block.marks, mark2, from, to));
+    for (const { block, from, to } of segments2) {
       if (covered) {
         block.marks = cutMark(block.marks, mark2, from, to);
       } else {
@@ -47400,7 +47446,7 @@ var PlainProvider = class {
       }
     }
     return {
-      dirtyBlocks: segments.map((s) => s.block.id),
+      dirtyBlocks: segments2.map((s) => s.block.id),
       removedBlocks: [],
       selection: range
     };
@@ -58999,7 +59045,7 @@ var LinkCanvas = class extends UIBase {
     this.canvas.style.height = height + "px";
   }
   /** Repaints every segment as a cubic bezier with horizontal tangents. */
-  drawLinks(segments, dpi = 1) {
+  drawLinks(segments2, dpi = 1) {
     const g = this.g;
     if (g === null) {
       return;
@@ -59013,7 +59059,7 @@ var LinkCanvas = class extends UIBase {
     for (const pass of [false, true]) {
       g.strokeStyle = pass ? selColor : color2;
       g.lineWidth = pass ? selWidth : width;
-      for (const s of segments) {
+      for (const s of segments2) {
         if (s.selected === true !== pass) {
           continue;
         }
@@ -66560,11 +66606,11 @@ var ThemeChangeEvent = class extends Event {
   record;
   /** The variable that was edited, when the change came through one. */
   varKey;
-  constructor(category, key, record2, varKey) {
+  constructor(category, key, record, varKey) {
     super("change");
     this.category = category;
     this.key = key;
-    this.record = record2;
+    this.record = record;
     this.varKey = varKey;
   }
 };
@@ -66752,12 +66798,12 @@ var ThemeEditor = class extends Container3 {
     panel.rebuild();
   }
   /** Repaints the screen against the edited theme and reports the change. */
-  notify(category, key, record2, varKey) {
+  notify(category, key, record, varKey) {
     flagThemeUpdate();
-    this.dispatchEvent(new ThemeChangeEvent(category, key, record2, varKey));
+    this.dispatchEvent(new ThemeChangeEvent(category, key, record, varKey));
     const on_change = this.on_change;
     if (on_change) {
-      on_change(category, key, record2);
+      on_change(category, key, record);
     }
     if (this.ctx) {
       this.ctx.screen.completeSetCSS();
@@ -70598,26 +70644,26 @@ var Screen2 = class extends UIBase {
       if (b.locked) {
         continue;
       }
-      let blank;
+      let blank2;
       let sarea;
       for (const he of b.halfedges) {
         if (!he.sarea.area) {
-          blank = he.sarea;
-          sarea = b.getOtherSarea(blank);
+          blank2 = he.sarea;
+          sarea = b.getOtherSarea(blank2);
           const axis = b.horiz ? 1 : 0;
-          if (blank && sarea && blank.size[axis] !== sarea.size[axis]) {
-            blank = sarea = void 0;
+          if (blank2 && sarea && blank2.size[axis] !== sarea.size[axis]) {
+            blank2 = sarea = void 0;
           }
-          if (blank && sarea) {
+          if (blank2 && sarea) {
             break;
           } else {
-            blank = void 0;
+            blank2 = void 0;
             sarea = void 0;
           }
         }
       }
-      if (blank && sarea && blank !== sarea) {
-        this.collapseArea(blank, b);
+      if (blank2 && sarea && blank2 !== sarea) {
+        this.collapseArea(blank2, b);
       }
     }
     this.cleanupBorders();
@@ -76343,14 +76389,14 @@ function compile2(options) {
     }
     return buffers[0].join("");
   }
-  function prepareList(slice) {
-    const length = slice.length;
+  function prepareList(slice2) {
+    const length = slice2.length;
     let index2 = 0;
     let containerBalance = 0;
     let loose = false;
     let atMarker;
     while (++index2 < length) {
-      const event = slice[index2];
+      const event = slice2[index2];
       if (event[1]._container) {
         atMarker = void 0;
         if (event[0] === "enter") {
@@ -76383,7 +76429,7 @@ function compile2(options) {
         }
       }
     }
-    slice[0][1]._loose = loose;
+    slice2[0][1]._loose = loose;
   }
   function setData(key, value2) {
     data[key] = value2;
@@ -76412,8 +76458,8 @@ function compile2(options) {
   }
   function lineEndingIfNeeded() {
     const buffer2 = buffers[buffers.length - 1];
-    const slice = buffer2[buffer2.length - 1];
-    const previous3 = slice ? slice.charCodeAt(slice.length - 1) : null;
+    const slice2 = buffer2[buffer2.length - 1];
+    const previous3 = slice2 ? slice2.charCodeAt(slice2.length - 1) : null;
     if (previous3 === 10 || previous3 === 13 || previous3 === null) {
       return;
     }
@@ -78111,10 +78157,10 @@ function subcontent(events, eventIndex) {
   }
   index2 = breaks.length;
   while (index2--) {
-    const slice = childEvents.slice(breaks[index2], breaks[index2 + 1]);
+    const slice2 = childEvents.slice(breaks[index2], breaks[index2 + 1]);
     const start3 = startPositions.pop();
-    jumps.push([start3, start3 + slice.length - 1]);
-    events.splice(start3, 2, slice);
+    jumps.push([start3, start3 + slice2.length - 1]);
+    events.splice(start3, 2, slice2);
   }
   jumps.reverse();
   index2 = -1;
@@ -80229,8 +80275,8 @@ function createTokenizer(parser3, initialize, from) {
     resolveAllConstructs.push(initialize);
   }
   return context;
-  function write(slice) {
-    chunks = push(chunks, slice);
+  function write(slice2) {
+    chunks = push(chunks, slice2);
     main();
     if (chunks[chunks.length - 1] !== null) {
       return [];
@@ -82421,12 +82467,12 @@ var EditMap = class {
     }
     vecs.push(events.slice());
     events.length = 0;
-    let slice = vecs.pop();
-    while (slice) {
-      for (const element2 of slice) {
+    let slice2 = vecs.pop();
+    while (slice2) {
+      for (const element2 of slice2) {
         events.push(element2);
       }
-      slice = vecs.pop();
+      slice2 = vecs.pop();
     }
     this.map.length = 0;
     this.index.clear();
@@ -83615,11 +83661,11 @@ function gfmFootnoteToMarkdown(options) {
     return value2;
   }
 }
-function mapExceptFirst(line, index2, blank) {
-  return index2 === 0 ? line : mapAll(line, index2, blank);
+function mapExceptFirst(line, index2, blank2) {
+  return index2 === 0 ? line : mapAll(line, index2, blank2);
 }
-function mapAll(line, index2, blank) {
-  return (blank ? "" : "    ") + line;
+function mapAll(line, index2, blank2) {
+  return (blank2 ? "" : "    ") + line;
 }
 
 // node_modules/.pnpm/mdast-util-gfm-strikethrough@2.0.0/node_modules/mdast-util-gfm-strikethrough/lib/index.js
@@ -83897,8 +83943,8 @@ function blockquote(node2, _, state, info) {
   exit3();
   return value2;
 }
-function map4(line, _, blank) {
-  return ">" + (blank ? "" : " ") + line;
+function map4(line, _, blank2) {
+  return ">" + (blank2 ? "" : " ") + line;
 }
 
 // node_modules/.pnpm/mdast-util-to-markdown@2.1.2/node_modules/mdast-util-to-markdown/lib/util/pattern-in-scope.js
@@ -84025,8 +84071,8 @@ function code3(node2, _, state, info) {
   exit3();
   return value2;
 }
-function map5(line, _, blank) {
-  return (blank ? "" : "    ") + line;
+function map5(line, _, blank2) {
+  return (blank2 ? "" : "    ") + line;
 }
 
 // node_modules/.pnpm/mdast-util-to-markdown@2.1.2/node_modules/mdast-util-to-markdown/lib/util/check-quote.js
@@ -84667,11 +84713,11 @@ function listItem(node2, parent, state, info) {
   );
   exit3();
   return value2;
-  function map6(line, index2, blank) {
+  function map6(line, index2, blank2) {
     if (index2) {
-      return (blank ? "" : " ".repeat(size)) + line;
+      return (blank2 ? "" : " ".repeat(size)) + line;
     }
-    return (blank ? bullet : bullet + " ".repeat(size - bullet.length)) + line;
+    return (blank2 ? bullet : bullet + " ".repeat(size - bullet.length)) + line;
   }
 }
 
@@ -86443,7 +86489,7 @@ function sanitizeAttrs(tag, attrs) {
   }
   return out;
 }
-var emptyToUndefined = (record2) => Object.keys(record2).length > 0 ? record2 : void 0;
+var emptyToUndefined = (record) => Object.keys(record).length > 0 ? record : void 0;
 function sanitizedOf(element2) {
   const tag = element2.tagName.toLowerCase();
   const raw = {};
@@ -87515,390 +87561,6 @@ function markdownText(doc) {
   });
 }
 
-// scripts/widgets/richtext/providers/markdown_image.ts
-init_ui_base();
-init_theme_schema();
-init_toolop();
-var MIN_WIDTH = 16;
-var CLICK_SLOP_PX2 = 3;
-function moveAtomOp(order, from, to) {
-  const a2 = order.indexOf(from.block);
-  const b = order.indexOf(to.block);
-  const blocks = order.slice(Math.min(a2, b), Math.max(a2, b) + 1);
-  const shifts = from.block === to.block ? [] : [
-    { block: from.block, at: from.offset, delta: -1 },
-    { block: to.block, at: to.offset, delta: 1 }
-  ];
-  return {
-    type: "custom",
-    name: "moveAtom",
-    blocks,
-    data: { from: { ...from }, to: { ...to } },
-    shifts
-  };
-}
-function blockOrder(root2) {
-  const ids = [];
-  for (const child of root2.children) {
-    const id = child.getAttribute("data-doc-block");
-    if (id !== null) {
-      ids.push(id);
-    }
-  }
-  return ids;
-}
-function acceptsAtom(el) {
-  return el.getAttribute("contenteditable") !== "false" && el.tagName !== "PRE";
-}
-function caretRect(root2, pos) {
-  const dom = fromDocPos(root2, pos);
-  if (dom === void 0) {
-    return void 0;
-  }
-  const range = document.createRange();
-  range.setStart(dom.node, dom.offset);
-  range.collapse(true);
-  const rect = range.getClientRects()[0] ?? range.getBoundingClientRect();
-  if (rect.height > 0) {
-    return rect;
-  }
-  const el = dom.node instanceof Element ? dom.node : dom.node.parentElement;
-  return el?.getBoundingClientRect();
-}
-var MdImageWidget = class extends UIBase {
-  img;
-  handle;
-  styletag;
-  block = "";
-  offset = 0;
-  constructor() {
-    super();
-    this.styletag = document.createElement("style");
-    this.styletag.textContent = `
-      :host {
-        position       : relative;
-        display        : inline-block;
-        vertical-align : middle;
-        line-height    : 0;
-      }
-      img {
-        max-width : 100%;
-        display   : block;
-      }
-      :host(:hover:not([readonly])) img {
-        outline : 2px solid var(--md-image-outline-color);
-      }
-      .handle {
-        display    : none;
-        position   : absolute;
-        right      : -2px;
-        bottom     : -2px;
-        width      : var(--md-image-handle-size);
-        height     : var(--md-image-handle-size);
-        background : var(--md-image-handle-color);
-        cursor     : nwse-resize;
-      }
-      :host(:hover:not([readonly])) .handle,
-      :host([resizing]) .handle {
-        display : block;
-      }
-      :host([resizing]) img {
-        outline : 2px solid var(--md-image-outline-color);
-      }
-    `;
-    this.shadow.appendChild(this.styletag);
-    this.img = document.createElement("img");
-    this.img.draggable = false;
-    this.img.addEventListener("dragstart", (e) => e.preventDefault());
-    this.shadow.appendChild(this.img);
-    this.handle = document.createElement("div");
-    this.handle.className = "handle";
-    this.handle.setAttribute("data-testid", "md-image-handle");
-    this.shadow.appendChild(this.handle);
-  }
-  /** Points the widget at the atom it renders and shows its image. */
-  setAtom(block, offset, image2) {
-    this.block = block;
-    this.offset = offset;
-    const src = safeUrl(image2.src, true);
-    if (src !== void 0) {
-      this.img.setAttribute("src", src);
-    } else {
-      this.img.removeAttribute("src");
-    }
-    this.img.setAttribute("alt", image2.alt);
-    if (image2.title !== void 0) {
-      this.img.setAttribute("title", image2.title);
-    } else {
-      this.img.removeAttribute("title");
-    }
-    if (image2.width !== void 0) {
-      this.img.setAttribute("width", String(image2.width));
-    } else {
-      this.img.removeAttribute("width");
-    }
-  }
-  /** The position of the atom's own character. */
-  get atomPos() {
-    return { block: this.block, offset: this.offset };
-  }
-  init() {
-    super.init();
-    this.setAttribute("data-testid", "md-image");
-    this.setCSS();
-    this.addEventListener("pointerenter", () => this.mirrorReadOnly());
-    this.handle.addEventListener("pointerdown", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (e.button === 0 && this.canEdit()) {
-        this.spawn(new ImageResizeOp(this, e), e);
-      }
-    });
-    this.img.addEventListener("pointerdown", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (e.button === 0 && this.canEdit()) {
-        this.spawn(new ImageMoveOp(this, e), e);
-      }
-    });
-  }
-  canEdit() {
-    return this.ctx !== void 0 && !this.ctx.editor.readOnly;
-  }
-  spawn(op, e) {
-    const ctx = this.ctx;
-    void ctx.toolstack.execTool(ctx, op, e);
-  }
-  mirrorReadOnly() {
-    this.toggleAttribute("readonly", this.ctx?.editor.readOnly ?? false);
-  }
-  update() {
-    super.update();
-    this.mirrorReadOnly();
-  }
-  setCSS() {
-    super.setCSS();
-    this.style.setProperty("--md-image-handle-color", this.getDefault("handle-color"));
-    this.style.setProperty(
-      "--md-image-handle-size",
-      `${this.getDefault("handle-size")}px`
-    );
-    this.style.setProperty("--md-image-outline-color", this.getDefault("outline-color"));
-  }
-  static define() {
-    return {
-      tagname: "md-image-x",
-      style: "mdimage",
-      theme: {
-        "handle-color": t.color,
-        "handle-size": t.number,
-        "outline-color": t.color,
-        "drop-caret-color": t.color
-      }
-    };
-  }
-};
-UIBase.internalRegister(MdImageWidget);
-var ImageResizeOp = class extends ToolOp {
-  widget;
-  startX = 0;
-  startWidth = 0;
-  width = 0;
-  hadWidth = false;
-  constructor(widget, e) {
-    super();
-    this.widget = widget;
-    if (widget !== void 0 && e !== void 0) {
-      this.startX = e.clientX;
-      this.startWidth = widget.img.getBoundingClientRect().width;
-      this.width = this.startWidth;
-      this.hadWidth = widget.img.hasAttribute("width");
-      widget.setAttribute("resizing", "");
-    }
-  }
-  static tooldef() {
-    return {
-      uiname: "Resize Image",
-      description: "Drag the corner handle to resize the image",
-      toolpath: "richtext.markdown.resize_image",
-      is_modal: true,
-      undoflag: UndoFlags.NO_UNDO,
-      inputs: {},
-      outputs: {}
-    };
-  }
-  on_pointermove(e) {
-    const widget = this.widget;
-    if (widget === void 0) {
-      return;
-    }
-    this.width = Math.max(MIN_WIDTH, Math.round(this.startWidth + e.clientX - this.startX));
-    widget.img.setAttribute("width", String(this.width));
-  }
-  on_pointerup(_e) {
-    const widget = this.widget;
-    if (widget !== void 0 && this.width !== Math.round(this.startWidth)) {
-      void widget.ctx.editor.dispatch({
-        type: "custom",
-        name: "setImage",
-        blocks: [widget.block],
-        data: { offset: widget.offset, width: this.width }
-      });
-    }
-    this.modalEnd(false);
-  }
-  on_pointercancel(_e) {
-    this.modalEnd(true);
-  }
-  on_keydown(e) {
-    if (e.key === "Escape") {
-      this.modalEnd(true);
-    }
-  }
-  modalEnd(was_cancelled) {
-    const widget = this.widget;
-    this.widget = void 0;
-    if (widget !== void 0) {
-      widget.removeAttribute("resizing");
-      if (was_cancelled) {
-        if (this.hadWidth) {
-          widget.img.setAttribute("width", String(Math.round(this.startWidth)));
-        } else {
-          widget.img.removeAttribute("width");
-        }
-      }
-    }
-    super.modalEnd(was_cancelled);
-  }
-};
-ToolOp.register(ImageResizeOp);
-var ImageMoveOp = class extends ToolOp {
-  widget;
-  ghost;
-  caret;
-  startX = 0;
-  startY = 0;
-  grabX = 0;
-  grabY = 0;
-  moved = false;
-  target;
-  constructor(widget, e) {
-    super();
-    this.widget = widget;
-    if (widget !== void 0 && e !== void 0) {
-      const rect = widget.img.getBoundingClientRect();
-      this.startX = e.clientX;
-      this.startY = e.clientY;
-      this.grabX = e.clientX - rect.left;
-      this.grabY = e.clientY - rect.top;
-    }
-  }
-  static tooldef() {
-    return {
-      uiname: "Move Image",
-      description: "Drag the image to another place in the text",
-      toolpath: "richtext.markdown.move_image",
-      is_modal: true,
-      undoflag: UndoFlags.NO_UNDO,
-      inputs: {},
-      outputs: {}
-    };
-  }
-  on_pointermove(e) {
-    const widget = this.widget;
-    if (widget === void 0) {
-      return;
-    }
-    if (!this.moved && Math.abs(e.clientX - this.startX) < CLICK_SLOP_PX2 && Math.abs(e.clientY - this.startY) < CLICK_SLOP_PX2) {
-      return;
-    }
-    this.moved = true;
-    const bridge = widget.ctx.editor;
-    const shadow = bridge.root.parentNode;
-    if (!(shadow instanceof ShadowRoot)) {
-      return;
-    }
-    const origin = shadow.host.getBoundingClientRect();
-    if (this.ghost === void 0) {
-      const rect2 = widget.img.getBoundingClientRect();
-      const ghost = this.ghost = document.createElement("img");
-      ghost.className = "md-image-ghost";
-      ghost.src = widget.img.src;
-      ghost.style.position = "absolute";
-      ghost.style.width = `${rect2.width}px`;
-      ghost.style.height = `${rect2.height}px`;
-      ghost.style.opacity = "0.5";
-      ghost.style.pointerEvents = "none";
-      ghost.style.zIndex = "10";
-      shadow.appendChild(ghost);
-      const caret2 = this.caret = document.createElement("div");
-      caret2.className = "md-image-drop-caret";
-      caret2.style.position = "absolute";
-      caret2.style.width = "2px";
-      caret2.style.pointerEvents = "none";
-      caret2.style.zIndex = "10";
-      caret2.style.display = "none";
-      shadow.appendChild(caret2);
-    }
-    this.ghost.style.left = `${e.clientX - this.grabX - origin.left}px`;
-    this.ghost.style.top = `${e.clientY - this.grabY - origin.top}px`;
-    const pos = bridge.posFromPoint(e.clientX, e.clientY);
-    const own6 = widget.atomPos;
-    const unchanged = pos?.block === own6.block && (pos.offset === own6.offset || pos.offset === own6.offset + 1);
-    const el = pos === void 0 ? void 0 : bridge.blockElement(pos.block);
-    const rect = pos === void 0 ? void 0 : caretRect(bridge.root, pos);
-    const caret = this.caret;
-    if (caret === void 0) {
-      return;
-    }
-    if (pos === void 0 || el === void 0 || rect === void 0 || unchanged) {
-      this.target = void 0;
-      caret.style.display = "none";
-      return;
-    }
-    const allowed = acceptsAtom(el);
-    this.target = allowed ? pos : void 0;
-    caret.style.display = "block";
-    caret.style.left = `${rect.left - 1 - origin.left}px`;
-    caret.style.top = `${rect.top - origin.top}px`;
-    caret.style.height = `${rect.height}px`;
-    caret.style.background = allowed ? widget.getDefault("drop-caret-color") : "rgba(128, 128, 128, 0.5)";
-    caret.toggleAttribute("data-refused", !allowed);
-  }
-  on_pointerup(_e) {
-    const widget = this.widget;
-    const target = this.target;
-    if (widget !== void 0) {
-      const bridge = widget.ctx.editor;
-      if (!this.moved) {
-        const own6 = widget.atomPos;
-        bridge.select({ anchor: own6, head: { block: own6.block, offset: own6.offset + 1 } });
-      } else if (target !== void 0) {
-        void bridge.dispatch(moveAtomOp(blockOrder(bridge.root), widget.atomPos, target));
-      }
-    }
-    this.modalEnd(false);
-  }
-  on_pointercancel(_e) {
-    this.modalEnd(true);
-  }
-  on_keydown(e) {
-    if (e.key === "Escape") {
-      this.modalEnd(true);
-    }
-  }
-  modalEnd(was_cancelled) {
-    this.widget = void 0;
-    this.target = void 0;
-    this.ghost?.remove();
-    this.caret?.remove();
-    this.ghost = void 0;
-    this.caret = void 0;
-    super.modalEnd(was_cancelled);
-  }
-};
-ToolOp.register(ImageMoveOp);
-
 // scripts/widgets/richtext/providers/markdown_render.ts
 init_ui_base();
 var COUNTER_DEPTHS = 8;
@@ -88269,20 +87931,8 @@ function markdownStyles() {
   `;
 }
 
-// scripts/widgets/richtext/providers/markdown_provider.ts
+// scripts/widgets/richtext/providers/markdown_doc.ts
 init_icon_enum();
-init_toolprop();
-var SHORTCUTS = [
-  {
-    marker: /^(#{1,6}) $/,
-    kind: (m) => ({ kind: "heading", level: m[1].length })
-  },
-  { marker: /^[-*+] $/, kind: () => ({ kind: "listItem", ordered: false, depth: 0 }) },
-  { marker: /^\d+\. $/, kind: () => ({ kind: "listItem", ordered: true, depth: 0 }) },
-  { marker: /^> $/, kind: () => ({ kind: "quote", depth: 0 }) },
-  { marker: /^```$/, kind: () => ({ kind: "code", lang: "" }) }
-];
-var OWN_HTML_MARK = "data-richtext-markdown";
 var MD_MARKS = [
   { name: "bold", label: "Bold (Ctrl+B)", icon: Icons.BOLD, glyph: "<b>B</b>" },
   { name: "italic", label: "Italic (Ctrl+I)", icon: Icons.ITALIC, glyph: "<i>I</i>" },
@@ -88295,30 +87945,13 @@ var MD_MARKS = [
   },
   { name: "code", label: "Code", icon: Icons.FILE, glyph: "<code>&lt;/&gt;</code>" }
 ];
-var KIND_CHOICES = [
-  { key: "paragraph", label: "Paragraph", kind: { kind: "paragraph" } },
-  { key: "heading1", label: "Heading 1", kind: { kind: "heading", level: 1 } },
-  { key: "heading2", label: "Heading 2", kind: { kind: "heading", level: 2 } },
-  { key: "heading3", label: "Heading 3", kind: { kind: "heading", level: 3 } },
-  { key: "heading4", label: "Heading 4", kind: { kind: "heading", level: 4 } },
-  { key: "heading5", label: "Heading 5", kind: { kind: "heading", level: 5 } },
-  { key: "heading6", label: "Heading 6", kind: { kind: "heading", level: 6 } },
-  { key: "quote", label: "Quote", kind: { kind: "quote" } },
-  { key: "code", label: "Code block", kind: { kind: "code" } }
-];
-function kindKey(b) {
-  switch (b.kind) {
-    case "heading":
-      return `heading${b.level}`;
-    case "quote":
-    case "code":
-      return b.kind;
-    default:
-      return "paragraph";
-  }
-}
 var TOGGLE_NAMES = new Set(MD_MARKS.map((m) => m.name));
-var OPAQUE_KINDS = /* @__PURE__ */ new Set(["hr", "table", "raw", "frontmatter"]);
+var OPAQUE_KINDS = /* @__PURE__ */ new Set([
+  "hr",
+  "table",
+  "raw",
+  "frontmatter"
+]);
 var isOpaque = (b) => OPAQUE_KINDS.has(b.kind);
 var collapsed3 = (block, offset) => ({
   anchor: { block, offset },
@@ -88326,32 +87959,52 @@ var collapsed3 = (block, offset) => ({
 });
 var unique2 = (ids) => [...new Set(ids)];
 var cloneBlock2 = (b) => structuredClone(b);
-function objectOf(v) {
-  return typeof v === "object" && v !== null && !Array.isArray(v) ? v : void 0;
-}
-function record(op) {
-  const data = objectOf(op.data);
-  if (data === void 0) {
-    throw new Error(`MarkdownProvider: ${op.name} needs an object as data`);
+function indexOf(doc, id) {
+  const index2 = doc.blocks.findIndex((b) => b.id === id);
+  if (index2 < 0) {
+    throw new Error(`unknown block ${id}`);
   }
-  return data;
+  return index2;
 }
-function posOf(v) {
-  const o = objectOf(v);
-  if (o === void 0) {
-    return void 0;
-  }
-  const { block, offset } = o;
-  return typeof block === "string" && typeof offset === "number" ? { block, offset } : void 0;
+function blockOf(doc, id) {
+  return doc.blocks[indexOf(doc, id)];
 }
-function rangeOf(v) {
-  const o = objectOf(v);
-  if (o === void 0) {
-    return void 0;
+function textOf(doc, id) {
+  const b = blockOf(doc, id);
+  return isOpaque(b) ? ATOM_CHAR : b.text;
+}
+function orderRange2(doc, range) {
+  const ai = indexOf(doc, range.anchor.block);
+  const hi = indexOf(doc, range.head.block);
+  const clamp = (pos, i2) => ({
+    block: pos.block,
+    offset: Math.max(0, Math.min(pos.offset, textOf(doc, doc.blocks[i2].id).length))
+  });
+  const anchor = clamp(range.anchor, ai);
+  const head = clamp(range.head, hi);
+  if (ai < hi || ai === hi && anchor.offset <= head.offset) {
+    return { start: anchor, end: head, startIndex: ai, endIndex: hi };
   }
-  const anchor = posOf(o.anchor);
-  const head = posOf(o.head);
-  return anchor !== void 0 && head !== void 0 ? { anchor, head } : void 0;
+  return { start: head, end: anchor, startIndex: hi, endIndex: ai };
+}
+function rangeBlocks(doc, range) {
+  const r = orderRange2(doc, range);
+  return doc.blocks.slice(r.startIndex, r.endIndex + 1).map((b) => b.id);
+}
+function segments(doc, r) {
+  const out = [];
+  for (let i2 = r.startIndex; i2 <= r.endIndex; i2++) {
+    const block = doc.blocks[i2];
+    if (isOpaque(block) || block.kind === "code") {
+      continue;
+    }
+    const from = i2 === r.startIndex ? r.start.offset : 0;
+    const to = i2 === r.endIndex ? r.end.offset : block.text.length;
+    if (from < to) {
+      out.push({ block, from, to });
+    }
+  }
+  return out;
 }
 var atomsAfterInsert = (atoms, pos, len) => atoms.map((a2) => a2.offset >= pos ? { ...a2, offset: a2.offset + len } : a2);
 var atomsAfterDelete = (atoms, from, to) => atoms.filter((a2) => a2.offset < from || a2.offset >= to).map((a2) => a2.offset >= to ? { ...a2, offset: a2.offset - (to - from) } : a2);
@@ -88429,6 +88082,28 @@ function kindOf(b) {
       return { kind: b.kind, source: b.source };
   }
 }
+function slice(b, from, to, kind) {
+  const out = withKind(
+    {
+      ...b,
+      text: b.text.slice(from, to),
+      marks: clipMarks(b.marks, from, to, 0, normalizeMdMarks),
+      atoms: clipAtoms(b.atoms, from, to, 0)
+    },
+    kind
+  );
+  out.marks = fixMarks(out);
+  return out;
+}
+function blank(doc, index2) {
+  const b = doc.blocks[index2];
+  const next = mdBlock(b.id, { kind: "paragraph" });
+  doc.blocks[index2] = next;
+  return next;
+}
+
+// scripts/widgets/richtext/providers/markdown_clipboard.ts
+var OWN_HTML_MARK = "data-richtext-markdown";
 function clipboardHtml(html3) {
   return html3.replace(/<head[\s\S]*?<\/head>/i, "").replace(/<!--[\s\S]*?-->/g, "").replace(/>\s*\n(?:\s*\n)+\s*</g, ">\n<").trim();
 }
@@ -88436,1160 +88111,1142 @@ function entryOf(block) {
   const source = markdownText({ blocks: [block] }).replace(/\n+$/, "");
   return block.kind === "listItem" ? "  ".repeat(block.depth) + source : source;
 }
-var MarkdownProvider = class {
-  constructor(options = {}) {
-    this.options = options;
+function parseEntry(entry, id) {
+  const indent2 = /^( +)(?:[-*+]|\d+[.)])\s/.exec(entry);
+  const depth = indent2 === null ? 0 : Math.floor(indent2[1].length / 2);
+  const parsed = markdownDocFromText(
+    indent2 === null ? entry : entry.slice(indent2[1].length)
+  ).blocks;
+  const first2 = parsed[0];
+  if (first2 === void 0) {
+    return mdBlock(id, { kind: "paragraph" });
   }
-  options;
-  listeners = /* @__PURE__ */ new WeakMap();
-  blocks(doc) {
-    return doc.blocks.map((b) => b.id);
-  }
-  /** The block's text; an opaque block answers one `ATOM_CHAR`, so its offsets run 0 to 1. */
-  blockText(doc, block) {
-    const b = this.block(doc, block);
-    return isOpaque(b) ? ATOM_CHAR : b.text;
-  }
-  isOpaque(doc, block) {
-    return isOpaque(this.block(doc, block));
-  }
-  marks() {
-    return MD_MARKS;
-  }
-  activeMarks(doc, range) {
-    const r = this.order(doc, range);
-    const names = MD_MARKS.map((m) => m.name);
-    if (r.startIndex === r.endIndex && r.start.offset === r.end.offset) {
-      const { marks } = doc.blocks[r.startIndex];
-      const pos = r.start.offset;
-      return names.filter(
-        (name) => marks.some((m) => m.name === name && m.from < pos && pos <= m.to)
-      );
+  const out = first2;
+  out.id = id;
+  for (const b of parsed.slice(1)) {
+    if (isOpaque(out) || isOpaque(b)) {
+      break;
     }
-    const segments = this.segments(doc, r);
-    if (segments.length === 0) {
-      return [];
-    }
-    return names.filter(
-      (name) => segments.every(({ block, from, to }) => hasMark(block.marks, name, from, to))
-    );
+    const seam = out.text.length + 1;
+    out.text += `
+${b.text}`;
+    out.marks.push(...b.marks.map((m) => ({ ...m, from: m.from + seam, to: m.to + seam })));
+    out.atoms.push(...b.atoms.map((a2) => ({ ...a2, offset: a2.offset + seam })));
   }
-  headings(doc) {
-    const out = [];
-    for (const b of doc.blocks) {
-      if (b.kind === "heading") {
-        out.push({ block: b.id, level: b.level });
-      }
-    }
-    return out;
+  if (out.kind === "listItem") {
+    out.depth = depth;
   }
-  renderBlock(doc, block, ctx) {
-    return renderMarkdownBlock(this.block(doc, block), ctx, this.options);
+  out.marks = fixMarks(out);
+  return out;
+}
+function toClipboard(doc, range) {
+  const r = orderRange2(doc, range);
+  const blocks = [];
+  let html3 = "";
+  for (let i2 = r.startIndex; i2 <= r.endIndex; i2++) {
+    const b = doc.blocks[i2];
+    const length = textOf(doc, b.id).length;
+    const from = i2 === r.startIndex ? r.start.offset : 0;
+    const to = i2 === r.endIndex ? r.end.offset : length;
+    if (isOpaque(b)) {
+      if (from === 0 && to === 1) {
+        blocks.push(entryOf(b));
+        html3 += htmlForBlock(b);
+      }
+      continue;
+    }
+    const whole = from === 0 && to === b.text.length;
+    const sliced = whole ? b : slice(b, from, to, { kind: "paragraph" });
+    if (whole) {
+      blocks.push(entryOf(b));
+    } else if (b.kind === "code") {
+      blocks.push(b.text.slice(from, to));
+    } else {
+      blocks.push(entryOf(sliced));
+    }
+    html3 += htmlForBlock(sliced);
   }
-  styles() {
-    return markdownStyles();
+  return { blocks, html: `<div ${OWN_HTML_MARK}>${html3}</div>`, text: blocks.join("\n") };
+}
+function fromClipboard(data) {
+  const text6 = data.types.includes("text/plain") ? data.getData("text/plain").replace(/\r\n?/g, "\n") : void 0;
+  const html3 = data.types.includes("text/html") ? data.getData("text/html") : "";
+  if (html3 !== "" && !html3.includes(OWN_HTML_MARK)) {
+    const blocks2 = markdownDocFromText(clipboardHtml(html3)).blocks.map(entryOf);
+    if (blocks2.length > 0) {
+      return { blocks: blocks2, text: text6 ?? blocks2.join("\n") };
+    }
   }
-  /**
-   * The kind dropdown, the mark buttons, the three list toggles and the Link button. Each edit
-   * goes over the blocks the selection spans; the sync keeps the last document and selection
-   * so a press can find them after the button has taken the pointer.
-   */
-  buildToolbar(row, ctx) {
-    let lastDoc;
-    let lastSelection;
-    const current = () => {
-      const doc = lastDoc;
-      const range = ctx.editor.selection() ?? lastSelection;
-      if (doc === void 0 || range === void 0) {
-        return void 0;
-      }
-      const r = this.order(doc, range);
-      const editable = doc.blocks.slice(r.startIndex, r.endIndex + 1).filter((b) => !isOpaque(b));
-      return editable.length === 0 ? void 0 : { doc, range, editable };
-    };
-    const setKind = (kind) => {
-      const cur = current();
-      if (cur === void 0) {
-        return;
-      }
-      const lines = kind.kind === "code" ? 0 : cur.editable.filter((b) => b.kind === "code").reduce((n, b) => n + b.text.split("\n").length - 1, 0);
-      const ids = lines > 0 ? Array.from({ length: lines }, () => newBlockId()) : void 0;
-      void ctx.editor.dispatch(
-        markdownOps.setKind(
-          cur.editable.map((b) => b.id),
-          kind,
-          { ids, selection: cur.range }
-        )
-      );
-    };
-    const kindProp = new EnumProperty(
-      "paragraph",
-      Object.fromEntries(KIND_CHOICES.map((c) => [c.key, c.key])),
-      void 0,
-      "Block"
-    ).addUINames(Object.fromEntries(KIND_CHOICES.map((c) => [c.key, c.label])));
-    const kinds = row.listenum(void 0, {
-      enumDef: kindProp,
-      callback: (id) => {
-        const choice = KIND_CHOICES.find((c) => c.key === id);
-        if (choice !== void 0) {
-          setKind(choice.kind);
-        }
-      }
-    });
-    kinds.setAttribute("data-testid", "richtext-kind");
-    kinds.setValue("paragraph");
-    addSeparator(row);
-    const syncMarks = addMarkButtons(row, ctx, this);
-    addSeparator(row);
-    const listButton = (glyph, label, testid, lit, kind) => {
-      const btn = addToolButton(row, glyph, label, () => {
-        const cur = current();
-        if (cur === void 0) {
-          return;
-        }
-        setKind(cur.editable.every(lit) ? { kind: "paragraph" } : kind);
-      });
-      btn.setAttribute("data-testid", testid);
-      return { btn, lit };
-    };
-    const lists = [
-      listButton(
-        "&bull;",
-        "Bulleted list",
-        "richtext-list-bullet",
-        (b) => b.kind === "listItem" && !b.ordered && !b.task,
-        { kind: "listItem", ordered: false, task: false }
-      ),
-      listButton(
-        "1.",
-        "Numbered list",
-        "richtext-list-numbered",
-        (b) => b.kind === "listItem" && b.ordered && !b.task,
-        { kind: "listItem", ordered: true, task: false }
-      ),
-      listButton(
-        "&#9745;",
-        "Task list",
-        "richtext-list-task",
-        (b) => b.kind === "listItem" && b.task === true,
-        { kind: "listItem", ordered: false, task: true }
-      )
-    ];
-    addSeparator(row);
-    const link2 = addToolButton(row, "Link", "Link the selection", () => {
-      const cur = current();
-      const range = cur?.range;
-      if (cur === void 0 || range === void 0 || range.anchor.block !== range.head.block) {
-        return;
-      }
-      if (range.anchor.offset === range.head.offset) {
-        return;
-      }
-      const block = cur.editable[0];
-      const from = Math.min(range.anchor.offset, range.head.offset);
-      const existing = block.marks.find(
-        (m) => m.name === "link" && m.from <= from && from < m.to
-      );
-      const rect = link2.getBoundingClientRect();
-      openLinkPopup(
-        row,
-        ctx.editor,
-        {
-          range,
-          kind: existing?.kind ?? "url",
-          target: existing?.target ?? "",
-          title: existing?.title
-        },
-        rect.left,
-        rect.bottom + 4
-      );
-    });
-    link2.setAttribute("data-testid", "richtext-link");
-    return (doc, selection) => {
-      lastDoc = doc;
-      lastSelection = selection;
-      syncMarks(doc, selection);
-      const head = selection === void 0 ? void 0 : this.block(doc, selection.head.block);
-      kinds.setValue(head === void 0 ? "paragraph" : kindKey(head));
-      for (const { btn, lit } of lists) {
-        btn.active = head !== void 0 && lit(head);
-      }
-      link2.active = head !== void 0 && selection !== void 0 && head.marks.some(
-        (m) => m.name === "link" && m.from < selection.head.offset && selection.head.offset <= m.to
-      );
-    };
-  }
-  /**
-   * Tab and Shift+Tab on a list item change its depth; Enter in a fence adds a line, or leaves
-   * the fence from an empty last line; Shift+Enter is a hard line break in any editable block.
-   */
-  handleKey(doc, range, e) {
-    if (e.ctrlKey || e.metaKey || e.altKey) {
-      return void 0;
-    }
-    const r = this.order(doc, range);
-    const b = doc.blocks[r.startIndex];
-    const single = r.startIndex === r.endIndex;
-    const isCollapsed3 = single && r.start.offset === r.end.offset;
-    if (e.key === "[" && isCollapsed3 && !isOpaque(b) && b.kind !== "code" && b.text[r.start.offset - 1] === "[" && this.options.onWikilinkStart !== void 0) {
-      this.options.onWikilinkStart({ block: b.id, offset: r.start.offset + 1, event: e });
-      return void 0;
-    }
-    if (e.key === "Tab") {
-      if (b.kind !== "listItem") {
-        return void 0;
-      }
-      const blocks = doc.blocks.slice(r.startIndex, r.endIndex + 1).map((x) => x.id);
-      return markdownOps.setDepth(blocks, { delta: e.shiftKey ? -1 : 1, selection: range });
-    }
-    if (e.key !== "Enter" || isOpaque(b)) {
-      return void 0;
-    }
-    if (b.kind === "code" && single) {
-      const atEnd = isCollapsed3 && r.start.offset === b.text.length;
-      if (atEnd && (b.text === "" || b.text.endsWith("\n"))) {
-        return { type: "splitBlock", at: r.start, newBlock: newBlockId() };
-      }
-      return { type: "insertText", at: range, text: "\n" };
-    }
-    if (e.shiftKey) {
-      return single ? markdownOps.insertBreak(range) : { type: "insertText", at: range, text: "\n" };
-    }
+  if (text6 === void 0) {
     return void 0;
   }
-  applyEdit(doc, op) {
-    switch (op.type) {
-      case "insertText":
-        return this.insertText(doc, op.at, op.text, false);
-      case "deleteRange": {
-        const cut = this.deleteRangeImpl(doc, op.range);
-        return {
-          dirtyBlocks: cut.dirty,
-          removedBlocks: cut.removed,
-          selection: collapsed3(cut.start.block, cut.start.offset)
-        };
-      }
-      case "splitBlock":
-        return this.splitBlock(doc, op.at, op.newBlock);
-      case "joinWithPrevious":
-        return this.joinWithPrevious(doc, op.block);
-      case "toggleMark":
-        return this.toggleMark(doc, op.range, op.mark);
-      case "insertContent":
-        return this.insertContent(doc, op.at, op.content, op.newBlocks);
-      case "replaceBlocks":
-        return this.replaceBlocks(doc, op.after, op.blocks, op.remove);
-      case "custom":
-        return this.custom(doc, op);
-    }
-  }
-  inverse(doc, op) {
-    let touched = [];
-    let created = [];
-    let after;
-    switch (op.type) {
-      case "insertText":
-        touched = this.rangeBlocks(doc, op.at);
-        break;
-      case "deleteRange":
-      case "toggleMark":
-        touched = this.rangeBlocks(doc, op.range);
-        break;
-      case "insertContent":
-        touched = this.rangeBlocks(doc, op.at);
-        created = op.newBlocks;
-        break;
-      case "splitBlock":
-        touched = [op.at.block];
-        created = [op.newBlock];
-        break;
-      case "joinWithPrevious": {
-        const index2 = this.index(doc, op.block);
-        touched = index2 === 0 ? [op.block] : [doc.blocks[index2 - 1].id, op.block];
-        break;
-      }
-      case "replaceBlocks": {
-        const removing = new Set(op.remove);
-        touched = doc.blocks.filter((b) => removing.has(b.id)).map((b) => b.id);
-        created = op.blocks.map((b) => b.id);
-        if (touched.length === 0) {
-          after = op.after;
-        }
-        break;
-      }
-      case "custom": {
-        const indices = op.blocks.map((id) => this.index(doc, id));
-        const first2 = Math.min(...indices);
-        const last = Math.max(...indices);
-        touched = doc.blocks.slice(first2, last + 1).map((b) => b.id);
-        const ids = record(op).ids;
-        if (Array.isArray(ids)) {
-          created = ids.filter((id) => typeof id === "string");
-        }
-        break;
-      }
-    }
-    if (after === void 0) {
-      const first2 = touched.length > 0 ? this.index(doc, touched[0]) : 0;
-      after = first2 > 0 ? doc.blocks[first2 - 1].id : null;
-    }
-    return {
-      type: "replaceBlocks",
-      after,
-      blocks: this.snapshots(doc, touched),
-      remove: unique2([...touched, ...created])
-    };
-  }
-  snapshots(doc, blocks = this.blocks(doc)) {
-    return blocks.map((id) => ({ id, state: cloneBlock2(this.block(doc, id)) }));
-  }
-  /**
-   * One markdown source entry per covered block: a whole block as itself, a partial block as
-   * inline content, a partial fence as its bare lines. `html` carries the same blocks.
-   */
-  toClipboard(doc, range) {
-    const r = this.order(doc, range);
-    const blocks = [];
-    let html3 = "";
-    for (let i2 = r.startIndex; i2 <= r.endIndex; i2++) {
-      const b = doc.blocks[i2];
-      const length = this.blockText(doc, b.id).length;
-      const from = i2 === r.startIndex ? r.start.offset : 0;
-      const to = i2 === r.endIndex ? r.end.offset : length;
-      if (isOpaque(b)) {
-        if (from === 0 && to === 1) {
-          blocks.push(entryOf(b));
-          html3 += htmlForBlock(b);
-        }
-        continue;
-      }
-      const whole = from === 0 && to === b.text.length;
-      const sliced = whole ? b : this.slice(b, from, to, { kind: "paragraph" });
-      if (whole) {
-        blocks.push(entryOf(b));
-      } else if (b.kind === "code") {
-        blocks.push(b.text.slice(from, to));
-      } else {
-        blocks.push(entryOf(sliced));
-      }
-      html3 += htmlForBlock(sliced);
-    }
-    return { blocks, html: `<div ${OWN_HTML_MARK}>${html3}</div>`, text: blocks.join("\n") };
-  }
-  /** The plain text parsed as markdown, one entry per block it holds; `text` keeps it verbatim for a fence. */
-  fromClipboard(data) {
-    const text6 = data.types.includes("text/plain") ? data.getData("text/plain").replace(/\r\n?/g, "\n") : void 0;
-    const html3 = data.types.includes("text/html") ? data.getData("text/html") : "";
-    if (html3 !== "" && !html3.includes(OWN_HTML_MARK)) {
-      const blocks2 = markdownDocFromText(clipboardHtml(html3)).blocks.map(entryOf);
-      if (blocks2.length > 0) {
-        return { blocks: blocks2, text: text6 ?? blocks2.join("\n") };
-      }
-    }
-    if (text6 === void 0) {
-      return void 0;
-    }
-    const blocks = markdownDocFromText(text6).blocks.map(entryOf);
-    return { blocks: blocks.length > 0 ? blocks : [""], text: text6 };
-  }
-  /** The document as markdown, as `text/markdown`. */
-  emitDocFile(doc) {
-    return new Blob([markdownText(doc)], { type: "text/markdown" });
-  }
-  onExternalChange(doc, listener) {
-    let set2 = this.listeners.get(doc);
-    if (set2 === void 0) {
-      set2 = /* @__PURE__ */ new Set();
-      this.listeners.set(doc, set2);
-    }
-    set2.add(listener);
-    return () => {
-      set2.delete(listener);
-    };
-  }
-  /** Reports a change made to `doc` outside `applyEdit` to every `onExternalChange` listener. */
-  notifyChange(doc, change) {
-    const set2 = this.listeners.get(doc);
-    if (set2 === void 0) {
-      return;
-    }
-    for (const listener of [...set2]) {
-      listener(change);
-    }
-  }
-  block(doc, id) {
-    return doc.blocks[this.index(doc, id)];
-  }
-  index(doc, id) {
-    const index2 = doc.blocks.findIndex((b) => b.id === id);
-    if (index2 < 0) {
-      throw new Error(`unknown block ${id}`);
-    }
-    return index2;
-  }
-  /** The range in document order, offsets clamped to their block's text. */
-  order(doc, range) {
-    const ai = this.index(doc, range.anchor.block);
-    const hi = this.index(doc, range.head.block);
-    const clamp = (pos, i2) => ({
-      block: pos.block,
-      offset: Math.max(0, Math.min(pos.offset, this.blockText(doc, doc.blocks[i2].id).length))
-    });
-    const anchor = clamp(range.anchor, ai);
-    const head = clamp(range.head, hi);
-    if (ai < hi || ai === hi && anchor.offset <= head.offset) {
-      return { start: anchor, end: head, startIndex: ai, endIndex: hi };
-    }
-    return { start: head, end: anchor, startIndex: hi, endIndex: ai };
-  }
-  rangeBlocks(doc, range) {
-    const r = this.order(doc, range);
-    return doc.blocks.slice(r.startIndex, r.endIndex + 1).map((b) => b.id);
-  }
-  /** The non-empty runs of the range's editable, non-fence blocks. */
-  segments(doc, r) {
-    const segments = [];
-    for (let i2 = r.startIndex; i2 <= r.endIndex; i2++) {
-      const block = doc.blocks[i2];
-      if (isOpaque(block) || block.kind === "code") {
-        continue;
-      }
-      const from = i2 === r.startIndex ? r.start.offset : 0;
-      const to = i2 === r.endIndex ? r.end.offset : block.text.length;
-      if (from < to) {
-        segments.push({ block, from, to });
-      }
-    }
-    return segments;
-  }
-  /** A block holding `[from, to)` of `b` under `kind`, re-based to 0. */
-  slice(b, from, to, kind) {
-    const out = withKind(
-      {
-        ...b,
-        text: b.text.slice(from, to),
-        marks: clipMarks(b.marks, from, to, 0, normalizeMdMarks),
-        atoms: clipAtoms(b.atoms, from, to, 0)
-      },
-      kind
-    );
-    out.marks = fixMarks(out);
-    return out;
-  }
-  /** Replaces the block at `index` with its paragraph form, empty. */
-  blank(doc, index2) {
-    const b = doc.blocks[index2];
-    const next = mdBlock(b.id, { kind: "paragraph" });
-    doc.blocks[index2] = next;
-    return next;
-  }
-  /**
-   * Removes the range's text, joining its outer blocks. An opaque block is removed when the
-   * range covers it and left alone when the range only touches its edge; one that was the
-   * only thing removed becomes an empty paragraph, so its id survives. A range from the end
-   * of one block to the start of another with only opaque blocks between, which is what a
-   * browser reports for Backspace or Delete beside one, removes them without joining.
-   */
-  deleteRangeImpl(doc, range) {
-    const r = this.order(doc, range);
-    const none = { start: r.start, dirty: [], removed: [] };
-    if (r.startIndex === r.endIndex) {
-      const b = doc.blocks[r.startIndex];
-      if (r.start.offset === r.end.offset) {
-        return none;
-      }
-      if (isOpaque(b)) {
-        this.blank(doc, r.startIndex);
-        return { start: { block: b.id, offset: 0 }, dirty: [b.id], removed: [] };
-      }
-      b.text = b.text.slice(0, r.start.offset) + b.text.slice(r.end.offset);
-      b.marks = marksAfterDelete(b.marks, r.start.offset, r.end.offset, normalizeMdMarks);
-      b.atoms = atomsAfterDelete(b.atoms, r.start.offset, r.end.offset);
-      b.marks = fixMarks(b);
-      return { start: r.start, dirty: [b.id], removed: [] };
-    }
-    let { startIndex, endIndex, start: start2, end } = r;
-    if (isOpaque(doc.blocks[startIndex]) && start2.offset >= 1) {
-      startIndex++;
-      start2 = { block: doc.blocks[startIndex].id, offset: 0 };
-    }
-    if (isOpaque(doc.blocks[endIndex]) && end.offset === 0) {
-      endIndex--;
-      end = {
-        block: doc.blocks[endIndex].id,
-        offset: this.blockText(doc, doc.blocks[endIndex].id).length
-      };
-    }
-    if (startIndex > endIndex) {
+  const blocks = markdownDocFromText(text6).blocks.map(entryOf);
+  return { blocks: blocks.length > 0 ? blocks : [""], text: text6 };
+}
+
+// scripts/widgets/richtext/providers/markdown_edits.ts
+var SHORTCUTS = [
+  {
+    marker: /^(#{1,6}) $/,
+    kind: (m) => ({ kind: "heading", level: m[1].length })
+  },
+  { marker: /^[-*+] $/, kind: () => ({ kind: "listItem", ordered: false, depth: 0 }) },
+  { marker: /^\d+\. $/, kind: () => ({ kind: "listItem", ordered: true, depth: 0 }) },
+  { marker: /^> $/, kind: () => ({ kind: "quote", depth: 0 }) },
+  { marker: /^```$/, kind: () => ({ kind: "code", lang: "" }) }
+];
+function deleteRange(doc, range) {
+  const r = orderRange2(doc, range);
+  const none = { start: r.start, dirty: [], removed: [] };
+  if (r.startIndex === r.endIndex) {
+    const b = doc.blocks[r.startIndex];
+    if (r.start.offset === r.end.offset) {
       return none;
     }
-    if (startIndex === endIndex) {
-      return this.deleteRangeImpl(doc, { anchor: start2, head: end });
-    }
-    let first2 = doc.blocks[startIndex];
-    let last = doc.blocks[endIndex];
-    const between2 = doc.blocks.slice(startIndex + 1, endIndex);
-    if (between2.length > 0 && between2.every(isOpaque) && !isOpaque(first2) && !isOpaque(last) && start2.offset >= first2.text.length && end.offset === 0) {
-      doc.blocks.splice(startIndex + 1, between2.length);
-      return { start: start2, dirty: [], removed: between2.map((b) => b.id) };
-    }
-    if (isOpaque(first2)) {
-      first2 = this.blank(doc, startIndex);
-      start2 = { block: first2.id, offset: 0 };
-    }
-    if (isOpaque(last)) {
-      last = this.blank(doc, endIndex);
-      end = { block: last.id, offset: 0 };
-    }
-    const removed = doc.blocks.slice(startIndex + 1, endIndex + 1).map((b) => b.id);
-    const joined = withKind(
-      {
-        ...first2,
-        text: first2.text.slice(0, start2.offset) + last.text.slice(end.offset),
-        marks: [
-          ...clipMarks(first2.marks, 0, start2.offset, 0, normalizeMdMarks),
-          ...clipMarks(last.marks, end.offset, last.text.length, start2.offset, normalizeMdMarks)
-        ],
-        atoms: [
-          ...clipAtoms(first2.atoms, 0, start2.offset, 0),
-          ...clipAtoms(last.atoms, end.offset, last.text.length, start2.offset)
-        ]
-      },
-      kindOf(first2)
-    );
-    joined.html = first2.html;
-    doc.blocks[startIndex] = joined;
-    doc.blocks.splice(startIndex + 1, endIndex - startIndex);
-    return { start: { block: joined.id, offset: start2.offset }, dirty: [joined.id], removed };
-  }
-  /** Typing, or a hard break when `hardBreak` is set and the text is one newline. */
-  insertText(doc, at, text6, hardBreak2) {
-    const cut = this.deleteRangeImpl(doc, at);
-    const b = this.block(doc, cut.start.block);
-    const pos = cut.start.offset;
     if (isOpaque(b)) {
-      return {
-        dirtyBlocks: cut.dirty,
-        removedBlocks: cut.removed,
-        selection: collapsed3(b.id, pos)
-      };
+      blank(doc, r.startIndex);
+      return { start: { block: b.id, offset: 0 }, dirty: [b.id], removed: [] };
     }
-    const inserted = b.kind === "code" ? text6.split(ATOM_CHAR).join("") : text6;
-    b.text = b.text.slice(0, pos) + inserted + b.text.slice(pos);
-    b.atoms = atomsAfterInsert(b.atoms, pos, inserted.length);
-    if (b.kind !== "code") {
-      b.marks = marksAfterTyping(b.marks, pos, inserted.length, normalizeMdMarks);
-      if (hardBreak2 && inserted === "\n") {
-        b.marks.push({ from: pos, to: pos + 1, name: "break" });
-      }
-      b.marks = fixMarks(b);
+    b.text = b.text.slice(0, r.start.offset) + b.text.slice(r.end.offset);
+    b.marks = marksAfterDelete(b.marks, r.start.offset, r.end.offset, normalizeMdMarks);
+    b.atoms = atomsAfterDelete(b.atoms, r.start.offset, r.end.offset);
+    b.marks = fixMarks(b);
+    return { start: r.start, dirty: [b.id], removed: [] };
+  }
+  let { startIndex, endIndex, start: start2, end } = r;
+  if (isOpaque(doc.blocks[startIndex]) && start2.offset >= 1) {
+    startIndex++;
+    start2 = { block: doc.blocks[startIndex].id, offset: 0 };
+  }
+  if (isOpaque(doc.blocks[endIndex]) && end.offset === 0) {
+    endIndex--;
+    end = {
+      block: doc.blocks[endIndex].id,
+      offset: textOf(doc, doc.blocks[endIndex].id).length
+    };
+  }
+  if (startIndex > endIndex) {
+    return none;
+  }
+  if (startIndex === endIndex) {
+    return deleteRange(doc, { anchor: start2, head: end });
+  }
+  let first2 = doc.blocks[startIndex];
+  let last = doc.blocks[endIndex];
+  const between2 = doc.blocks.slice(startIndex + 1, endIndex);
+  if (between2.length > 0 && between2.every(isOpaque) && !isOpaque(first2) && !isOpaque(last) && start2.offset >= first2.text.length && end.offset === 0) {
+    doc.blocks.splice(startIndex + 1, between2.length);
+    return { start: start2, dirty: [], removed: between2.map((b) => b.id) };
+  }
+  if (isOpaque(first2)) {
+    first2 = blank(doc, startIndex);
+    start2 = { block: first2.id, offset: 0 };
+  }
+  if (isOpaque(last)) {
+    last = blank(doc, endIndex);
+    end = { block: last.id, offset: 0 };
+  }
+  const removed = doc.blocks.slice(startIndex + 1, endIndex + 1).map((b) => b.id);
+  const joined = withKind(
+    {
+      ...first2,
+      text: first2.text.slice(0, start2.offset) + last.text.slice(end.offset),
+      marks: [
+        ...clipMarks(first2.marks, 0, start2.offset, 0, normalizeMdMarks),
+        ...clipMarks(last.marks, end.offset, last.text.length, start2.offset, normalizeMdMarks)
+      ],
+      atoms: [
+        ...clipAtoms(first2.atoms, 0, start2.offset, 0),
+        ...clipAtoms(last.atoms, end.offset, last.text.length, start2.offset)
+      ]
+    },
+    kindOf(first2)
+  );
+  joined.html = first2.html;
+  doc.blocks[startIndex] = joined;
+  doc.blocks.splice(startIndex + 1, endIndex - startIndex);
+  return { start: { block: joined.id, offset: start2.offset }, dirty: [joined.id], removed };
+}
+function shortcutAt(b, caret) {
+  if (b.kind !== "paragraph" || b.text.length === 0) {
+    return void 0;
+  }
+  const head = b.text.slice(0, caret);
+  for (const { marker, kind } of SHORTCUTS) {
+    const match = marker.exec(head);
+    if (match !== null) {
+      return kind(match);
     }
-    const caret = pos + inserted.length;
-    const shortcut = inserted.length === 1 ? this.shortcutAt(b, caret) : void 0;
-    if (shortcut !== void 0) {
-      doc.blocks[this.index(doc, b.id)] = this.slice(b, caret, b.text.length, shortcut);
-      return {
-        dirtyBlocks: unique2([b.id, ...cut.dirty]),
-        removedBlocks: cut.removed,
-        selection: collapsed3(b.id, 0)
-      };
+  }
+  return void 0;
+}
+function insertText(doc, at, text6, hardBreak2, shortcuts) {
+  const cut = deleteRange(doc, at);
+  const b = blockOf(doc, cut.start.block);
+  const pos = cut.start.offset;
+  if (isOpaque(b)) {
+    return {
+      dirtyBlocks: cut.dirty,
+      removedBlocks: cut.removed,
+      selection: collapsed3(b.id, pos)
+    };
+  }
+  const inserted = b.kind === "code" ? text6.split(ATOM_CHAR).join("") : text6;
+  b.text = b.text.slice(0, pos) + inserted + b.text.slice(pos);
+  b.atoms = atomsAfterInsert(b.atoms, pos, inserted.length);
+  if (b.kind !== "code") {
+    b.marks = marksAfterTyping(b.marks, pos, inserted.length, normalizeMdMarks);
+    if (hardBreak2 && inserted === "\n") {
+      b.marks.push({ from: pos, to: pos + 1, name: "break" });
     }
+    b.marks = fixMarks(b);
+  }
+  const caret = pos + inserted.length;
+  const shortcut = shortcuts && inserted.length === 1 ? shortcutAt(b, caret) : void 0;
+  if (shortcut !== void 0) {
+    doc.blocks[indexOf(doc, b.id)] = slice(b, caret, b.text.length, shortcut);
     return {
       dirtyBlocks: unique2([b.id, ...cut.dirty]),
       removedBlocks: cut.removed,
-      selection: collapsed3(b.id, caret)
+      selection: collapsed3(b.id, 0)
     };
   }
-  /** The kind a typing shortcut turns `b` into when the text before `caret` is exactly a marker. */
-  shortcutAt(b, caret) {
-    if (this.options.shortcuts === false || b.kind !== "paragraph" || b.text.length === 0) {
-      return void 0;
+  return {
+    dirtyBlocks: unique2([b.id, ...cut.dirty]),
+    removedBlocks: cut.removed,
+    selection: collapsed3(b.id, caret)
+  };
+}
+function splitBlock(doc, at, newBlock) {
+  if (doc.blocks.some((b2) => b2.id === newBlock)) {
+    throw new Error(`splitBlock: block id ${newBlock} is already in use`);
+  }
+  const index2 = indexOf(doc, at.block);
+  const b = doc.blocks[index2];
+  const pos = Math.max(0, Math.min(at.offset, textOf(doc, b.id).length));
+  const paragraph3 = () => mdBlock(newBlock, { kind: "paragraph" });
+  if (isOpaque(b)) {
+    if (b.kind === "frontmatter" && pos === 0) {
+      return { dirtyBlocks: [], removedBlocks: [], selection: collapsed3(b.id, 0) };
     }
-    const head = b.text.slice(0, caret);
-    for (const { marker, kind } of SHORTCUTS) {
-      const match = marker.exec(head);
-      if (match !== null) {
-        return kind(match);
-      }
+    const para = paragraph3();
+    doc.blocks.splice(pos === 0 ? index2 : index2 + 1, 0, para);
+    return { dirtyBlocks: [para.id], removedBlocks: [], selection: collapsed3(para.id, 0) };
+  }
+  if ((b.kind === "listItem" || b.kind === "quote") && b.text.length === 0) {
+    const para = paragraph3();
+    doc.blocks[index2] = para;
+    return { dirtyBlocks: [para.id], removedBlocks: [b.id], selection: collapsed3(para.id, 0) };
+  }
+  if (b.kind === "code" && pos === b.text.length && (b.text === "" || b.text.endsWith("\n"))) {
+    b.text = b.text.slice(0, b.text.endsWith("\n") ? -1 : void 0);
+    const para = paragraph3();
+    doc.blocks.splice(index2 + 1, 0, para);
+    return { dirtyBlocks: [b.id, para.id], removedBlocks: [], selection: collapsed3(para.id, 0) };
+  }
+  const atStart = pos === 0 && b.text.length > 0;
+  const headKind = atStart ? tailKind(b) : kindOf(b);
+  const tail = slice(b, pos, b.text.length, atStart ? kindOf(b) : tailKind(b));
+  tail.id = newBlock;
+  if (atStart) {
+    tail.html = b.html;
+  }
+  const head = slice(b, 0, pos, headKind);
+  if (!atStart) {
+    head.html = b.html;
+  }
+  doc.blocks[index2] = head;
+  doc.blocks.splice(index2 + 1, 0, tail);
+  return { dirtyBlocks: [head.id, tail.id], removedBlocks: [], selection: collapsed3(tail.id, 0) };
+}
+function joinWithPrevious(doc, block) {
+  const index2 = indexOf(doc, block);
+  const b = doc.blocks[index2];
+  const stay = { dirtyBlocks: [], removedBlocks: [], selection: collapsed3(block, 0) };
+  const select = (id) => ({
+    dirtyBlocks: [],
+    removedBlocks: [],
+    selection: { anchor: { block: id, offset: 0 }, head: { block: id, offset: 1 } }
+  });
+  if (index2 === 0) {
+    return stay;
+  }
+  if (isOpaque(b)) {
+    return select(b.id);
+  }
+  if (b.kind !== "paragraph") {
+    const own6 = kindOf(b);
+    let kind = { kind: "paragraph" };
+    if ((own6.kind === "listItem" || own6.kind === "quote") && own6.depth > 0) {
+      own6.depth -= 1;
+      kind = own6;
     }
+    doc.blocks[index2] = withKind(b, kind);
+    return { dirtyBlocks: [block], removedBlocks: [], selection: collapsed3(block, 0) };
+  }
+  const prev = doc.blocks[index2 - 1];
+  if (isOpaque(prev)) {
+    return select(prev.id);
+  }
+  const seam = prev.text.length;
+  const joined = withKind(
+    {
+      ...prev,
+      text: prev.text + b.text,
+      marks: [
+        ...prev.marks,
+        ...b.marks.map((m) => ({ ...m, from: m.from + seam, to: m.to + seam }))
+      ],
+      atoms: [...prev.atoms, ...b.atoms.map((a2) => ({ ...a2, offset: a2.offset + seam }))]
+    },
+    kindOf(prev)
+  );
+  joined.html = prev.html;
+  doc.blocks[index2 - 1] = joined;
+  doc.blocks.splice(index2, 1);
+  return { dirtyBlocks: [prev.id], removedBlocks: [b.id], selection: collapsed3(prev.id, seam) };
+}
+function toggleMark(doc, range, mark2) {
+  const none = { dirtyBlocks: [], removedBlocks: [], selection: range };
+  if (!TOGGLE_NAMES.has(mark2)) {
+    return none;
+  }
+  const runs = segments(doc, orderRange2(doc, range));
+  if (runs.length === 0) {
+    return none;
+  }
+  const name = mark2;
+  const covered = runs.every(({ block, from, to }) => hasMark(block.marks, name, from, to));
+  for (const { block, from, to } of runs) {
+    block.marks = covered ? cutMark(block.marks, name, from, to, normalizeMdMarks) : normalizeMdMarks([...block.marks, { from, to, name }]);
+  }
+  return { dirtyBlocks: runs.map((s) => s.block.id), removedBlocks: [], selection: range };
+}
+function spliced(block, from, to, insert) {
+  const len = insert.text.length;
+  const marks = [
+    ...clipMarks(block.marks, 0, from, 0, normalizeMdMarks),
+    ...insert.marks.map((m) => ({ ...m, from: m.from + from, to: m.to + from })),
+    ...clipMarks(block.marks, to, block.text.length, from + len, normalizeMdMarks)
+  ];
+  const atoms = [
+    ...clipAtoms(block.atoms, 0, from, 0),
+    ...insert.atoms.map((a2) => ({ ...a2, offset: a2.offset + from })),
+    ...clipAtoms(block.atoms, to, block.text.length, from + len)
+  ];
+  const out = {
+    ...block,
+    text: block.text.slice(0, from) + insert.text + block.text.slice(to),
+    marks,
+    atoms
+  };
+  out.marks = fixMarks(out);
+  return out;
+}
+function insertContent(doc, at, content3, newBlocks, shortcuts) {
+  const entries = content3.blocks;
+  if (entries.length === 0 || newBlocks.length !== entries.length - 1) {
+    throw new Error(`insertContent: ${entries.length} entries need ${entries.length - 1} new ids`);
+  }
+  for (const id of newBlocks) {
+    if (doc.blocks.some((b) => b.id === id)) {
+      throw new Error(`insertContent: block id ${id} is already in use`);
+    }
+  }
+  const cut = deleteRange(doc, at);
+  const index2 = indexOf(doc, cut.start.block);
+  const target = doc.blocks[index2];
+  const pos = cut.start.offset;
+  if (isOpaque(target)) {
+    return {
+      dirtyBlocks: cut.dirty,
+      removedBlocks: cut.removed,
+      selection: collapsed3(target.id, pos)
+    };
+  }
+  if (target.kind === "code") {
+    const text6 = content3.text ?? entries.join("\n");
+    return insertText(doc, collapsed3(target.id, pos), text6, false, shortcuts);
+  }
+  const parsed = entries.map(
+    (entry, i2) => parseEntry(entry, i2 === 0 ? target.id : newBlocks[i2 - 1])
+  );
+  const first2 = parsed[0];
+  const adopt = target.kind === "paragraph" && target.text.length === 0;
+  if (entries.length === 1) {
+    const kind = adopt ? kindOf(first2) : kindOf(target);
+    const merged = withKind(spliced(target, pos, pos, first2), kind);
+    merged.html = adopt ? first2.html : target.html;
+    doc.blocks[index2] = merged;
+    return {
+      dirtyBlocks: unique2([merged.id, ...cut.dirty]),
+      removedBlocks: cut.removed,
+      selection: collapsed3(merged.id, pos + first2.text.length)
+    };
+  }
+  const prefix2 = slice(target, 0, pos, kindOf(target));
+  const head = withKind(spliced(prefix2, pos, pos, first2), adopt ? kindOf(first2) : kindOf(target));
+  head.html = adopt ? first2.html : target.html;
+  doc.blocks[index2] = head;
+  doc.blocks.splice(index2 + 1, 0, ...parsed.slice(1));
+  const suffix = slice(target, pos, target.text.length, { kind: "paragraph" });
+  const last = parsed[parsed.length - 1];
+  const carrier = parsed.slice(1).reverse().find((b) => !isOpaque(b)) ?? head;
+  const carrierIndex = indexOf(doc, carrier.id);
+  doc.blocks[carrierIndex] = spliced(carrier, carrier.text.length, carrier.text.length, suffix);
+  return {
+    dirtyBlocks: unique2([head.id, ...newBlocks, ...cut.dirty]),
+    removedBlocks: cut.removed,
+    selection: collapsed3(last.id, isOpaque(last) ? 1 : last.text.length)
+  };
+}
+function fromSnapshot(snapshot) {
+  const state = snapshot.state;
+  if (typeof state?.kind !== "string" || typeof state.text !== "string" || !Array.isArray(state.marks) || !Array.isArray(state.atoms)) {
+    throw new Error(`replaceBlocks: snapshot of ${snapshot.id} is not an MdBlock`);
+  }
+  return cloneBlock2({ ...state, id: snapshot.id });
+}
+function replaceBlocks(doc, after, snapshots, remove2) {
+  const removing = new Set(remove2);
+  const removed = doc.blocks.filter((b) => removing.has(b.id)).map((b) => b.id);
+  doc.blocks = doc.blocks.filter((b) => !removing.has(b.id));
+  const restored = snapshots.map(fromSnapshot);
+  const index2 = after === null ? 0 : indexOf(doc, after) + 1;
+  doc.blocks.splice(index2, 0, ...restored);
+  const inserted = new Set(restored.map((b) => b.id));
+  const last = restored[restored.length - 1];
+  let selection;
+  if (last !== void 0) {
+    selection = collapsed3(last.id, textOf(doc, last.id).length);
+  } else if (index2 < doc.blocks.length) {
+    selection = collapsed3(doc.blocks[index2].id, 0);
+  } else if (index2 > 0) {
+    const prev = doc.blocks[index2 - 1];
+    selection = collapsed3(prev.id, textOf(doc, prev.id).length);
+  } else {
+    selection = collapsed3("", 0);
+  }
+  return {
+    dirtyBlocks: restored.map((b) => b.id),
+    removedBlocks: removed.filter((id) => !inserted.has(id)),
+    selection
+  };
+}
+
+// scripts/widgets/richtext/providers/markdown_custom.ts
+function objectOf(v) {
+  return typeof v === "object" && v !== null && !Array.isArray(v) ? v : void 0;
+}
+function customData(op) {
+  const data = objectOf(op.data);
+  if (data === void 0) {
+    throw new Error(`MarkdownProvider: ${op.name} needs an object as data`);
+  }
+  return data;
+}
+function posOf(v) {
+  const o = objectOf(v);
+  if (o === void 0) {
     return void 0;
   }
-  splitBlock(doc, at, newBlock) {
-    if (doc.blocks.some((b2) => b2.id === newBlock)) {
-      throw new Error(`splitBlock: block id ${newBlock} is already in use`);
-    }
-    const index2 = this.index(doc, at.block);
-    const b = doc.blocks[index2];
-    const pos = Math.max(0, Math.min(at.offset, this.blockText(doc, b.id).length));
-    const paragraph3 = () => mdBlock(newBlock, { kind: "paragraph" });
-    if (isOpaque(b)) {
-      if (b.kind === "frontmatter" && pos === 0) {
-        return { dirtyBlocks: [], removedBlocks: [], selection: collapsed3(b.id, 0) };
-      }
-      const para = paragraph3();
-      doc.blocks.splice(pos === 0 ? index2 : index2 + 1, 0, para);
-      return { dirtyBlocks: [para.id], removedBlocks: [], selection: collapsed3(para.id, 0) };
-    }
-    if ((b.kind === "listItem" || b.kind === "quote") && b.text.length === 0) {
-      const para = paragraph3();
-      doc.blocks[index2] = para;
-      return { dirtyBlocks: [para.id], removedBlocks: [b.id], selection: collapsed3(para.id, 0) };
-    }
-    if (b.kind === "code" && pos === b.text.length && (b.text === "" || b.text.endsWith("\n"))) {
-      b.text = b.text.slice(0, b.text.endsWith("\n") ? -1 : void 0);
-      const para = paragraph3();
-      doc.blocks.splice(index2 + 1, 0, para);
-      return { dirtyBlocks: [b.id, para.id], removedBlocks: [], selection: collapsed3(para.id, 0) };
-    }
-    const atStart = pos === 0 && b.text.length > 0;
-    const headKind = atStart ? tailKind(b) : kindOf(b);
-    const tail = this.slice(b, pos, b.text.length, atStart ? kindOf(b) : tailKind(b));
-    tail.id = newBlock;
-    if (atStart) {
-      tail.html = b.html;
-    }
-    const head = this.slice(b, 0, pos, headKind);
-    if (!atStart) {
-      head.html = b.html;
-    }
-    doc.blocks[index2] = head;
-    doc.blocks.splice(index2 + 1, 0, tail);
-    return { dirtyBlocks: [head.id, tail.id], removedBlocks: [], selection: collapsed3(tail.id, 0) };
+  const { block, offset } = o;
+  return typeof block === "string" && typeof offset === "number" ? { block, offset } : void 0;
+}
+function rangeOf(v) {
+  const o = objectOf(v);
+  if (o === void 0) {
+    return void 0;
   }
-  /**
-   * At the start of an item, heading, quote or fence the block first sheds its kind (an item or
-   * quote at depth drops one level); only a paragraph joins. A join that would take in an
-   * opaque block, from either side, selects that block instead, so the next key deletes it.
-   */
-  joinWithPrevious(doc, block) {
-    const index2 = this.index(doc, block);
-    const b = doc.blocks[index2];
-    const stay = { dirtyBlocks: [], removedBlocks: [], selection: collapsed3(block, 0) };
-    const select = (id) => ({
-      dirtyBlocks: [],
-      removedBlocks: [],
-      selection: { anchor: { block: id, offset: 0 }, head: { block: id, offset: 1 } }
-    });
-    if (index2 === 0) {
-      return stay;
-    }
-    if (isOpaque(b)) {
-      return select(b.id);
-    }
-    if (b.kind !== "paragraph") {
-      const own6 = kindOf(b);
-      let kind = { kind: "paragraph" };
-      if ((own6.kind === "listItem" || own6.kind === "quote") && own6.depth > 0) {
-        own6.depth -= 1;
-        kind = own6;
-      }
-      doc.blocks[index2] = withKind(b, kind);
-      return { dirtyBlocks: [block], removedBlocks: [], selection: collapsed3(block, 0) };
-    }
-    const prev = doc.blocks[index2 - 1];
-    if (isOpaque(prev)) {
-      return select(prev.id);
-    }
-    const seam = prev.text.length;
-    const joined = withKind(
-      {
-        ...prev,
-        text: prev.text + b.text,
-        marks: [
-          ...prev.marks,
-          ...b.marks.map((m) => ({ ...m, from: m.from + seam, to: m.to + seam }))
-        ],
-        atoms: [...prev.atoms, ...b.atoms.map((a2) => ({ ...a2, offset: a2.offset + seam }))]
-      },
-      kindOf(prev)
-    );
-    joined.html = prev.html;
-    doc.blocks[index2 - 1] = joined;
-    doc.blocks.splice(index2, 1);
-    return { dirtyBlocks: [prev.id], removedBlocks: [b.id], selection: collapsed3(prev.id, seam) };
+  const anchor = posOf(o.anchor);
+  const head = posOf(o.head);
+  return anchor !== void 0 && head !== void 0 ? { anchor, head } : void 0;
+}
+function customSelection(doc, data, fallback) {
+  const wanted = rangeOf(data.selection);
+  if (wanted !== void 0 && doc.blocks.some((b) => b.id === wanted.anchor.block) && doc.blocks.some((b) => b.id === wanted.head.block)) {
+    const r = orderRange2(doc, wanted);
+    return { anchor: r.start, head: r.end };
   }
-  /** Removes the mark when every covered run already has it, adds it otherwise; fences and opaque blocks are skipped. */
-  toggleMark(doc, range, mark2) {
-    const none = { dirtyBlocks: [], removedBlocks: [], selection: range };
-    if (!TOGGLE_NAMES.has(mark2)) {
-      return none;
-    }
-    const segments = this.segments(doc, this.order(doc, range));
-    if (segments.length === 0) {
-      return none;
-    }
-    const name = mark2;
-    const covered = segments.every(({ block, from, to }) => hasMark(block.marks, name, from, to));
-    for (const { block, from, to } of segments) {
-      block.marks = covered ? cutMark(block.marks, name, from, to, normalizeMdMarks) : normalizeMdMarks([...block.marks, { from, to, name }]);
-    }
-    return { dirtyBlocks: segments.map((s) => s.block.id), removedBlocks: [], selection: range };
+  return collapsed3(fallback, textOf(doc, fallback).length);
+}
+function applyCustom(doc, op, shortcuts) {
+  const data = customData(op);
+  const span = op.blocks.map((id) => blockOf(doc, id));
+  const first2 = span[0];
+  if (first2 === void 0) {
+    throw new Error(`MarkdownProvider: ${op.name} names no block`);
   }
-  /** One entry of clipboard content as a block with `id`; several parsed blocks fold into the first. */
-  parseEntry(entry, id) {
-    const indent2 = /^( +)(?:[-*+]|\d+[.)])\s/.exec(entry);
-    const depth = indent2 === null ? 0 : Math.floor(indent2[1].length / 2);
-    const parsed = markdownDocFromText(
-      indent2 === null ? entry : entry.slice(indent2[1].length)
-    ).blocks;
-    const first2 = parsed[0];
-    if (first2 === void 0) {
-      return mdBlock(id, { kind: "paragraph" });
-    }
-    const out = first2;
-    out.id = id;
-    for (const b of parsed.slice(1)) {
-      if (isOpaque(out) || isOpaque(b)) {
-        break;
-      }
-      const seam = out.text.length + 1;
-      out.text += `
-${b.text}`;
-      out.marks.push(...b.marks.map((m) => ({ ...m, from: m.from + seam, to: m.to + seam })));
-      out.atoms.push(...b.atoms.map((a2) => ({ ...a2, offset: a2.offset + seam })));
-    }
-    if (out.kind === "listItem") {
-      out.depth = depth;
-    }
-    out.marks = fixMarks(out);
-    return out;
-  }
-  /**
-   * The first entry goes in at the caret as inline content (an empty paragraph takes its kind),
-   * the rest become blocks, the last one taking the text after the caret. Into a fence the
-   * content goes verbatim as lines, so no new block is made and the ids go unused.
-   */
-  insertContent(doc, at, content3, newBlocks) {
-    const entries = content3.blocks;
-    if (entries.length === 0 || newBlocks.length !== entries.length - 1) {
-      throw new Error(
-        `insertContent: ${entries.length} entries need ${entries.length - 1} new ids`
-      );
-    }
-    for (const id of newBlocks) {
-      if (doc.blocks.some((b) => b.id === id)) {
-        throw new Error(`insertContent: block id ${id} is already in use`);
-      }
-    }
-    const cut = this.deleteRangeImpl(doc, at);
-    const index2 = this.index(doc, cut.start.block);
-    const target = doc.blocks[index2];
-    const pos = cut.start.offset;
-    if (isOpaque(target)) {
-      return {
-        dirtyBlocks: cut.dirty,
-        removedBlocks: cut.removed,
-        selection: collapsed3(target.id, pos)
-      };
-    }
-    if (target.kind === "code") {
-      const text6 = content3.text ?? entries.join("\n");
-      return this.insertText(doc, collapsed3(target.id, pos), text6, false);
-    }
-    const parsed = entries.map(
-      (entry, i2) => this.parseEntry(entry, i2 === 0 ? target.id : newBlocks[i2 - 1])
-    );
-    const first2 = parsed[0];
-    const adopt = target.kind === "paragraph" && target.text.length === 0;
-    if (entries.length === 1) {
-      const kind = adopt ? kindOf(first2) : kindOf(target);
-      const merged = withKind(this.spliced(target, pos, pos, first2), kind);
-      merged.html = adopt ? first2.html : target.html;
-      doc.blocks[index2] = merged;
-      return {
-        dirtyBlocks: unique2([merged.id, ...cut.dirty]),
-        removedBlocks: cut.removed,
-        selection: collapsed3(merged.id, pos + first2.text.length)
-      };
-    }
-    const prefix2 = this.slice(target, 0, pos, kindOf(target));
-    const head = withKind(
-      this.spliced(prefix2, pos, pos, first2),
-      adopt ? kindOf(first2) : kindOf(target)
-    );
-    head.html = adopt ? first2.html : target.html;
-    doc.blocks[index2] = head;
-    doc.blocks.splice(index2 + 1, 0, ...parsed.slice(1));
-    const suffix = this.slice(target, pos, target.text.length, { kind: "paragraph" });
-    const last = parsed[parsed.length - 1];
-    const carrier = parsed.slice(1).reverse().find((b) => !isOpaque(b)) ?? head;
-    const carrierIndex = this.index(doc, carrier.id);
-    doc.blocks[carrierIndex] = this.spliced(
-      carrier,
-      carrier.text.length,
-      carrier.text.length,
-      suffix
-    );
-    return {
-      dirtyBlocks: unique2([head.id, ...newBlocks, ...cut.dirty]),
-      removedBlocks: cut.removed,
-      selection: collapsed3(last.id, isOpaque(last) ? 1 : last.text.length)
-    };
-  }
-  /** `block` with `[from, to)` replaced by `insert`'s inline content, marks and atoms carried over. */
-  spliced(block, from, to, insert) {
-    const len = insert.text.length;
-    const marks = [
-      ...clipMarks(block.marks, 0, from, 0, normalizeMdMarks),
-      ...insert.marks.map((m) => ({ ...m, from: m.from + from, to: m.to + from })),
-      ...clipMarks(block.marks, to, block.text.length, from + len, normalizeMdMarks)
-    ];
-    const atoms = [
-      ...clipAtoms(block.atoms, 0, from, 0),
-      ...insert.atoms.map((a2) => ({ ...a2, offset: a2.offset + from })),
-      ...clipAtoms(block.atoms, to, block.text.length, from + len)
-    ];
-    const out = {
-      ...block,
-      text: block.text.slice(0, from) + insert.text + block.text.slice(to),
-      marks,
-      atoms
-    };
-    out.marks = fixMarks(out);
-    return out;
-  }
-  replaceBlocks(doc, after, snapshots, remove2) {
-    const removing = new Set(remove2);
-    const removed = doc.blocks.filter((b) => removing.has(b.id)).map((b) => b.id);
-    doc.blocks = doc.blocks.filter((b) => !removing.has(b.id));
-    const restored = snapshots.map((s) => this.fromSnapshot(s));
-    const index2 = after === null ? 0 : this.index(doc, after) + 1;
-    doc.blocks.splice(index2, 0, ...restored);
-    const inserted = new Set(restored.map((b) => b.id));
-    const last = restored[restored.length - 1];
-    let selection;
-    if (last !== void 0) {
-      selection = collapsed3(last.id, this.blockText(doc, last.id).length);
-    } else if (index2 < doc.blocks.length) {
-      selection = collapsed3(doc.blocks[index2].id, 0);
-    } else if (index2 > 0) {
-      const prev = doc.blocks[index2 - 1];
-      selection = collapsed3(prev.id, this.blockText(doc, prev.id).length);
-    } else {
-      selection = collapsed3("", 0);
-    }
-    return {
-      dirtyBlocks: restored.map((b) => b.id),
-      removedBlocks: removed.filter((id) => !inserted.has(id)),
-      selection
-    };
-  }
-  fromSnapshot(snapshot) {
-    const state = snapshot.state;
-    if (typeof state?.kind !== "string" || typeof state.text !== "string" || !Array.isArray(state.marks) || !Array.isArray(state.atoms)) {
-      throw new Error(`replaceBlocks: snapshot of ${snapshot.id} is not an MdBlock`);
-    }
-    return cloneBlock2({ ...state, id: snapshot.id });
-  }
-  /** The selection a custom op's data names, clamped, or the caret at the end of `fallback`. */
-  customSelection(doc, data, fallback) {
-    const wanted = rangeOf(data.selection);
-    if (wanted !== void 0 && doc.blocks.some((b) => b.id === wanted.anchor.block) && doc.blocks.some((b) => b.id === wanted.head.block)) {
-      const r = this.order(doc, wanted);
-      return { anchor: r.start, head: r.end };
-    }
-    return collapsed3(fallback, this.blockText(doc, fallback).length);
-  }
-  custom(doc, op) {
-    const data = record(op);
-    const span = op.blocks.map((id) => this.block(doc, id));
-    const first2 = span[0];
-    if (first2 === void 0) {
-      throw new Error(`MarkdownProvider: ${op.name} names no block`);
-    }
-    switch (op.name) {
-      case "setKind":
-        return this.setKind(doc, span, data);
-      case "setDepth": {
-        const dirty2 = [];
-        for (const b of span) {
-          if (b.kind !== "listItem" && b.kind !== "quote") {
-            continue;
-          }
-          const depth = Math.max(
-            0,
-            typeof data.depth === "number" ? data.depth : b.depth + (typeof data.delta === "number" ? data.delta : 0)
-          );
-          if (depth !== b.depth) {
-            b.depth = depth;
-            dirty2.push(b.id);
-          }
+  switch (op.name) {
+    case "setKind":
+      return setKind(doc, span, data);
+    case "setDepth": {
+      const dirty2 = [];
+      for (const b of span) {
+        if (b.kind !== "listItem" && b.kind !== "quote") {
+          continue;
         }
-        return {
-          dirtyBlocks: dirty2,
-          removedBlocks: [],
-          selection: this.customSelection(doc, data, first2.id)
-        };
-      }
-      case "setTask": {
-        const dirty2 = [];
-        for (const b of span) {
-          if (b.kind !== "listItem") {
-            continue;
-          }
-          if (typeof data.checked === "boolean") {
-            b.task = true;
-            b.checked = data.checked;
-          } else if (data.task === true) {
-            b.task = true;
-            b.checked = b.checked === true;
-          } else if (data.task === false) {
-            delete b.task;
-            delete b.checked;
-          }
+        const depth = Math.max(
+          0,
+          typeof data.depth === "number" ? data.depth : b.depth + (typeof data.delta === "number" ? data.delta : 0)
+        );
+        if (depth !== b.depth) {
+          b.depth = depth;
           dirty2.push(b.id);
         }
-        return {
-          dirtyBlocks: dirty2,
-          removedBlocks: [],
-          selection: this.customSelection(doc, data, first2.id)
-        };
-      }
-      case "setLink":
-        return this.setLink(doc, first2, data);
-      case "insertWikilink":
-        return this.insertWikilink(doc, first2, data);
-      case "setImage":
-        return this.setImage(doc, first2, data);
-      case "moveAtom":
-        return this.moveAtom(doc, data);
-      case "insertBreak": {
-        const range = rangeOf(data.range);
-        if (range === void 0) {
-          throw new Error("MarkdownProvider: insertBreak needs a range");
-        }
-        return this.insertText(doc, range, "\n", true);
-      }
-      default:
-        throw new Error(`MarkdownProvider: unknown custom op ${op.name}`);
-    }
-  }
-  /**
-   * Sets every editable block of the span to the target kind. To `code`, the span's blocks
-   * merge into one fence; from `code`, a fence splits into one block per line, the ids for the
-   * lines after the first taken from `data.ids`.
-   */
-  setKind(doc, span, data) {
-    const target = data.kind;
-    const editable = span.filter((b) => !isOpaque(b));
-    const dirty2 = [];
-    const removed = [];
-    const ids = Array.isArray(data.ids) ? data.ids.filter((id) => typeof id === "string") : [];
-    let idsUsed = 0;
-    const nextId = () => {
-      const id = ids[idsUsed++];
-      if (id === void 0 || doc.blocks.some((b) => b.id === id)) {
-        throw new Error("setKind: a fence split needs one unused id per line in data.ids");
-      }
-      return id;
-    };
-    if (editable.length === 0) {
-      return {
-        dirtyBlocks: [],
-        removedBlocks: [],
-        selection: this.customSelection(doc, data, span[0].id)
-      };
-    }
-    if (target === "code") {
-      const lang = typeof data.lang === "string" ? data.lang : "";
-      if (editable.every((b) => b.kind === "code")) {
-        for (const b of editable) {
-          if (b.kind === "code") {
-            b.lang = lang;
-            dirty2.push(b.id);
-          }
-        }
-      } else {
-        const head = editable[0];
-        const text6 = editable.map((b) => b.text).join("\n");
-        const fence3 = withKind({ ...head, text: text6 }, { kind: "code", lang });
-        doc.blocks[this.index(doc, head.id)] = fence3;
-        for (const b of editable.slice(1)) {
-          doc.blocks.splice(this.index(doc, b.id), 1);
-          removed.push(b.id);
-        }
-        dirty2.push(fence3.id);
       }
       return {
         dirtyBlocks: dirty2,
-        removedBlocks: removed,
-        selection: this.customSelection(doc, data, dirty2[dirty2.length - 1])
+        removedBlocks: [],
+        selection: customSelection(doc, data, first2.id)
       };
     }
-    const kindFor = (b) => {
-      switch (target) {
-        case "heading": {
-          const level = typeof data.level === "number" ? Math.max(1, Math.min(6, Math.round(data.level))) : 1;
-          return { kind: "heading", level };
+    case "setTask": {
+      const dirty2 = [];
+      for (const b of span) {
+        if (b.kind !== "listItem") {
+          continue;
         }
-        case "listItem": {
-          const kind = {
-            kind: "listItem",
-            ordered: data.ordered === true,
-            depth: b.kind === "listItem" ? b.depth : 0
-          };
-          if (data.task === true || data.task === void 0 && b.kind === "listItem" && b.task) {
-            kind.task = true;
-            kind.checked = b.kind === "listItem" && b.checked === true;
-          }
-          return kind;
+        if (typeof data.checked === "boolean") {
+          b.task = true;
+          b.checked = data.checked;
+        } else if (data.task === true) {
+          b.task = true;
+          b.checked = b.checked === true;
+        } else if (data.task === false) {
+          delete b.task;
+          delete b.checked;
         }
-        case "quote":
-          return { kind: "quote", depth: b.kind === "quote" ? b.depth : 0 };
-        case "paragraph":
-          return { kind: "paragraph" };
-        default:
-          throw new Error(`setKind: unknown kind ${String(target)}`);
-      }
-    };
-    for (const b of editable) {
-      const index2 = this.index(doc, b.id);
-      if (b.kind !== "code") {
-        doc.blocks[index2] = withKind(b, kindFor(b));
         dirty2.push(b.id);
-        continue;
       }
-      const lines = b.text.split("\n");
-      const blocks = lines.map(
-        (line, i2) => withKind(
-          { ...b, id: i2 === 0 ? b.id : nextId(), text: line, marks: [], atoms: [] },
-          kindFor(b)
-        )
-      );
-      doc.blocks.splice(index2, 1, ...blocks);
-      dirty2.push(...blocks.map((x) => x.id));
+      return {
+        dirtyBlocks: dirty2,
+        removedBlocks: [],
+        selection: customSelection(doc, data, first2.id)
+      };
+    }
+    case "setLink":
+      return setLink(doc, first2, data);
+    case "insertWikilink":
+      return insertWikilink(doc, first2, data, shortcuts);
+    case "setImage":
+      return setImage(doc, first2, data);
+    case "moveAtom":
+      return moveAtom(doc, data);
+    case "insertBreak": {
+      const range = rangeOf(data.range);
+      if (range === void 0) {
+        throw new Error("MarkdownProvider: insertBreak needs a range");
+      }
+      return insertText(doc, range, "\n", true, shortcuts);
+    }
+    default:
+      throw new Error(`MarkdownProvider: unknown custom op ${op.name}`);
+  }
+}
+function setKind(doc, span, data) {
+  const target = data.kind;
+  const editable = span.filter((b) => !isOpaque(b));
+  const dirty2 = [];
+  const removed = [];
+  const ids = Array.isArray(data.ids) ? data.ids.filter((id) => typeof id === "string") : [];
+  let idsUsed = 0;
+  const nextId = () => {
+    const id = ids[idsUsed++];
+    if (id === void 0 || doc.blocks.some((b) => b.id === id)) {
+      throw new Error("setKind: a fence split needs one unused id per line in data.ids");
+    }
+    return id;
+  };
+  if (editable.length === 0) {
+    return {
+      dirtyBlocks: [],
+      removedBlocks: [],
+      selection: customSelection(doc, data, span[0].id)
+    };
+  }
+  if (target === "code") {
+    const lang = typeof data.lang === "string" ? data.lang : "";
+    if (editable.every((b) => b.kind === "code")) {
+      for (const b of editable) {
+        if (b.kind === "code") {
+          b.lang = lang;
+          dirty2.push(b.id);
+        }
+      }
+    } else {
+      const head = editable[0];
+      const text6 = editable.map((b) => b.text).join("\n");
+      const fence3 = withKind({ ...head, text: text6 }, { kind: "code", lang });
+      doc.blocks[indexOf(doc, head.id)] = fence3;
+      for (const b of editable.slice(1)) {
+        doc.blocks.splice(indexOf(doc, b.id), 1);
+        removed.push(b.id);
+      }
+      dirty2.push(fence3.id);
     }
     return {
       dirtyBlocks: dirty2,
       removedBlocks: removed,
-      selection: this.customSelection(doc, data, dirty2[dirty2.length - 1])
+      selection: customSelection(doc, data, dirty2[dirty2.length - 1])
     };
   }
-  /** Sets the link over `[from, to)` of the block, or removes links there when `target` is empty. */
-  insertWikilink(doc, b, data) {
-    const from = typeof data.from === "number" ? data.from : 0;
-    const to = typeof data.to === "number" ? data.to : from;
-    const target = typeof data.target === "string" ? data.target : "";
-    const text6 = typeof data.text === "string" && data.text !== "" ? data.text : target;
-    if (isOpaque(b) || b.kind === "code" || from > to || to > b.text.length || target === "") {
-      return { dirtyBlocks: [], removedBlocks: [], selection: collapsed3(b.id, to) };
+  const kindFor = (b) => {
+    switch (target) {
+      case "heading": {
+        const level = typeof data.level === "number" ? Math.max(1, Math.min(6, Math.round(data.level))) : 1;
+        return { kind: "heading", level };
+      }
+      case "listItem": {
+        const kind = {
+          kind: "listItem",
+          ordered: data.ordered === true,
+          depth: b.kind === "listItem" ? b.depth : 0
+        };
+        if (data.task === true || data.task === void 0 && b.kind === "listItem" && b.task) {
+          kind.task = true;
+          kind.checked = b.kind === "listItem" && b.checked === true;
+        }
+        return kind;
+      }
+      case "quote":
+        return { kind: "quote", depth: b.kind === "quote" ? b.depth : 0 };
+      case "paragraph":
+        return { kind: "paragraph" };
+      default:
+        throw new Error(`setKind: unknown kind ${String(target)}`);
     }
-    const result = this.insertText(
-      doc,
-      { anchor: { block: b.id, offset: from }, head: { block: b.id, offset: to } },
-      text6,
-      false
+  };
+  for (const b of editable) {
+    const index2 = indexOf(doc, b.id);
+    if (b.kind !== "code") {
+      doc.blocks[index2] = withKind(b, kindFor(b));
+      dirty2.push(b.id);
+      continue;
+    }
+    const lines = b.text.split("\n");
+    const blocks = lines.map(
+      (line, i2) => withKind(
+        { ...b, id: i2 === 0 ? b.id : nextId(), text: line, marks: [], atoms: [] },
+        kindFor(b)
+      )
     );
-    const mark2 = { from, to: from + text6.length, name: "link", kind: "wiki", target };
-    b.marks = normalizeMdMarks([
-      ...cutMark(b.marks, "link", mark2.from, mark2.to, normalizeMdMarks),
-      mark2
-    ]);
-    return result;
+    doc.blocks.splice(index2, 1, ...blocks);
+    dirty2.push(...blocks.map((x) => x.id));
   }
-  setLink(doc, b, data) {
-    const from = typeof data.from === "number" ? data.from : 0;
-    const to = typeof data.to === "number" ? data.to : from;
-    const target = typeof data.target === "string" ? data.target : "";
-    const none = {
+  return {
+    dirtyBlocks: dirty2,
+    removedBlocks: removed,
+    selection: customSelection(doc, data, dirty2[dirty2.length - 1])
+  };
+}
+function insertWikilink(doc, b, data, shortcuts) {
+  const from = typeof data.from === "number" ? data.from : 0;
+  const to = typeof data.to === "number" ? data.to : from;
+  const target = typeof data.target === "string" ? data.target : "";
+  const text6 = typeof data.text === "string" && data.text !== "" ? data.text : target;
+  if (isOpaque(b) || b.kind === "code" || from > to || to > b.text.length || target === "") {
+    return { dirtyBlocks: [], removedBlocks: [], selection: collapsed3(b.id, to) };
+  }
+  const result = insertText(
+    doc,
+    { anchor: { block: b.id, offset: from }, head: { block: b.id, offset: to } },
+    text6,
+    false,
+    shortcuts
+  );
+  const mark2 = { from, to: from + text6.length, name: "link", kind: "wiki", target };
+  b.marks = normalizeMdMarks([
+    ...cutMark(b.marks, "link", mark2.from, mark2.to, normalizeMdMarks),
+    mark2
+  ]);
+  return result;
+}
+function setLink(doc, b, data) {
+  const from = typeof data.from === "number" ? data.from : 0;
+  const to = typeof data.to === "number" ? data.to : from;
+  const target = typeof data.target === "string" ? data.target : "";
+  const none = {
+    dirtyBlocks: [],
+    removedBlocks: [],
+    selection: customSelection(doc, data, b.id)
+  };
+  if (isOpaque(b) || b.kind === "code" || from >= to || to > b.text.length) {
+    return none;
+  }
+  let marks = cutMark(b.marks, "link", from, to, normalizeMdMarks);
+  if (target !== "") {
+    const mark2 = {
+      from,
+      to,
+      name: "link",
+      kind: typeof data.kind === "string" ? data.kind : "url",
+      target
+    };
+    if (typeof data.title === "string" && data.title !== "") {
+      mark2.title = data.title;
+    }
+    marks = normalizeMdMarks([...marks, mark2]);
+  }
+  b.marks = marks;
+  const range = {
+    anchor: { block: b.id, offset: from },
+    head: { block: b.id, offset: to }
+  };
+  return {
+    dirtyBlocks: [b.id],
+    removedBlocks: [],
+    selection: data.selection === void 0 ? range : customSelection(doc, data, b.id)
+  };
+}
+function setImage(doc, b, data) {
+  const atom = b.atoms.find((a2) => a2.offset === data.offset);
+  if (atom === void 0) {
+    return {
       dirtyBlocks: [],
       removedBlocks: [],
-      selection: this.customSelection(doc, data, b.id)
-    };
-    if (isOpaque(b) || b.kind === "code" || from >= to || to > b.text.length) {
-      return none;
-    }
-    let marks = cutMark(b.marks, "link", from, to, normalizeMdMarks);
-    if (target !== "") {
-      const mark2 = {
-        from,
-        to,
-        name: "link",
-        kind: typeof data.kind === "string" ? data.kind : "url",
-        target
-      };
-      if (typeof data.title === "string" && data.title !== "") {
-        mark2.title = data.title;
-      }
-      marks = normalizeMdMarks([...marks, mark2]);
-    }
-    b.marks = marks;
-    const range = {
-      anchor: { block: b.id, offset: from },
-      head: { block: b.id, offset: to }
-    };
-    return {
-      dirtyBlocks: [b.id],
-      removedBlocks: [],
-      selection: data.selection === void 0 ? range : this.customSelection(doc, data, b.id)
+      selection: customSelection(doc, data, b.id)
     };
   }
-  /** Patches the image at `data.offset`: `width` (null removes it), `alt`, `src`, `title`. */
-  setImage(doc, b, data) {
-    const atom = b.atoms.find((a2) => a2.offset === data.offset);
-    if (atom === void 0) {
-      return {
-        dirtyBlocks: [],
-        removedBlocks: [],
-        selection: this.customSelection(doc, data, b.id)
-      };
-    }
-    const image2 = { ...atom.image };
-    if (data.width === null) {
-      delete image2.width;
-    } else if (typeof data.width === "number") {
-      image2.width = Math.max(1, Math.round(data.width));
-    }
-    for (const key of ["alt", "src", "title"]) {
-      const value2 = data[key];
-      if (typeof value2 === "string") {
-        image2[key] = value2;
-      }
-    }
-    atom.image = image2;
-    return { dirtyBlocks: [b.id], removedBlocks: [], selection: collapsed3(b.id, atom.offset + 1) };
+  const image2 = { ...atom.image };
+  if (data.width === null) {
+    delete image2.width;
+  } else if (typeof data.width === "number") {
+    image2.width = Math.max(1, Math.round(data.width));
   }
-  /** Moves the atom at `data.from` to `data.to`; refused into a fence or an opaque block. */
-  moveAtom(doc, data) {
-    const from = posOf(data.from);
-    const target = posOf(data.to);
-    if (from === void 0 || target === void 0) {
-      throw new Error("MarkdownProvider: moveAtom needs from and to positions");
+  for (const key of ["alt", "src", "title"]) {
+    const value2 = data[key];
+    if (typeof value2 === "string") {
+      image2[key] = value2;
     }
-    const source = this.block(doc, from.block);
-    const dest = this.block(doc, target.block);
-    const atom = source.atoms.find((a2) => a2.offset === from.offset);
-    const none = {
-      dirtyBlocks: [],
-      removedBlocks: [],
-      selection: collapsed3(source.id, from.offset + 1)
-    };
-    if (atom === void 0 || isOpaque(dest) || dest.kind === "code") {
-      return none;
+  }
+  atom.image = image2;
+  return { dirtyBlocks: [b.id], removedBlocks: [], selection: collapsed3(b.id, atom.offset + 1) };
+}
+function moveAtom(doc, data) {
+  const from = posOf(data.from);
+  const target = posOf(data.to);
+  if (from === void 0 || target === void 0) {
+    throw new Error("MarkdownProvider: moveAtom needs from and to positions");
+  }
+  const source = blockOf(doc, from.block);
+  const dest = blockOf(doc, target.block);
+  const atom = source.atoms.find((a2) => a2.offset === from.offset);
+  const none = {
+    dirtyBlocks: [],
+    removedBlocks: [],
+    selection: collapsed3(source.id, from.offset + 1)
+  };
+  if (atom === void 0 || isOpaque(dest) || dest.kind === "code") {
+    return none;
+  }
+  let to = Math.max(0, Math.min(target.offset, dest.text.length));
+  const at = atom.offset;
+  source.text = source.text.slice(0, at) + source.text.slice(at + 1);
+  source.marks = marksAfterDelete(source.marks, at, at + 1, normalizeMdMarks);
+  source.atoms = atomsAfterDelete(source.atoms, at, at + 1);
+  if (dest === source && to > at) {
+    to -= 1;
+  }
+  dest.text = dest.text.slice(0, to) + ATOM_CHAR + dest.text.slice(to);
+  dest.marks = marksAfterTyping(dest.marks, to, 1, normalizeMdMarks);
+  dest.atoms = [...atomsAfterInsert(dest.atoms, to, 1), { offset: to, image: atom.image }].sort(
+    (a2, b) => a2.offset - b.offset
+  );
+  source.marks = fixMarks(source);
+  dest.marks = fixMarks(dest);
+  return {
+    dirtyBlocks: unique2([source.id, dest.id]),
+    removedBlocks: [],
+    selection: collapsed3(dest.id, to + 1)
+  };
+}
+
+// scripts/widgets/richtext/providers/markdown_image.ts
+init_ui_base();
+init_theme_schema();
+init_toolop();
+var MIN_WIDTH = 16;
+var CLICK_SLOP_PX2 = 3;
+function moveAtomOp(order, from, to) {
+  const a2 = order.indexOf(from.block);
+  const b = order.indexOf(to.block);
+  const blocks = order.slice(Math.min(a2, b), Math.max(a2, b) + 1);
+  const shifts = from.block === to.block ? [] : [
+    { block: from.block, at: from.offset, delta: -1 },
+    { block: to.block, at: to.offset, delta: 1 }
+  ];
+  return {
+    type: "custom",
+    name: "moveAtom",
+    blocks,
+    data: { from: { ...from }, to: { ...to } },
+    shifts
+  };
+}
+function blockOrder(root2) {
+  const ids = [];
+  for (const child of root2.children) {
+    const id = child.getAttribute("data-doc-block");
+    if (id !== null) {
+      ids.push(id);
     }
-    let to = Math.max(0, Math.min(target.offset, dest.text.length));
-    const at = atom.offset;
-    source.text = source.text.slice(0, at) + source.text.slice(at + 1);
-    source.marks = marksAfterDelete(source.marks, at, at + 1, normalizeMdMarks);
-    source.atoms = atomsAfterDelete(source.atoms, at, at + 1);
-    if (dest === source && to > at) {
-      to -= 1;
+  }
+  return ids;
+}
+function acceptsAtom(el) {
+  return el.getAttribute("contenteditable") !== "false" && el.tagName !== "PRE";
+}
+function caretRect(root2, pos) {
+  const dom = fromDocPos(root2, pos);
+  if (dom === void 0) {
+    return void 0;
+  }
+  const range = document.createRange();
+  range.setStart(dom.node, dom.offset);
+  range.collapse(true);
+  const rect = range.getClientRects()[0] ?? range.getBoundingClientRect();
+  if (rect.height > 0) {
+    return rect;
+  }
+  const el = dom.node instanceof Element ? dom.node : dom.node.parentElement;
+  return el?.getBoundingClientRect();
+}
+var MdImageWidget2 = class extends UIBase {
+  img;
+  handle;
+  styletag;
+  block = "";
+  offset = 0;
+  constructor() {
+    super();
+    this.styletag = document.createElement("style");
+    this.styletag.textContent = `
+      :host {
+        position       : relative;
+        display        : inline-block;
+        vertical-align : middle;
+        line-height    : 0;
+      }
+      img {
+        max-width : 100%;
+        display   : block;
+      }
+      :host(:hover:not([readonly])) img {
+        outline : 2px solid var(--md-image-outline-color);
+      }
+      .handle {
+        display    : none;
+        position   : absolute;
+        right      : -2px;
+        bottom     : -2px;
+        width      : var(--md-image-handle-size);
+        height     : var(--md-image-handle-size);
+        background : var(--md-image-handle-color);
+        cursor     : nwse-resize;
+      }
+      :host(:hover:not([readonly])) .handle,
+      :host([resizing]) .handle {
+        display : block;
+      }
+      :host([resizing]) img {
+        outline : 2px solid var(--md-image-outline-color);
+      }
+    `;
+    this.shadow.appendChild(this.styletag);
+    this.img = document.createElement("img");
+    this.img.draggable = false;
+    this.img.addEventListener("dragstart", (e) => e.preventDefault());
+    this.shadow.appendChild(this.img);
+    this.handle = document.createElement("div");
+    this.handle.className = "handle";
+    this.handle.setAttribute("data-testid", "md-image-handle");
+    this.shadow.appendChild(this.handle);
+  }
+  /** Points the widget at the atom it renders and shows its image. */
+  setAtom(block, offset, image2) {
+    this.block = block;
+    this.offset = offset;
+    const src = safeUrl(image2.src, true);
+    if (src !== void 0) {
+      this.img.setAttribute("src", src);
+    } else {
+      this.img.removeAttribute("src");
     }
-    dest.text = dest.text.slice(0, to) + ATOM_CHAR + dest.text.slice(to);
-    dest.marks = marksAfterTyping(dest.marks, to, 1, normalizeMdMarks);
-    dest.atoms = [...atomsAfterInsert(dest.atoms, to, 1), { offset: to, image: atom.image }].sort(
-      (a2, b) => a2.offset - b.offset
+    this.img.setAttribute("alt", image2.alt);
+    if (image2.title !== void 0) {
+      this.img.setAttribute("title", image2.title);
+    } else {
+      this.img.removeAttribute("title");
+    }
+    if (image2.width !== void 0) {
+      this.img.setAttribute("width", String(image2.width));
+    } else {
+      this.img.removeAttribute("width");
+    }
+  }
+  /** The position of the atom's own character. */
+  get atomPos() {
+    return { block: this.block, offset: this.offset };
+  }
+  init() {
+    super.init();
+    this.setAttribute("data-testid", "md-image");
+    this.setCSS();
+    this.addEventListener("pointerenter", () => this.mirrorReadOnly());
+    this.handle.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.button === 0 && this.canEdit()) {
+        this.spawn(new ImageResizeOp(this, e), e);
+      }
+    });
+    this.img.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.button === 0 && this.canEdit()) {
+        this.spawn(new ImageMoveOp(this, e), e);
+      }
+    });
+  }
+  canEdit() {
+    return this.ctx !== void 0 && !this.ctx.editor.readOnly;
+  }
+  spawn(op, e) {
+    const ctx = this.ctx;
+    void ctx.toolstack.execTool(ctx, op, e);
+  }
+  mirrorReadOnly() {
+    this.toggleAttribute("readonly", this.ctx?.editor.readOnly ?? false);
+  }
+  update() {
+    super.update();
+    this.mirrorReadOnly();
+  }
+  setCSS() {
+    super.setCSS();
+    this.style.setProperty("--md-image-handle-color", this.getDefault("handle-color"));
+    this.style.setProperty(
+      "--md-image-handle-size",
+      `${this.getDefault("handle-size")}px`
     );
-    source.marks = fixMarks(source);
-    dest.marks = fixMarks(dest);
+    this.style.setProperty("--md-image-outline-color", this.getDefault("outline-color"));
+  }
+  static define() {
     return {
-      dirtyBlocks: unique2([source.id, dest.id]),
-      removedBlocks: [],
-      selection: collapsed3(dest.id, to + 1)
+      tagname: "md-image-x",
+      style: "mdimage",
+      theme: {
+        "handle-color": t.color,
+        "handle-size": t.number,
+        "outline-color": t.color,
+        "drop-caret-color": t.color
+      }
     };
   }
 };
+UIBase.internalRegister(MdImageWidget2);
+var ImageResizeOp = class extends ToolOp {
+  widget;
+  startX = 0;
+  startWidth = 0;
+  width = 0;
+  hadWidth = false;
+  constructor(widget, e) {
+    super();
+    this.widget = widget;
+    if (widget !== void 0 && e !== void 0) {
+      this.startX = e.clientX;
+      this.startWidth = widget.img.getBoundingClientRect().width;
+      this.width = this.startWidth;
+      this.hadWidth = widget.img.hasAttribute("width");
+      widget.setAttribute("resizing", "");
+    }
+  }
+  static tooldef() {
+    return {
+      uiname: "Resize Image",
+      description: "Drag the corner handle to resize the image",
+      toolpath: "richtext.markdown.resize_image",
+      is_modal: true,
+      undoflag: UndoFlags.NO_UNDO,
+      inputs: {},
+      outputs: {}
+    };
+  }
+  on_pointermove(e) {
+    const widget = this.widget;
+    if (widget === void 0) {
+      return;
+    }
+    this.width = Math.max(MIN_WIDTH, Math.round(this.startWidth + e.clientX - this.startX));
+    widget.img.setAttribute("width", String(this.width));
+  }
+  on_pointerup(_e) {
+    const widget = this.widget;
+    if (widget !== void 0 && this.width !== Math.round(this.startWidth)) {
+      void widget.ctx.editor.dispatch({
+        type: "custom",
+        name: "setImage",
+        blocks: [widget.block],
+        data: { offset: widget.offset, width: this.width }
+      });
+    }
+    this.modalEnd(false);
+  }
+  on_pointercancel(_e) {
+    this.modalEnd(true);
+  }
+  on_keydown(e) {
+    if (e.key === "Escape") {
+      this.modalEnd(true);
+    }
+  }
+  modalEnd(was_cancelled) {
+    const widget = this.widget;
+    this.widget = void 0;
+    if (widget !== void 0) {
+      widget.removeAttribute("resizing");
+      if (was_cancelled) {
+        if (this.hadWidth) {
+          widget.img.setAttribute("width", String(Math.round(this.startWidth)));
+        } else {
+          widget.img.removeAttribute("width");
+        }
+      }
+    }
+    super.modalEnd(was_cancelled);
+  }
+};
+ToolOp.register(ImageResizeOp);
+var ImageMoveOp = class extends ToolOp {
+  widget;
+  ghost;
+  caret;
+  startX = 0;
+  startY = 0;
+  grabX = 0;
+  grabY = 0;
+  moved = false;
+  target;
+  constructor(widget, e) {
+    super();
+    this.widget = widget;
+    if (widget !== void 0 && e !== void 0) {
+      const rect = widget.img.getBoundingClientRect();
+      this.startX = e.clientX;
+      this.startY = e.clientY;
+      this.grabX = e.clientX - rect.left;
+      this.grabY = e.clientY - rect.top;
+    }
+  }
+  static tooldef() {
+    return {
+      uiname: "Move Image",
+      description: "Drag the image to another place in the text",
+      toolpath: "richtext.markdown.move_image",
+      is_modal: true,
+      undoflag: UndoFlags.NO_UNDO,
+      inputs: {},
+      outputs: {}
+    };
+  }
+  on_pointermove(e) {
+    const widget = this.widget;
+    if (widget === void 0) {
+      return;
+    }
+    if (!this.moved && Math.abs(e.clientX - this.startX) < CLICK_SLOP_PX2 && Math.abs(e.clientY - this.startY) < CLICK_SLOP_PX2) {
+      return;
+    }
+    this.moved = true;
+    const bridge = widget.ctx.editor;
+    const shadow = bridge.root.parentNode;
+    if (!(shadow instanceof ShadowRoot)) {
+      return;
+    }
+    const origin = shadow.host.getBoundingClientRect();
+    if (this.ghost === void 0) {
+      const rect2 = widget.img.getBoundingClientRect();
+      const ghost = this.ghost = document.createElement("img");
+      ghost.className = "md-image-ghost";
+      ghost.src = widget.img.src;
+      ghost.style.position = "absolute";
+      ghost.style.width = `${rect2.width}px`;
+      ghost.style.height = `${rect2.height}px`;
+      ghost.style.opacity = "0.5";
+      ghost.style.pointerEvents = "none";
+      ghost.style.zIndex = "10";
+      shadow.appendChild(ghost);
+      const caret2 = this.caret = document.createElement("div");
+      caret2.className = "md-image-drop-caret";
+      caret2.style.position = "absolute";
+      caret2.style.width = "2px";
+      caret2.style.pointerEvents = "none";
+      caret2.style.zIndex = "10";
+      caret2.style.display = "none";
+      shadow.appendChild(caret2);
+    }
+    this.ghost.style.left = `${e.clientX - this.grabX - origin.left}px`;
+    this.ghost.style.top = `${e.clientY - this.grabY - origin.top}px`;
+    const pos = bridge.posFromPoint(e.clientX, e.clientY);
+    const own6 = widget.atomPos;
+    const unchanged = pos?.block === own6.block && (pos.offset === own6.offset || pos.offset === own6.offset + 1);
+    const el = pos === void 0 ? void 0 : bridge.blockElement(pos.block);
+    const rect = pos === void 0 ? void 0 : caretRect(bridge.root, pos);
+    const caret = this.caret;
+    if (caret === void 0) {
+      return;
+    }
+    if (pos === void 0 || el === void 0 || rect === void 0 || unchanged) {
+      this.target = void 0;
+      caret.style.display = "none";
+      return;
+    }
+    const allowed = acceptsAtom(el);
+    this.target = allowed ? pos : void 0;
+    caret.style.display = "block";
+    caret.style.left = `${rect.left - 1 - origin.left}px`;
+    caret.style.top = `${rect.top - origin.top}px`;
+    caret.style.height = `${rect.height}px`;
+    caret.style.background = allowed ? widget.getDefault("drop-caret-color") : "rgba(128, 128, 128, 0.5)";
+    caret.toggleAttribute("data-refused", !allowed);
+  }
+  on_pointerup(_e) {
+    const widget = this.widget;
+    const target = this.target;
+    if (widget !== void 0) {
+      const bridge = widget.ctx.editor;
+      if (!this.moved) {
+        const own6 = widget.atomPos;
+        bridge.select({ anchor: own6, head: { block: own6.block, offset: own6.offset + 1 } });
+      } else if (target !== void 0) {
+        void bridge.dispatch(moveAtomOp(blockOrder(bridge.root), widget.atomPos, target));
+      }
+    }
+    this.modalEnd(false);
+  }
+  on_pointercancel(_e) {
+    this.modalEnd(true);
+  }
+  on_keydown(e) {
+    if (e.key === "Escape") {
+      this.modalEnd(true);
+    }
+  }
+  modalEnd(was_cancelled) {
+    this.widget = void 0;
+    this.target = void 0;
+    this.ghost?.remove();
+    this.caret?.remove();
+    this.ghost = void 0;
+    this.caret = void 0;
+    super.modalEnd(was_cancelled);
+  }
+};
+ToolOp.register(ImageMoveOp);
+
+// scripts/widgets/richtext/providers/markdown_ops.ts
 var markdownOps = {
   /** Sets the kind over `blocks`; `ids` supplies one unused id per line beyond the first when a fence splits. */
   setKind(blocks, kind, extra = {}) {
@@ -89687,6 +89344,371 @@ var markdownOps = {
       data: { range: { anchor: { ...anchor }, head: { ...head } } },
       shifts: [{ block: anchor.block, at: start2, delta: 1 - (end - start2) }]
     };
+  }
+};
+
+// scripts/widgets/richtext/providers/markdown_toolbar.ts
+init_toolprop();
+var KIND_CHOICES = [
+  { key: "paragraph", label: "Paragraph", kind: { kind: "paragraph" } },
+  { key: "heading1", label: "Heading 1", kind: { kind: "heading", level: 1 } },
+  { key: "heading2", label: "Heading 2", kind: { kind: "heading", level: 2 } },
+  { key: "heading3", label: "Heading 3", kind: { kind: "heading", level: 3 } },
+  { key: "heading4", label: "Heading 4", kind: { kind: "heading", level: 4 } },
+  { key: "heading5", label: "Heading 5", kind: { kind: "heading", level: 5 } },
+  { key: "heading6", label: "Heading 6", kind: { kind: "heading", level: 6 } },
+  { key: "quote", label: "Quote", kind: { kind: "quote" } },
+  { key: "code", label: "Code block", kind: { kind: "code" } }
+];
+function kindKey(b) {
+  switch (b.kind) {
+    case "heading":
+      return `heading${b.level}`;
+    case "quote":
+    case "code":
+      return b.kind;
+    default:
+      return "paragraph";
+  }
+}
+function buildMarkdownToolbar(row, ctx, provider) {
+  let lastDoc;
+  let lastSelection;
+  const current = () => {
+    const doc = lastDoc;
+    const range = ctx.editor.selection() ?? lastSelection;
+    if (doc === void 0 || range === void 0) {
+      return void 0;
+    }
+    const r = orderRange2(doc, range);
+    const editable = doc.blocks.slice(r.startIndex, r.endIndex + 1).filter((b) => !isOpaque(b));
+    return editable.length === 0 ? void 0 : { doc, range, editable };
+  };
+  const setKind2 = (kind) => {
+    const cur = current();
+    if (cur === void 0) {
+      return;
+    }
+    const lines = kind.kind === "code" ? 0 : cur.editable.filter((b) => b.kind === "code").reduce((n, b) => n + b.text.split("\n").length - 1, 0);
+    const ids = lines > 0 ? Array.from({ length: lines }, () => newBlockId()) : void 0;
+    void ctx.editor.dispatch(
+      markdownOps.setKind(
+        cur.editable.map((b) => b.id),
+        kind,
+        { ids, selection: cur.range }
+      )
+    );
+  };
+  const kindProp = new EnumProperty(
+    "paragraph",
+    Object.fromEntries(KIND_CHOICES.map((c) => [c.key, c.key])),
+    void 0,
+    "Block"
+  ).addUINames(Object.fromEntries(KIND_CHOICES.map((c) => [c.key, c.label])));
+  const kinds = row.listenum(void 0, {
+    enumDef: kindProp,
+    callback: (id) => {
+      const choice = KIND_CHOICES.find((c) => c.key === id);
+      if (choice !== void 0) {
+        setKind2(choice.kind);
+      }
+    }
+  });
+  kinds.setAttribute("data-testid", "richtext-kind");
+  kinds.setValue("paragraph");
+  addSeparator(row);
+  const syncMarks = addMarkButtons(row, ctx, provider);
+  addSeparator(row);
+  const listButton = (glyph, label, testid, lit, kind) => {
+    const btn = addToolButton(row, glyph, label, () => {
+      const cur = current();
+      if (cur === void 0) {
+        return;
+      }
+      setKind2(cur.editable.every(lit) ? { kind: "paragraph" } : kind);
+    });
+    btn.setAttribute("data-testid", testid);
+    return { btn, lit };
+  };
+  const lists = [
+    listButton(
+      "&bull;",
+      "Bulleted list",
+      "richtext-list-bullet",
+      (b) => b.kind === "listItem" && !b.ordered && !b.task,
+      { kind: "listItem", ordered: false, task: false }
+    ),
+    listButton(
+      "1.",
+      "Numbered list",
+      "richtext-list-numbered",
+      (b) => b.kind === "listItem" && b.ordered && !b.task,
+      { kind: "listItem", ordered: true, task: false }
+    ),
+    listButton(
+      "&#9745;",
+      "Task list",
+      "richtext-list-task",
+      (b) => b.kind === "listItem" && b.task === true,
+      { kind: "listItem", ordered: false, task: true }
+    )
+  ];
+  addSeparator(row);
+  const link2 = addToolButton(row, "Link", "Link the selection", () => {
+    const cur = current();
+    const range = cur?.range;
+    if (cur === void 0 || range === void 0 || range.anchor.block !== range.head.block) {
+      return;
+    }
+    if (range.anchor.offset === range.head.offset) {
+      return;
+    }
+    const block = cur.editable[0];
+    const from = Math.min(range.anchor.offset, range.head.offset);
+    const existing = block.marks.find(
+      (m) => m.name === "link" && m.from <= from && from < m.to
+    );
+    const rect = link2.getBoundingClientRect();
+    openLinkPopup(
+      row,
+      ctx.editor,
+      {
+        range,
+        kind: existing?.kind ?? "url",
+        target: existing?.target ?? "",
+        title: existing?.title
+      },
+      rect.left,
+      rect.bottom + 4
+    );
+  });
+  link2.setAttribute("data-testid", "richtext-link");
+  return (doc, selection) => {
+    lastDoc = doc;
+    lastSelection = selection;
+    syncMarks(doc, selection);
+    const head = selection === void 0 ? void 0 : blockOf(doc, selection.head.block);
+    kinds.setValue(head === void 0 ? "paragraph" : kindKey(head));
+    for (const { btn, lit } of lists) {
+      btn.active = head !== void 0 && lit(head);
+    }
+    link2.active = head !== void 0 && selection !== void 0 && head.marks.some(
+      (m) => m.name === "link" && m.from < selection.head.offset && selection.head.offset <= m.to
+    );
+  };
+}
+
+// scripts/widgets/richtext/providers/markdown_provider.ts
+var MarkdownProvider = class {
+  constructor(options = {}) {
+    this.options = options;
+  }
+  options;
+  listeners = /* @__PURE__ */ new WeakMap();
+  blocks(doc) {
+    return doc.blocks.map((b) => b.id);
+  }
+  /** The block's text; an opaque block answers one `ATOM_CHAR`, so its offsets run 0 to 1. */
+  blockText(doc, block) {
+    return textOf(doc, block);
+  }
+  isOpaque(doc, block) {
+    return isOpaque(blockOf(doc, block));
+  }
+  marks() {
+    return MD_MARKS;
+  }
+  activeMarks(doc, range) {
+    const r = orderRange2(doc, range);
+    const names = MD_MARKS.map((m) => m.name);
+    if (r.startIndex === r.endIndex && r.start.offset === r.end.offset) {
+      const { marks } = doc.blocks[r.startIndex];
+      const pos = r.start.offset;
+      return names.filter(
+        (name) => marks.some((m) => m.name === name && m.from < pos && pos <= m.to)
+      );
+    }
+    const runs = segments(doc, r);
+    if (runs.length === 0) {
+      return [];
+    }
+    return names.filter(
+      (name) => runs.every(({ block, from, to }) => hasMark(block.marks, name, from, to))
+    );
+  }
+  headings(doc) {
+    const out = [];
+    for (const b of doc.blocks) {
+      if (b.kind === "heading") {
+        out.push({ block: b.id, level: b.level });
+      }
+    }
+    return out;
+  }
+  renderBlock(doc, block, ctx) {
+    return renderMarkdownBlock(blockOf(doc, block), ctx, this.options);
+  }
+  styles() {
+    return markdownStyles();
+  }
+  buildToolbar(row, ctx) {
+    return buildMarkdownToolbar(row, ctx, this);
+  }
+  /**
+   * Tab and Shift+Tab on a list item change its depth; Enter in a fence adds a line, or leaves
+   * the fence from an empty last line; Shift+Enter is a hard line break in any editable block.
+   */
+  handleKey(doc, range, e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) {
+      return void 0;
+    }
+    const r = orderRange2(doc, range);
+    const b = doc.blocks[r.startIndex];
+    const single = r.startIndex === r.endIndex;
+    const isCollapsed3 = single && r.start.offset === r.end.offset;
+    if (e.key === "[" && isCollapsed3 && !isOpaque(b) && b.kind !== "code" && b.text[r.start.offset - 1] === "[" && this.options.onWikilinkStart !== void 0) {
+      this.options.onWikilinkStart({ block: b.id, offset: r.start.offset + 1, event: e });
+      return void 0;
+    }
+    if (e.key === "Tab") {
+      if (b.kind !== "listItem") {
+        return void 0;
+      }
+      const blocks = doc.blocks.slice(r.startIndex, r.endIndex + 1).map((x) => x.id);
+      return markdownOps.setDepth(blocks, { delta: e.shiftKey ? -1 : 1, selection: range });
+    }
+    if (e.key !== "Enter" || isOpaque(b)) {
+      return void 0;
+    }
+    if (b.kind === "code" && single) {
+      const atEnd = isCollapsed3 && r.start.offset === b.text.length;
+      if (atEnd && (b.text === "" || b.text.endsWith("\n"))) {
+        return { type: "splitBlock", at: r.start, newBlock: newBlockId() };
+      }
+      return { type: "insertText", at: range, text: "\n" };
+    }
+    if (e.shiftKey) {
+      return single ? markdownOps.insertBreak(range) : { type: "insertText", at: range, text: "\n" };
+    }
+    return void 0;
+  }
+  applyEdit(doc, op) {
+    const shortcuts = this.options.shortcuts !== false;
+    switch (op.type) {
+      case "insertText":
+        return insertText(doc, op.at, op.text, false, shortcuts);
+      case "deleteRange": {
+        const cut = deleteRange(doc, op.range);
+        return {
+          dirtyBlocks: cut.dirty,
+          removedBlocks: cut.removed,
+          selection: collapsed3(cut.start.block, cut.start.offset)
+        };
+      }
+      case "splitBlock":
+        return splitBlock(doc, op.at, op.newBlock);
+      case "joinWithPrevious":
+        return joinWithPrevious(doc, op.block);
+      case "toggleMark":
+        return toggleMark(doc, op.range, op.mark);
+      case "insertContent":
+        return insertContent(doc, op.at, op.content, op.newBlocks, shortcuts);
+      case "replaceBlocks":
+        return replaceBlocks(doc, op.after, op.blocks, op.remove);
+      case "custom":
+        return applyCustom(doc, op, shortcuts);
+    }
+  }
+  inverse(doc, op) {
+    let touched = [];
+    let created = [];
+    let after;
+    switch (op.type) {
+      case "insertText":
+        touched = rangeBlocks(doc, op.at);
+        break;
+      case "deleteRange":
+      case "toggleMark":
+        touched = rangeBlocks(doc, op.range);
+        break;
+      case "insertContent":
+        touched = rangeBlocks(doc, op.at);
+        created = op.newBlocks;
+        break;
+      case "splitBlock":
+        touched = [op.at.block];
+        created = [op.newBlock];
+        break;
+      case "joinWithPrevious": {
+        const index2 = indexOf(doc, op.block);
+        touched = index2 === 0 ? [op.block] : [doc.blocks[index2 - 1].id, op.block];
+        break;
+      }
+      case "replaceBlocks": {
+        const removing = new Set(op.remove);
+        touched = doc.blocks.filter((b) => removing.has(b.id)).map((b) => b.id);
+        created = op.blocks.map((b) => b.id);
+        if (touched.length === 0) {
+          after = op.after;
+        }
+        break;
+      }
+      case "custom": {
+        const indices = op.blocks.map((id) => indexOf(doc, id));
+        const first2 = Math.min(...indices);
+        const last = Math.max(...indices);
+        touched = doc.blocks.slice(first2, last + 1).map((b) => b.id);
+        const ids = customData(op).ids;
+        if (Array.isArray(ids)) {
+          created = ids.filter((id) => typeof id === "string");
+        }
+        break;
+      }
+    }
+    if (after === void 0) {
+      const first2 = touched.length > 0 ? indexOf(doc, touched[0]) : 0;
+      after = first2 > 0 ? doc.blocks[first2 - 1].id : null;
+    }
+    return {
+      type: "replaceBlocks",
+      after,
+      blocks: this.snapshots(doc, touched),
+      remove: unique2([...touched, ...created])
+    };
+  }
+  snapshots(doc, blocks = this.blocks(doc)) {
+    return blocks.map((id) => ({ id, state: cloneBlock2(blockOf(doc, id)) }));
+  }
+  toClipboard(doc, range) {
+    return toClipboard(doc, range);
+  }
+  fromClipboard(data) {
+    return fromClipboard(data);
+  }
+  /** The document as markdown, as `text/markdown`. */
+  emitDocFile(doc) {
+    return new Blob([markdownText(doc)], { type: "text/markdown" });
+  }
+  onExternalChange(doc, listener) {
+    let set2 = this.listeners.get(doc);
+    if (set2 === void 0) {
+      set2 = /* @__PURE__ */ new Set();
+      this.listeners.set(doc, set2);
+    }
+    set2.add(listener);
+    return () => {
+      set2.delete(listener);
+    };
+  }
+  /** Reports a change made to `doc` outside `applyEdit` to every `onExternalChange` listener. */
+  notifyChange(doc, change) {
+    const set2 = this.listeners.get(doc);
+    if (set2 === void 0) {
+      return;
+    }
+    for (const listener of [...set2]) {
+      listener(change);
+    }
   }
 };
 
@@ -90062,17 +90084,17 @@ var PropsEditor = class extends Editor2 {
     grid.style.height = "300px";
     tab2.add(grid);
     grid.setItems(items);
-    const record2 = (kind, id) => {
+    const record = (kind, id) => {
       window.galleryEvents ??= [];
       window.galleryEvents.push(kind + ":" + id);
     };
     grid.addEventListener(
       "change",
-      (e) => record2("change", e.selection.id)
+      (e) => record("change", e.selection.id)
     );
     grid.addEventListener(
       "confirm",
-      (e) => record2("confirm", e.selection.id)
+      (e) => record("confirm", e.selection.id)
     );
     const rows = UIBase.createElement("assetgallerygrid-x");
     rows.setAttribute("data-testid", "gallery-rows");
@@ -90100,7 +90122,7 @@ var PropsEditor = class extends Editor2 {
     tab2.add(gallery);
     gallery.setItems(items);
     const pick3 = tab2.button("Pick\u2026", () => {
-      pickAssetPopup(pick3, { items }).then((item) => record2("picked", item?.id));
+      pickAssetPopup(pick3, { items }).then((item) => record("picked", item?.id));
     });
     pick3.setAttribute("data-testid", "gallery-pick");
     pick3.description = "Choose an item through the gallery popup";

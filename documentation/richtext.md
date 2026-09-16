@@ -197,6 +197,11 @@ two. It is how a provider reaches the editor without holding a pointer to it.
   Composition below; an ordinary composition is accepted).
 - `RichTextEditor.observeMutations` (a static, on by default) logs any change to the editable
   DOM the editor did not make, which is how a missed input type shows up during development.
+- The editor's source is split by concern: `editor.ts` holds the widget and its state,
+  `editor_input.ts` maps a `beforeinput` to ops, `dom_selection.ts` reads and writes the
+  live selection as document positions, `editor_render.ts` renders and patches the root,
+  `editor_style.ts` holds the stylesheet and theme keys, `positions.ts` the DOM-to-document
+  walk and `composition.ts` the composition diff and snapshot.
 
 ## Render-only mode
 
@@ -359,6 +364,10 @@ dropped. Its samples are a test fixture, so it tracks the parser.
 - `headings(doc)` lists `{ block, level }` in document order for an outline.
 - `MarkdownProviderOptions.renderMedia(image, ctx)` supplies the element for an image atom,
   for an app whose media are not plain `<img>`s.
+- The provider's source is split by concern: `markdown_provider.ts` holds the protocol
+  surface, `markdown_doc.ts` the block helpers its modules share, `markdown_edits.ts` the
+  standard ops, `markdown_custom.ts` the custom ops, `markdown_ops.ts` the `markdownOps`
+  builders, `markdown_clipboard.ts` the clipboard and `markdown_toolbar.ts` the toolbar row.
 
 ### Rendering and editing widgets
 
