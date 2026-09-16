@@ -677,6 +677,7 @@
     "GraphContext",
     "GraphEdit",
     "GroupDesignerOpts",
+    "HeaderMenuArgs",
     "HeadingInfo",
     "HotKeyCallback",
     "IAreaDef",

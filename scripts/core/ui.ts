@@ -29,7 +29,7 @@ import type { RowFrame, ColumnFrame } from "./ui_containers";
 import type { TableFrame } from "../widgets/ui_table";
 import { ToolOpAny } from "../path-controller/controller/controller_abstract";
 import type { PathWatchInfo } from "../path-controller/controller/pathwatch";
-import { dynamicMenuImpl, menuImpl, toolPanelImpl, toolImpl } from "./utils/container_menu";
+import { menuImpl, toolPanelImpl, toolImpl } from "./utils/container_menu";
 import {
   textboxImpl,
   pathlabelImpl,
@@ -68,6 +68,15 @@ import {
 function styl(el: { style: CSSStyleDeclaration }) {
   return el.style;
 }
+
+export type HeaderMenuArgs = {
+  title: string;
+  template: MenuTemplate;
+  /** PackFlags bitmask, defaults to 0. */
+  packflag?: number;
+  /** Defaults to false. */
+  autoSearchMode?: boolean;
+};
 
 export type SliderArgs = {
   name?: string;
@@ -836,8 +845,14 @@ export class Container<
   }
 
   //TODO: make sure this works on Electron?
-  dynamicMenu(title: string, list: MenuTemplate, packflag = 0) {
-    return dynamicMenuImpl(this, title, list, packflag);
+  dynamicMenu(
+    title: string,
+    template: MenuTemplate,
+    packflag?: number
+  ): ReturnType<typeof menuImpl>;
+  dynamicMenu(args: HeaderMenuArgs): ReturnType<typeof menuImpl>;
+  dynamicMenu(...args: unknown[]) {
+    return this._menu(...args);
   }
 
   /**example usage:
@@ -851,8 +866,35 @@ export class Container<
    ])
 
    **/
-  menu(title: string, list: MenuTemplate, packflag = 0) {
-    return menuImpl(this, title, list, packflag);
+  menu(title: string, template: MenuTemplate, packflag?: number): ReturnType<typeof menuImpl>;
+  menu(args: HeaderMenuArgs): ReturnType<typeof menuImpl>;
+  menu(...args: unknown[]) {
+    return this._menu(...args);
+  }
+
+  private _menu(...args: unknown[]) {
+    let title: string;
+    let template: MenuTemplate;
+    let packflag = 0;
+    let autoSearchMode = false;
+
+    if (args.length === 3 || args.length === 2) {
+      title = args[0] as string;
+      template = args[1] as MenuTemplate;
+      packflag = (args[2] as number | undefined) ?? packflag;
+    } else if (args.length === 1) {
+      const a = args[0] as HeaderMenuArgs;
+      title = a.title;
+      template = a.template;
+      packflag = a.packflag ?? packflag;
+      // autoSearchMode is deliberately only exposed in HeaderMenuArgs to encourage
+      // the use of the argument object form.
+      autoSearchMode = a.autoSearchMode ?? autoSearchMode;
+    } else {
+      throw new Error("Invalid number of argument to .menu()");
+    }
+
+    return menuImpl(this, title, template, packflag, autoSearchMode);
   }
 
   toolPanel(

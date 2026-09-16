@@ -35528,6 +35528,14 @@ var init_dropbox = __esm({
         this._auto_depress = false;
         this._onpress = this._onpress.bind(this);
       }
+      /** Defaults to true.  See also searchMenuMode which forcibly enables search mode. */
+      get autoSearchMode() {
+        const attr = this.getAttribute("autoSearchMode");
+        return typeof attr === "string" ? attr === "true" : true;
+      }
+      set autoSearchMode(v) {
+        this.setAttribute("autoSearchMode", v ? "true" : "false");
+      }
       get searchMenuMode() {
         return this._searchMenuMode;
       }
@@ -35827,7 +35835,7 @@ var init_dropbox = __esm({
         if (builtMenu === void 0) {
           return;
         }
-        builtMenu.autoSearchMode = false;
+        builtMenu.autoSearchMode = this.autoSearchMode;
         builtMenu.srcWidget = this;
         builtMenu._dropbox = this;
         this.dom._background = this.getDefault("BoxDepressed");
@@ -39385,14 +39393,12 @@ init_toolop();
 init_toolsys2();
 init_ui_base();
 init_ui_meta_tags();
-function dynamicMenuImpl(self2, title, list5, packflag = 0) {
-  return self2.menu(title, list5, packflag);
-}
-function menuImpl(self2, title, list5, packflag = 0) {
+function menuImpl(self2, title, list5, packflag = 0, autoSearchMode = false) {
   const dbox = UIBase.createElement("dropbox-x");
   dbox._name = title;
   dbox.setAttribute("simple", "true");
   dbox.setAttribute("name", title);
+  dbox.setAttribute("autoSearchMode", autoSearchMode ? "true" : "false");
   if (list5 instanceof Menu) {
     dbox._build_menu = async function() {
       if (this._menu?.parentNode !== void 0) {
@@ -41219,23 +41225,31 @@ var Container3 = class _Container extends UIBase {
     }
     return child;
   }
-  //TODO: make sure this works on Electron?
-  dynamicMenu(title, list5, packflag = 0) {
-    return dynamicMenuImpl(this, title, list5, packflag);
+  dynamicMenu(...args) {
+    return this._menu(...args);
   }
-  /**example usage:
-  
-     .menu([
-     "some_tool_path.tool()|CustomLabel",
-     ui_widgets.Menu.SEP,
-     "some_tool_path.another_tool()",
-     "some_tool_path.another_tool()|CustomLabel::Custom Hotkey String",
-     ["Name", () => {console.log("do something")}]
-     ])
-  
-     **/
-  menu(title, list5, packflag = 0) {
-    return menuImpl(this, title, list5, packflag);
+  menu(...args) {
+    return this._menu(...args);
+  }
+  _menu(...args) {
+    let title;
+    let template;
+    let packflag = 0;
+    let autoSearchMode = false;
+    if (args.length === 3 || args.length === 2) {
+      title = args[0];
+      template = args[1];
+      packflag = args[2] ?? packflag;
+    } else if (args.length === 1) {
+      const a2 = args[0];
+      title = a2.title;
+      template = a2.template;
+      packflag = a2.packflag ?? packflag;
+      autoSearchMode = a2.autoSearchMode ?? autoSearchMode;
+    } else {
+      throw new Error("Invalid number of argument to .menu()");
+    }
+    return menuImpl(this, title, template, packflag, autoSearchMode);
   }
   toolPanel(path_or_cls, args = {}) {
     return toolPanelImpl(this, path_or_cls, args);
@@ -47985,7 +47999,7 @@ init_ui_base();
 init_ui_savedata();
 var UIBase6 = UIBase;
 var PackFlags3 = PackFlags;
-var PanelContents2 = class extends ColumnFrame {
+var PanelContents = class extends ColumnFrame {
   get openClosedIcon() {
     return this.panelFrame.openCloseIcon;
   }
@@ -48029,7 +48043,7 @@ var PanelContents2 = class extends ColumnFrame {
     };
   }
 };
-UIBase6.internalRegister(PanelContents2);
+UIBase6.internalRegister(PanelContents);
 var PanelFrame = class extends ColumnFrame {
   titleframe;
   contents;
@@ -49785,7 +49799,7 @@ var TabClickEvent = class _TabClickEvent extends PointerEvent {
     return new _TabClickEvent(this.type, this.tab, this);
   }
 };
-var TabItemContainer2 = class extends ColumnFrame {
+var TabItemContainer = class extends ColumnFrame {
   static define() {
     return {
       ...ColumnFrame.define(),
@@ -49844,7 +49858,7 @@ var TabItemContainer2 = class extends ColumnFrame {
     this._tab.ontabcontextmenu = v;
   }
 };
-UIBase.internalRegister(TabItemContainer2);
+UIBase.internalRegister(TabItemContainer);
 var TabDragEvent = class extends PointerEvent {
 };
 var TabItem = class extends UIBase {
@@ -51300,7 +51314,7 @@ var TabBar = class extends UIBase {
   }
 };
 UIBase.internalRegister(TabBar);
-var TabContainer3 = class extends UIBase {
+var TabContainer2 = class extends UIBase {
   _style;
   tbar;
   tabs;
@@ -51681,7 +51695,7 @@ var TabContainer3 = class extends UIBase {
     }
   }
 };
-UIBase.internalRegister(TabContainer3);
+UIBase.internalRegister(TabContainer2);
 
 // scripts/widgets/ui_listbox.ts
 init_ui_base();
@@ -72916,7 +72930,7 @@ export {
   PanZoomContainer,
   PanZoomPanOp,
   PanZoomTransform,
-  PanelContents2 as PanelContents,
+  PanelContents,
   PanelDockMask,
   PanelFlags,
   PanelFrame,
@@ -72977,9 +72991,9 @@ export {
   StringSetProperty,
   StructFlags,
   TabBar,
-  TabContainer3 as TabContainer,
+  TabContainer2 as TabContainer,
   TabItem,
-  TabItemContainer2 as TabItemContainer,
+  TabItemContainer,
   TableFrame,
   TableRow,
   TangentModes,

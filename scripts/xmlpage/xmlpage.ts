@@ -5,8 +5,10 @@ import { Menu } from "../menu/menu";
 import { Icons } from "../core/ui_base";
 import { Container } from "../core/ui";
 import type { IContextBase } from "../core/context_base";
-import { TableRowProxy } from "../widgets/ui_table";
-import { PanelContents, TabContainer, TabItemContainer } from "../pathux";
+import type { TableRowProxy } from "../widgets/ui_table";
+import type { MenuTemplate } from "../menu/menu_types";
+import type { PanelContents } from "../widgets/ui_panel";
+import type { TabContainer, TabItemContainer } from "../widgets/ui_tabs";
 
 // try to make setting attributes
 // in xml not run afoul of inherited packflags override them
@@ -1001,7 +1003,7 @@ class Handler {
       }
     }
 
-    const ret = this.container.menu(title, list as Parameters<Container["menu"]>[1], packflag);
+    const ret = this.container.menu(title, list as MenuTemplate, packflag);
     if (isDropBox) {
       ret.removeAttribute("simple");
     }
