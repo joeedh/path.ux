@@ -4,7 +4,9 @@
 never owns. A `DocumentProvider` renders each block and applies each edit; the editor turns
 browser input into `EditOp`s, runs them through a toolstack as `DocEditOp`s, and re-renders
 what the provider says changed. The design and its reasoning live in
-[plans/rich-text-provider.md](plans/rich-text-provider.md); this page is the consumer's view.
+[plans/rich-text-provider.md](plans/rich-text-provider.md), with the markdown provider in
+[plans/rich-text-markdown.md](plans/rich-text-markdown.md) and composition in
+[plans/rich-text-ime.md](plans/rich-text-ime.md); this page is the consumer's view.
 
 Everything below is exported from the `pathux` barrel: `RichTextEditor`, `RichTextArea`,
 `DocumentSession`, `RichTextContext`, `DocEditOp`, `replaceContentsOp`, `PlainProvider`,
@@ -90,9 +92,9 @@ the like, since a string cannot be edited in place.
   editor calls on every selection change to light the buttons; per-editor state lives in that
   closure, since one provider serves every editor over a session. `providers/toolbar.ts`
   supplies `addMarkButtons(row, ctx, provider, marks?)`, one `IconCheck` per mark with a sync
-  that reads `activeMarks`, and `addSeparator(row)`; `providers/marks.ts` has the range
-  arithmetic for flat `{ from, to, name }` marks. A provider without `buildToolbar` gets no
-  toolbar.
+  that reads `activeMarks`, `addToolButton(row, glyph, label, onPress)` for a plain glyph
+  button, and `addSeparator(row)`; `providers/marks.ts` has the range arithmetic for flat
+  `{ from, to, name }` marks. A provider without `buildToolbar` gets no toolbar.
 - `onExternalChange(doc, listener)` is optional and reports changes made outside `applyEdit`
   (a remote update, a write to a field the document renders) and returns the unsubscribe. A
   provider never reports its own `applyEdit`. See Hearing about changes for when to use it
@@ -190,7 +192,9 @@ two. It is how a provider reaches the editor without holding a pointer to it.
 - Copy and cut write the selection through `toClipboard`; paste and drop read through
   `fromClipboard`.
 - A `refused` event, `detail: { inputType }`, fires for every input the editor declined: an
-  input type it has no mapping for, a paste the provider refused, and composition.
+  input type it has no mapping for, a paste the provider refused, Tab when the provider does
+  not take it, and a composition whose result the editor could not attribute (see
+  Composition below; an ordinary composition is accepted).
 - `RichTextEditor.observeMutations` (a static, on by default) logs any change to the editable
   DOM the editor did not make, which is how a missed input type shows up during development.
 
@@ -298,13 +302,16 @@ dropped. Its samples are a test fixture, so it tracks the parser.
 - `MdDoc` is `{ blocks: MdBlock[] }`. A block is its kind plus `id`, `text`, `marks` and
   `atoms`: `paragraph`, `heading` (`level`), `listItem` (`ordered`, `depth`, `task`,
   `checked`), `quote` (`depth`), `code` (`lang`, with newlines in `text`), and the opaque kinds
-  `hr`, `table`, `raw` and `frontmatter`, each keeping its `source`.
+  `hr`, `table`, `raw` and `frontmatter`, each keeping its `source`. A text block parsed from
+  HTML may carry `html` (`tag`, `style`, `attrs`), the element and the sanitized attributes
+  the source gave it, which the serializer writes back as HTML.
 - Marks are `{ from, to, name }` with `bold`, `italic`, `underline`, `strikethrough`, `code`,
-  `link` (`kind`, `target`, `title`), `style` (an inline element, style or attributes the
-  source carried) and `break` (a hard line break over one `\n`; a bare `\n` is a soft one).
-- An atom is an image, `{ offset, image: { src, alt, title?, width? } }`, one `ATOM_CHAR` in
-  the text. `mdBlock(id, kind, text)` builds an empty block; `wikilinkSource` is the `[[…]]`
-  form of a target and its text.
+  `link` (`kind`, `target`, `title`), `style` (an inline element markdown has no syntax for)
+  and `break` (a hard line break over one `\n`; a bare `\n` is a soft one). Any mark parsed
+  from HTML may carry `tag`, `style` and `attrs` from its element.
+- An atom is an image, `{ offset, image: { src, alt, title?, width?, attrs? } }`, one
+  `ATOM_CHAR` in the text. `mdBlock(id, kind, text)` builds an empty block; `wikilinkSource`
+  is the `[[…]]` form of a target and its text.
 - `markdownDocFromText(text, newId?)` understands GFM tables, task lists and strikethrough,
   YAML front matter, `[[target|text]]` wikilinks and a whitelist of inline and block HTML; ids
   are fresh per parse. `markdownText(doc)` writes fixed forms (`-` bullets, `*` emphasis and

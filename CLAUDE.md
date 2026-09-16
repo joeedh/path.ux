@@ -412,9 +412,11 @@ leaving the old callback in place and `@deprecated`.
   `ThumbnailCache` behind it, and `pickAssetPopup` for choosing one item.
 - [Rich text](documentation/richtext.md) — `rich-text-x` edits a document through a
   `DocumentProvider` (`scripts/widgets/richtext/`): the provider contract, `DocumentSession`
-  and the per-document or shared toolstack, the editing loop over `beforeinput`, and what is
-  refused (composition) until the IME plan lands. `RichTextArea` is the datapath-bound form
-  that `Container.textarea` builds for a `RICH_TEXT_STRING` property.
+  and the per-document or shared toolstack, the editing loop over `beforeinput`, sessions and
+  history engines, render-only mode, link clicks, and composition (IME), which is diffed at
+  `compositionend` into an ordinary edit. `RichTextArea` is the datapath-bound form that
+  `Container.textarea` builds for a `RICH_TEXT_STRING` property, with a `plain` format built
+  in and `markdown` registered by importing `scripts/widgets/richtext/markdown.ts`.
   [Markdown syntax](documentation/markdown_syntax.md) is the reference for the markdown
   format: what `MarkdownProvider` reads, what it writes back and what it drops; every sample
   in it is a test fixture (`tests/richtext/markdownSyntax.test.ts`).
