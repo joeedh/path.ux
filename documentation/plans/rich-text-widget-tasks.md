@@ -1,6 +1,6 @@
 # Embedded rich text widget tasks
 
-Status: Stages 1–4 are complete. Stage 5 is in progress.
+Status: Stages 1–5 are complete. Stopped at the Stage 5 boundary.
 
 This is the sole status and completion tracker for the [widget architecture](rich-text-widgets.md)
 and [forms/front-matter design](rich-text-widget-forms.md). Task IDs and existing completion
@@ -17,7 +17,7 @@ proposed; update their status here when implementation begins.
 | 2. Native table        | Complete    | GFM table cells and structure edit through document history and round-trip formatting                                              |
 | 3. Plugin storage      | Complete    | Registry, session host, command validation, Markdown envelopes, unknown-record preservation, and structured clipboard              |
 | 4. Local forms         | Complete    | Standalone form control, Zod adapter, embedded and native front-matter bindings, source preservation, drafts, validation, and undo |
-| 5. Additional adapters | In progress | Second schema adapter and declarative embedded schemas with explicit unsupported cases                                             |
+| 5. Additional adapters | Complete    | Second schema adapter and declarative embedded schemas with explicit unsupported cases                                             |
 | 6. External data       | Not started | Host-supplied resource services, policy invalidation, conflicts, cancellation, and explicit submission                             |
 
 Stage 1 includes a review of serialization at the toolstack boundary before later stages
@@ -58,8 +58,8 @@ condition is demonstrated, and record the relevant commit and checks in the comp
 Record blockers with the affected task ID and the concrete dependency needed to continue.
 Tasks without a checkbox marked complete are pending, including partially implemented work.
 
-- Current work: A3; shared adapter fixtures and schema-migration browser verification. A1 and A2 are implemented; acceptance is pending final checks.
-- Next task: finish A3 verification and record Stage 5 acceptance.
+- Current work: none; A1–A3 are complete and verified.
+- Next task: E1, define host-supplied resource/schema services and their authorization, cancellation and version/conflict contracts.
 - Blockers: none for Stage 5. Remaining [design decisions](rich-text-widgets.md#decisions-still-requiring-implementation-prototypes)
   belong to later stages.
 
@@ -181,11 +181,11 @@ require source retention; the current canonical Markdown serializer is not suffi
 
 Dependencies: F1–F8. Adapters remain optional imports, outside the base rich text bundle.
 
-- [ ] A1. Implement the nstructjs adapter for a documented subset, with explicit diagnostics
+- [x] A1. Implement the nstructjs adapter for a documented subset, with explicit diagnostics
       for helper expressions, references, and unsupported class/value encodings.
-- [ ] A2. Implement versioned declarative embedded schemas without evaluating document code.
+- [x] A2. Implement versioned declarative embedded schemas without evaluating document code.
       Verify unsupported runtime behavior requires a host-registered implementation.
-- [ ] A3. Add shared form fixtures for both adapters and schema-version migrations. Verify
+- [x] A3. Add shared form fixtures for both adapters and schema-version migrations. Verify
       validation behavior and source/value codecs, and document limitations and bundle boundaries.
 
 ### Stage 6: external data and actions
@@ -403,3 +403,45 @@ the authored source. Retained source increases history snapshot memory. The exam
 is simulated, so applications must retain their own authoritative hash/identity checks. WebKit,
 physical/mobile IMEs and uninterrupted movement without `moveBefore` retain the earlier limits.
 Stage 5 adapters, external services, inline records and the visualnovel migration remain pending.
+
+Stage 5 completion on 2026-09-16:
+
+| Tasks | Commit and acceptance evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A1    | `6e6b58af`: optional nstructjs metadata adapter supports bounded scalar, array and optional JSON inputs. Tests cover numeric ranges, nullable optionals, helper expressions, named/abstract references, iterator variables and unsupported class/value encodings. Registered fixture constructors and readers are never executed. The inspected 0.8.12 metadata API and stricter form-validation policy are documented.                                                                       |
+| A2    | `6e6b58af`: bounded version-1 declarative schemas support explicit scalar, collection, object, enum and union validation. Unknown keywords, runtime hooks, malformed shapes and future grammar versions produce diagnostics. Tests cover hostile JSON, cyclic/accessor input and the validation work limit. Both browsers preserve unsupported executable text inertly and require an explicit registered schema to restore behavior. The original reference-only plugin remains the default. |
+| A3    | `6e6b58af`: shared intake fixtures exercise both adapters, editable codecs and source-preserving YAML patches. The example demonstrates catalog-version migration and embedded-schema replacement. Both browsers verify independent views, invalid/incomplete answer persistence, draft conflicts, stale command refusal, shared history authorization and atomic schema/answer undo. Redo never re-executes conversion. Optional bundle boundaries and limitations are documented.           |
+
+Final verification:
+
+- `pnpm run typecheck` passes both the library and example checks; `pnpm run build` passes.
+- `pnpm run test --maxWorkers=4` passes all 1,128 tests across 77 files, including 54 new
+  adapter cases. Main barrel exports remain unchanged. The declarative adapter's bundle
+  contains no nstructjs, Zod, YAML or form UI runtime.
+- `pnpm exec playwright test playwright/richtext/forms.spec.ts --workers=2 --reporter=line`
+  passes all 48 cases in Chromium and Firefox. The full rich-text browser run passes 190
+  tests with the same five existing skips. One earlier Firefox disk-conflict case timed out
+  after returning the expected save result; it passed in both the complete forms rerun and
+  the full regression. No timeout increase or new skip was introduced.
+- `pnpm run lint:check` passes with the seven existing datapath warnings and zero prose
+  findings. Changed-file Prettier and CRLF-aware whitespace checks pass. Full
+  `pnpm run format:check` reports only the same 66 unchanged path-controller files.
+
+Review covered metadata-only adaptation, unsupported runtime behavior, strict schema decoding,
+validation bounds, authored-value preservation, migration snapshots, draft barriers, shared
+history policy and undo/redo rebinding. The rendered adapter forms were inspected in Chromium;
+the screenshot was saved as `pathux-stage5-adapters.png` in the system temporary directory.
+Verification logs are `pathux-stage5-unit.log`, `pathux-stage5-forms-final.log`,
+`pathux-stage5-browser.log`, `pathux-stage5-lint.log` and `pathux-stage5-format.log` in that same
+directory. Generated example bundles are committed; the main library bundle is unchanged.
+No submodule change or gitlink update was needed, and visualnovel was not modified.
+
+The nstructjs adapter intentionally excludes class readers, helper expressions, references,
+static encodings and other values requiring application codecs. It preserves authored floats
+without promising lossless float32 binary conversion. Declarative descriptions support a
+bounded path.ux subset rather than general JSON Schema; executable behavior requires a
+host-registered implementation. Complex fields still use JSON text controls. The example
+migration is pure application code using the existing command boundary; applications must
+retain schema invalidation and their authoritative save/conflict handling. Earlier WebKit,
+physical/mobile IME and movement-without-`moveBefore` limits remain. External services, true
+inline records and the visualnovel migration remain pending.
