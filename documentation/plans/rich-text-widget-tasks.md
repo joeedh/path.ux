@@ -1,6 +1,6 @@
 # Embedded rich text widget tasks
 
-Status: Stages 1–5 are complete. Stage 6 is in progress.
+Status: Stages 1–6 are complete. Stopped at the Stage 6 boundary.
 
 This is the sole status and completion tracker for the [widget architecture](rich-text-widgets.md)
 and [forms/front-matter design](rich-text-widget-forms.md). Task IDs and existing completion
@@ -11,14 +11,14 @@ records are retained from the original combined document.
 Implementation is not authorized by this design document alone. The following stages are
 proposed; update their status here when implementation begins.
 
-| Stage                  | Status      | Deliverable and acceptance condition                                                                                               |
-| ---------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| 1. Hosting             | Complete    | Keyed mounts, disposal, input ownership, focus-preserving changes, and a synthetic editable widget work in two views               |
-| 2. Native table        | Complete    | GFM table cells and structure edit through document history and round-trip formatting                                              |
-| 3. Plugin storage      | Complete    | Registry, session host, command validation, Markdown envelopes, unknown-record preservation, and structured clipboard              |
-| 4. Local forms         | Complete    | Standalone form control, Zod adapter, embedded and native front-matter bindings, source preservation, drafts, validation, and undo |
-| 5. Additional adapters | Complete    | Second schema adapter and declarative embedded schemas with explicit unsupported cases                                             |
-| 6. External data       | In progress | Host-supplied resource services, policy invalidation, conflicts, cancellation, and explicit submission                             |
+| Stage                  | Status   | Deliverable and acceptance condition                                                                                               |
+| ---------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Hosting             | Complete | Keyed mounts, disposal, input ownership, focus-preserving changes, and a synthetic editable widget work in two views               |
+| 2. Native table        | Complete | GFM table cells and structure edit through document history and round-trip formatting                                              |
+| 3. Plugin storage      | Complete | Registry, session host, command validation, Markdown envelopes, unknown-record preservation, and structured clipboard              |
+| 4. Local forms         | Complete | Standalone form control, Zod adapter, embedded and native front-matter bindings, source preservation, drafts, validation, and undo |
+| 5. Additional adapters | Complete | Second schema adapter and declarative embedded schemas with explicit unsupported cases                                             |
+| 6. External data       | Complete | Host-supplied resource services, policy invalidation, conflicts, cancellation, and explicit submission                             |
 
 Stage 1 includes a review of serialization at the toolstack boundary before later stages
 depend on widget commands. Begin forms with a host-supplied Zod schema; add nstructjs against
@@ -58,10 +58,10 @@ condition is demonstrated, and record the relevant commit and checks in the comp
 Record blockers with the affected task ID and the concrete dependency needed to continue.
 Tasks without a checkbox marked complete are pending, including partially implemented work.
 
-- Current work: E4–E5; resource contracts, external bindings and explicit submission are implemented. Verify cancellation, conflicts, schema versions and the local service example before acceptance.
-- Next task: finish Stage 6 unit/browser regressions and record E1–E5 acceptance.
+- Current work: none; E1–E5 are complete and verified.
+- Next task: I1, finalize bounded true-inline plugin syntax and supported placements.
 - Blockers: none for Stage 6. Remaining [design decisions](rich-text-widgets.md#decisions-still-requiring-implementation-prototypes)
-  belong to later stages.
+  belong to the inline follow-up work.
 
 ### Preparation
 
@@ -192,16 +192,16 @@ Dependencies: F1–F8. Adapters remain optional imports, outside the base rich t
 
 Dependencies: W1–W8 and F1–F8. This stage introduces no default video or service renderer.
 
-- [ ] E1. Define host-supplied resource/schema services with scoped references, credentials
+- [x] E1. Define host-supplied resource/schema services with scoped references, credentials
       outside documents, destination authorization, cancellation, and version/conflict results.
-- [ ] E2. Implement reference-backed form values and read-only external views. Verify
+- [x] E2. Implement reference-backed form values and read-only external views. Verify
       refresh does not dirty the document and saving a snapshot is an explicit document edit.
-- [ ] E3. Implement explicit submission with pending/success/failure states. Verify neither
+- [x] E3. Implement explicit submission with pending/success/failure states. Verify neither
       document undo nor redo submits, repeats, or reverses external requests.
-- [ ] E4. Test document rebinding, path changes, policy revocation, redirects, and late
+- [x] E4. Test document rebinding, path changes, policy revocation, redirects, and late
       responses. Verify disallowed work never mounts or starts a request and stale results are
       discarded without corrupting document or view state.
-- [ ] E5. Document the service contract with a local fake service and browser example,
+- [x] E5. Document the service contract with a local fake service and browser example,
       including offline/failure behavior and externally versioned value conflicts.
 
 ### Follow-up: true inline plugin records
@@ -445,3 +445,47 @@ migration is pure application code using the existing command boundary; applicat
 retain schema invalidation and their authoritative save/conflict handling. Earlier WebKit,
 physical/mobile IME and movement-without-`moveBefore` limits remain. External services, true
 inline records and the visualnovel migration remain pending.
+
+Stage 6 completion on 2026-09-16:
+
+| Tasks | Commit and acceptance evidence                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| E1    | `405767d5`: optional host-owned resource services define scoped references, side-effect-free resolution, explicit destination authorization, bounded versioned results, schema-version stamps and submission IDs. Tests verify authorization before transport, strict boolean decisions, each redirect hop, redirect limits, malformed results and separate authored/validated submission values. No credential field or default transport is added. |
+| E2    | `405767d5`: external forms and read-only JSON views use shared widget hosting. Browser tests verify independent view snapshots, refresh without document edits, explicit snapshot commands, identical-snapshot no-ops and history replay without service writes. Offline saved snapshots display a stale-data label and cannot enable writes.                                                                                                        |
+| E3    | `405767d5`: explicit submission validates current answers and reports pending, success, conflict, failure or cancellation. External drafts block document save preparation instead of executing remote work. Both engines verify repeated-click guards, invalid input refusal, conflict retention and redo without resubmission. Resource and schema versions remain distinct from document history.                                                 |
+| E4    | `405767d5`: optional mount preflight denies renderers before construction. Unit/browser checks cover revoked policies, changed document bases, stale records, replaced services, redirects, cancellation despite an ignored signal, late responses, read-only/session policy and recoverable detached drafts. Failed schema refresh disables the previously loaded form.                                                                             |
+| E5    | `405767d5`: the application exposes a local external-data demo with two editor views, simulated versioned storage, offline failures and explicit snapshot history. Fixture controls exercise delayed requests, policy revocation and schema conflicts. The actual application dialog protects drafts on close, and its rendered result was inspected visually. Contracts, host obligations and limitations are documented.                           |
+
+Final verification:
+
+- `pnpm run typecheck` passes the full library and example checks; `pnpm run build` passes.
+- `pnpm run test --maxWorkers=4` passes all 1,149 tests across 78 files, including 21 new
+  resource cases. The focused resource/plugin regression passes all 46 cases. Main barrel
+  exports and the built main library bundle remain unchanged.
+- `pnpm exec playwright test playwright/richtext --workers=2 --reporter=line` passes 222 tests
+  with the same five existing skips. After the final discard-action cleanup, the complete
+  external/local form regression passes 78 tests, and the application external-data example
+  passes in Chromium and Firefox. No new skip or timeout increase was introduced.
+- `pnpm run lint:check` passes with seven existing datapath warnings and zero prose findings.
+  Changed-file Prettier and CRLF-aware whitespace checks pass. Full `pnpm run format:check`
+  reports only the same 66 unchanged path-controller files.
+
+Review covered destination checks before transport, strict authorization results, redirect
+limits, data/schema version conflicts, repeated submissions during validation, failed schema
+refresh, stale offline snapshots, detached-draft recovery and separation from document history.
+The final example screenshot is the external-example artifact of the Chromium application
+browser test. Verification logs in the system temporary directory are
+`pathux-stage6-unit-final.log`, `pathux-stage6-browser.log`, `pathux-stage6-accepted-forms.log`,
+`pathux-stage6-accepted-example.log`, `pathux-stage6-lint-accepted.log` and
+`pathux-stage6-format.log`. Generated example bundles are committed. No submodule change or
+gitlink update was needed, and visualnovel was not modified.
+
+Services are trusted application code. Production hosts still supply transport, credentials,
+manual redirects, bounded response parsing, atomic data/schema version checks and idempotency.
+Cancelling a write cannot reverse a remote transaction that already committed; the UI preserves
+the draft and reports the uncertain outcome. Remote refresh is explicit, with no shared push
+cache or automatic retry. External forms accept registered or resource-backed declarative
+schemas; a remote-schema binding over native YAML is outside this implementation. Complex
+fields retain JSON text controls. Default media behavior is unchanged. Earlier WebKit,
+physical/mobile IME and movement-without-`moveBefore` limits remain. True inline records and
+the separate visualnovel migration remain pending.
