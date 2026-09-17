@@ -1,6 +1,6 @@
 # Embedded rich text widget tasks
 
-Status: Stage 3 is in progress; stages 1 and 2 are complete.
+Status: Stages 1–3 are complete. Stopped at the Stage 3 boundary.
 
 This is the sole status and completion tracker for the [widget architecture](rich-text-widgets.md)
 and [forms/front-matter design](rich-text-widget-forms.md). Task IDs and existing completion
@@ -15,7 +15,7 @@ proposed; update their status here when implementation begins.
 | ---------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | 1. Hosting             | Complete    | Keyed mounts, disposal, input ownership, focus-preserving changes, and a synthetic editable widget work in two views               |
 | 2. Native table        | Complete    | GFM table cells and structure edit through document history and round-trip formatting                                              |
-| 3. Plugin storage      | In progress | Registry, session host, command validation, Markdown envelopes, unknown-record preservation, and structured clipboard              |
+| 3. Plugin storage      | Complete    | Registry, session host, command validation, Markdown envelopes, unknown-record preservation, and structured clipboard              |
 | 4. Local forms         | Not started | Standalone form control, Zod adapter, embedded and native front-matter bindings, source preservation, drafts, validation, and undo |
 | 5. Additional adapters | Not started | Second schema adapter and declarative embedded schemas with explicit unsupported cases                                             |
 | 6. External data       | Not started | Host-supplied resource services, policy invalidation, conflicts, cancellation, and explicit submission                             |
@@ -58,8 +58,8 @@ condition is demonstrated, and record the relevant commit and checks in the comp
 Record blockers with the affected task ID and the concrete dependency needed to continue.
 Tasks without a checkbox marked complete are pending, including partially implemented work.
 
-- Current work: W8; final example acceptance, regression checks, and implementation review.
-- Next task: F1, after Stage 3 acceptance and a new authorization.
+- Current work: none; W1–W8 are complete and verified.
+- Next task: F1, finalize the normalized form schema and binding contract.
 - Blockers: none for Stage 3. Remaining [design decisions](rich-text-widgets.md#decisions-still-requiring-implementation-prototypes)
   belong to later stages.
 
@@ -145,7 +145,7 @@ Dependencies: H1–H9. T1–T6 should validate native hosting before the plugin 
 - [x] W7. Add tests for malicious keys/depth, HTML/URL handling, stale policy decisions, and
       cancellation after revocation. Verify default video references create no players, literal
       video/iframe HTML stays inert, and no embed scripts or services load automatically.
-- [ ] W8. Document provider opt-in, host configuration, and an application-supplied plugin
+- [x] W8. Document provider opt-in, host configuration, and an application-supplied plugin
       example. Verify ordinary editors without a host retain their existing behavior.
 
 ### Stage 4: Zod forms and native front-matter bindings
@@ -320,3 +320,42 @@ On this checkout, `pnpm run typecheck` passed both library and example passes,
 `pnpm run lint:check` passed with seven existing datapath warnings and no prose findings.
 Review reconfirmed connected mount retention, command/history authorization, draft recovery,
 legacy media compatibility, and the documented browser limitations. Visualnovel was untouched.
+
+Stage 3 completion on 2026-09-16:
+
+| Tasks  | Commit and acceptance evidence                                                                                                                                                                                                                                                                  |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| W1     | `97bcffac`: fixtures preceded parser integration. Eleven codec tests cover the exact v1 grammar, unknown/future versions, fence escaping, source-preserving ID repair, duplicate members, hostile keys, sparse arrays, depth and byte limits.                                                   |
+| W2     | `97bcffac`: explicit registries and per-session hosts separate insert, mount, edit and external policy. Tests cover duplicate registration, separate document contexts, denial before factory construction, invalidation, abort signals and late-result refusal.                                |
+| W3     | `97bcffac`: optional block storage returns frozen snapshots; insert/update/remove/move use complete provider snapshots. Tests cover stale/forged snapshots, queued caller mutation, stable identities, inverses and shared-stack write refusal.                                                 |
+| W4     | `97bcffac`: Markdown retains reserved source, including CRLF and unsupported versions; duplicate repair changes only the ID token. Tests cover inert oversized/malformed data, nested/ordinary code fences and canonical writes.                                                                |
+| W5     | `97bcffac`: portable structured transfers create fresh IDs and preserve external references. Tests cover surrounding prose, undo/redo, foreign clipboard HTML, explicit plain-provider refusal, escaped static HTML and independent entry parsing.                                              |
+| W6, W7 | `97bcffac`: migrations run once as validated undoable edits; removal and policy denial leave data-only history usable. Raw draft edits are refused in favor of scoped prepared updates. Unit and browser tests cover revoked actions, source retention, hostile values and inert default media. |
+| W8     | `97bcffac`: provider/host documentation and an application note plugin demonstrate two views, drafts and explicit opt-in. Bound-field tests verify per-instance configuration, one mount per replacement and one undo entry. The example was inspected visually in the browser.                 |
+
+Final verification:
+
+- `pnpm run typecheck` passes the library and example passes; `pnpm run build` passes.
+- `pnpm run test` passes all 1,032 tests across 75 files, including the unchanged barrel surface.
+- `pnpm exec playwright test playwright/richtext --workers=2 --reporter=line` passes 140
+  tests with five existing skips. The focused plugin/example/image regression passes all
+  20 cases in Chromium and Firefox. No new skips were added.
+- `pnpm run lint:check` passes with seven existing datapath warnings and zero prose findings.
+  Changed-file Prettier and whitespace checks pass. Repository-wide `pnpm run format:check`
+  still reports the same 66 untouched path-controller files.
+
+Review covered immutable capture, authoritative snapshot checks, draft command validation,
+clipboard boundaries, hostile JSON, source offset mapping, disposal, instance configuration,
+optional bundle boundaries and default media behavior. Browser fixtures were corrected to
+use the local server without query strings. Shared screenshot overwrites caused Windows
+file-open errors; Markdown diagnostics now use per-test output paths. The final full browser
+run passes, and generated tracked screenshots were restored. Library/example bundles are
+committed. No path-controller change or gitlink update was needed; visualnovel was untouched.
+
+This API supports block records and one current payload version per plugin. Inline records,
+forms/schema adapters, and external resource services remain pending. Plugins are trusted
+application code, not isolated executable modules. Record envelopes retain unsupported source;
+the surrounding Markdown document still uses its existing canonical serializer. Structured
+transfers with an unclosed reserved container are explicitly refused. Host metadata/policy
+changes require invalidation. The five existing browser skips and the earlier WebKit,
+physical/mobile IME, and movement-without-`moveBefore` limitations remain.
