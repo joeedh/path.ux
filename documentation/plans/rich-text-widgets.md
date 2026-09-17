@@ -100,7 +100,7 @@ identity because neighboring edits move it. No default media recognizer is intro
 
 ### Plugin records
 
-A plugin record is a provider-independent value. A proposed envelope is:
+A plugin record is a provider-independent value. The block envelope is:
 
 ```ts
 interface WidgetRecord {
@@ -146,26 +146,37 @@ Resolve identity, authorize, capture the inverse, and apply the change against t
 current state at the serialized commit boundary. A check performed when a palette opens or
 before an asynchronous wait is insufficient. Rejected, stale, or deleted targets produce a
 settled refusal result and no history entry. A failed operation must not partially mutate
-the document. This is a new requirement for widget commands; the current dispatch path
-computes inverses before submitting to the toolstack and will need review.
+the document. The shared command boundary captures inverses beside mutation and checks session write
+authorization during application history execution.
 
 Use a per-widget revision or relevant-value precondition so unrelated text edits do not
 invalidate every request. Concurrent edits to the same value are refused and refreshed
 instead of silently overwriting another view. This design does not introduce collaborative
 operational transformation or automatic merging of arbitrary payloads.
 
-Initial widget operations can use provider `custom` edits. They must declare the complete
-touched block span and position shifts. A later public operation type is justified only if
-it reduces duplicated provider code. Raw plugin mutations and a second `DataPathSetOp` for
+Markdown plugin commands use complete `replaceBlocks` snapshots, including the contiguous
+span touched by a move. Native provider operations can still use `custom` edits with complete
+touched spans and position shifts. No plugin-specific history operation is needed. Raw plugin mutations and a second `DataPathSetOp` for
 the same change are prohibited: one logical change produces one document history entry.
 
 ## Persistence and clipboard
 
-The first Markdown implementation uses a reserved, versioned fenced block containing a
-JSON envelope, with an info string such as `pathux-widget-v1`. The exact grammar and escaping
-fixtures must be finalized before parser implementation. Fence length must safely contain
-payload text, including backticks. This is a Markdown extension, not an ordinary GFM table
-or arbitrary HTML tag.
+The Markdown block envelope uses the exact info string `pathux-widget-v1`. Its body is one
+JSON object with exactly `id`, `type`, `version`, and `payload`. The opening fence has at
+least three backticks or tildes; the closing fence repeats it exactly. LF and CRLF are
+supported, with optional trailing spaces or tabs on fence lines. Canonical output uses
+compact JSON and a backtick fence longer than every backtick run in that JSON. Only top-level
+blocks activate records. Nested fences keep ordinary code semantics. Other numbered
+`pathux-widget-vN` fences, extra info, malformed JSON, and unsupported envelope shapes are
+preserved as opaque source. This is a Markdown extension, not an arbitrary HTML tag.
+
+IDs match `[A-Za-z0-9][A-Za-z0-9._:-]{0,127}`. Types have at least two dot-separated
+ASCII segments, begin with a letter, and contain letters, digits, underscores, or hyphens;
+their total length is at most 128 characters. Payload versions are integers from 1 through 2147483647. The entire JSON envelope is limited to 65,536 UTF-8 bytes, nesting depth 32,
+and 10,000 values. Duplicate object members, accessors, sparse arrays, non-finite numbers,
+and the keys `__proto__`, `prototype`, and `constructor` are rejected. A lexical scan bounds
+depth and tokens before `JSON.parse`. The Markdown parser still retains the surrounding
+document source; these limits bound envelope decoding rather than total document size.
 
 Parsing recognizes the envelope without loading a plugin. Unknown types, future versions,
 and disallowed instances render inert placeholders and retain their data. Malformed or
@@ -181,7 +192,10 @@ changes. Schema version changes within a form are separate from plugin payload m
 Copy/paste within capable providers preserves the record and creates a fresh instance ID.
 Moving within a document preserves identity. Loading detects duplicate IDs and gives each
 occurrence a distinct runtime identity before mounting. The format must define how duplicate
-persisted IDs are repaired without changing opaque unknown payloads. Undo restores the
+persisted IDs are repaired without changing opaque unknown payloads. The first occurrence
+keeps its ID; later occurrences get fresh IDs by replacing only the top-level JSON ID token.
+All other source bytes, including unknown payloads and CRLF, remain unchanged. Malformed or
+future containers have no decoded record and use their provider block identity. Undo restores the
 original identity of a deleted instance.
 
 Use a versioned structured clipboard flavor for provider-independent transfers, with
@@ -189,8 +203,15 @@ plain-text and sanitized static HTML fallbacks. Clipboard input is untrusted and
 the same parsing and authorization rules as loaded documents. Unsupported targets receive
 an explicit fallback, not a successful insertion that silently loses saved values.
 
-The current `ClipboardContent` supports block strings and HTML; structured transfer requires
-extending that contract and the editor's clipboard plumbing. Native table cell selection
+`ClipboardContent.widgetData` carries `application/x-pathux-widgets+json`. Its exact root is
+`{format:"pathux-widgets",version:1,blocks:[...]}`; each ordered entry has exactly one member,
+either `{widget:WidgetRecord}` or `{text:string}` for Markdown source. Transfers allow at most
+1,024 entries and 262,144 UTF-8 bytes, with the same depth and node limits. Paste creates
+fresh instance IDs; moves and history retain them. External references remain unchanged.
+Malformed structured data refuses insertion rather than falling through to HTML. Editors
+whose providers lack widget storage emit `clipboardunsupported` and refuse structured input.
+Users can explicitly paste plain text as a source fallback. Oversized copy/cut also emits
+that event and preserves the selection without deleting data. Native table cell selection
 uses its own TSV/text clipboard behavior, while selecting the outer block copies the
 document table. A cell paste is one undoable operation.
 
@@ -423,8 +444,6 @@ true inline plugins, and the separate visualnovel migration using stable task ID
 
 ## Decisions still requiring implementation prototypes
 
-- Finalize the Markdown envelope grammar, payload limits, duplicate-ID repair, and structured
-  clipboard format before implementing persistence.
 - Specify true inline plugin syntax separately; do not encode arbitrary payloads in image
   URLs or accept executable custom HTML as a shortcut.
 - Define the normalized form schema subset and adapter diagnostics using real Zod and

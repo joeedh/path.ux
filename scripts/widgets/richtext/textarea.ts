@@ -1,3 +1,4 @@
+import type { WidgetHostFactory } from "./plugin_types";
 import type { WidgetOptions } from "./widget";
 import { UIBase } from "../../core/ui_base";
 import type { IContextBase } from "../../core/context_base";
@@ -69,6 +70,23 @@ export class RichTextArea<CTX extends IContextBase = IContextBase> extends UIBas
   }
   invalidateWidgetPolicy(): void {
     this.editor.invalidateWidgetPolicy();
+  }
+
+  private hostFactory?: WidgetHostFactory;
+  get widgetHostFactory(): WidgetHostFactory | undefined {
+    return this.hostFactory;
+  }
+  set widgetHostFactory(factory: WidgetHostFactory | undefined) {
+    if (factory === this.hostFactory) return;
+    this.hostFactory = factory;
+    if (this._session) {
+      this._session.widgetHost?.dispose();
+      const host = factory?.(this._session, this.ctx);
+      if (this._session.widgetHost !== host) {
+        this._session.widgetHost = host;
+        this._session.invalidateWidgets();
+      }
+    }
   }
 
   private writeAllowed = true;
@@ -225,6 +243,7 @@ export class RichTextArea<CTX extends IContextBase = IContextBase> extends UIBas
 
     const session = new DocumentSession(this.doc, this.provider, this.ctx.toolstack);
     session.setWriteAllowed(this.writeAllowed);
+    session.widgetHost = this.hostFactory?.(session, this.ctx);
     // a load is the path's own value arriving, so it is not written back normalized
     session.onChange((_change, info) => {
       if (info.origin !== "external" && info.origin !== "policy") {

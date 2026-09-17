@@ -1,0 +1,37 @@
+[
+  {
+    "name"  : "supported",
+    "source": "````pathux-widget-v1\n{\"id\":\"fixture-1\",\"type\":\"example.note\",\"version\":1,\"payload\":{\"text\":\"hello ``` world\",\"url\":\"https://example.invalid/reference\"}}\n````",
+    "record": true
+  },
+  {
+    "name"  : "unknown plugin",
+    "source": "````pathux-widget-v1\n{\"id\":\"fixture-1\",\"type\":\"missing.note\",\"version\":1,\"payload\":{\"text\":\"hello ``` world\",\"url\":\"https://example.invalid/reference\"}}\n````",
+    "record": true
+  },
+  {
+    "name"  : "future payload",
+    "source": "````pathux-widget-v1\n{\"id\":\"fixture-1\",\"type\":\"example.note\",\"version\":99,\"payload\":{\"text\":\"hello ``` world\",\"url\":\"https://example.invalid/reference\"}}\n````",
+    "record": true
+  },
+  {
+    "name"  : "future envelope",
+    "source": "````pathux-widget-v2\n{\"id\":\"fixture-1\",\"type\":\"example.note\",\"version\":1,\"payload\":{\"text\":\"hello ``` world\",\"url\":\"https://example.invalid/reference\"}}\n````",
+    "record": false
+  },
+  {
+    "name"  : "malformed",
+    "source": "```pathux-widget-v1\n{bad json}\n```",
+    "record": false
+  },
+  {
+    "name"  : "unknown envelope field",
+    "source": "````pathux-widget-v1\n{\"id\":\"fixture-1\",\"type\":\"example.note\",\"version\":1,\"payload\":{\"text\":\"hello ``` world\",\"url\":\"https://example.invalid/reference\"},\"extra\":true}\n````",
+    "record": false
+  },
+  {
+    "name"  : "ordinary fence",
+    "source": "````json\n{\"id\":\"fixture-1\",\"type\":\"example.note\",\"version\":1,\"payload\":{\"text\":\"hello ``` world\",\"url\":\"https://example.invalid/reference\"}}\n````",
+    "record": false
+  }
+]

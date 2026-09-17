@@ -667,10 +667,10 @@ function containsIC(array, value2) {
   }
   return false;
 }
-function convertPropsToRegExp(object) {
-  for (const key in object) {
-    if (hasOwnProp.call(object, key)) {
-      object[key] = new RegExp(object[key], "i");
+function convertPropsToRegExp(object2) {
+  for (const key in object2) {
+    if (hasOwnProp.call(object2, key)) {
+      object2[key] = new RegExp(object2[key], "i");
     }
   }
 }
@@ -23378,7 +23378,7 @@ var init_controller_ops = __esm({
         this.propType = -1;
         this._undo = void 0;
       }
-      setValue(ctx, val, object) {
+      setValue(ctx, val, object2) {
         var _stack = [];
         try {
           const prop = this.inputs.prop;
@@ -23395,7 +23395,7 @@ var init_controller_ops = __esm({
             }
           }
           const execCtx = __using(_stack, prop.execWithContext());
-          execCtx.dataref = object;
+          execCtx.dataref = object2;
           execCtx.ctx = ctx;
           execCtx.datapath = path2;
           prop.setValue(val);
@@ -28458,15 +28458,15 @@ An example of a more complicated expression might be:
       _parsePathOverrides(path2) {
         const parts = ["", void 0, void 0];
         const TOOLPATH = 0;
-        const NAME = 1;
+        const NAME2 = 1;
         const HOTKEY = 2;
         let part = TOOLPATH;
         for (let i2 = 0; i2 < path2.length; i2++) {
           const c = path2[i2];
           const n = i2 < path2.length - 1 ? path2[i2 + 1] : "";
           if (c === "|") {
-            part = NAME;
-            parts[NAME] = "";
+            part = NAME2;
+            parts[NAME2] = "";
             continue;
           } else if (c === ":" && n === ":") {
             part = HOTKEY;
@@ -28478,7 +28478,7 @@ An example of a more complicated expression might be:
         }
         return {
           path: parts[TOOLPATH].trim(),
-          uiname: parts[NAME] ? parts[NAME].trim() : void 0,
+          uiname: parts[NAME2] ? parts[NAME2].trim() : void 0,
           hotkey: parts[HOTKEY] ? parts[HOTKEY].trim() : void 0
         };
       }
@@ -32285,8 +32285,8 @@ function _setUIBase(uibase) {
   UIBase3 = uibase;
 }
 function initAspectClass(objectIn, blacklist = /* @__PURE__ */ new Set()) {
-  const object = objectIn;
-  const cls = object.constructor;
+  const object2 = objectIn;
+  const cls = object2.constructor;
   if (!cls[AspectKeys]) {
     let validProperty2 = function(obj, key) {
       const descr = Object.getOwnPropertyDescriptor(obj, key);
@@ -32311,7 +32311,7 @@ function initAspectClass(objectIn, blacklist = /* @__PURE__ */ new Set()) {
     var validProperty = validProperty2;
     cls[AspectKeys] = [];
     let keys2 = [];
-    let p = Object.getPrototypeOf(object);
+    let p = Object.getPrototypeOf(object2);
     while (p) {
       keys2 = keys2.concat(Reflect.ownKeys(p));
       p = Object.getPrototypeOf(p);
@@ -32328,11 +32328,11 @@ function initAspectClass(objectIn, blacklist = /* @__PURE__ */ new Set()) {
       if (blacklist.has(k) || exclude.has(k)) {
         continue;
       }
-      if (!validProperty2(object, k)) {
+      if (!validProperty2(object2, k)) {
         continue;
       }
       try {
-        v = object[k];
+        v = object2[k];
       } catch (error2) {
         continue;
       }
@@ -32342,9 +32342,9 @@ function initAspectClass(objectIn, blacklist = /* @__PURE__ */ new Set()) {
       cls[AspectKeys].push(k);
     }
   }
-  object.__aspect_methods = /* @__PURE__ */ new Set();
+  object2.__aspect_methods = /* @__PURE__ */ new Set();
   for (const k of cls[AspectKeys]) {
-    AfterAspect.bind(object, k);
+    AfterAspect.bind(object2, k);
   }
 }
 function clearAspectCallbacks(obj) {
@@ -45262,6 +45262,8 @@ var DocEditOp = class extends ToolOp {
   resolveEdit(session) {
     if (!session.canWrite) throw new ToolRefusedError("Document writes are prohibited", this);
     const op = this.prepare?.() ?? this.op;
+    if (session.widgetHost && !session.widgetHost.authorizeEdit(op))
+      throw new ToolRefusedError("Widget insertion is prohibited", this);
     const encoded = encodeEdit(op);
     this.inputs.op.setValue(encoded);
     const decoded = this.op;
@@ -45333,6 +45335,14 @@ var DocumentSession = class {
   provider;
   toolstack;
   id;
+  widgetHost;
+  /** Cancels mounted generations after host metadata, registry or policy changes. */
+  invalidateWidgets() {
+    this.notify(
+      { dirtyBlocks: this.provider.blocks(this.doc), removedBlocks: [] },
+      { origin: "policy", invalidateWidgets: true }
+    );
+  }
   disposed = false;
   /** Counts every delivered change, folds included, so a client can tell local edits from none. */
   revision = 0;
@@ -45496,6 +45506,7 @@ var DocumentSession = class {
       return;
     }
     this.disposed = true;
+    this.widgetHost?.dispose();
     this.notify({ dirtyBlocks: [], removedBlocks: [] }, { origin: "policy" });
     this.unsubscribe();
     this.listeners.clear();
@@ -45538,6 +45549,9 @@ var RichTextContext = class _RichTextContext {
     return new _RichTextContext(parent, this.session, this.editor);
   }
 };
+
+// scripts/widgets/richtext/widget_mime.ts
+var WIDGET_CLIPBOARD_MIME = "application/x-pathux-widgets+json";
 
 // scripts/widgets/richtext/positions.ts
 var BLOCK_ATTR = "data-doc-block";
@@ -46198,16 +46212,16 @@ function freezeComposition(root2, range, view, pending) {
     view: { blocks, blockText: (id) => texts.get(id) ?? "" }
   };
 }
-function resolveComposition(snapshot, root2, view) {
-  const element2 = blockElement(root2, snapshot.block);
+function resolveComposition(snapshot2, root2, view) {
+  const element2 = blockElement(root2, snapshot2.block);
   if (element2 === void 0 || !rootReflects(root2, view.blocks)) {
     return { kind: "refuse" };
   }
-  const sel = snapshot.selection;
-  if (sel.anchor.block !== snapshot.block || sel.head.block !== snapshot.block) {
+  const sel = snapshot2.selection;
+  if (sel.anchor.block !== snapshot2.block || sel.head.block !== snapshot2.block) {
     return { kind: "refuse" };
   }
-  const edit = composedEdit(snapshot.text, blockTextOf(element2), [
+  const edit = composedEdit(snapshot2.text, blockTextOf(element2), [
     sel.anchor.offset,
     sel.head.offset
   ]);
@@ -46217,7 +46231,7 @@ function resolveComposition(snapshot, root2, view) {
   if ("refused" in edit) {
     return { kind: "refuse" };
   }
-  const map6 = (offset) => mapThroughPending({ block: snapshot.block, offset }, snapshot.pending, snapshot.view);
+  const map6 = (offset) => mapThroughPending({ block: snapshot2.block, offset }, snapshot2.pending, snapshot2.view);
   const range = { anchor: map6(edit.range[0]), head: map6(edit.range[1]) };
   const op = edit.text.length > 0 ? { type: "insertText", at: range, text: edit.text } : { type: "deleteRange", range };
   return { kind: "op", op };
@@ -46439,7 +46453,7 @@ function mapDelete(e, type, host) {
 // scripts/widgets/richtext/editor_render.ts
 function renderBlock(session, id, ctx, options) {
   try {
-    const descriptor = options?.resolveNativeBlock?.(session, id, ctx);
+    const descriptor = session.widgetHost?.resolve(id, ctx) ?? options?.resolveNativeBlock?.(session, id, ctx);
     if (descriptor) {
       const block = document.createElement("div");
       block.dataset.docBlock = id;
@@ -46820,6 +46834,10 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
         this.ownInfo.set(change, info);
         return;
       }
+      if (info.invalidateWidgets) {
+        this.invalidateWidgetPolicy();
+        return;
+      }
       this.docChanged(change);
       if (info.origin !== "policy") this.announce(change, info);
     });
@@ -47082,7 +47100,15 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     const ops = mapInput(e, {
       view,
       hasMark: (name) => provider.marks().some((m) => m.name === name),
-      fromClipboard: (data) => provider.fromClipboard(data),
+      fromClipboard: (data) => {
+        if (data.types.includes(WIDGET_CLIPBOARD_MIME) && !provider.widgets) {
+          this.dispatchEvent(
+            new CustomEvent("clipboardunsupported", { detail: { format: WIDGET_CLIPBOARD_MIME } })
+          );
+          return void 0;
+        }
+        return provider.fromClipboard(data);
+      },
       inputRange: (event) => this.inputRange(event),
       refuse: (type) => this.refuse(type),
       undo: () => this.undo(),
@@ -47148,11 +47174,22 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     if (session === void 0 || range === void 0 || isCollapsed(range) || !e.clipboardData) {
       return;
     }
-    const content3 = session.provider.toClipboard(session.doc, range);
+    let content3;
+    try {
+      content3 = session.provider.toClipboard(session.doc, range);
+    } catch {
+      e.preventDefault();
+      this.dispatchEvent(
+        new CustomEvent("clipboardunsupported", { detail: { format: WIDGET_CLIPBOARD_MIME } })
+      );
+      return;
+    }
     e.clipboardData.setData("text/plain", content3.blocks.join("\n"));
     if (content3.html !== void 0) {
       e.clipboardData.setData("text/html", content3.html);
     }
+    if (content3.widgetData !== void 0)
+      e.clipboardData.setData(WIDGET_CLIPBOARD_MIME, content3.widgetData);
     e.preventDefault();
     if (cut && !session.disposed && !this.readOnly) {
       this.submit({ type: "deleteRange", range });
@@ -47175,42 +47212,42 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
   onCompositionEnd() {
     this.observer?.takeRecords();
     this.composing = false;
-    const snapshot = this.snapshot;
+    const snapshot2 = this.snapshot;
     this.snapshot = void 0;
     const view = this.view();
-    if (snapshot === void 0 || view === void 0 || this._session === void 0 || this._session.disposed) {
-      this.refuseComposition(snapshot);
+    if (snapshot2 === void 0 || view === void 0 || this._session === void 0 || this._session.disposed) {
+      this.refuseComposition(snapshot2);
       return;
     }
-    const outcome = resolveComposition(snapshot, this.root, view);
+    const outcome = resolveComposition(snapshot2, this.root, view);
     if (outcome.kind === "refuse") {
-      this.refuseComposition(snapshot);
+      this.refuseComposition(snapshot2);
     } else if (outcome.kind === "rerender") {
-      this.rerenderComposed(snapshot);
+      this.rerenderComposed(snapshot2);
     } else {
       this.submit(outcome.op, true);
     }
   }
   /** Re-renders the composed block from the provider and restores the snapshot's caret. */
-  rerenderComposed(snapshot) {
+  rerenderComposed(snapshot2) {
     const view = this.view();
-    if (view?.blocks.includes(snapshot.block) !== true) {
-      this.refuseComposition(snapshot);
+    if (view?.blocks.includes(snapshot2.block) !== true) {
+      this.refuseComposition(snapshot2);
       return;
     }
-    const caret = mapThroughPending(snapshot.selection.head, snapshot.pending, snapshot.view);
+    const caret = mapThroughPending(snapshot2.selection.head, snapshot2.pending, snapshot2.view);
     this.applyResult({
-      dirtyBlocks: [snapshot.block],
+      dirtyBlocks: [snapshot2.block],
       removedBlocks: [],
       selection: collapsed(this.clampPos(caret, view))
     });
   }
   /** The fallback: reconcile the whole root, clamp the caret, and report the composition refused. */
-  refuseComposition(snapshot) {
+  refuseComposition(snapshot2) {
     this.renderAll();
     const view = this.view();
     if (view !== void 0) {
-      const caret = snapshot !== void 0 ? mapThroughPending(snapshot.selection.head, snapshot.pending, snapshot.view) : this.domRange()?.head ?? { block: view.blocks[0], offset: 0 };
+      const caret = snapshot2 !== void 0 ? mapThroughPending(snapshot2.selection.head, snapshot2.pending, snapshot2.view) : this.domRange()?.head ?? { block: view.blocks[0], offset: 0 };
       if (caret.block !== void 0) {
         this.setSelection(collapsed(this.clampPos(caret, view)));
       }
@@ -48072,12 +48109,12 @@ var PlainProvider = class {
       selection
     };
   }
-  fromSnapshot(snapshot) {
-    const state = snapshot.state;
+  fromSnapshot(snapshot2) {
+    const state = snapshot2.state;
     if (typeof state?.text !== "string" || !Array.isArray(state.marks)) {
-      throw new Error(`replaceBlocks: snapshot of ${snapshot.id} is not a PlainBlock`);
+      throw new Error(`replaceBlocks: snapshot of ${snapshot2.id} is not a PlainBlock`);
     }
-    return cloneBlock({ id: snapshot.id, text: state.text, marks: state.marks });
+    return cloneBlock({ id: snapshot2.id, text: state.text, marks: state.marks });
   }
 };
 function plainDocFromLines(lines, makeId) {
@@ -48109,6 +48146,22 @@ var RichTextArea = class extends UIBase {
   }
   invalidateWidgetPolicy() {
     this.editor.invalidateWidgetPolicy();
+  }
+  hostFactory;
+  get widgetHostFactory() {
+    return this.hostFactory;
+  }
+  set widgetHostFactory(factory) {
+    if (factory === this.hostFactory) return;
+    this.hostFactory = factory;
+    if (this._session) {
+      this._session.widgetHost?.dispose();
+      const host = factory?.(this._session, this.ctx);
+      if (this._session.widgetHost !== host) {
+        this._session.widgetHost = host;
+        this._session.invalidateWidgets();
+      }
+    }
   }
   writeAllowed = true;
   setWriteAllowed(allowed) {
@@ -48238,6 +48291,7 @@ var RichTextArea = class extends UIBase {
     }
     const session = new DocumentSession(this.doc, this.provider, this.ctx.toolstack);
     session.setWriteAllowed(this.writeAllowed);
+    session.widgetHost = this.hostFactory?.(session, this.ctx);
     session.onChange((_change, info) => {
       if (info.origin !== "external" && info.origin !== "policy") {
         this.pushValue();
@@ -76542,6 +76596,547 @@ MenuBarEditor2.STRUCT = struct_default.STRUCT.inherit(MenuBarEditor2, Editor2) +
 `;
 struct_default.register(MenuBarEditor2);
 
+// scripts/widgets/richtext/widget_codec.ts
+var MAX_BYTES = 65536;
+var NAME = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
+var TYPE = /^[a-zA-Z][a-zA-Z0-9_-]*(?:\.[a-zA-Z0-9_-]+)+$/;
+var FORBIDDEN = /* @__PURE__ */ new Set(["__proto__", "prototype", "constructor"]);
+function widgetJson(value2, maxBytes = MAX_BYTES) {
+  let nodes = 0;
+  let characters = 0;
+  const ancestors = /* @__PURE__ */ new Set();
+  const visit2 = (value3, depth) => {
+    if (++nodes > 1e4 || depth > 32)
+      throw new Error("Widget JSON exceeds its depth or node limit");
+    characters += typeof value3 === "string" ? value3.length : 1;
+    if (characters > maxBytes) throw new Error("Widget JSON exceeds its byte limit");
+    if (typeof value3 === "string" && value3.length > maxBytes)
+      throw new Error("Widget string is oversized");
+    if (value3 === null || typeof value3 === "boolean" || typeof value3 === "string") return value3;
+    if (typeof value3 === "number" && Number.isFinite(value3)) return value3;
+    if (typeof value3 !== "object" || ancestors.has(value3))
+      throw new Error("Widget values must be JSON");
+    if (!Array.isArray(value3) && Object.getPrototypeOf(value3) !== Object.prototype && Object.getPrototypeOf(value3) !== null)
+      throw new Error("Widget objects must be plain JSON");
+    ancestors.add(value3);
+    const descriptors = Object.getOwnPropertyDescriptors(value3);
+    const result2 = Array.isArray(value3) ? [] : {};
+    for (const key of Reflect.ownKeys(descriptors)) {
+      if (typeof key !== "string" || FORBIDDEN.has(key)) throw new Error("Unsafe widget key");
+      if (Array.isArray(value3) && key === "length") continue;
+      characters += key.length;
+      const descriptor = descriptors[key];
+      if (!descriptor.enumerable || !("value" in descriptor))
+        throw new Error("Widget JSON cannot contain accessors");
+      if (Array.isArray(result2)) {
+        if (key !== String(result2.length)) throw new Error("Widget arrays must be dense");
+        result2.push(visit2(descriptor.value, depth + 1));
+      } else result2[key] = visit2(descriptor.value, depth + 1);
+    }
+    if (Array.isArray(value3) && Array.isArray(result2) && value3.length !== result2.length)
+      throw new Error("Widget arrays must be dense");
+    ancestors.delete(value3);
+    return Object.freeze(result2);
+  };
+  const result = visit2(value2, 0);
+  if (new TextEncoder().encode(JSON.stringify(result)).length > maxBytes)
+    throw new Error("Widget JSON exceeds its byte limit");
+  return result;
+}
+function object(value2) {
+  return value2 !== null && typeof value2 === "object" && !Array.isArray(value2);
+}
+function widgetRecord(value2) {
+  const json = widgetJson(value2);
+  if (!object(json) || Object.keys(json).sort().join(",") !== "id,payload,type,version" || typeof json.id !== "string" || !NAME.test(json.id) || typeof json.type !== "string" || !TYPE.test(json.type) || json.type.length > 128 || typeof json.version !== "number" || !Number.isSafeInteger(json.version) || json.version < 1 || json.version > 2147483647) {
+    throw new Error("Invalid widget envelope");
+  }
+  return json;
+}
+function parseJson(text6, limit) {
+  if (text6.length > limit || new TextEncoder().encode(text6).length > limit)
+    throw new Error("Widget JSON is oversized");
+  let depth = 0;
+  let tokens2 = 0;
+  let quoted = false;
+  let escaped = false;
+  let stringStart = 0;
+  const keys2 = [];
+  for (let index2 = 0; index2 < text6.length; index2++) {
+    const char = text6[index2];
+    if (quoted) {
+      if (escaped) escaped = false;
+      else if (char === "\\") escaped = true;
+      else if (char === '"') {
+        quoted = false;
+        let next = index2 + 1;
+        while (/\s/.test(text6[next] ?? "")) next++;
+        if (text6[next] === ":") {
+          const key = JSON.parse(text6.slice(stringStart, index2 + 1));
+          const current = keys2.at(-1);
+          if (!current || current.has(key)) throw new Error("Duplicate JSON member");
+          current.add(key);
+        }
+      }
+    } else if (char === '"') {
+      quoted = true;
+      stringStart = index2;
+      tokens2++;
+    } else if (char === "{" || char === "[") {
+      if (++depth > 32) throw new Error("Widget JSON is too deep");
+      keys2.push(char === "{" ? /* @__PURE__ */ new Set() : void 0);
+      tokens2++;
+    } else if (char === "}" || char === "]") {
+      depth--;
+      keys2.pop();
+    } else if (char === "," || char === ":") tokens2++;
+    if (tokens2 > 3e4) throw new Error("Widget JSON has too many tokens");
+  }
+  const parsed = JSON.parse(text6);
+  return widgetJson(parsed, limit);
+}
+function decodeWidgetFence(source) {
+  if (source.length > MAX_BYTES * 3 + 256) return void 0;
+  const match = /^(`{3,}|~{3,})pathux-widget-v1[ \t]*\r?\n([\s\S]*)\r?\n\1[ \t]*$/.exec(source);
+  if (!match) return void 0;
+  try {
+    return widgetRecord(parseJson(match[2], MAX_BYTES));
+  } catch {
+    return void 0;
+  }
+}
+function encodeWidgetFence(record) {
+  const text6 = JSON.stringify(widgetRecord(record));
+  let length = 3;
+  for (const match of text6.matchAll(/`+/g)) length = Math.max(length, match[0].length + 1);
+  const fence3 = "`".repeat(length);
+  return `${fence3}pathux-widget-v1
+${text6}
+${fence3}`;
+}
+function reidentifyWidgetFence(source, id) {
+  if (!decodeWidgetFence(source) || !NAME.test(id)) throw new Error("Invalid widget source or ID");
+  let depth = 0;
+  const start2 = source.indexOf("\n") + 1;
+  for (let i2 = start2; i2 < source.length; i2++) {
+    if (source[i2] === "{" || source[i2] === "[") depth++;
+    else if (source[i2] === "}" || source[i2] === "]") depth--;
+    else if (source[i2] === '"') {
+      const tokenStart = i2++;
+      while (i2 < source.length && source[i2] !== '"') {
+        if (source[i2] === "\\") i2++;
+        i2++;
+      }
+      const token4 = source.slice(tokenStart, i2 + 1);
+      if (depth !== 1 || JSON.parse(token4) !== "id") continue;
+      let p = i2 + 1;
+      while (/\s/.test(source[p] ?? "")) p++;
+      if (source[p++] !== ":") continue;
+      while (/\s/.test(source[p] ?? "")) p++;
+      const valueStart = p++;
+      while (p < source.length && source[p] !== '"') {
+        if (source[p] === "\\") p++;
+        p++;
+      }
+      return source.slice(0, valueStart) + JSON.stringify(id) + source.slice(p + 1);
+    }
+  }
+  throw new Error("Widget ID is missing");
+}
+function encodeWidgetTransfer(blocks) {
+  if (blocks.length > 1024) throw new Error("Too many clipboard blocks");
+  const source = JSON.stringify(
+    widgetJson({ format: "pathux-widgets", version: 1, blocks }, 262144)
+  );
+  if (!decodeWidgetTransfer(source)) throw new Error("Invalid clipboard transfer");
+  return source;
+}
+function decodeWidgetTransfer(source) {
+  try {
+    const value2 = parseJson(source, 262144);
+    if (!object(value2) || value2.format !== "pathux-widgets" || value2.version !== 1 || Object.keys(value2).sort().join(",") !== "blocks,format,version" || !Array.isArray(value2.blocks) || value2.blocks.length > 1024)
+      return void 0;
+    return value2.blocks.map((entry) => {
+      if (!object(entry) || Object.keys(entry).length !== 1)
+        throw new Error("Invalid clipboard entry");
+      if (typeof entry.text === "string") return { text: entry.text };
+      return { widget: widgetRecord(entry.widget) };
+    });
+  } catch {
+    return void 0;
+  }
+}
+
+// scripts/widgets/richtext/plugins.ts
+var WidgetRegistry = class {
+  plugins = /* @__PURE__ */ new Map();
+  listeners = /* @__PURE__ */ new Set();
+  register(plugin) {
+    widgetRecord({ id: "registration", type: plugin.type, version: plugin.version, payload: null });
+    if (this.plugins.has(plugin.type)) throw new Error(`Duplicate widget type: ${plugin.type}`);
+    const entry = Object.freeze({
+      type: plugin.type,
+      version: plugin.version,
+      label: plugin.label,
+      validate: plugin.validate.bind(plugin),
+      create: plugin.create.bind(plugin),
+      migrate: plugin.migrate?.bind(plugin)
+    });
+    this.plugins.set(entry.type, entry);
+    this.changed();
+    return () => {
+      if (this.plugins.get(entry.type) !== entry) return;
+      this.plugins.delete(entry.type);
+      this.changed();
+    };
+  }
+  get(type) {
+    return this.plugins.get(type);
+  }
+  subscribe(listener) {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+  changed() {
+    for (const listener of [...this.listeners]) listener();
+  }
+};
+var DocumentWidgetHost = class {
+  constructor(session, registry, options) {
+    this.session = session;
+    this.registry = registry;
+    if (session.disposed) throw new Error("The session is disposed");
+    if (session.widgetHost) throw new Error("The session already has a widget host");
+    this.options = { ...options, document: widgetJson(options.document) };
+    this.unsubscribe = registry.subscribe(() => this.invalidate());
+    session.widgetHost = this;
+    session.invalidateWidgets();
+  }
+  session;
+  registry;
+  options;
+  epoch = 0;
+  closed = false;
+  unsubscribe;
+  /** Rebinds document metadata or policy and cancels every old view generation. */
+  invalidate(options = this.options) {
+    if (this.closed) return;
+    this.options = { ...options, document: widgetJson(options.document) };
+    this.epoch++;
+    this.session.invalidateWidgets();
+  }
+  allowed(action, record, externalAction) {
+    if (this.closed || this.session.disposed || this.session.widgetHost !== this) return false;
+    try {
+      const decision = this.options.authorize({
+        action,
+        record,
+        document: this.options.document,
+        externalAction
+      });
+      return decision === true;
+    } catch {
+      return false;
+    }
+  }
+  supported(record, plugin = this.registry.get(record.type)) {
+    try {
+      if (plugin?.version !== record.version) return false;
+      const valid = plugin.validate(record.payload);
+      return valid === true;
+    } catch {
+      return false;
+    }
+  }
+  current(expected) {
+    const found = this.session.provider.widgets?.read(this.session.doc, expected.record.id);
+    return found?.revision === expected.revision && found.block === expected.block && JSON.stringify(found.record) === JSON.stringify(expected.record) ? found : void 0;
+  }
+  capture(snapshot2) {
+    return Object.freeze({
+      placement: "block",
+      block: snapshot2.block,
+      revision: snapshot2.revision,
+      record: widgetRecord(snapshot2.record)
+    });
+  }
+  prepareUpdate(expected, payload) {
+    expected = this.capture(expected);
+    const next = widgetRecord({ ...expected.record, payload });
+    const epoch = this.epoch;
+    const plugin = this.registry.get(next.type);
+    return {
+      authorize: () => epoch === this.epoch && this.registry.get(next.type) === plugin && this.allowed("edit", expected.record) && this.allowed("edit", next) && this.supported(next, plugin),
+      resolve: () => {
+        const current = this.current(expected);
+        return current ? this.session.provider.widgets?.update(this.session.doc, current, next) : void 0;
+      }
+    };
+  }
+  update(expected, payload, context) {
+    try {
+      return this.session.command(this.prepareUpdate(expected, payload), context);
+    } catch (error2) {
+      return Promise.resolve({ status: "failed", error: error2 });
+    }
+  }
+  insert(record, after, context) {
+    try {
+      const next = widgetRecord(record);
+      const block = newBlockId();
+      const epoch = this.epoch;
+      return this.session.command(
+        {
+          authorize: () => epoch === this.epoch && this.allowed("insert", next) && this.supported(next),
+          resolve: () => {
+            const storage = this.session.provider.widgets;
+            if (!storage || storage.read(this.session.doc, next.id) || after !== null && !this.session.provider.blocks(this.session.doc).includes(after))
+              return void 0;
+            return storage.insert(this.session.doc, after, block, next);
+          }
+        },
+        context
+      );
+    } catch (error2) {
+      return Promise.resolve({ status: "failed", error: error2 });
+    }
+  }
+  remove(expected, context) {
+    expected = this.capture(expected);
+    const epoch = this.epoch;
+    return this.session.command(
+      {
+        authorize: () => epoch === this.epoch && this.allowed("edit", expected.record),
+        resolve: () => {
+          const current = this.current(expected);
+          return current ? this.session.provider.widgets?.remove(this.session.doc, current) : void 0;
+        }
+      },
+      context
+    );
+  }
+  move(expected, after, context) {
+    expected = this.capture(expected);
+    const epoch = this.epoch;
+    return this.session.command(
+      {
+        authorize: () => epoch === this.epoch && this.allowed("edit", expected.record),
+        resolve: () => {
+          const current = this.current(expected);
+          if (!current || after === current.block || after !== null && !this.session.provider.blocks(this.session.doc).includes(after))
+            return void 0;
+          return this.session.provider.widgets?.move(this.session.doc, current, after);
+        }
+      },
+      context
+    );
+  }
+  /** Runs conversion exactly once at command execution; replay contains only its data result. */
+  migrate(expected, context) {
+    expected = this.capture(expected);
+    const plugin = this.registry.get(expected.record.type);
+    const epoch = this.epoch;
+    return this.session.command(
+      {
+        authorize: () => epoch === this.epoch && this.registry.get(expected.record.type) === plugin && this.allowed("edit", expected.record),
+        resolve: () => {
+          const current = this.current(expected);
+          if (!current || !plugin?.migrate || plugin.version <= current.record.version)
+            return void 0;
+          const next = widgetRecord({
+            ...current.record,
+            version: plugin.version,
+            payload: plugin.migrate(current.record)
+          });
+          if (!this.supported(next, plugin) || !this.allowed("edit", next)) return void 0;
+          return this.session.provider.widgets?.update(this.session.doc, current, next);
+        }
+      },
+      context
+    );
+  }
+  authorizeEdit(op) {
+    if (op.type !== "insertContent") return true;
+    const records = this.session.provider.widgets?.pasted(op.content) ?? [];
+    return records.every((record) => this.allowed("insert", record));
+  }
+  resolve(block, _context) {
+    const snapshot2 = this.session.provider.widgets?.atBlock(this.session.doc, block);
+    if (!snapshot2) return void 0;
+    const plugin = this.registry.get(snapshot2.record.type);
+    const allowed = this.allowed("mount", snapshot2.record) && this.supported(snapshot2.record, plugin);
+    return {
+      id: `plugin:${snapshot2.record.id}`,
+      implementation: plugin ?? this,
+      label: plugin?.label ?? snapshot2.record.type,
+      value: snapshot2,
+      allowed,
+      editable: this.allowed("edit", snapshot2.record),
+      create: (context) => {
+        if (!plugin || !this.allowed("mount", snapshot2.record) || !this.supported(snapshot2.record, plugin))
+          throw new Error("Widget mounting refused");
+        return plugin.create(snapshot2, this.viewContext(snapshot2, plugin, context));
+      }
+    };
+  }
+  viewContext(snapshot2, plugin, context) {
+    const epoch = this.epoch;
+    const preparedUpdates = /* @__PURE__ */ new WeakSet();
+    const isCurrent = () => {
+      const current = this.session.provider.widgets?.read(this.session.doc, snapshot2.record.id);
+      return !!current && context.isCurrent() && epoch === this.epoch && this.registry.get(plugin.type) === plugin && this.supported(current.record, plugin) && this.allowed("mount", current.record);
+    };
+    const prepare = (expected, payload) => {
+      const own6 = expected.record.id === snapshot2.record.id;
+      const command = this.prepareUpdate(expected, payload);
+      const prepared = Object.freeze({
+        resolve: command.resolve,
+        authorize: () => isCurrent() && own6 && (command.authorize?.() ?? true)
+      });
+      preparedUpdates.add(prepared);
+      return prepared;
+    };
+    return {
+      signal: context.signal,
+      document: this.options.document,
+      isCurrent,
+      prepareUpdate: prepare,
+      update: (expected, payload) => {
+        try {
+          return context.command(prepare(expected, payload));
+        } catch (error2) {
+          return Promise.resolve({ status: "failed", error: error2 });
+        }
+      },
+      registerDraft: (controller) => context.registerDraft({
+        key: `plugin:${snapshot2.record.id}:${controller.key}`,
+        pending: () => controller.pending(),
+        version: () => controller.version(),
+        discard: () => controller.discard(),
+        recover: () => controller.recover(),
+        committed: () => controller.committed(),
+        prepare: async () => {
+          const result = await controller.prepare();
+          if (result.status !== "ready") return result;
+          if (!preparedUpdates.has(result.command)) return { status: "refused" };
+          return {
+            status: "ready",
+            command: {
+              resolve: result.command.resolve,
+              authorize: () => {
+                const current = this.session.provider.widgets?.read(
+                  this.session.doc,
+                  snapshot2.record.id
+                );
+                return !!current && isCurrent() && this.allowed("edit", current.record) && (result.command.authorize?.() ?? true);
+              }
+            }
+          };
+        }
+      }),
+      external: async (action, run) => {
+        const current = this.session.provider.widgets?.read(this.session.doc, snapshot2.record.id);
+        if (!current || !isCurrent() || !this.allowed("external", current.record, action))
+          return { status: "refused" };
+        try {
+          const value2 = await run(context.signal);
+          return isCurrent() && this.current(current) && this.allowed("external", current.record, action) ? { status: "complete", value: value2 } : { status: "refused" };
+        } catch (error2) {
+          return context.signal.aborted || !isCurrent() ? { status: "refused" } : { status: "failed", error: error2 };
+        }
+      }
+    };
+  }
+  dispose() {
+    if (this.closed) return;
+    this.closed = true;
+    this.epoch++;
+    this.unsubscribe();
+    if (this.session.widgetHost === this) {
+      this.session.widgetHost = void 0;
+      this.session.invalidateWidgets();
+    }
+  }
+};
+
+// example/editors/properties/note_plugin.ts
+var notePlugin = {
+  type: "example.note",
+  version: 1,
+  label: "Note",
+  validate(payload) {
+    return payload !== null && typeof payload === "object" && !Array.isArray(payload) && "text" in payload && typeof payload.text === "string";
+  },
+  create(initial, context) {
+    const element2 = document.createElement("div");
+    const shadow = element2.attachShadow({ mode: "open" });
+    const input = document.createElement("input");
+    input.setAttribute("aria-label", "Note text");
+    const accept = document.createElement("button");
+    accept.textContent = "Apply note";
+    const status = document.createElement("span");
+    status.setAttribute("role", "status");
+    shadow.append(input, accept, status);
+    let base = initial;
+    let latest = initial;
+    let dirty2 = false;
+    let version = 0;
+    const text6 = (snapshot2) => snapshot2.record.payload.text;
+    input.value = text6(initial);
+    const payload = () => ({ ...base.record.payload, text: input.value });
+    const committed = () => {
+      dirty2 = false;
+      base = latest;
+      input.value = text6(latest);
+      status.textContent = "Saved in document";
+    };
+    input.addEventListener("input", () => {
+      dirty2 = true;
+      version++;
+      status.textContent = "Draft";
+    });
+    accept.addEventListener("pointerdown", (event) => event.preventDefault());
+    accept.addEventListener("click", async () => {
+      if (!dirty2) return;
+      const expectedVersion = version;
+      const result = await context.update(base, payload());
+      if (result.status === "applied" && version === expectedVersion) committed();
+      else status.textContent = "Draft retained; refresh or resolve the conflict";
+    });
+    context.registerDraft({
+      key: "text",
+      pending: () => dirty2,
+      version: () => version,
+      recover: () => input.value,
+      discard: () => {
+        dirty2 = false;
+        base = latest;
+        input.value = text6(latest);
+        version++;
+      },
+      committed,
+      prepare: () => ({ status: "ready", command: context.prepareUpdate(base, payload()) })
+    });
+    return {
+      element: element2,
+      update(state) {
+        latest = state.value;
+        input.readOnly = state.readOnly;
+        accept.disabled = state.readOnly;
+        if (!dirty2) {
+          base = latest;
+          input.value = text6(latest);
+        } else if (base.revision !== latest.revision)
+          status.textContent = "Saved value changed; draft retained";
+      },
+      dispose() {
+      }
+    };
+  }
+};
+
 // node_modules/.pnpm/mdast-util-to-string@4.0.0/node_modules/mdast-util-to-string/lib/index.js
 var emptyOptions = {};
 function toString(value2, options) {
@@ -87551,6 +88146,7 @@ function inlineHtml(nodes) {
   return out;
 }
 function htmlForBlock(block) {
+  if (block.kind === "widget") return `<pre>${escapeHtml(block.source)}</pre>`;
   const attrs = attrText(block.html?.attrs, block.html?.style);
   const inner = inlineHtml(inlineTree(block));
   switch (block.kind) {
@@ -87601,15 +88197,36 @@ function plainText(node2) {
   }
 }
 var Parser2 = class {
-  constructor(source, newId) {
+  constructor(source, newId, original = source, crlfOffsets = []) {
     this.source = source;
     this.newId = newId;
+    this.original = original;
+    this.crlfOffsets = crlfOffsets;
   }
   source;
   newId;
+  original;
+  crlfOffsets;
   blocks = [];
+  flowDepth = 0;
   definitions = /* @__PURE__ */ new Map();
   wrappers = [];
+  originalSlice(node2) {
+    const offset = (value2) => {
+      let lo = 0;
+      let hi = this.crlfOffsets.length;
+      while (lo < hi) {
+        const mid = lo + hi >>> 1;
+        if (this.crlfOffsets[mid] < value2) lo = mid + 1;
+        else hi = mid;
+      }
+      return value2 + lo;
+    };
+    return this.original.slice(
+      offset(node2.position.start.offset),
+      offset(node2.position.end.offset)
+    );
+  }
   get ctx() {
     return this.wrappers.length > 0 ? this.wrappers[this.wrappers.length - 1] : rootHtmlContext();
   }
@@ -87646,8 +88263,11 @@ var Parser2 = class {
     return block;
   }
   flow(nodes, ctx) {
-    for (const node2 of nodes) {
-      this.node(node2, ctx);
+    this.flowDepth++;
+    try {
+      for (const node2 of nodes) this.node(node2, ctx);
+    } finally {
+      this.flowDepth--;
     }
   }
   node(node2, ctx) {
@@ -87672,7 +88292,9 @@ var Parser2 = class {
         this.quote(node2, ctx);
         break;
       case "code":
-        this.push({ kind: "code", lang: node2.lang ?? "" }, node2.value);
+        if (this.flowDepth === 1 && /^pathux-widget-v[0-9]+$/.test(node2.lang ?? "") && !ctx.listDepth && !ctx.quoteDepth && !this.wrappers.length) {
+          this.push({ kind: "widget", source: this.originalSlice(node2) });
+        } else this.push({ kind: "code", lang: node2.lang ?? "" }, node2.value);
         break;
       case "thematicBreak":
         this.push({ kind: "hr" });
@@ -87960,9 +88582,28 @@ function markdownDocFromText(text6, newId = newBlockId) {
     extensions: [gfm(), frontmatter(["yaml"])],
     mdastExtensions: [gfmFromMarkdown(), frontmatterFromMarkdown(["yaml"])]
   });
-  const parser3 = new Parser2(source, newId);
+  const crlfOffsets = [];
+  for (const match of text6.matchAll(/\r\n/g)) crlfOffsets.push(match.index - crlfOffsets.length);
+  const parser3 = new Parser2(source, newId, text6, crlfOffsets);
   parser3.collectDefinitions(tree.children);
   parser3.flow(tree.children, rootHtmlContext());
+  const records = parser3.blocks.map(
+    (block) => block.kind === "widget" ? decodeWidgetFence(block.source) : void 0
+  );
+  const reserved2 = new Set(records.flatMap((record) => record ? [record.id] : []));
+  const seen = /* @__PURE__ */ new Set();
+  parser3.blocks.forEach((block, index2) => {
+    const record = records[index2];
+    if (!record || block.kind !== "widget") return;
+    if (seen.has(record.id)) {
+      let id;
+      do {
+        id = newBlockId();
+      } while (reserved2.has(id));
+      reserved2.add(id);
+      block.source = reidentifyWidgetFence(block.source, id);
+    } else seen.add(record.id);
+  });
   return { blocks: parser3.blocks };
 }
 
@@ -88027,6 +88668,7 @@ function inlineOf(block, htmlTags = false) {
 }
 var paragraph2 = (children) => ({ type: "paragraph", children });
 function flowNode(block) {
+  if (block.kind === "widget") return { type: "html", value: block.source };
   if (blockNeedsHtml(block) && block.kind !== "table" && block.kind !== "raw") {
     if (block.kind === "paragraph" && block.html?.tag === "span") {
       const { open, close: close2 } = markTag({ name: "style", from: 0, to: 0, ...block.html });
@@ -88147,6 +88789,86 @@ function markdownText(doc) {
     listItemIndent: "one"
   });
 }
+
+// scripts/widgets/richtext/providers/markdown_widgets.ts
+function atBlock(doc, id) {
+  const block = doc.blocks.find((block2) => block2.id === id);
+  if (block?.kind !== "widget") return void 0;
+  const record = decodeWidgetFence(block.source);
+  return record ? Object.freeze({ placement: "block", block: id, revision: block.source, record }) : void 0;
+}
+var snapshot = (block) => ({
+  id: block.id,
+  state: structuredClone(block)
+});
+var markdownWidgetStorage = {
+  atBlock,
+  read(doc, id) {
+    for (const block of doc.blocks) {
+      if (block.kind !== "widget") continue;
+      const record = decodeWidgetFence(block.source);
+      if (record?.id === id)
+        return Object.freeze({
+          placement: "block",
+          block: block.id,
+          revision: block.source,
+          record
+        });
+    }
+    return void 0;
+  },
+  insert(_doc, after, block, record) {
+    return {
+      type: "replaceBlocks",
+      after,
+      remove: [],
+      blocks: [snapshot(mdBlock(block, { kind: "widget", source: encodeWidgetFence(record) }))]
+    };
+  },
+  update(doc, expected, record) {
+    const index2 = doc.blocks.findIndex((block) => block.id === expected.block);
+    return {
+      type: "replaceBlocks",
+      after: doc.blocks[index2 - 1]?.id ?? null,
+      remove: [expected.block],
+      blocks: [
+        snapshot(mdBlock(expected.block, { kind: "widget", source: encodeWidgetFence(record) }))
+      ]
+    };
+  },
+  remove(doc, expected) {
+    const index2 = doc.blocks.findIndex((block) => block.id === expected.block);
+    return {
+      type: "replaceBlocks",
+      after: doc.blocks[index2 - 1]?.id ?? null,
+      remove: [expected.block],
+      blocks: []
+    };
+  },
+  move(doc, expected, after) {
+    const from = doc.blocks.findIndex((block) => block.id === expected.block);
+    const to = after === null ? -1 : doc.blocks.findIndex((block) => block.id === after);
+    const first2 = Math.min(from, to + 1);
+    const last = Math.max(from, to);
+    const span = doc.blocks.slice(first2, last + 1);
+    const moving = doc.blocks[from];
+    const next = span.filter((block) => block !== moving);
+    if (to < from) next.unshift(moving);
+    else next.push(moving);
+    return {
+      type: "replaceBlocks",
+      after: doc.blocks[first2 - 1]?.id ?? null,
+      remove: span.map((block) => block.id),
+      blocks: next.map(snapshot)
+    };
+  },
+  pasted(content3) {
+    return content3.blocks.flatMap((source) => {
+      const record = decodeWidgetFence(source);
+      return record ? [record] : [];
+    });
+  }
+};
 
 // scripts/widgets/richtext/providers/markdown_image.ts
 init_ui_base();
@@ -88784,6 +89506,12 @@ function renderMarkdownBlock(block, ctx, options = {}) {
       el = opaque("md-raw", tag);
       break;
     }
+    case "widget": {
+      const label = document.createElement("code");
+      label.textContent = "Widget unavailable";
+      el = opaque("md-widget", label);
+      break;
+    }
     case "frontmatter": {
       const pre = document.createElement("pre");
       pre.textContent = block.source;
@@ -88960,6 +89688,7 @@ var TOGGLE_NAMES = new Set(MD_MARKS.map((m) => m.name));
 var OPAQUE_KINDS = /* @__PURE__ */ new Set([
   "hr",
   "table",
+  "widget",
   "raw",
   "frontmatter"
 ]);
@@ -89153,6 +89882,7 @@ ${b.text}`;
 function toClipboard(doc, range) {
   const r = orderRange2(doc, range);
   const blocks = [];
+  let hasWidget = false;
   let html3 = "";
   for (let i2 = r.startIndex; i2 <= r.endIndex; i2++) {
     const b = doc.blocks[i2];
@@ -89161,6 +89891,7 @@ function toClipboard(doc, range) {
     const to = i2 === r.endIndex ? r.end.offset : length;
     if (isOpaque(b)) {
       if (from === 0 && to === 1) {
+        hasWidget ||= b.kind === "widget";
         blocks.push(entryOf(b));
         html3 += htmlForBlock(b);
       }
@@ -89177,19 +89908,49 @@ function toClipboard(doc, range) {
     }
     html3 += htmlForBlock(sliced);
   }
-  return { blocks, html: `<div ${OWN_HTML_MARK}>${html3}</div>`, text: blocks.join("\n") };
+  let widgetData;
+  if (hasWidget) {
+    widgetData = encodeWidgetTransfer(
+      blocks.map((source) => {
+        const widget = decodeWidgetFence(source);
+        return widget ? { widget } : { text: source };
+      })
+    );
+  }
+  return {
+    blocks,
+    widgetData,
+    html: `<div ${OWN_HTML_MARK}>${html3}</div>`,
+    text: blocks.join("\n")
+  };
 }
 function pasteEntries(blocks) {
   const entries = blocks.map(entryOf);
-  if (blocks[0]?.kind === "table") entries.unshift("");
-  if (blocks.at(-1)?.kind === "table") entries.push("");
+  if (blocks[0]?.kind === "table" || blocks[0]?.kind === "widget") entries.unshift("");
+  if (blocks.at(-1)?.kind === "table" || blocks.at(-1)?.kind === "widget") entries.push("");
   return entries;
 }
 function fromClipboard(data) {
+  if (data.types.includes(WIDGET_CLIPBOARD_MIME)) {
+    const transfer = decodeWidgetTransfer(data.getData(WIDGET_CLIPBOARD_MIME));
+    if (!transfer) return void 0;
+    const source = transfer.map((entry) => "widget" in entry ? encodeWidgetFence(entry.widget) : entry.text).join("\n\n");
+    const parsed2 = {
+      blocks: transfer.flatMap(
+        (entry) => markdownDocFromText("widget" in entry ? encodeWidgetFence(entry.widget) : entry.text).blocks
+      )
+    };
+    if (parsed2.blocks.some((block) => block.kind === "widget" && !closedFence(block.source)))
+      return void 0;
+    freshWidgetIds(parsed2);
+    return { blocks: pasteEntries(parsed2.blocks), text: source };
+  }
   const text6 = data.types.includes("text/plain") ? data.getData("text/plain").replace(/\r\n?/g, "\n") : void 0;
   const html3 = data.types.includes("text/html") ? data.getData("text/html") : "";
   if (html3 !== "" && !html3.includes(OWN_HTML_MARK)) {
-    const blocks2 = pasteEntries(markdownDocFromText(clipboardHtml(html3)).blocks);
+    const parsed2 = markdownDocFromText(clipboardHtml(html3));
+    freshWidgetIds(parsed2);
+    const blocks2 = pasteEntries(parsed2.blocks);
     if (blocks2.length > 0) {
       return { blocks: blocks2, text: text6 ?? blocks2.join("\n") };
     }
@@ -89197,8 +89958,23 @@ function fromClipboard(data) {
   if (text6 === void 0) {
     return void 0;
   }
-  const blocks = pasteEntries(markdownDocFromText(text6).blocks);
+  const parsed = markdownDocFromText(text6);
+  freshWidgetIds(parsed);
+  const blocks = pasteEntries(parsed.blocks);
   return { blocks: blocks.length > 0 ? blocks : [""], text: text6 };
+}
+function freshWidgetIds(doc) {
+  for (const block of doc.blocks) {
+    if (block.kind === "widget" && decodeWidgetFence(block.source))
+      block.source = reidentifyWidgetFence(block.source, newBlockId());
+  }
+}
+function closedFence(source) {
+  const fence3 = /^(`{3,}|~{3,})/.exec(source)?.[0];
+  const newline = source.lastIndexOf("\n");
+  if (!fence3 || newline < 0) return false;
+  const closing = source.slice(newline + 1).trim();
+  return closing.length >= fence3.length && [...closing].every((char) => char === fence3[0]);
 }
 
 // scripts/widgets/richtext/providers/markdown_edits.ts
@@ -89517,12 +90293,12 @@ function insertContent(doc, at, content3, newBlocks, shortcuts) {
     selection: collapsed3(last.id, isOpaque(last) ? 1 : last.text.length)
   };
 }
-function fromSnapshot(snapshot) {
-  const state = snapshot.state;
+function fromSnapshot(snapshot2) {
+  const state = snapshot2.state;
   if (typeof state?.kind !== "string" || typeof state.text !== "string" || !Array.isArray(state.marks) || !Array.isArray(state.atoms)) {
-    throw new Error(`replaceBlocks: snapshot of ${snapshot.id} is not an MdBlock`);
+    throw new Error(`replaceBlocks: snapshot of ${snapshot2.id} is not an MdBlock`);
   }
-  return cloneBlock2({ ...state, id: snapshot.id });
+  return cloneBlock2({ ...state, id: snapshot2.id });
 }
 function replaceBlocks(doc, after, snapshots, remove2) {
   const removing = new Set(remove2);
@@ -90305,11 +91081,11 @@ function buildMarkdownToolbar(row, ctx, provider) {
 
 // scripts/widgets/richtext/table_editor.ts
 var TableEditor = class {
-  constructor(snapshot, key, context, adapter) {
+  constructor(snapshot2, key, context, adapter) {
     this.context = context;
     this.adapter = adapter;
-    this.latest = this.base = snapshot;
-    this.model = structuredClone(snapshot.model);
+    this.latest = this.base = snapshot2;
+    this.model = structuredClone(snapshot2.model);
     this.element.className = "table-editor";
     this.table.setAttribute("aria-label", "Table cells (inline Markdown)");
     this.toolbar.setAttribute("role", "toolbar");
@@ -90621,6 +91397,7 @@ var MarkdownProvider = class {
     this.options = options;
   }
   options;
+  widgets = markdownWidgetStorage;
   listeners = /* @__PURE__ */ new WeakMap();
   blocks(doc) {
     return doc.blocks.map((b) => b.id);
@@ -90674,7 +91451,7 @@ var MarkdownProvider = class {
     if (item.kind === "table" && ctx.editor.widget) {
       const model = parseMarkdownTable(item.source);
       if (model) {
-        const snapshot = { revision: item.source, model };
+        const snapshot2 = { revision: item.source, model };
         const el = document.createElement("div");
         el.className = "md-table md-opaque";
         el.contentEditable = "false";
@@ -90684,8 +91461,8 @@ var MarkdownProvider = class {
             id: block,
             implementation: TableEditor,
             label: "Markdown table",
-            value: snapshot,
-            create: (context) => new TableEditor(snapshot, `table:${block}`, context, {
+            value: snapshot2,
+            create: (context) => new TableEditor(snapshot2, `table:${block}`, context, {
               command: (expected, next) => tableCommand(doc, block, expected.revision, next),
               history: (redo) => redo ? ctx.toolstack.redo(ctx) : ctx.toolstack.undo(ctx)
             })
@@ -91079,6 +91856,9 @@ var PropsEditor = class extends Editor2 {
         popup.remove();
       });
     };
+    const registry = new WidgetRegistry();
+    registry.register(notePlugin);
+    let pluginHost;
     const provider = new MarkdownProvider({ onWikilinkStart: completeWikilink });
     const editor = UIBase.constructElement(
       RichTextEditor.define().tagname,
@@ -91093,6 +91873,17 @@ var PropsEditor = class extends Editor2 {
     readOnly.on_change = (value2) => {
       editor.readOnly = value2;
     };
+    const addNote = controls.button("Insert note widget", async () => {
+      const session = editor.session;
+      if (!session || !pluginHost) return;
+      const result = await pluginHost.insert(
+        { id: newBlockId(), type: notePlugin.type, version: 1, payload: { text: "New note" } },
+        session.doc.blocks.at(-1)?.id ?? null,
+        this.ctx
+      );
+      if (result.status !== "applied") status.text = `Insert refused: ${result.status}`;
+    });
+    addNote.setAttribute("data-testid", "markdown-insert-note");
     const save = controls.button("Save", async () => {
       const session = editor.session;
       if (session !== void 0) {
@@ -91175,11 +91966,16 @@ var PropsEditor = class extends Editor2 {
     };
     const open = (text6) => {
       if (editor.session?.pendingDrafts.length) {
-        status.text = "Apply or discard table drafts before replacing the document";
+        status.text = "Apply or discard drafts before replacing the document";
         return;
       }
       stopListening();
+      pluginHost?.dispose();
       const session = new DocumentSession(markdownDocFromText(text6), provider, new ToolStack());
+      pluginHost = new DocumentWidgetHost(session, registry, {
+        document: { path: "example/document.md" },
+        authorize: ({ action }) => action !== "external"
+      });
       editor.session = session;
       second.session = session;
       source.textContent = markdownText(session.doc);

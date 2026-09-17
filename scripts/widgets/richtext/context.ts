@@ -1,3 +1,4 @@
+import type { SessionWidgetHost } from "./plugin_types";
 import { toLockedImpl } from "../../path-controller/controller/contextNew";
 import type { DataAPI } from "../../path-controller/controller/controller";
 import type { Screen } from "../../screen/FrameManager";
@@ -18,6 +19,7 @@ export type DocChangeOrigin = "edit" | "fold" | "undo" | "redo" | "external" | "
 
 /** What the session knows about a change beyond the change itself. */
 export interface DocChangeInfo {
+  invalidateWidgets?: boolean;
   origin: DocChangeOrigin;
   /** The op applied, for every origin but `external`. */
   op?: EditOp;
@@ -37,6 +39,15 @@ let dispatchCounter = 0;
  */
 export class DocumentSession<Doc = unknown> {
   readonly id: string;
+  widgetHost?: SessionWidgetHost;
+
+  /** Cancels mounted generations after host metadata, registry or policy changes. */
+  invalidateWidgets(): void {
+    this.notify(
+      { dirtyBlocks: this.provider.blocks(this.doc), removedBlocks: [] },
+      { origin: "policy", invalidateWidgets: true }
+    );
+  }
   disposed = false;
   /** Counts every delivered change, folds included, so a client can tell local edits from none. */
   revision = 0;
@@ -258,6 +269,7 @@ export class DocumentSession<Doc = unknown> {
     }
 
     this.disposed = true;
+    this.widgetHost?.dispose();
     this.notify({ dirtyBlocks: [], removedBlocks: [] }, { origin: "policy" });
     this.unsubscribe();
     this.listeners.clear();

@@ -1,3 +1,4 @@
+import { markdownWidgetStorage } from "./markdown_widgets";
 import type { RowFrame } from "../../../core/ui_containers";
 import { newBlockId } from "../provider";
 import type {
@@ -76,6 +77,7 @@ export interface MarkdownProviderOptions extends MarkdownRenderOptions {
  * contiguous span an edit touches, as the reference provider does.
  */
 export class MarkdownProvider implements DocumentProvider<MdDoc> {
+  readonly widgets = markdownWidgetStorage;
   private listeners = new WeakMap<MdDoc, Set<(change: DocChange) => void>>();
 
   constructor(readonly options: MarkdownProviderOptions = {}) {}

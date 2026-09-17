@@ -655,3 +655,6 @@ For a direct provider edit, use `markdownOps.table(blockId, expectedSource, chan
 widget or delayed action, use `tableCommand(doc, blockId, expectedSource, nextModel)` through
 `session.command()` so stale targets settle as refusals without history entries. The source
 comparison is an optimistic concurrency check over the entire table.
+
+Application-supplied block plugins use the optional [plugin host](richtext_plugins.md), with
+provider-owned records, per-document policy, scoped commands, and data-only history.

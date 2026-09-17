@@ -1,5 +1,5 @@
 import { test, expect, type Locator, type Page } from "@playwright/test";
-import { PLAYWRIGHT_HOST, SCEENSHOTS } from "../location";
+import { PLAYWRIGHT_HOST } from "../location";
 
 interface Pos {
   block: string;
@@ -64,6 +64,24 @@ const RAW = `A paragraph before the video.
 
 A paragraph after it.
 `;
+
+test("application note plugin inserts, commits and updates the second Markdown view", async ({
+  page,
+}) => {
+  const editor = await openMarkdown(page, "Before\n\nAfter");
+  await page.getByTestId("markdown-insert-note").click();
+  const note = editor.getByRole("textbox", { name: "Note text" });
+  await expect(note).toHaveValue("New note");
+  await note.fill("Application plugin value");
+  await editor.getByRole("button", { name: "Apply note" }).click();
+  await page.getByTestId("markdown-show-second").click();
+  await expect(
+    page.getByTestId("markdown-second-view").getByRole("textbox", { name: "Note text" })
+  ).toHaveValue("Application plugin value");
+  await expect(page.getByTestId("markdown-source")).toContainText("example.note");
+  await expect(page.getByTestId("markdown-source")).toContainText("Application plugin value");
+  await page.screenshot({ path: test.info().outputPath("plugin-example.png") });
+});
 
 async function openMarkdown(page: Page, text?: string): Promise<Locator> {
   await page.goto(PLAYWRIGHT_HOST);
@@ -139,7 +157,7 @@ function caretRect(editor: Locator): Promise<{ top: number; left: number } | und
 /** Writes the named screenshot from Chromium; the Firefox project only checks behaviour. */
 async function shot(editor: Locator, browserName: string, name: string): Promise<void> {
   if (browserName === "chromium") {
-    await editor.screenshot({ path: `${SCEENSHOTS}/${name}.png`, caret: "initial" });
+    await editor.screenshot({ path: test.info().outputPath(`${name}.png`), caret: "initial" });
   }
 }
 
@@ -153,7 +171,7 @@ async function pageShot(page: Page, editor: Locator, browserName: string, name: 
   }
   const box = (await editor.boundingBox())!;
   await page.screenshot({
-    path: `${SCEENSHOTS}/${name}.png`,
+    path: test.info().outputPath(`${name}.png`),
     clip: { x: box.x, y: box.y, width: box.width, height: box.height },
   });
 }
@@ -579,7 +597,7 @@ test("the Link button sets a link over the selection and a link click opens the 
   await expect(popup).toBeVisible();
   if (browserName === "chromium") {
     await page.screenshot({
-      path: `${SCEENSHOTS}/markdown-link-popup.png`,
+      path: test.info().outputPath("markdown-link-popup.png"),
       clip: { x: 640, y: 0, width: 640, height: 240 },
     });
   }
@@ -784,7 +802,7 @@ async function tabShot(page: Page, browserName: string, name: string) {
   const y = controls.y - 8;
   const view = page.viewportSize()!;
   await page.screenshot({
-    path: `${SCEENSHOTS}/${name}.png`,
+    path: test.info().outputPath(`${name}.png`),
     clip: {
       x,
       y,

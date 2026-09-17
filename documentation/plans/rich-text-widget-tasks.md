@@ -1,6 +1,6 @@
 # Embedded rich text widget tasks
 
-Status: Stages 1 and 2 are complete. Stage 1 acceptance is reverified; later work is paused.
+Status: Stage 3 is in progress; stages 1 and 2 are complete.
 
 This is the sole status and completion tracker for the [widget architecture](rich-text-widgets.md)
 and [forms/front-matter design](rich-text-widget-forms.md). Task IDs and existing completion
@@ -15,7 +15,7 @@ proposed; update their status here when implementation begins.
 | ---------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | 1. Hosting             | Complete    | Keyed mounts, disposal, input ownership, focus-preserving changes, and a synthetic editable widget work in two views               |
 | 2. Native table        | Complete    | GFM table cells and structure edit through document history and round-trip formatting                                              |
-| 3. Plugin storage      | Not started | Registry, session host, command validation, Markdown envelopes, unknown-record preservation, and structured clipboard              |
+| 3. Plugin storage      | In progress | Registry, session host, command validation, Markdown envelopes, unknown-record preservation, and structured clipboard              |
 | 4. Local forms         | Not started | Standalone form control, Zod adapter, embedded and native front-matter bindings, source preservation, drafts, validation, and undo |
 | 5. Additional adapters | Not started | Second schema adapter and declarative embedded schemas with explicit unsupported cases                                             |
 | 6. External data       | Not started | Host-supplied resource services, policy invalidation, conflicts, cancellation, and explicit submission                             |
@@ -50,8 +50,7 @@ unit/browser checks when implementation changes the public surface.
 
 This checklist is the implementation tracker. The stage table above summarizes the same
 work. Update both when a stage changes; do not maintain a second independent task list.
-The current request stops at H9. Preserve the existing Stage 2 commits; do not advance
-Stage 3 or modify visualnovel during this run.
+The continuation authorizes Stage 3. Stop after W8; later stages and visualnovel remain outside this run.
 
 Task IDs remain stable when work is split or reordered. Before starting a task, record its
 ID in the current-work entry below. Mark a checkbox complete only after its acceptance
@@ -59,9 +58,9 @@ condition is demonstrated, and record the relevant commit and checks in the comp
 Record blockers with the affected task ID and the concrete dependency needed to continue.
 Tasks without a checkbox marked complete are pending, including partially implemented work.
 
-- Current work: none; H1–H9 are complete and reverified at the requested boundary.
-- Next task: W1, pending authorization; T1–T6 are already committed and verified.
-- Blockers: none for Stage 1. Remaining [design decisions](rich-text-widgets.md#decisions-still-requiring-implementation-prototypes)
+- Current work: W8; final example acceptance, regression checks, and implementation review.
+- Next task: F1, after Stage 3 acceptance and a new authorization.
+- Blockers: none for Stage 3. Remaining [design decisions](rich-text-widgets.md#decisions-still-requiring-implementation-prototypes)
   belong to later stages.
 
 ### Preparation
@@ -125,25 +124,25 @@ Dependencies: H1–H9. Tables retain ordinary GFM syntax and need no plugin enve
 
 Dependencies: H1–H9. T1–T6 should validate native hosting before the plugin API is finalized.
 
-- [ ] W1. Finalize the versioned Markdown block envelope and structured clipboard grammar,
+- [x] W1. Finalize the versioned Markdown block envelope and structured clipboard grammar,
       payload limits, fence escaping, and duplicate-ID repair. Add fixtures before implementing
       parsing, including unknown and future versions.
-- [ ] W2. Define the explicit plugin registry and session document host. Implement duplicate
+- [x] W2. Define the explicit plugin registry and session document host. Implement duplicate
       type detection, per-document context, policy invalidation, and separate insert/mount/edit/
       external-action decisions with denial before renderer construction or resource access.
-- [ ] W3. Implement the optional provider widget-storage capability and immutable record
+- [x] W3. Implement the optional provider widget-storage capability and immutable record
       reads. Add insert/update/remove commands by stable ID with revision preconditions and
       snapshots; verify behavior through the H5/H6 execution and history boundaries.
-- [ ] W4. Add Markdown parsing and serialization for block records, with canonical supported
+- [x] W4. Add Markdown parsing and serialization for block records, with canonical supported
       output and verbatim unsupported source. Verify malformed/oversized envelopes remain inert
       and bounded, and ordinary code fences retain their existing meaning.
-- [ ] W5. Add structured clipboard plumbing and provider fallbacks. Verify fresh IDs on copy,
+- [x] W5. Add structured clipboard plumbing and provider fallbacks. Verify fresh IDs on copy,
       retained IDs on moves and undo, preserved external references, and explicit unsupported
       target behavior without silently dropping saved values.
-- [ ] W6. Implement explicit undoable migrations with validated output. Verify plugin removal,
+- [x] W6. Implement explicit undoable migrations with validated output. Verify plugin removal,
       policy denial, and unavailable versions preserve records and do not prevent data-only
       undo/redo or cause migration during rendering.
-- [ ] W7. Add tests for malicious keys/depth, HTML/URL handling, stale policy decisions, and
+- [x] W7. Add tests for malicious keys/depth, HTML/URL handling, stale policy decisions, and
       cancellation after revocation. Verify default video references create no players, literal
       video/iframe HTML stays inert, and no embed scripts or services load automatically.
 - [ ] W8. Document provider opt-in, host configuration, and an application-supplied plugin

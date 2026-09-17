@@ -45136,6 +45136,8 @@ var DocEditOp = class extends ToolOp {
   resolveEdit(session) {
     if (!session.canWrite) throw new ToolRefusedError("Document writes are prohibited", this);
     const op = this.prepare?.() ?? this.op;
+    if (session.widgetHost && !session.widgetHost.authorizeEdit(op))
+      throw new ToolRefusedError("Widget insertion is prohibited", this);
     const encoded = encodeEdit(op);
     this.inputs.op.setValue(encoded);
     const decoded = this.op;
@@ -45207,6 +45209,14 @@ var DocumentSession = class {
   provider;
   toolstack;
   id;
+  widgetHost;
+  /** Cancels mounted generations after host metadata, registry or policy changes. */
+  invalidateWidgets() {
+    this.notify(
+      { dirtyBlocks: this.provider.blocks(this.doc), removedBlocks: [] },
+      { origin: "policy", invalidateWidgets: true }
+    );
+  }
   disposed = false;
   /** Counts every delivered change, folds included, so a client can tell local edits from none. */
   revision = 0;
@@ -45370,6 +45380,7 @@ var DocumentSession = class {
       return;
     }
     this.disposed = true;
+    this.widgetHost?.dispose();
     this.notify({ dirtyBlocks: [], removedBlocks: [] }, { origin: "policy" });
     this.unsubscribe();
     this.listeners.clear();
@@ -45412,6 +45423,9 @@ var RichTextContext = class _RichTextContext {
     return new _RichTextContext(parent, this.session, this.editor);
   }
 };
+
+// scripts/widgets/richtext/widget_mime.ts
+var WIDGET_CLIPBOARD_MIME = "application/x-pathux-widgets+json";
 
 // scripts/widgets/richtext/positions.ts
 var BLOCK_ATTR = "data-doc-block";
@@ -46313,7 +46327,7 @@ function mapDelete(e, type, host) {
 // scripts/widgets/richtext/editor_render.ts
 function renderBlock(session, id, ctx, options) {
   try {
-    const descriptor = options?.resolveNativeBlock?.(session, id, ctx);
+    const descriptor = session.widgetHost?.resolve(id, ctx) ?? options?.resolveNativeBlock?.(session, id, ctx);
     if (descriptor) {
       const block = document.createElement("div");
       block.dataset.docBlock = id;
@@ -46694,6 +46708,10 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
         this.ownInfo.set(change, info);
         return;
       }
+      if (info.invalidateWidgets) {
+        this.invalidateWidgetPolicy();
+        return;
+      }
       this.docChanged(change);
       if (info.origin !== "policy") this.announce(change, info);
     });
@@ -46956,7 +46974,15 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     const ops = mapInput(e, {
       view,
       hasMark: (name) => provider.marks().some((m) => m.name === name),
-      fromClipboard: (data) => provider.fromClipboard(data),
+      fromClipboard: (data) => {
+        if (data.types.includes(WIDGET_CLIPBOARD_MIME) && !provider.widgets) {
+          this.dispatchEvent(
+            new CustomEvent("clipboardunsupported", { detail: { format: WIDGET_CLIPBOARD_MIME } })
+          );
+          return void 0;
+        }
+        return provider.fromClipboard(data);
+      },
       inputRange: (event) => this.inputRange(event),
       refuse: (type) => this.refuse(type),
       undo: () => this.undo(),
@@ -47022,11 +47048,22 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     if (session === void 0 || range === void 0 || isCollapsed(range) || !e.clipboardData) {
       return;
     }
-    const content = session.provider.toClipboard(session.doc, range);
+    let content;
+    try {
+      content = session.provider.toClipboard(session.doc, range);
+    } catch {
+      e.preventDefault();
+      this.dispatchEvent(
+        new CustomEvent("clipboardunsupported", { detail: { format: WIDGET_CLIPBOARD_MIME } })
+      );
+      return;
+    }
     e.clipboardData.setData("text/plain", content.blocks.join("\n"));
     if (content.html !== void 0) {
       e.clipboardData.setData("text/html", content.html);
     }
+    if (content.widgetData !== void 0)
+      e.clipboardData.setData(WIDGET_CLIPBOARD_MIME, content.widgetData);
     e.preventDefault();
     if (cut && !session.disposed && !this.readOnly) {
       this.submit({ type: "deleteRange", range });
@@ -47984,6 +48021,22 @@ var RichTextArea = class extends UIBase {
   invalidateWidgetPolicy() {
     this.editor.invalidateWidgetPolicy();
   }
+  hostFactory;
+  get widgetHostFactory() {
+    return this.hostFactory;
+  }
+  set widgetHostFactory(factory) {
+    if (factory === this.hostFactory) return;
+    this.hostFactory = factory;
+    if (this._session) {
+      this._session.widgetHost?.dispose();
+      const host = factory?.(this._session, this.ctx);
+      if (this._session.widgetHost !== host) {
+        this._session.widgetHost = host;
+        this._session.invalidateWidgets();
+      }
+    }
+  }
   writeAllowed = true;
   setWriteAllowed(allowed) {
     this.writeAllowed = allowed;
@@ -48112,6 +48165,7 @@ var RichTextArea = class extends UIBase {
     }
     const session = new DocumentSession(this.doc, this.provider, this.ctx.toolstack);
     session.setWriteAllowed(this.writeAllowed);
+    session.widgetHost = this.hostFactory?.(session, this.ctx);
     session.onChange((_change, info) => {
       if (info.origin !== "external" && info.origin !== "policy") {
         this.pushValue();

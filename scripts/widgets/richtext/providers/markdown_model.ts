@@ -12,6 +12,7 @@ export type MdKind =
   | { kind: "code"; lang: string }
   | { kind: "hr" }
   | { kind: "table"; source: string }
+  | { kind: "widget"; source: string }
   | { kind: "raw"; source: string }
   | { kind: "frontmatter"; source: string };
 

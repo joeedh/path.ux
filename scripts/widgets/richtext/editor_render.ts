@@ -15,7 +15,8 @@ function renderBlock<Doc>(
   options?: WidgetOptions<Doc>
 ): HTMLElement {
   try {
-    const descriptor = options?.resolveNativeBlock?.(session, id, ctx);
+    const descriptor =
+      session.widgetHost?.resolve(id, ctx) ?? options?.resolveNativeBlock?.(session, id, ctx);
     if (descriptor) {
       const block = document.createElement("div");
       block.dataset.docBlock = id;

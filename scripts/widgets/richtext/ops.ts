@@ -149,6 +149,8 @@ export class DocEditOp extends ToolOp<EditInputs, {}, RichTextContext> implement
   private resolveEdit(session: DocumentSession): EditOp {
     if (!session.canWrite) throw new ToolRefusedError("Document writes are prohibited", this);
     const op = this.prepare?.() ?? this.op;
+    if (session.widgetHost && !session.widgetHost.authorizeEdit(op))
+      throw new ToolRefusedError("Widget insertion is prohibited", this);
     const encoded = encodeEdit(op);
     this.inputs.op.setValue(encoded);
     const decoded = this.op;

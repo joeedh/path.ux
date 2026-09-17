@@ -1,3 +1,4 @@
+import { WIDGET_CLIPBOARD_MIME } from "./widget_mime";
 import { UIBase } from "../../core/ui_base";
 import type { UIBaseDefinition } from "../../core/base/ui_base_types";
 import type { IContextBase } from "../../core/context_base";
@@ -220,6 +221,10 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
         return;
       }
 
+      if (info.invalidateWidgets) {
+        this.invalidateWidgetPolicy();
+        return;
+      }
       this.docChanged(change);
       if (info.origin !== "policy") this.announce(change, info);
     });
@@ -536,7 +541,15 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     const ops = mapInput(e, {
       view,
       hasMark      : (name) => provider.marks().some((m) => m.name === name),
-      fromClipboard: (data) => provider.fromClipboard(data),
+      fromClipboard: (data) => {
+        if (data.types.includes(WIDGET_CLIPBOARD_MIME) && !provider.widgets) {
+          this.dispatchEvent(
+            new CustomEvent("clipboardunsupported", { detail: { format: WIDGET_CLIPBOARD_MIME } })
+          );
+          return undefined;
+        }
+        return provider.fromClipboard(data);
+      },
       inputRange   : (event) => this.inputRange(event),
       refuse       : (type) => this.refuse(type),
       undo         : () => this.undo(),
@@ -615,11 +628,22 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
       return;
     }
 
-    const content = session.provider.toClipboard(session.doc, range);
+    let content;
+    try {
+      content = session.provider.toClipboard(session.doc, range);
+    } catch {
+      e.preventDefault();
+      this.dispatchEvent(
+        new CustomEvent("clipboardunsupported", { detail: { format: WIDGET_CLIPBOARD_MIME } })
+      );
+      return;
+    }
     e.clipboardData.setData("text/plain", content.blocks.join("\n"));
     if (content.html !== undefined) {
       e.clipboardData.setData("text/html", content.html);
     }
+    if (content.widgetData !== undefined)
+      e.clipboardData.setData(WIDGET_CLIPBOARD_MIME, content.widgetData);
     e.preventDefault();
 
     if (cut && !session.disposed && !this.readOnly) {

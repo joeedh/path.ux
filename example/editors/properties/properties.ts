@@ -1,3 +1,5 @@
+import { DocumentWidgetHost, WidgetRegistry } from "../../../scripts/widgets/richtext/plugins";
+import { notePlugin } from "./note_plugin";
 import {
   UIBase,
   nstructjs,
@@ -233,6 +235,9 @@ export class PropsEditor extends Editor {
       });
     };
 
+    const registry = new WidgetRegistry();
+    registry.register(notePlugin);
+    let pluginHost: DocumentWidgetHost<MdDoc> | undefined;
     const provider = new MarkdownProvider({ onWikilinkStart: completeWikilink });
     const editor = UIBase.constructElement<RichTextEditor<typeof this.ctx, MdDoc>>(
       RichTextEditor.define().tagname,
@@ -249,6 +254,17 @@ export class PropsEditor extends Editor {
     readOnly.on_change = (value: boolean) => {
       editor.readOnly = value;
     };
+    const addNote = controls.button("Insert note widget", async () => {
+      const session = editor.session;
+      if (!session || !pluginHost) return;
+      const result = await pluginHost.insert(
+        { id: newBlockId(), type: notePlugin.type, version: 1, payload: { text: "New note" } },
+        session.doc.blocks.at(-1)?.id ?? null,
+        this.ctx
+      );
+      if (result.status !== "applied") status.text = `Insert refused: ${result.status}`;
+    });
+    addNote.setAttribute("data-testid", "markdown-insert-note");
     const save = controls.button("Save", async () => {
       const session = editor.session;
       if (session !== undefined) {
@@ -338,11 +354,16 @@ export class PropsEditor extends Editor {
     let stopListening = () => {};
     const open = (text: string) => {
       if (editor.session?.pendingDrafts.length) {
-        status.text = "Apply or discard table drafts before replacing the document";
+        status.text = "Apply or discard drafts before replacing the document";
         return;
       }
       stopListening();
+      pluginHost?.dispose();
       const session = new DocumentSession(markdownDocFromText(text), provider, new ToolStack());
+      pluginHost = new DocumentWidgetHost(session, registry, {
+        document : { path: "example/document.md" },
+        authorize: ({ action }) => action !== "external",
+      });
       editor.session = session;
       second.session = session;
       source.textContent = markdownText(session.doc);

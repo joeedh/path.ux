@@ -125,6 +125,7 @@ const paragraph = (children: PhrasingContent[]): Paragraph => ({ type: "paragrap
 
 /** One block as flow content; list items and quotes are grouped by the caller. */
 function flowNode(block: MdBlock): RootContent {
+  if (block.kind === "widget") return { type: "html", value: block.source };
   if (blockNeedsHtml(block) && block.kind !== "table" && block.kind !== "raw") {
     if (block.kind === "paragraph" && block.html?.tag === "span") {
       // an inline element is a paragraph to the parser, so its content stays markdown

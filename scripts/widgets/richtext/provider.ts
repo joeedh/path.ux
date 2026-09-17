@@ -1,5 +1,6 @@
 import type { IContextBase } from "../../core/context_base";
 import type { RowFrame } from "../../core/ui_containers";
+import type { WidgetStorage } from "./plugin_types";
 import type { WidgetDescriptor } from "./widget";
 
 // The editor's whole view of a document is here: blocks with stable ids, flattened text per
@@ -47,6 +48,8 @@ export type JsonValue =
 
 /** A selection ready for the clipboard, one plain-text entry per block. */
 export interface ClipboardContent {
+  /** Optional portable widget transfer; unsupported targets must explicitly refuse it. */
+  widgetData?: string;
   blocks: readonly string[];
   /** The whole selection as HTML, when the provider can produce it. */
   html?: string;
@@ -178,6 +181,7 @@ export type ToolbarSync<Doc> = (doc: Doc, selection: DocRange | undefined) => vo
  * `onExternalChange`. `applyEdit` mutates `doc` in place, so `Doc` must be a mutable object.
  */
 export interface DocumentProvider<Doc> {
+  readonly widgets?: WidgetStorage<Doc>;
   blocks(doc: Doc): readonly BlockId[];
   /** The block's flattened text: its runs concatenated, each atom counting as one `ATOM_CHAR`. */
   blockText(doc: Doc, block: BlockId): string;

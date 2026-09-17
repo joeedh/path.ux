@@ -17,6 +17,8 @@ import {
   markdownText,
 } from "../../scripts/widgets/richtext/markdown";
 import { TextArea } from "../../scripts/widgets/ui_textarea";
+import { DocumentWidgetHost, WidgetRegistry } from "../../scripts/widgets/richtext/plugins";
+import { notePlugin } from "../../example/editors/properties/note_plugin";
 /* used only as a type above, so the element registration it performs on import needs
  * naming explicitly or the import is elided */
 import "../../scripts/core/ui_containers";
@@ -110,6 +112,61 @@ function openField(ctx: Root, path = "data.text") {
 
   return field;
 }
+
+test("plugin host configuration is per field, survives format replacement and adds one history entry", async () => {
+  const ctx = makeCtx();
+  const field = openField(ctx, "data.md");
+  const other = openField(ctx, "data.text");
+  const registry = new WidgetRegistry();
+  let created = 0;
+  registry.register({
+    ...notePlugin,
+    create(snapshot, context) {
+      created++;
+      return notePlugin.create(snapshot, context);
+    },
+  });
+  field.widgetHostFactory = (session) =>
+    new DocumentWidgetHost(session, registry, {
+      document : { path: "one.md" },
+      authorize: () => true,
+    });
+  expect(other.session?.widgetHost).toBeUndefined();
+  const original = field.session!;
+  const host = original.widgetHost as DocumentWidgetHost<unknown>;
+  expect(
+    (
+      await host.insert(
+        { id: "note", type: notePlugin.type, version: 1, payload: { text: "bound" } },
+        null,
+        ctx
+      )
+    ).status
+  ).toBe("applied");
+  expect(ctx.data.md).toContain("pathux-widget-v1");
+  expect(ctx.toolstack).toHaveLength(1);
+  await ctx.toolstack.undo();
+  expect(ctx.data.md).not.toContain("pathux-widget-v1");
+  await ctx.toolstack.redo();
+  expect(ctx.data.md).toContain("pathux-widget-v1");
+  const beforeReplacement = created;
+  field.widgetHostFactory = (session) =>
+    new DocumentWidgetHost(session, registry, {
+      document : { path: "renamed.md" },
+      authorize: () => true,
+    });
+  expect(created).toBe(beforeReplacement + 1);
+  field.useFormat({
+    provider: () => new MarkdownProvider(),
+    fromText: markdownDocFromText,
+    toText  : markdownText,
+  });
+  expect(original.widgetHost).toBeUndefined();
+  expect(field.session?.widgetHost).toBeInstanceOf(DocumentWidgetHost);
+  expect(field.session?.widgetHost).not.toBe(host);
+  field.widgetHostFactory = undefined;
+  expect(field.session?.widgetHost).toBeUndefined();
+});
 
 const blockTexts = (field: RichTextArea) => {
   const session = field.session;

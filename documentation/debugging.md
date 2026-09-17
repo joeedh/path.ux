@@ -70,3 +70,20 @@ its opaque kind when the paragraph was nonempty. Table clipboard parsing now res
 prose entries at the outer edges. The existing editor allocator supplies IDs for the table
 and suffix before dispatch, so snapshots and redo include all blocks. Exercise a real paste
 into the middle of text; testing only adoption by an empty paragraph misses this loss.
+
+## Reserved Markdown widget source
+
+The Markdown parser normalizes line endings before mdast assigns offsets. Retaining a
+reserved fence verbatim requires mapping those offsets back to the original source. Track
+CRLF positions and count preceding pairs with a binary search; slicing normalized text loses
+unsupported payload formatting. Duplicate-ID repair should replace only the envelope ID
+token, rather than parsing and reserializing an unavailable plugin payload.
+
+Browser fixture readiness must include completion of fixture initialization. A visible first
+editor does not prove later sessions initialized; a missing required block-ID factory can
+throw after the first view appears. Typecheck fixtures before running their browser cases.
+
+Markdown browser screenshots use `test.info().outputPath()` so each project and case writes
+its own artifacts. Repeated Windows runs could fail with an `UNKNOWN` file-open error while
+overwriting shared tracked PNGs even when their attributes and ACL allowed writes. Per-test
+output also keeps diagnostics from changing the repository's committed screenshots.

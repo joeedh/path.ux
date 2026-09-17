@@ -1,3 +1,12 @@
+import { newBlockId } from "../provider";
+import { WIDGET_CLIPBOARD_MIME } from "../widget_mime";
+import {
+  decodeWidgetFence,
+  decodeWidgetTransfer,
+  encodeWidgetFence,
+  encodeWidgetTransfer,
+  reidentifyWidgetFence,
+} from "../widget_codec";
 import type { BlockId, ClipboardContent, DocRange } from "../provider";
 import { htmlForBlock } from "./markdown_html";
 import { mdBlock } from "./markdown_model";
@@ -68,6 +77,7 @@ export function parseEntry(entry: string, id: BlockId): MdBlock {
 export function toClipboard(doc: MdDoc, range: DocRange): ClipboardContent {
   const r = orderRange(doc, range);
   const blocks: string[] = [];
+  let hasWidget = false;
   let html = "";
 
   for (let i = r.startIndex; i <= r.endIndex; i++) {
@@ -78,6 +88,7 @@ export function toClipboard(doc: MdDoc, range: DocRange): ClipboardContent {
 
     if (isOpaque(b)) {
       if (from === 0 && to === 1) {
+        hasWidget ||= b.kind === "widget";
         blocks.push(entryOf(b));
         html += htmlForBlock(b);
       }
@@ -96,19 +107,51 @@ export function toClipboard(doc: MdDoc, range: DocRange): ClipboardContent {
     html += htmlForBlock(sliced);
   }
 
-  return { blocks, html: `<div ${OWN_HTML_MARK}>${html}</div>`, text: blocks.join("\n") };
+  let widgetData: string | undefined;
+  if (hasWidget) {
+    widgetData = encodeWidgetTransfer(
+      blocks.map((source) => {
+        const widget = decodeWidgetFence(source);
+        return widget ? { widget } : { text: source };
+      })
+    );
+  }
+  return {
+    blocks,
+    widgetData,
+    html: `<div ${OWN_HTML_MARK}>${html}</div>`,
+    text: blocks.join("\n"),
+  };
 }
 
 /** Reserves prose carriers around table edges so insertion never merges a table into text. */
 function pasteEntries(blocks: readonly MdBlock[]): string[] {
   const entries = blocks.map(entryOf);
-  if (blocks[0]?.kind === "table") entries.unshift("");
-  if (blocks.at(-1)?.kind === "table") entries.push("");
+  if (blocks[0]?.kind === "table" || blocks[0]?.kind === "widget") entries.unshift("");
+  if (blocks.at(-1)?.kind === "table" || blocks.at(-1)?.kind === "widget") entries.push("");
   return entries;
 }
 
 /** Parses clipboard blocks with table boundary carriers; `text` stays verbatim for a fence. */
 export function fromClipboard(data: DataTransfer): ClipboardContent | undefined {
+  if (data.types.includes(WIDGET_CLIPBOARD_MIME)) {
+    const transfer = decodeWidgetTransfer(data.getData(WIDGET_CLIPBOARD_MIME));
+    if (!transfer) return undefined;
+    const source = transfer
+      .map((entry) => ("widget" in entry ? encodeWidgetFence(entry.widget) : entry.text))
+      .join("\n\n");
+    const parsed: MdDoc = {
+      blocks: transfer.flatMap(
+        (entry) =>
+          markdownDocFromText("widget" in entry ? encodeWidgetFence(entry.widget) : entry.text)
+            .blocks
+      ),
+    };
+    if (parsed.blocks.some((block) => block.kind === "widget" && !closedFence(block.source)))
+      return undefined;
+    freshWidgetIds(parsed);
+    return { blocks: pasteEntries(parsed.blocks), text: source };
+  }
   const text = data.types.includes("text/plain")
     ? data.getData("text/plain").replace(/\r\n?/g, "\n")
     : undefined;
@@ -117,7 +160,9 @@ export function fromClipboard(data: DataTransfer): ClipboardContent | undefined 
   // copy carries the exact markdown as text, which is better than its rendering
   const html = data.types.includes("text/html") ? data.getData("text/html") : "";
   if (html !== "" && !html.includes(OWN_HTML_MARK)) {
-    const blocks = pasteEntries(markdownDocFromText(clipboardHtml(html)).blocks);
+    const parsed = markdownDocFromText(clipboardHtml(html));
+    freshWidgetIds(parsed);
+    const blocks = pasteEntries(parsed.blocks);
     if (blocks.length > 0) {
       return { blocks, text: text ?? blocks.join("\n") };
     }
@@ -126,7 +171,26 @@ export function fromClipboard(data: DataTransfer): ClipboardContent | undefined 
   if (text === undefined) {
     return undefined;
   }
-  const blocks = pasteEntries(markdownDocFromText(text).blocks);
+  const parsed = markdownDocFromText(text);
+  freshWidgetIds(parsed);
+  const blocks = pasteEntries(parsed.blocks);
 
   return { blocks: blocks.length > 0 ? blocks : [""], text };
+}
+
+/** A pasted occurrence is always a new instance, including unknown payload versions. */
+function freshWidgetIds(doc: MdDoc): void {
+  for (const block of doc.blocks) {
+    if (block.kind === "widget" && decodeWidgetFence(block.source))
+      block.source = reidentifyWidgetFence(block.source, newBlockId());
+  }
+}
+
+/** Prevents an unsupported open container from swallowing following transferred records. */
+function closedFence(source: string): boolean {
+  const fence = /^(`{3,}|~{3,})/.exec(source)?.[0];
+  const newline = source.lastIndexOf("\n");
+  if (!fence || newline < 0) return false;
+  const closing = source.slice(newline + 1).trim();
+  return closing.length >= fence.length && [...closing].every((char) => char === fence[0]);
 }

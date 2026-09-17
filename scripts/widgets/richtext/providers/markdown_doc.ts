@@ -43,6 +43,7 @@ export const TOGGLE_NAMES: ReadonlySet<string> = new Set(MD_MARKS.map((m) => m.n
 export const OPAQUE_KINDS: ReadonlySet<MdBlock["kind"]> = new Set([
   "hr",
   "table",
+  "widget",
   "raw",
   "frontmatter",
 ]);

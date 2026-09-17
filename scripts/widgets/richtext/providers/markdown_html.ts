@@ -1097,6 +1097,7 @@ export function inlineHtml(nodes: readonly InlineNode[]): string {
 
 /** The whole of `block` as one HTML block, for a block markdown syntax cannot carry. */
 export function htmlForBlock(block: MdBlock): string {
+  if (block.kind === "widget") return `<pre>${escapeHtml(block.source)}</pre>`;
   const attrs = attrText(block.html?.attrs, block.html?.style);
   const inner = inlineHtml(inlineTree(block));
 

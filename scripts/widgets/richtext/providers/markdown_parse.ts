@@ -1,3 +1,4 @@
+import { decodeWidgetFence, reidentifyWidgetFence } from "../widget_codec";
 // Markdown text to the block model: mdast's tree, flattened one block per node, with inline
 // HTML paired into marks and wikilinks lifted out of the text.
 
@@ -66,13 +67,33 @@ function plainText(node: PhrasingContent): string {
 
 class Parser {
   readonly blocks: MdBlock[] = [];
+  private flowDepth = 0;
   private readonly definitions = new Map<string, Definition>();
   private readonly wrappers: HtmlContext[] = [];
 
   constructor(
     private readonly source: string,
-    private readonly newId: () => BlockId
+    private readonly newId: () => BlockId,
+    private readonly original = source,
+    private readonly crlfOffsets: readonly number[] = []
   ) {}
+
+  private originalSlice(node: Nodes): string {
+    const offset = (value: number) => {
+      let lo = 0;
+      let hi = this.crlfOffsets.length;
+      while (lo < hi) {
+        const mid = (lo + hi) >>> 1;
+        if (this.crlfOffsets[mid] < value) lo = mid + 1;
+        else hi = mid;
+      }
+      return value + lo;
+    };
+    return this.original.slice(
+      offset(node.position!.start.offset!),
+      offset(node.position!.end.offset!)
+    );
+  }
 
   private get ctx(): HtmlContext {
     return this.wrappers.length > 0 ? this.wrappers[this.wrappers.length - 1] : rootHtmlContext();
@@ -116,8 +137,11 @@ class Parser {
   }
 
   flow(nodes: readonly RootContent[], ctx: HtmlContext): void {
-    for (const node of nodes) {
-      this.node(node, ctx);
+    this.flowDepth++;
+    try {
+      for (const node of nodes) this.node(node, ctx);
+    } finally {
+      this.flowDepth--;
     }
   }
 
@@ -145,7 +169,15 @@ class Parser {
         this.quote(node, ctx);
         break;
       case "code":
-        this.push({ kind: "code", lang: node.lang ?? "" }, node.value);
+        if (
+          this.flowDepth === 1 &&
+          /^pathux-widget-v[0-9]+$/.test(node.lang ?? "") &&
+          !ctx.listDepth &&
+          !ctx.quoteDepth &&
+          !this.wrappers.length
+        ) {
+          this.push({ kind: "widget", source: this.originalSlice(node) });
+        } else this.push({ kind: "code", lang: node.lang ?? "" }, node.value);
         break;
       case "thematicBreak":
         this.push({ kind: "hr" });
@@ -487,9 +519,28 @@ export function markdownDocFromText(text: string, newId: () => BlockId = newBloc
     mdastExtensions: [gfmFromMarkdown(), frontmatterFromMarkdown(["yaml"])],
   });
 
-  const parser = new Parser(source, newId);
+  const crlfOffsets: number[] = [];
+  for (const match of text.matchAll(/\r\n/g)) crlfOffsets.push(match.index - crlfOffsets.length);
+  const parser = new Parser(source, newId, text, crlfOffsets);
   parser.collectDefinitions(tree.children);
   parser.flow(tree.children, rootHtmlContext());
 
+  const records = parser.blocks.map((block) =>
+    block.kind === "widget" ? decodeWidgetFence(block.source) : undefined
+  );
+  const reserved = new Set(records.flatMap((record) => (record ? [record.id] : [])));
+  const seen = new Set<string>();
+  parser.blocks.forEach((block, index) => {
+    const record = records[index];
+    if (!record || block.kind !== "widget") return;
+    if (seen.has(record.id)) {
+      let id: string;
+      do {
+        id = newBlockId();
+      } while (reserved.has(id));
+      reserved.add(id);
+      block.source = reidentifyWidgetFence(block.source, id);
+    } else seen.add(record.id);
+  });
   return { blocks: parser.blocks };
 }

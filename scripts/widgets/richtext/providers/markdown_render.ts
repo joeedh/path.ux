@@ -361,6 +361,12 @@ export function renderMarkdownBlock(
       el = opaque("md-raw", tag);
       break;
     }
+    case "widget": {
+      const label = document.createElement("code");
+      label.textContent = "Widget unavailable";
+      el = opaque("md-widget", label);
+      break;
+    }
     case "frontmatter": {
       const pre = document.createElement("pre");
       pre.textContent = block.source;
