@@ -73,6 +73,8 @@ export interface WidgetPlugin {
   readonly version: number;
   readonly label: string;
   validate(payload: JsonValue): boolean;
+  /** Checks host-supplied service policy without constructing a view or performing I/O. */
+  canMount?(record: WidgetRecord, document: JsonValue): boolean;
   create(snapshot: WidgetSnapshot, context: PluginViewContext): WidgetView | Promise<WidgetView>;
   /** Converts an older payload only when an explicit migration command runs. */
   migrate?(record: WidgetRecord): JsonValue;

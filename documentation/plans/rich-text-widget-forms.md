@@ -337,3 +337,127 @@ adapter and application codec. The shared intake fixtures in
 example/editors/properties/form_adapters.ts exercise both new adapters with identical values,
 control codecs and source-preserving YAML patches. Complex values still use JSON text controls;
 this stage adds no nested visual builder, external service, media renderer or consumer migration.
+
+## External resources and submission
+
+The optional resource API lives in scripts/widgets/richtext/resource.ts. Applications supply
+`ResourceServices`: an explicit map of service implementations plus a synchronous destination
+policy. A document reference is exactly `{service, key}`. The key is opaque to path.ux; it is
+not a URL that the library fetches. Service objects own transport, authentication and any
+credential store. Documents, widget records, snapshots and resource requests contain no
+credential field. No HTTP adapter, service detection, media renderer or default network
+fetching is installed by this API.
+
+`ResourceService.resolve(reference, scope)` is a synchronous, side-effect-free resolution
+step. It may use the host's document descriptor to resolve a relative path but must perform
+no I/O. It returns the actual destination string checked by `ResourceServices.authorize()`.
+The scope contains the document descriptor and immutable widget record. Resolution and
+policy must be cheap: mount checks and current-view checks can call them repeatedly.
+
+`ResourceService.request()` receives that destination, scoped reference, action and an
+`AbortSignal`. Actions are `read`, `schema` and `submit`. A successful response is
+`{status: "ready", snapshot: {version, value}}`, where the version is a nonempty opaque
+string and the value is bounded JSON. Other results are `conflict` (optionally with the
+current snapshot), `failed`, `refused` or `cancelled`. Returned JSON is detached and frozen;
+versions, references and destinations have explicit length limits. Widget JSON size, depth
+and value-count limits apply to service snapshots and submission values.
+
+A service must return `{status: "redirect", destination}` before contacting a redirect
+target. `WidgetResources` checks policy for every hop, limits redirects to five, rejects
+loops and checks permission again before accepting the response. A network adapter must use
+manual redirect handling and retain credentials only for destinations approved by the host.
+The library cannot enforce this inside arbitrary trusted service code. It provides no
+transport sandbox and never follows an HTTP redirect itself.
+
+Requests also pass through the existing widget `external()` gate using action names
+`resource:read`, `resource:schema` and `resource:submit`. The optional plugin `canMount`
+preflight checks service/reference policy before renderer construction; the shared widget
+host checks it again before constructing a view and when checking whether a view is current.
+Host mount policy and service policy must both permit access. Read permission does not grant
+submit permission. Hosts must call `DocumentWidgetHost.invalidate()` when credentials,
+services, paths, schema classification or policies change so existing generations abort.
+
+`WidgetResources.cancel()` aborts outstanding requests and settles their callers even when
+a transport ignores the signal. Disposal and host invalidation abort requests too. Changes
+to the record, service identity, policy or mounted generation prevent late data from being
+accepted. Cancellation cannot reverse a remote transaction that has already committed;
+the UI reports that its outcome may be unknown and offers refresh instead of automatic retry.
+
+### External form and read-only view plugins
+
+Import `createExternalFormPlugin` or `createExternalViewPlugin` from
+scripts/widgets/richtext/form_external.ts. They are explicitly registered plugins named
+`pathux.external-form` and `pathux.external-view`, each with payload version 1. Both use the
+shared widget host. The form payload is:
+
+```json
+{
+  "resource": { "service": "customers", "key": "customer-42" },
+  "schema"  : { "id": "customer-intake", "version": 3 }
+}
+```
+
+The form's schema can instead be `{resource: {service, key}}`. Schema resource access uses
+its own authorization check and returns a versioned declarative description understood by
+`declarativeFormSchema`; fetched text never becomes executable code. Runtime validation still
+requires an explicitly host-registered schema. The read-only plugin needs only `resource`
+and displays fetched JSON as text. This stage supplies external values with a registered or
+resource-backed schema; it does not add a remote-schema binding over native YAML fields.
+
+Initial load and Refresh resource read external state without changing the document or its
+history. Each view retains its own versioned read and local field drafts. A dirty view refuses
+refresh until its answers are submitted or discarded. A failed refresh disables editing until
+a fresh read succeeds. Resource reference/schema changes require rebinding; the example
+invalidates views when these references change, including during undo and redo.
+
+Save resource snapshot explicitly copies the last successfully loaded or submitted
+`{version, value}` into the payload's `snapshot` field through the document command boundary.
+It refuses pending drafts and creates one undo entry. Saving the same snapshot again is a
+no-op. Undo/redo restores document data without performing a resource write. A saved snapshot
+can be displayed offline with an explicit stale-data label; it never supplies a trusted write
+version or enables submission before a fresh read. Read-only editor state and session write
+policy protect snapshot commands and application-level history.
+
+### Drafts and explicit submission
+
+External forms reuse `FormControl` and its input codecs, with its document Apply action
+hidden through `{commit: false, discard: false}`. The external view supplies its own discard
+action, which also updates resource status and stays disabled during a transaction. `submissionValues()` captures authored JSON independently
+of the full validator's output. External drafts register with the document session for
+navigation/save protection, but their preparation refuses with an explicit submit-or-discard
+reason. `prepareSave()` never runs a remote transaction. Detached drafts remain recoverable
+and discardable after a view is removed or its policy is revoked.
+
+Submit answers validates the current input, bounds both authored values and validated output,
+and sends them separately. The request contains `expectedVersion`, an opaque `requestId`, and
+both `values` and `output`. If the schema was fetched, it also contains the schema reference
+and version. The host service must atomically enforce applicable data/schema versions and
+return a conflict when either changed. It decides how validated output maps to its domain;
+transformed output never silently replaces the authored input in the document.
+
+Validation and submission are guarded against repeated clicks, changed answers, composition,
+read-only changes and stale views. Pending service work disables edits. Success adopts the
+service's returned snapshot and clears only that view's submitted draft. Conflict and failure
+retain authored text and the original version baseline; the conflict's newer version is not
+silently adopted. Other views retain their prior snapshots until explicitly refreshed, so a
+second stale view encounters a version conflict instead of overwriting the first submission.
+The client performs no automatic retries. Services own deduplication by request ID, external
+transaction history and recovery from uncertain outcomes.
+
+External transactions create no document undo entries. Document undo/redo never submits,
+reverses, repeats or retries a service operation. The supplied form conservatively prohibits
+submission in a read-only editor or session, in addition to requiring external-action policy.
+Reading and refresh remain available under read policy. A host requiring a different external
+interaction policy can use the scoped resource API in its own widget.
+
+### Local service example
+
+The Markdown example's Open external data demo button opens two views sharing a document
+and an application-owned in-memory service. It demonstrates independent drafts, explicit
+submission, version conflicts, read-only JSON views, saved snapshots and offline failures.
+The fixture can also delay requests, revoke policy, redirect destinations and change the
+remote schema version. Browser checks exercise those controls in Chromium and Firefox.
+The example's service has no real credentials or network access. Production adapters must
+supply their own authentication, atomic version checks, redirect behavior, idempotency and
+bounded transport parsing. Resource refresh is explicit; push subscriptions and cross-view
+remote cache synchronization are outside this implementation.

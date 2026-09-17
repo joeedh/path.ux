@@ -37,7 +37,8 @@ export class FormControl<Output = unknown> implements WidgetView {
     readonly schema: FormSchema<Output>,
     readonly binding: FormBinding,
     context: IContextBase,
-    presentation: FormPresentation = {}
+    presentation: FormPresentation = {},
+    options: { commit?: boolean; discard?: boolean } = {}
   ) {
     const initial = binding.read();
     if (!initial || !formObject(initial.values)) throw new Error("Form requires an object input");
@@ -92,8 +93,9 @@ export class FormControl<Output = unknown> implements WidgetView {
       this.element.append(row);
     }
     const actions = document.createElement("div");
-    this.button("Apply answers", () => void this.commit(), actions);
-    this.button("Discard answers", () => this.discard(), actions, true);
+    if (options.commit !== false) this.button("Apply answers", () => void this.commit(), actions);
+    if (options.discard !== false)
+      this.button("Discard answers", () => this.discard(), actions, true);
     this.button("Validate submission", () => void this.validateSubmission(), actions);
     this.element.append(actions, this.status);
     this.element.addEventListener("compositionstart", () => (this.composing = true));
@@ -156,6 +158,13 @@ export class FormControl<Output = unknown> implements WidgetView {
     } catch (error) {
       return { status: "unencodable", reason: String(error) };
     }
+  }
+
+  /** Captures authored answers for an explicit action without committing or transforming them. */
+  submissionValues(): JsonValue {
+    if (this.locked() || this.composing || this.binding.read()?.revision !== this.base.revision)
+      throw new Error("Resolve unavailable or conflicting answers before submission");
+    return this.values();
   }
 
   async commit(): Promise<void> {

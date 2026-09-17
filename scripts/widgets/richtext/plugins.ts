@@ -30,6 +30,7 @@ export class WidgetRegistry {
       version : plugin.version,
       label   : plugin.label,
       validate: plugin.validate.bind(plugin),
+      canMount: plugin.canMount?.bind(plugin),
       create  : plugin.create.bind(plugin),
       migrate : plugin.migrate?.bind(plugin),
     });
@@ -92,7 +93,11 @@ export class DocumentWidgetHost<Doc> implements SessionWidgetHost {
         document: this.options.document,
         externalAction,
       });
-      return decision === true;
+      if (decision !== true) return false;
+      const canMount = this.registry.get(record.type)?.canMount;
+      if (action !== "mount" || !canMount) return true;
+      const mountAllowed: unknown = canMount(record, this.options.document);
+      return mountAllowed === true;
     } catch {
       return false;
     }

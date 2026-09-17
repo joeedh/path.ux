@@ -128,3 +128,25 @@ Schema migration must settle drafts before capturing its source snapshot. A docu
 can replace the schema and answers together, but the application must also invalidate views
 when undo or redo restores a different schema. Compare schema descriptions rather than all
 answer values so ordinary field edits preserve mounted controls and focus.
+
+### External widget resources
+
+Keep external form drafts registered with the session, but refuse their save preparation.
+A document save barrier must never call a remote write. A form submission carries its
+resource version and, when fetched separately, its schema version; adopting a conflict's
+new version would permit a stale retry to overwrite current values.
+
+Guard the validation phase as well as the transport phase against repeated submissions.
+Two click handlers can await validation together before either sets a transport-busy flag.
+A handler that returns from the second validation must not clear the first request's busy
+state in `finally`. The external view uses a separate validation guard and tests rapid clicks.
+
+Cancellation should race the transport promise so a service that ignores `AbortSignal` cannot
+hold the view indefinitely. Remove abort listeners when cancellation settles, reject late data
+by record and generation, and keep detached drafts discardable even if disposal interrupted a
+pending request. An aborted remote write can already have committed; show its uncertain outcome
+and require host-side version/idempotency handling rather than replaying it through undo.
+
+A failed schema refresh must disable the previously loaded form. Keeping its old fields visible
+is useful for diagnosis, but they cannot remain writable against an unsupported newer schema.
+Likewise, an offline document snapshot is readable data, not a fresh external write baseline.

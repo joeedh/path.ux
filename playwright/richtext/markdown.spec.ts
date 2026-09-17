@@ -102,6 +102,22 @@ test("application forms demo mounts native and embedded bindings", async ({ page
   await expect(dialog).toHaveCount(0);
 });
 
+test("application external data demo protects drafts and submits explicitly", async ({ page }) => {
+  await openMarkdown(page);
+  await page.locator('button-x[name="Open external data demo"]').click();
+  const dialog = page.locator("dialog");
+  const form = dialog.locator("#external0 .external-resource").first();
+  await expect(form.getByRole("textbox", { name: "name", exact: true })).toHaveValue("Ada");
+  await form.getByRole("textbox", { name: "name", exact: true }).fill("Bea");
+  await dialog.getByRole("button", { name: "Close external demo", exact: true }).click();
+  await expect(dialog).toBeVisible();
+  await form.getByRole("button", { name: "Submit answers" }).click();
+  await expect(form.locator(".resource-status")).toHaveText("Submitted version 2");
+  await page.screenshot({ path: test.info().outputPath("external-example.png") });
+  await dialog.getByRole("button", { name: "Close external demo", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+});
+
 async function openMarkdown(page: Page, text?: string): Promise<Locator> {
   await page.goto(PLAYWRIGHT_HOST);
   await page.getByTestId("tab-markdown").click();

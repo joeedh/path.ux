@@ -360,7 +360,10 @@ command executes. Limit each view to the services and configuration approved for
 Resource identifiers and credentials remain separate. The document stores a reference;
 host services resolve it and supply authentication. Reference resolution must apply host
 policy to the actual destination, including redirects or a changed document base path.
-Schema retrieval is also resource access and requires authorization.
+Schema retrieval is also resource access and requires authorization. The optional
+[resource service contracts](rich-text-widget-forms.md#external-resources-and-submission)
+specify scoped references, destination preflight, redirect handling, cancellation, versioned
+results and explicit submission without document-history replay.
 
 YouTube illustrates the intended boundary. Supported browser embeds use an iframe, created
 directly or by the [IFrame Player API](https://developers.google.com/youtube/iframe_api_reference).

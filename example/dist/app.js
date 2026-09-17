@@ -1024,20 +1024,20 @@ var init_mobile_detect = __esm({
       return null;
     };
     impl.getVersion = function(propertyName, userAgent) {
-      const version = impl.getVersionStr(propertyName, userAgent);
-      return version ? impl.prepareVersionNo(version) : NaN;
+      const version2 = impl.getVersionStr(propertyName, userAgent);
+      return version2 ? impl.prepareVersionNo(version2) : NaN;
     };
-    impl.prepareVersionNo = function(version) {
-      const numbers = version.split(/[a-z._ /-]/i);
+    impl.prepareVersionNo = function(version2) {
+      const numbers = version2.split(/[a-z._ /-]/i);
       if (numbers.length === 1) {
-        version = numbers[0];
+        version2 = numbers[0];
       }
       if (numbers.length > 1) {
-        version = numbers[0] + ".";
+        version2 = numbers[0] + ".";
         numbers.shift();
-        version += numbers.join("");
+        version2 += numbers.join("");
       }
-      return Number(version);
+      return Number(version2);
     };
     impl.isMobileFallback = function(userAgent) {
       return impl.detectMobileBrowsers.fullPattern.test(userAgent) || impl.detectMobileBrowsers.shortPattern.test(userAgent.substr(0, 4));
@@ -2848,8 +2848,8 @@ function unregister(cls) {
 function inherit(child, parent, structName = child.name) {
   return STRUCT.inherit(child, parent, structName);
 }
-function readObject(data, cls, __uctx, version) {
-  return manager.readObject(data, cls, __uctx, version);
+function readObject(data, cls, __uctx, version2) {
+  return manager.readObject(data, cls, __uctx, version2);
 }
 function writeObject(data, obj) {
   return manager.writeObject(data, obj);
@@ -3313,9 +3313,9 @@ var init_nstructjs_es6 = __esm({
     temp_dataview = new DataView(new ArrayBuffer(16));
     uint8_view = new Uint8Array(temp_dataview.buffer);
     unpack_context = class {
-      constructor(version = 0) {
+      constructor(version2 = 0) {
         this.i = 0;
-        this.version = version;
+        this.version = version2;
       }
     };
     BinWriter = class {
@@ -4909,7 +4909,7 @@ var init_nstructjs_es6 = __esm({
         }
       }
       // defaults to structjs.manager
-      parse_structs(buf, defined_classes, version = 0) {
+      parse_structs(buf, defined_classes, version2 = 0) {
         const keywords = this.constructor.keywords;
         if (defined_classes === void 0) {
           defined_classes = manager;
@@ -4945,7 +4945,7 @@ var init_nstructjs_es6 = __esm({
         struct_parse.input(buf);
         while (!struct_parse.at_end()) {
           const stt = struct_parse.parse(void 0, false);
-          const migratedName = migrationSource.structNameMigration(version, stt.name);
+          const migratedName = migrationSource.structNameMigration(version2, stt.name);
           if (!(migratedName in clsmap)) {
             if (!(stt.name in this.null_natives)) {
               if (warninglvl2 > 0) console.log("WARNING: struct " + stt.name + " is missing from class list.");
@@ -5230,13 +5230,13 @@ var init_nstructjs_es6 = __esm({
            finishes loading. Defaults to 0.
          @return Instance of cls_or_struct_id
          */
-      readObject(data, cls_or_struct_id, uctx, version) {
+      readObject(data, cls_or_struct_id, uctx, version2) {
         if (data instanceof Uint8Array || data instanceof Uint8ClampedArray) {
           data = new DataView(data.buffer);
         } else if (data instanceof Array) {
           data = new DataView(new Uint8Array(data).buffer);
         }
-        return this.read_object(data, cls_or_struct_id, uctx, void 0, version);
+        return this.read_object(data, cls_or_struct_id, uctx, void 0, version2);
       }
       writeObject(data, obj) {
         return this.write_object(data, obj);
@@ -5386,19 +5386,19 @@ var init_nstructjs_es6 = __esm({
         }
         const anyCls = cls;
         if (anyCls.migrateSTRUCT !== void 0) {
-          const version = anyCls.getVersionSTRUCT !== void 0 ? anyCls.getVersionSTRUCT(obj) : uctx.version;
-          anyCls.migrateSTRUCT(version, obj, binaryMigrateFinisher);
+          const version2 = anyCls.getVersionSTRUCT !== void 0 ? anyCls.getVersionSTRUCT(obj) : uctx.version;
+          anyCls.migrateSTRUCT(version2, obj, binaryMigrateFinisher);
         }
         return obj;
       }
-      addStructNameMigration(version, oldName, newName) {
-        let item = this.struct_names_migrations.find((i2) => i2.version === version);
+      addStructNameMigration(version2, oldName, newName) {
+        let item = this.struct_names_migrations.find((i2) => i2.version === version2);
         if (item === void 0) {
-          item = { version, map: /* @__PURE__ */ new Map() };
+          item = { version: version2, map: /* @__PURE__ */ new Map() };
           this.struct_names_migrations.push(item);
           this.struct_names_migrations.sort((a2, b) => a2.version - b.version);
         } else if (item.map.has(oldName)) {
-          throw new Error("Struct name migration already exists for " + oldName + " at version " + version);
+          throw new Error("Struct name migration already exists for " + oldName + " at version " + version2);
         }
         item.map.set(oldName, newName);
         return this;
@@ -5417,13 +5417,13 @@ var init_nstructjs_es6 = __esm({
        * lookup; that's a dead end; not a loop, so resolution stops there and
        * returns the last name reached rather than cycling forever.
        */
-      structNameMigration(version, name) {
+      structNameMigration(version2, name) {
         const seen = /* @__PURE__ */ new Set([name]);
         for (; ; ) {
           let next;
           for (let i2 = 0; i2 < this.struct_names_migrations.length; i2++) {
             const item = this.struct_names_migrations[i2];
-            if (version < item.version && item.map.has(name)) {
+            if (version2 < item.version && item.map.has(name)) {
               next = item.map.get(name);
               break;
             }
@@ -5468,9 +5468,9 @@ var init_nstructjs_es6 = __esm({
           }
           return parentVersion;
         };
-        const getStruct = (version, sname, doVersion = true) => {
+        const getStruct = (version2, sname, doVersion = true) => {
           if (doVersion) {
-            sname = this.structNameMigration(version, sname);
+            sname = this.structNameMigration(version2, sname);
           }
           if (!(sname in this.structs)) {
             if (warnMissing) {
@@ -5495,74 +5495,74 @@ var init_nstructjs_es6 = __esm({
           return false;
         };
         const walkable = (data) => typeof data === "object" && data !== null && !Array.isArray(data);
-        const walkArray = (version, arrayType2, data) => {
+        const walkArray = (version2, arrayType2, data) => {
           if (!isPossibleType(arrayType2.type) || !Array.isArray(data)) {
             return;
           }
           for (const item of data) {
-            dispatch(version, arrayType2.data.type, item);
+            dispatch(version2, arrayType2.data.type, item);
           }
         };
-        const walkStruct = (version, sname, data, doVersion) => {
+        const walkStruct = (version2, sname, data, doVersion) => {
           if (!walkable(data)) {
             return;
           }
-          const stt2 = getStruct(version, sname, doVersion);
+          const stt2 = getStruct(version2, sname, doVersion);
           if (!stt2) {
             return;
           }
-          const version2 = getVersion(version, stt2.name, data);
+          const version22 = getVersion(version2, stt2.name, data);
           const finish = (excludeFields) => {
             for (const field of stt2.fields) {
               if (isPossibleType(field.type.type) && !excludeFields?.includes(field.name)) {
-                dispatch(version2, field.type, data[field.name]);
+                dispatch(version22, field.type, data[field.name]);
               }
             }
           };
           const cls2 = this.get_struct_cls(sname);
           if (cls2.migrateSTRUCT !== void 0) {
-            cls2.migrateSTRUCT(version2, data, finish);
+            cls2.migrateSTRUCT(version22, data, finish);
           } else {
             finish();
           }
         };
-        const walkIterKeys = (version, type, data) => {
+        const walkIterKeys = (version2, type, data) => {
           if (!walkable(data)) {
             return;
           }
           for (const key of Object.keys(data)) {
-            dispatch(version, type.data.type, data[key]);
+            dispatch(version2, type.data.type, data[key]);
           }
         };
         const this2 = this;
-        function dispatch(version, type, data) {
+        function dispatch(version2, type, data) {
           switch (type.type) {
             case StructEnum.ARRAY:
             case StructEnum.ITER:
             case StructEnum.STATIC_ARRAY:
-              walkArray(version, type, data);
+              walkArray(version2, type, data);
               break;
             case StructEnum.STRUCT:
-              walkStruct(version, type.data, data);
+              walkStruct(version2, type.data, data);
               break;
             case StructEnum.ITERKEYS:
-              walkIterKeys(version, type, data);
+              walkIterKeys(version2, type, data);
               break;
             case StructEnum.TSTRUCT: {
               if (!walkable(data)) {
                 break;
               }
               const was = data[type.jsonKeyword];
-              const name = this2.structNameMigration(version, was);
+              const name = this2.structNameMigration(version2, was);
               if (name !== was) {
                 data[type.jsonKeyword] = name;
               }
-              walkStruct(getVersion(version, name, data), name, data, false);
+              walkStruct(getVersion(version2, name, data), name, data, false);
               break;
             }
             case StructEnum.OPTIONAL:
               if (data !== void 0 && data !== null) {
-                dispatch(version, type.data, data);
+                dispatch(version2, type.data, data);
               }
               break;
           }
@@ -45398,24 +45398,24 @@ var DocumentSession = class {
     const prepared = await Promise.all(
       pending.map(async (draft) => {
         const entry = this.drafts.get(draft.id);
-        const version = entry.controller.version();
+        const version2 = entry.controller.version();
         try {
-          return { draft, entry, version, result: await entry.controller.prepare() };
+          return { draft, entry, version: version2, result: await entry.controller.prepare() };
         } catch {
-          return { draft, entry, version, result: { status: "unencodable" } };
+          return { draft, entry, version: version2, result: { status: "unencodable" } };
         }
       })
     );
     if (this.revision !== revision) return { status: "conflict", drafts: this.pendingDrafts };
     let expectedRevision = revision;
-    for (const { draft, entry, version, result } of prepared) {
+    for (const { draft, entry, version: version2, result } of prepared) {
       if (result.status !== "ready") return { ...result, drafts: [draft] };
       if (entry.detached) return { status: "refused", drafts: [draft] };
-      if (entry.controller.version() !== version) return { status: "conflict", drafts: [draft] };
+      if (entry.controller.version() !== version2) return { status: "conflict", drafts: [draft] };
       const committed = await this.command(
         {
           authorize: () => !entry.detached && (result.command.authorize?.() ?? true),
-          resolve: () => this.revision === expectedRevision && entry.controller.version() === version && this.pendingDrafts.filter((other) => other.key === draft.key).length === 1 ? result.command.resolve() : void 0
+          resolve: () => this.revision === expectedRevision && entry.controller.version() === version2 && this.pendingDrafts.filter((other) => other.key === draft.key).length === 1 ? result.command.resolve() : void 0
         },
         entry.context
       );
@@ -45426,7 +45426,7 @@ var DocumentSession = class {
         };
       }
       expectedRevision++;
-      if (entry.controller.version() !== version) return { status: "conflict", drafts: [draft] };
+      if (entry.controller.version() !== version2) return { status: "conflict", drafts: [draft] };
       entry.controller.committed();
     }
     return this.pendingDrafts.length || this.revision !== expectedRevision ? { status: "conflict", drafts: this.pendingDrafts } : { status: "ready", revision: this.revision };
@@ -45485,11 +45485,11 @@ var DocumentSession = class {
    * result once it has run. `run` defaults to a fresh value, so two dispatches never fold
    * into each other; pass an editor's own run to join its typing run.
    */
-  async dispatch(op, parentCtx, source, run = `dispatch${++dispatchCounter}`, authorize) {
+  async dispatch(op, parentCtx, source, run = `dispatch${++dispatchCounter}`, authorize2) {
     const ctx = new RichTextContext(parentCtx, this);
     const toolop = new DocEditOp(op, void 0, this.id, run);
     toolop.prepare = () => {
-      if (authorize && !authorize()) throw new ToolRefusedError("View is read-only", toolop);
+      if (authorize2 && !authorize2()) throw new ToolRefusedError("View is read-only", toolop);
       return op;
     };
     const result = toolop.result(source);
@@ -46212,16 +46212,16 @@ function freezeComposition(root2, range, view, pending) {
     view: { blocks, blockText: (id) => texts.get(id) ?? "" }
   };
 }
-function resolveComposition(snapshot2, root2, view) {
-  const element2 = blockElement(root2, snapshot2.block);
+function resolveComposition(snapshot3, root2, view) {
+  const element2 = blockElement(root2, snapshot3.block);
   if (element2 === void 0 || !rootReflects(root2, view.blocks)) {
     return { kind: "refuse" };
   }
-  const sel = snapshot2.selection;
-  if (sel.anchor.block !== snapshot2.block || sel.head.block !== snapshot2.block) {
+  const sel = snapshot3.selection;
+  if (sel.anchor.block !== snapshot3.block || sel.head.block !== snapshot3.block) {
     return { kind: "refuse" };
   }
-  const edit = composedEdit(snapshot2.text, blockTextOf(element2), [
+  const edit = composedEdit(snapshot3.text, blockTextOf(element2), [
     sel.anchor.offset,
     sel.head.offset
   ]);
@@ -46231,7 +46231,7 @@ function resolveComposition(snapshot2, root2, view) {
   if ("refused" in edit) {
     return { kind: "refuse" };
   }
-  const map7 = (offset) => mapThroughPending({ block: snapshot2.block, offset }, snapshot2.pending, snapshot2.view);
+  const map7 = (offset) => mapThroughPending({ block: snapshot3.block, offset }, snapshot3.pending, snapshot3.view);
   const range = { anchor: map7(edit.range[0]), head: map7(edit.range[1]) };
   const op = edit.text.length > 0 ? { type: "insertText", at: range, text: edit.text } : { type: "deleteRange", range };
   return { kind: "op", op };
@@ -47212,42 +47212,42 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
   onCompositionEnd() {
     this.observer?.takeRecords();
     this.composing = false;
-    const snapshot2 = this.snapshot;
+    const snapshot3 = this.snapshot;
     this.snapshot = void 0;
     const view = this.view();
-    if (snapshot2 === void 0 || view === void 0 || this._session === void 0 || this._session.disposed) {
-      this.refuseComposition(snapshot2);
+    if (snapshot3 === void 0 || view === void 0 || this._session === void 0 || this._session.disposed) {
+      this.refuseComposition(snapshot3);
       return;
     }
-    const outcome = resolveComposition(snapshot2, this.root, view);
+    const outcome = resolveComposition(snapshot3, this.root, view);
     if (outcome.kind === "refuse") {
-      this.refuseComposition(snapshot2);
+      this.refuseComposition(snapshot3);
     } else if (outcome.kind === "rerender") {
-      this.rerenderComposed(snapshot2);
+      this.rerenderComposed(snapshot3);
     } else {
       this.submit(outcome.op, true);
     }
   }
   /** Re-renders the composed block from the provider and restores the snapshot's caret. */
-  rerenderComposed(snapshot2) {
+  rerenderComposed(snapshot3) {
     const view = this.view();
-    if (view?.blocks.includes(snapshot2.block) !== true) {
-      this.refuseComposition(snapshot2);
+    if (view?.blocks.includes(snapshot3.block) !== true) {
+      this.refuseComposition(snapshot3);
       return;
     }
-    const caret = mapThroughPending(snapshot2.selection.head, snapshot2.pending, snapshot2.view);
+    const caret = mapThroughPending(snapshot3.selection.head, snapshot3.pending, snapshot3.view);
     this.applyResult({
-      dirtyBlocks: [snapshot2.block],
+      dirtyBlocks: [snapshot3.block],
       removedBlocks: [],
       selection: collapsed(this.clampPos(caret, view))
     });
   }
   /** The fallback: reconcile the whole root, clamp the caret, and report the composition refused. */
-  refuseComposition(snapshot2) {
+  refuseComposition(snapshot3) {
     this.renderAll();
     const view = this.view();
     if (view !== void 0) {
-      const caret = snapshot2 !== void 0 ? mapThroughPending(snapshot2.selection.head, snapshot2.pending, snapshot2.view) : this.domRange()?.head ?? { block: view.blocks[0], offset: 0 };
+      const caret = snapshot3 !== void 0 ? mapThroughPending(snapshot3.selection.head, snapshot3.pending, snapshot3.view) : this.domRange()?.head ?? { block: view.blocks[0], offset: 0 };
       if (caret.block !== void 0) {
         this.setSelection(collapsed(this.clampPos(caret, view)));
       }
@@ -48109,12 +48109,12 @@ var PlainProvider = class {
       selection
     };
   }
-  fromSnapshot(snapshot2) {
-    const state = snapshot2.state;
+  fromSnapshot(snapshot3) {
+    const state = snapshot3.state;
     if (typeof state?.text !== "string" || !Array.isArray(state.marks)) {
-      throw new Error(`replaceBlocks: snapshot of ${snapshot2.id} is not a PlainBlock`);
+      throw new Error(`replaceBlocks: snapshot of ${snapshot3.id} is not a PlainBlock`);
     }
-    return cloneBlock({ id: snapshot2.id, text: state.text, marks: state.marks });
+    return cloneBlock({ id: snapshot3.id, text: state.text, marks: state.marks });
   }
 };
 function plainDocFromLines(lines, makeId) {
@@ -55862,7 +55862,7 @@ pathux.NodeSocketBase {
    * wrap any field exclusions in a closure, e.g.
    * super.migrateSTRUCT(version, jsonOrObj, () => migrate(['field']));
    */
-  static migrateSTRUCT(version, jsonOrObj, migrate) {
+  static migrateSTRUCT(version2, jsonOrObj, migrate) {
     const haveDefaultProp = Boolean(jsonOrObj.defaultProp);
     if (!jsonOrObj.defaultProp) {
       const defaultProp = new this().defaultProp;
@@ -56170,7 +56170,7 @@ pathux.GraphNode {
    * wrap any field exclusions in a closure, e.g.
    * super.migrateSTRUCT(version, jsonOrObj, () => migrate(['field']));
    */
-  static migrateSTRUCT(version, jsonOrObj, migrate) {
+  static migrateSTRUCT(version2, jsonOrObj, migrate) {
     if (!jsonOrObj.VERSION) {
       jsonOrObj.VERSION = 0;
     }
@@ -72675,12 +72675,12 @@ var FileHeader = class {
   version_minor;
   version_micro;
   schema;
-  constructor(version, magic = "", flags = 0) {
+  constructor(version2, magic = "", flags = 0) {
     this.magic = magic;
     this.flags = flags;
-    this.version_major = version ? version[0] : 0;
-    this.version_minor = version ? version[1] : 0;
-    this.version_micro = version ? version[2] : 0;
+    this.version_major = version2 ? version2[0] : 0;
+    this.version_minor = version2 ? version2[1] : 0;
+    this.version_micro = version2 ? version2[2] : 0;
     this.schema = struct_default.write_scripts();
   }
   loadSTRUCT(reader) {
@@ -72698,8 +72698,8 @@ var FileFull = class extends FileHeader {
   );
   objects;
   screen;
-  constructor(version, magic, flags) {
-    super(version, magic, flags);
+  constructor(version2, magic, flags) {
+    super(version2, magic, flags);
     this.objects = [];
   }
 };
@@ -72734,18 +72734,18 @@ function saveFile2(appstate, args, objects) {
     args.useJSON = appstate.saveFilesInJSON;
   }
   const fargs = new FileArgs(args);
-  let version = fargs.version;
-  if (typeof version === "number") {
-    if (version === Math.floor(version)) {
-      version = [version, 0, 0];
+  let version2 = fargs.version;
+  if (typeof version2 === "number") {
+    if (version2 === Math.floor(version2)) {
+      version2 = [version2, 0, 0];
     } else {
-      const major = ~~version;
-      const minor = ~~(Math.fract(version) * 10);
-      const micro = (Math.fract(version) - minor) * 100;
-      version = [major, minor, micro];
+      const major = ~~version2;
+      const minor = ~~(Math.fract(version2) * 10);
+      const micro = (Math.fract(version2) - minor) * 100;
+      version2 = [major, minor, micro];
     }
   }
-  const file = new FileFull(version, fargs.magic, fargs.fileFlags);
+  const file = new FileFull(version2, fargs.magic, fargs.fileFlags);
   if (fargs.doScreen) {
     file.screen = appstate.screen;
   } else {
@@ -76766,376 +76766,6 @@ function decodeWidgetTransfer(source) {
     return void 0;
   }
 }
-
-// scripts/widgets/richtext/plugins.ts
-var WidgetRegistry = class {
-  plugins = /* @__PURE__ */ new Map();
-  listeners = /* @__PURE__ */ new Set();
-  register(plugin) {
-    widgetRecord({ id: "registration", type: plugin.type, version: plugin.version, payload: null });
-    if (this.plugins.has(plugin.type)) throw new Error(`Duplicate widget type: ${plugin.type}`);
-    const entry = Object.freeze({
-      type: plugin.type,
-      version: plugin.version,
-      label: plugin.label,
-      validate: plugin.validate.bind(plugin),
-      create: plugin.create.bind(plugin),
-      migrate: plugin.migrate?.bind(plugin)
-    });
-    this.plugins.set(entry.type, entry);
-    this.changed();
-    return () => {
-      if (this.plugins.get(entry.type) !== entry) return;
-      this.plugins.delete(entry.type);
-      this.changed();
-    };
-  }
-  get(type) {
-    return this.plugins.get(type);
-  }
-  subscribe(listener) {
-    this.listeners.add(listener);
-    return () => {
-      this.listeners.delete(listener);
-    };
-  }
-  changed() {
-    for (const listener of [...this.listeners]) listener();
-  }
-};
-var DocumentWidgetHost = class {
-  constructor(session, registry, options) {
-    this.session = session;
-    this.registry = registry;
-    if (session.disposed) throw new Error("The session is disposed");
-    if (session.widgetHost) throw new Error("The session already has a widget host");
-    this.options = { ...options, document: widgetJson(options.document) };
-    this.unsubscribe = registry.subscribe(() => this.invalidate());
-    session.widgetHost = this;
-    session.invalidateWidgets();
-  }
-  session;
-  registry;
-  options;
-  epoch = 0;
-  closed = false;
-  unsubscribe;
-  /** Rebinds document metadata or policy and cancels every old view generation. */
-  invalidate(options = this.options) {
-    if (this.closed) return;
-    this.options = { ...options, document: widgetJson(options.document) };
-    this.epoch++;
-    this.session.invalidateWidgets();
-  }
-  allowed(action, record, externalAction) {
-    if (this.closed || this.session.disposed || this.session.widgetHost !== this) return false;
-    try {
-      const decision = this.options.authorize({
-        action,
-        record,
-        document: this.options.document,
-        externalAction
-      });
-      return decision === true;
-    } catch {
-      return false;
-    }
-  }
-  supported(record, plugin = this.registry.get(record.type)) {
-    try {
-      if (plugin?.version !== record.version) return false;
-      const valid = plugin.validate(record.payload);
-      return valid === true;
-    } catch {
-      return false;
-    }
-  }
-  current(expected) {
-    const found = this.session.provider.widgets?.read(this.session.doc, expected.record.id);
-    return found?.revision === expected.revision && found.block === expected.block && JSON.stringify(found.record) === JSON.stringify(expected.record) ? found : void 0;
-  }
-  capture(snapshot2) {
-    return Object.freeze({
-      placement: "block",
-      block: snapshot2.block,
-      revision: snapshot2.revision,
-      record: widgetRecord(snapshot2.record)
-    });
-  }
-  prepareUpdate(expected, payload2) {
-    expected = this.capture(expected);
-    const next = widgetRecord({ ...expected.record, payload: payload2 });
-    const epoch = this.epoch;
-    const plugin = this.registry.get(next.type);
-    return {
-      authorize: () => epoch === this.epoch && this.registry.get(next.type) === plugin && this.allowed("edit", expected.record) && this.allowed("edit", next) && this.supported(next, plugin),
-      resolve: () => {
-        const current = this.current(expected);
-        return current ? this.session.provider.widgets?.update(this.session.doc, current, next) : void 0;
-      }
-    };
-  }
-  update(expected, payload2, context) {
-    try {
-      return this.session.command(this.prepareUpdate(expected, payload2), context);
-    } catch (error2) {
-      return Promise.resolve({ status: "failed", error: error2 });
-    }
-  }
-  insert(record, after, context) {
-    try {
-      const next = widgetRecord(record);
-      const block = newBlockId();
-      const epoch = this.epoch;
-      return this.session.command(
-        {
-          authorize: () => epoch === this.epoch && this.allowed("insert", next) && this.supported(next),
-          resolve: () => {
-            const storage = this.session.provider.widgets;
-            if (!storage || storage.read(this.session.doc, next.id) || after !== null && !this.session.provider.blocks(this.session.doc).includes(after))
-              return void 0;
-            return storage.insert(this.session.doc, after, block, next);
-          }
-        },
-        context
-      );
-    } catch (error2) {
-      return Promise.resolve({ status: "failed", error: error2 });
-    }
-  }
-  remove(expected, context) {
-    expected = this.capture(expected);
-    const epoch = this.epoch;
-    return this.session.command(
-      {
-        authorize: () => epoch === this.epoch && this.allowed("edit", expected.record),
-        resolve: () => {
-          const current = this.current(expected);
-          return current ? this.session.provider.widgets?.remove(this.session.doc, current) : void 0;
-        }
-      },
-      context
-    );
-  }
-  move(expected, after, context) {
-    expected = this.capture(expected);
-    const epoch = this.epoch;
-    return this.session.command(
-      {
-        authorize: () => epoch === this.epoch && this.allowed("edit", expected.record),
-        resolve: () => {
-          const current = this.current(expected);
-          if (!current || after === current.block || after !== null && !this.session.provider.blocks(this.session.doc).includes(after))
-            return void 0;
-          return this.session.provider.widgets?.move(this.session.doc, current, after);
-        }
-      },
-      context
-    );
-  }
-  /** Runs conversion exactly once at command execution; replay contains only its data result. */
-  migrate(expected, context) {
-    expected = this.capture(expected);
-    const plugin = this.registry.get(expected.record.type);
-    const epoch = this.epoch;
-    return this.session.command(
-      {
-        authorize: () => epoch === this.epoch && this.registry.get(expected.record.type) === plugin && this.allowed("edit", expected.record),
-        resolve: () => {
-          const current = this.current(expected);
-          if (!current || !plugin?.migrate || plugin.version <= current.record.version)
-            return void 0;
-          const next = widgetRecord({
-            ...current.record,
-            version: plugin.version,
-            payload: plugin.migrate(current.record)
-          });
-          if (!this.supported(next, plugin) || !this.allowed("edit", next)) return void 0;
-          return this.session.provider.widgets?.update(this.session.doc, current, next);
-        }
-      },
-      context
-    );
-  }
-  authorizeEdit(op) {
-    if (op.type !== "insertContent") return true;
-    const records = this.session.provider.widgets?.pasted(op.content) ?? [];
-    return records.every((record) => this.allowed("insert", record));
-  }
-  resolve(block, _context) {
-    const snapshot2 = this.session.provider.widgets?.atBlock(this.session.doc, block);
-    if (!snapshot2) return void 0;
-    const plugin = this.registry.get(snapshot2.record.type);
-    const allowed = this.allowed("mount", snapshot2.record) && this.supported(snapshot2.record, plugin);
-    return {
-      id: `plugin:${snapshot2.record.id}`,
-      implementation: plugin ?? this,
-      label: plugin?.label ?? snapshot2.record.type,
-      value: snapshot2,
-      allowed,
-      editable: this.allowed("edit", snapshot2.record),
-      create: (context) => {
-        if (!plugin || !this.allowed("mount", snapshot2.record) || !this.supported(snapshot2.record, plugin))
-          throw new Error("Widget mounting refused");
-        return plugin.create(snapshot2, this.viewContext(snapshot2, plugin, context));
-      }
-    };
-  }
-  viewContext(snapshot2, plugin, context) {
-    const epoch = this.epoch;
-    const preparedUpdates = /* @__PURE__ */ new WeakSet();
-    const isCurrent = () => {
-      const current = this.session.provider.widgets?.read(this.session.doc, snapshot2.record.id);
-      return !!current && context.isCurrent() && epoch === this.epoch && this.registry.get(plugin.type) === plugin && this.supported(current.record, plugin) && this.allowed("mount", current.record);
-    };
-    const prepare = (expected, payload2) => {
-      const own6 = expected.record.id === snapshot2.record.id;
-      const command = this.prepareUpdate(expected, payload2);
-      const prepared = Object.freeze({
-        resolve: command.resolve,
-        authorize: () => isCurrent() && own6 && (command.authorize?.() ?? true)
-      });
-      preparedUpdates.add(prepared);
-      return prepared;
-    };
-    return {
-      signal: context.signal,
-      document: this.options.document,
-      isCurrent,
-      prepareUpdate: prepare,
-      update: (expected, payload2) => {
-        try {
-          return context.command(prepare(expected, payload2));
-        } catch (error2) {
-          return Promise.resolve({ status: "failed", error: error2 });
-        }
-      },
-      registerDraft: (controller) => context.registerDraft({
-        key: `plugin:${snapshot2.record.id}:${controller.key}`,
-        pending: () => controller.pending(),
-        version: () => controller.version(),
-        discard: () => controller.discard(),
-        recover: () => controller.recover(),
-        committed: () => controller.committed(),
-        prepare: async () => {
-          const result = await controller.prepare();
-          if (result.status !== "ready") return result;
-          if (!preparedUpdates.has(result.command)) return { status: "refused" };
-          return {
-            status: "ready",
-            command: {
-              resolve: result.command.resolve,
-              authorize: () => {
-                const current = this.session.provider.widgets?.read(
-                  this.session.doc,
-                  snapshot2.record.id
-                );
-                return !!current && isCurrent() && this.allowed("edit", current.record) && (result.command.authorize?.() ?? true);
-              }
-            }
-          };
-        }
-      }),
-      external: async (action, run) => {
-        const current = this.session.provider.widgets?.read(this.session.doc, snapshot2.record.id);
-        if (!current || !isCurrent() || !this.allowed("external", current.record, action))
-          return { status: "refused" };
-        try {
-          const value2 = await run(context.signal);
-          return isCurrent() && this.current(current) && this.allowed("external", current.record, action) ? { status: "complete", value: value2 } : { status: "refused" };
-        } catch (error2) {
-          return context.signal.aborted || !isCurrent() ? { status: "refused" } : { status: "failed", error: error2 };
-        }
-      }
-    };
-  }
-  dispose() {
-    if (this.closed) return;
-    this.closed = true;
-    this.epoch++;
-    this.unsubscribe();
-    if (this.session.widgetHost === this) {
-      this.session.widgetHost = void 0;
-      this.session.invalidateWidgets();
-    }
-  }
-};
-
-// example/editors/properties/note_plugin.ts
-var notePlugin = {
-  type: "example.note",
-  version: 1,
-  label: "Note",
-  validate(payload2) {
-    return payload2 !== null && typeof payload2 === "object" && !Array.isArray(payload2) && "text" in payload2 && typeof payload2.text === "string";
-  },
-  create(initial, context) {
-    const element2 = document.createElement("div");
-    const shadow = element2.attachShadow({ mode: "open" });
-    const input = document.createElement("input");
-    input.setAttribute("aria-label", "Note text");
-    const accept = document.createElement("button");
-    accept.textContent = "Apply note";
-    const status = document.createElement("span");
-    status.setAttribute("role", "status");
-    shadow.append(input, accept, status);
-    let base = initial;
-    let latest = initial;
-    let dirty2 = false;
-    let version = 0;
-    const text6 = (snapshot2) => snapshot2.record.payload.text;
-    input.value = text6(initial);
-    const payload2 = () => ({ ...base.record.payload, text: input.value });
-    const committed = () => {
-      dirty2 = false;
-      base = latest;
-      input.value = text6(latest);
-      status.textContent = "Saved in document";
-    };
-    input.addEventListener("input", () => {
-      dirty2 = true;
-      version++;
-      status.textContent = "Draft";
-    });
-    accept.addEventListener("pointerdown", (event) => event.preventDefault());
-    accept.addEventListener("click", async () => {
-      if (!dirty2) return;
-      const expectedVersion = version;
-      const result = await context.update(base, payload2());
-      if (result.status === "applied" && version === expectedVersion) committed();
-      else status.textContent = "Draft retained; refresh or resolve the conflict";
-    });
-    context.registerDraft({
-      key: "text",
-      pending: () => dirty2,
-      version: () => version,
-      recover: () => input.value,
-      discard: () => {
-        dirty2 = false;
-        base = latest;
-        input.value = text6(latest);
-        version++;
-      },
-      committed,
-      prepare: () => ({ status: "ready", command: context.prepareUpdate(base, payload2()) })
-    });
-    return {
-      element: element2,
-      update(state) {
-        latest = state.value;
-        input.readOnly = state.readOnly;
-        accept.disabled = state.readOnly;
-        if (!dirty2) {
-          base = latest;
-          input.value = text6(latest);
-        } else if (base.revision !== latest.revision)
-          status.textContent = "Saved value changed; draft retained";
-      },
-      dispose() {
-      }
-    };
-  }
-};
 
 // node_modules/.pnpm/mdast-util-to-string@4.0.0/node_modules/mdast-util-to-string/lib/index.js
 var emptyOptions = {};
@@ -81913,7 +81543,7 @@ function fromMarkdown(value2, encoding, options) {
   return compiler(options)(postprocess(parse(options).document().write(preprocess()(value2, encoding, true))));
 }
 function compiler(options) {
-  const config2 = {
+  const config3 = {
     transforms: [],
     canContainEols: ["emphasis", "fragment", "heading", "paragraph", "strong"],
     enter: {
@@ -82011,7 +81641,7 @@ function compiler(options) {
       thematicBreak: closer()
     }
   };
-  configure(config2, (options || {}).mdastExtensions || []);
+  configure(config3, (options || {}).mdastExtensions || []);
   const data = {};
   return compile3;
   function compile3(events) {
@@ -82022,7 +81652,7 @@ function compiler(options) {
     const context = {
       stack: [tree],
       tokenStack: [],
-      config: config2,
+      config: config3,
       enter,
       exit: exit3,
       buffer,
@@ -82043,7 +81673,7 @@ function compiler(options) {
     }
     index2 = -1;
     while (++index2 < events.length) {
-      const handler2 = config2[events[index2][0]];
+      const handler2 = config3[events[index2][0]];
       if (own.call(handler2, events[index2][1].type)) {
         handler2[events[index2][1].type].call(Object.assign({
           sliceSerialize: events[index2][2].sliceSerialize
@@ -82068,8 +81698,8 @@ function compiler(options) {
       })
     };
     index2 = -1;
-    while (++index2 < config2.transforms.length) {
-      tree = config2.transforms[index2](tree) || tree;
+    while (++index2 < config3.transforms.length) {
+      tree = config3.transforms[index2](tree) || tree;
     }
     return tree;
   }
@@ -82312,7 +81942,7 @@ function compiler(options) {
       this.data.atHardBreak = void 0;
       return;
     }
-    if (!this.data.setextHeadingSlurpLineEnding && config2.canContainEols.includes(context.type)) {
+    if (!this.data.setextHeadingSlurpLineEnding && config3.canContainEols.includes(context.type)) {
       onenterdata.call(this, token4);
       onexitdata.call(this, token4);
     }
@@ -83262,12 +82892,12 @@ function defaultBackLabel(referenceIndex, rereferenceIndex) {
   return "Back to reference " + (referenceIndex + 1) + (rereferenceIndex > 1 ? "-" + rereferenceIndex : "");
 }
 function gfmFootnoteHtml(options) {
-  const config2 = options || emptyOptions2;
-  const label = config2.label || "Footnotes";
-  const labelTagName = config2.labelTagName || "h2";
-  const labelAttributes = config2.labelAttributes === null || config2.labelAttributes === void 0 ? 'class="sr-only"' : config2.labelAttributes;
-  const backLabel = config2.backLabel || defaultBackLabel;
-  const clobberPrefix = config2.clobberPrefix === null || config2.clobberPrefix === void 0 ? "user-content-" : config2.clobberPrefix;
+  const config3 = options || emptyOptions2;
+  const label = config3.label || "Footnotes";
+  const labelTagName = config3.labelTagName || "h2";
+  const labelAttributes = config3.labelAttributes === null || config3.labelAttributes === void 0 ? 'class="sr-only"' : config3.labelAttributes;
+  const backLabel = config3.backLabel || defaultBackLabel;
+  const clobberPrefix = config3.clobberPrefix === null || config3.clobberPrefix === void 0 ? "user-content-" : config3.clobberPrefix;
   return {
     enter: {
       gfmFootnoteDefinition() {
@@ -86346,8 +85976,8 @@ function indentLines(value2, map7) {
 }
 
 // node_modules/.pnpm/mdast-util-to-markdown@2.1.2/node_modules/mdast-util-to-markdown/lib/util/safe.js
-function safe(state, input, config2) {
-  const value2 = (config2.before || "") + (input || "") + (config2.after || "");
+function safe(state, input, config3) {
+  const value2 = (config3.before || "") + (input || "") + (config3.after || "");
   const positions = [];
   const result = [];
   const infos = {};
@@ -86377,8 +86007,8 @@ function safe(state, input, config2) {
     }
   }
   positions.sort(numerical);
-  let start2 = config2.before ? config2.before.length : 0;
-  const end = value2.length - (config2.after ? config2.after.length : 0);
+  let start2 = config3.before ? config3.before.length : 0;
+  const end = value2.length - (config3.after ? config3.after.length : 0);
   index2 = -1;
   while (++index2 < positions.length) {
     const position2 = positions[index2];
@@ -86392,14 +86022,14 @@ function safe(state, input, config2) {
       result.push(escapeBackslashes(value2.slice(start2, position2), "\\"));
     }
     start2 = position2;
-    if (/[!-/:-@[-`{-~]/.test(value2.charAt(position2)) && (!config2.encode || !config2.encode.includes(value2.charAt(position2)))) {
+    if (/[!-/:-@[-`{-~]/.test(value2.charAt(position2)) && (!config3.encode || !config3.encode.includes(value2.charAt(position2)))) {
       result.push("\\");
     } else {
       result.push(encodeCharacterReference(value2.charCodeAt(position2)));
       start2++;
     }
   }
-  result.push(escapeBackslashes(value2.slice(start2, end), config2.after));
+  result.push(escapeBackslashes(value2.slice(start2, end), config3.after));
   return result.join("");
 }
 function numerical(a2, b) {
@@ -86428,8 +86058,8 @@ function escapeBackslashes(value2, after) {
 }
 
 // node_modules/.pnpm/mdast-util-to-markdown@2.1.2/node_modules/mdast-util-to-markdown/lib/util/track.js
-function track(config2) {
-  const options = config2 || {};
+function track(config3) {
+  const options = config3 || {};
   const now = options.now || {};
   let lineShift = options.lineShift || 0;
   let line = now.line || 1;
@@ -86522,8 +86152,8 @@ function containerPhrasingBound(parent, info) {
 function containerFlowBound(parent, info) {
   return containerFlow(parent, this, info);
 }
-function safeBound(value2, config2) {
-  return safe(this, value2, config2);
+function safeBound(value2, config3) {
+  return safe(this, value2, config3);
 }
 
 // node_modules/.pnpm/mdast-util-gfm-table@2.0.0/node_modules/mdast-util-gfm-table/lib/index.js
@@ -90318,12 +89948,12 @@ function insertContent(doc, at, content3, newBlocks, shortcuts) {
     selection: collapsed3(last.id, isOpaque(last) ? 1 : last.text.length)
   };
 }
-function fromSnapshot(snapshot2) {
-  const state = snapshot2.state;
+function fromSnapshot(snapshot3) {
+  const state = snapshot3.state;
   if (typeof state?.kind !== "string" || typeof state.text !== "string" || !Array.isArray(state.marks) || !Array.isArray(state.atoms)) {
-    throw new Error(`replaceBlocks: snapshot of ${snapshot2.id} is not an MdBlock`);
+    throw new Error(`replaceBlocks: snapshot of ${snapshot3.id} is not an MdBlock`);
   }
-  return cloneBlock2({ ...state, id: snapshot2.id });
+  return cloneBlock2({ ...state, id: snapshot3.id });
 }
 function replaceBlocks(doc, after, snapshots, remove2) {
   const removing = new Set(remove2);
@@ -91106,11 +90736,11 @@ function buildMarkdownToolbar(row, ctx, provider) {
 
 // scripts/widgets/richtext/table_editor.ts
 var TableEditor = class {
-  constructor(snapshot2, key, context, adapter) {
+  constructor(snapshot3, key, context, adapter) {
     this.context = context;
     this.adapter = adapter;
-    this.latest = this.base = snapshot2;
-    this.model = structuredClone(snapshot2.model);
+    this.latest = this.base = snapshot3;
+    this.model = structuredClone(snapshot3.model);
     this.element.className = "table-editor";
     this.table.setAttribute("aria-label", "Table cells (inline Markdown)");
     this.toolbar.setAttribute("role", "toolbar");
@@ -91211,12 +90841,12 @@ var TableEditor = class {
       this.status.textContent = prepared.reason ?? prepared.status;
       return;
     }
-    const version = this.version;
+    const version2 = this.version;
     this.busy = true;
     this.draw();
     const result = await this.context.command(prepared.command);
     this.busy = false;
-    if (result.status === "applied" && version === this.version) this.committed();
+    if (result.status === "applied" && version2 === this.version) this.committed();
     else
       this.status.textContent = result.status === "applied" ? "Draft changed during commit" : result.status;
     this.draw();
@@ -91476,7 +91106,7 @@ var MarkdownProvider = class {
     if (item.kind === "table" && ctx.editor.widget) {
       const model = parseMarkdownTable(item.source);
       if (model) {
-        const snapshot2 = { revision: item.source, model };
+        const snapshot3 = { revision: item.source, model };
         const el = document.createElement("div");
         el.className = "md-table md-opaque";
         el.contentEditable = "false";
@@ -91486,8 +91116,8 @@ var MarkdownProvider = class {
             id: block,
             implementation: TableEditor,
             label: "Markdown table",
-            value: snapshot2,
-            create: (context) => new TableEditor(snapshot2, `table:${block}`, context, {
+            value: snapshot3,
+            create: (context) => new TableEditor(snapshot3, `table:${block}`, context, {
               command: (expected, next) => tableCommand(doc, block, expected.revision, next),
               history: (redo) => redo ? ctx.toolstack.redo(ctx) : ctx.toolstack.undo(ctx)
             })
@@ -91669,6 +91299,305 @@ RichTextArea.registerFormat("markdown", {
   toText: (doc) => markdownText(doc)
 });
 
+// scripts/widgets/richtext/plugins.ts
+var WidgetRegistry = class {
+  plugins = /* @__PURE__ */ new Map();
+  listeners = /* @__PURE__ */ new Set();
+  register(plugin2) {
+    widgetRecord({ id: "registration", type: plugin2.type, version: plugin2.version, payload: null });
+    if (this.plugins.has(plugin2.type)) throw new Error(`Duplicate widget type: ${plugin2.type}`);
+    const entry = Object.freeze({
+      type: plugin2.type,
+      version: plugin2.version,
+      label: plugin2.label,
+      validate: plugin2.validate.bind(plugin2),
+      canMount: plugin2.canMount?.bind(plugin2),
+      create: plugin2.create.bind(plugin2),
+      migrate: plugin2.migrate?.bind(plugin2)
+    });
+    this.plugins.set(entry.type, entry);
+    this.changed();
+    return () => {
+      if (this.plugins.get(entry.type) !== entry) return;
+      this.plugins.delete(entry.type);
+      this.changed();
+    };
+  }
+  get(type) {
+    return this.plugins.get(type);
+  }
+  subscribe(listener) {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+  changed() {
+    for (const listener of [...this.listeners]) listener();
+  }
+};
+var DocumentWidgetHost = class {
+  constructor(session, registry, options) {
+    this.session = session;
+    this.registry = registry;
+    if (session.disposed) throw new Error("The session is disposed");
+    if (session.widgetHost) throw new Error("The session already has a widget host");
+    this.options = { ...options, document: widgetJson(options.document) };
+    this.unsubscribe = registry.subscribe(() => this.invalidate());
+    session.widgetHost = this;
+    session.invalidateWidgets();
+  }
+  session;
+  registry;
+  options;
+  epoch = 0;
+  closed = false;
+  unsubscribe;
+  /** Rebinds document metadata or policy and cancels every old view generation. */
+  invalidate(options = this.options) {
+    if (this.closed) return;
+    this.options = { ...options, document: widgetJson(options.document) };
+    this.epoch++;
+    this.session.invalidateWidgets();
+  }
+  allowed(action, record, externalAction) {
+    if (this.closed || this.session.disposed || this.session.widgetHost !== this) return false;
+    try {
+      const decision = this.options.authorize({
+        action,
+        record,
+        document: this.options.document,
+        externalAction
+      });
+      if (decision !== true) return false;
+      const canMount = this.registry.get(record.type)?.canMount;
+      if (action !== "mount" || !canMount) return true;
+      const mountAllowed = canMount(record, this.options.document);
+      return mountAllowed === true;
+    } catch {
+      return false;
+    }
+  }
+  supported(record, plugin2 = this.registry.get(record.type)) {
+    try {
+      if (plugin2?.version !== record.version) return false;
+      const valid = plugin2.validate(record.payload);
+      return valid === true;
+    } catch {
+      return false;
+    }
+  }
+  current(expected) {
+    const found = this.session.provider.widgets?.read(this.session.doc, expected.record.id);
+    return found?.revision === expected.revision && found.block === expected.block && JSON.stringify(found.record) === JSON.stringify(expected.record) ? found : void 0;
+  }
+  capture(snapshot3) {
+    return Object.freeze({
+      placement: "block",
+      block: snapshot3.block,
+      revision: snapshot3.revision,
+      record: widgetRecord(snapshot3.record)
+    });
+  }
+  prepareUpdate(expected, payload3) {
+    expected = this.capture(expected);
+    const next = widgetRecord({ ...expected.record, payload: payload3 });
+    const epoch = this.epoch;
+    const plugin2 = this.registry.get(next.type);
+    return {
+      authorize: () => epoch === this.epoch && this.registry.get(next.type) === plugin2 && this.allowed("edit", expected.record) && this.allowed("edit", next) && this.supported(next, plugin2),
+      resolve: () => {
+        const current = this.current(expected);
+        return current ? this.session.provider.widgets?.update(this.session.doc, current, next) : void 0;
+      }
+    };
+  }
+  update(expected, payload3, context) {
+    try {
+      return this.session.command(this.prepareUpdate(expected, payload3), context);
+    } catch (error2) {
+      return Promise.resolve({ status: "failed", error: error2 });
+    }
+  }
+  insert(record, after, context) {
+    try {
+      const next = widgetRecord(record);
+      const block = newBlockId();
+      const epoch = this.epoch;
+      return this.session.command(
+        {
+          authorize: () => epoch === this.epoch && this.allowed("insert", next) && this.supported(next),
+          resolve: () => {
+            const storage = this.session.provider.widgets;
+            if (!storage || storage.read(this.session.doc, next.id) || after !== null && !this.session.provider.blocks(this.session.doc).includes(after))
+              return void 0;
+            return storage.insert(this.session.doc, after, block, next);
+          }
+        },
+        context
+      );
+    } catch (error2) {
+      return Promise.resolve({ status: "failed", error: error2 });
+    }
+  }
+  remove(expected, context) {
+    expected = this.capture(expected);
+    const epoch = this.epoch;
+    return this.session.command(
+      {
+        authorize: () => epoch === this.epoch && this.allowed("edit", expected.record),
+        resolve: () => {
+          const current = this.current(expected);
+          return current ? this.session.provider.widgets?.remove(this.session.doc, current) : void 0;
+        }
+      },
+      context
+    );
+  }
+  move(expected, after, context) {
+    expected = this.capture(expected);
+    const epoch = this.epoch;
+    return this.session.command(
+      {
+        authorize: () => epoch === this.epoch && this.allowed("edit", expected.record),
+        resolve: () => {
+          const current = this.current(expected);
+          if (!current || after === current.block || after !== null && !this.session.provider.blocks(this.session.doc).includes(after))
+            return void 0;
+          return this.session.provider.widgets?.move(this.session.doc, current, after);
+        }
+      },
+      context
+    );
+  }
+  /** Runs conversion exactly once at command execution; replay contains only its data result. */
+  migrate(expected, context) {
+    expected = this.capture(expected);
+    const plugin2 = this.registry.get(expected.record.type);
+    const epoch = this.epoch;
+    return this.session.command(
+      {
+        authorize: () => epoch === this.epoch && this.registry.get(expected.record.type) === plugin2 && this.allowed("edit", expected.record),
+        resolve: () => {
+          const current = this.current(expected);
+          if (!current || !plugin2?.migrate || plugin2.version <= current.record.version)
+            return void 0;
+          const next = widgetRecord({
+            ...current.record,
+            version: plugin2.version,
+            payload: plugin2.migrate(current.record)
+          });
+          if (!this.supported(next, plugin2) || !this.allowed("edit", next)) return void 0;
+          return this.session.provider.widgets?.update(this.session.doc, current, next);
+        }
+      },
+      context
+    );
+  }
+  authorizeEdit(op) {
+    if (op.type !== "insertContent") return true;
+    const records = this.session.provider.widgets?.pasted(op.content) ?? [];
+    return records.every((record) => this.allowed("insert", record));
+  }
+  resolve(block, _context) {
+    const snapshot3 = this.session.provider.widgets?.atBlock(this.session.doc, block);
+    if (!snapshot3) return void 0;
+    const plugin2 = this.registry.get(snapshot3.record.type);
+    const allowed = this.allowed("mount", snapshot3.record) && this.supported(snapshot3.record, plugin2);
+    return {
+      id: `plugin:${snapshot3.record.id}`,
+      implementation: plugin2 ?? this,
+      label: plugin2?.label ?? snapshot3.record.type,
+      value: snapshot3,
+      allowed,
+      editable: this.allowed("edit", snapshot3.record),
+      create: (context) => {
+        if (!plugin2 || !this.allowed("mount", snapshot3.record) || !this.supported(snapshot3.record, plugin2))
+          throw new Error("Widget mounting refused");
+        return plugin2.create(snapshot3, this.viewContext(snapshot3, plugin2, context));
+      }
+    };
+  }
+  viewContext(snapshot3, plugin2, context) {
+    const epoch = this.epoch;
+    const preparedUpdates = /* @__PURE__ */ new WeakSet();
+    const isCurrent = () => {
+      const current = this.session.provider.widgets?.read(this.session.doc, snapshot3.record.id);
+      return !!current && context.isCurrent() && epoch === this.epoch && this.registry.get(plugin2.type) === plugin2 && this.supported(current.record, plugin2) && this.allowed("mount", current.record);
+    };
+    const prepare = (expected, payload3) => {
+      const own6 = expected.record.id === snapshot3.record.id;
+      const command = this.prepareUpdate(expected, payload3);
+      const prepared = Object.freeze({
+        resolve: command.resolve,
+        authorize: () => isCurrent() && own6 && (command.authorize?.() ?? true)
+      });
+      preparedUpdates.add(prepared);
+      return prepared;
+    };
+    return {
+      signal: context.signal,
+      document: this.options.document,
+      isCurrent,
+      prepareUpdate: prepare,
+      update: (expected, payload3) => {
+        try {
+          return context.command(prepare(expected, payload3));
+        } catch (error2) {
+          return Promise.resolve({ status: "failed", error: error2 });
+        }
+      },
+      registerDraft: (controller) => context.registerDraft({
+        key: `plugin:${snapshot3.record.id}:${controller.key}`,
+        pending: () => controller.pending(),
+        version: () => controller.version(),
+        discard: () => controller.discard(),
+        recover: () => controller.recover(),
+        committed: () => controller.committed(),
+        prepare: async () => {
+          const result = await controller.prepare();
+          if (result.status !== "ready") return result;
+          if (!preparedUpdates.has(result.command)) return { status: "refused" };
+          return {
+            status: "ready",
+            command: {
+              resolve: result.command.resolve,
+              authorize: () => {
+                const current = this.session.provider.widgets?.read(
+                  this.session.doc,
+                  snapshot3.record.id
+                );
+                return !!current && isCurrent() && this.allowed("edit", current.record) && (result.command.authorize?.() ?? true);
+              }
+            }
+          };
+        }
+      }),
+      external: async (action, run) => {
+        const current = this.session.provider.widgets?.read(this.session.doc, snapshot3.record.id);
+        if (!current || !isCurrent() || !this.allowed("external", current.record, action))
+          return { status: "refused" };
+        try {
+          const value2 = await run(context.signal);
+          return isCurrent() && this.current(current) && this.allowed("external", current.record, action) ? { status: "complete", value: value2 } : { status: "refused" };
+        } catch (error2) {
+          return context.signal.aborted || !isCurrent() ? { status: "refused" } : { status: "failed", error: error2 };
+        }
+      }
+    };
+  }
+  dispose() {
+    if (this.closed) return;
+    this.closed = true;
+    this.epoch++;
+    this.unsubscribe();
+    if (this.session.widgetHost === this) {
+      this.session.widgetHost = void 0;
+      this.session.invalidateWidgets();
+    }
+  }
+};
+
 // scripts/widgets/richtext/form_schema.ts
 function formObject(value2) {
   return value2 !== null && typeof value2 === "object" && !Array.isArray(value2);
@@ -91690,7 +91619,7 @@ function encodeFormField(node2, value2, json = false) {
 // scripts/widgets/richtext/form_control.ts
 init_ui_base();
 var FormControl = class {
-  constructor(schema4, binding, context, presentation = {}) {
+  constructor(schema4, binding, context, presentation = {}, options = {}) {
     this.schema = schema4;
     this.binding = binding;
     const initial = binding.read();
@@ -91745,8 +91674,9 @@ var FormControl = class {
       this.element.append(row);
     }
     const actions = document.createElement("div");
-    this.button("Apply answers", () => void this.commit(), actions);
-    this.button("Discard answers", () => this.discard(), actions, true);
+    if (options.commit !== false) this.button("Apply answers", () => void this.commit(), actions);
+    if (options.discard !== false)
+      this.button("Discard answers", () => this.discard(), actions, true);
     this.button("Validate submission", () => void this.validateSubmission(), actions);
     this.element.append(actions, this.status);
     this.element.addEventListener("compositionstart", () => this.composing = true);
@@ -91821,6 +91751,12 @@ var FormControl = class {
       return { status: "unencodable", reason: String(error2) };
     }
   }
+  /** Captures authored answers for an explicit action without committing or transforming them. */
+  submissionValues() {
+    if (this.locked() || this.composing || this.binding.read()?.revision !== this.base.revision)
+      throw new Error("Resolve unavailable or conflicting answers before submission");
+    return this.values();
+  }
   async commit() {
     if (!this.pending) return;
     const prepared = this.prepare();
@@ -91828,13 +91764,13 @@ var FormControl = class {
       this.status.textContent = prepared.reason ?? prepared.status;
       return;
     }
-    const version = this.version;
+    const version2 = this.version;
     const values = this.values();
     this.busy = true;
     this.refresh();
     try {
       const result = await this.binding.commit(this.base, values);
-      if (result.status === "applied" && version === this.version) this.committed();
+      if (result.status === "applied" && version2 === this.version) this.committed();
       else this.status.textContent = result.status;
     } finally {
       this.busy = false;
@@ -91844,13 +91780,13 @@ var FormControl = class {
   /** Returns validated output for an explicit host action, without changing saved input. */
   async validateSubmission() {
     const revision = this.base.revision;
-    const version = this.version;
+    const version2 = this.version;
     let result;
     try {
       if (this.locked() || this.composing || this.binding.read()?.revision !== revision)
         throw new Error("Resolve unavailable or conflicting answers before submission");
       result = await this.schema.validate(this.values());
-      if (this.disposed || this.locked() || version !== this.version || this.binding.read()?.revision !== revision)
+      if (this.disposed || this.locked() || version2 !== this.version || this.binding.read()?.revision !== revision)
         throw new Error("Answers changed during validation");
     } catch (error2) {
       result = { success: false, issues: [{ path: [], message: String(error2) }] };
@@ -91904,19 +91840,907 @@ var FormControl = class {
   }
 };
 
-// scripts/widgets/richtext/form_plugin.ts
+// scripts/widgets/richtext/form_declarative.ts
+function declarativeFormSchema(source) {
+  const diagnostics = [];
+  const unsupported = (path2, message2) => {
+    diagnostics.push({ path: path2, message: message2 });
+    return { kind: "unsupported", reason: message2 };
+  };
+  const visit4 = (value2, path2) => {
+    if (!formObject(value2)) return unsupported(path2, "Schema node must be an object");
+    const allowed = {
+      string: ["minLength", "maxLength"],
+      number: ["integer", "min", "max"],
+      boolean: [],
+      null: [],
+      enum: ["values"],
+      object: ["fields"],
+      array: ["item", "minItems", "maxItems"],
+      record: ["value"],
+      union: ["options"]
+    };
+    if (typeof value2.kind !== "string" || !Object.hasOwn(allowed, value2.kind))
+      return unsupported(path2, "Unsupported schema kind; use a host-registered implementation");
+    const keys2 = ["kind", "optional", "description", ...allowed[value2.kind]];
+    for (const key of Object.keys(value2)) {
+      if (!keys2.includes(key))
+        unsupported(
+          [...path2, key],
+          "Unsupported schema keyword; use a host-registered implementation"
+        );
+    }
+    if (value2.optional !== void 0 && typeof value2.optional !== "boolean")
+      unsupported(path2, "optional must be boolean");
+    if (value2.description !== void 0 && typeof value2.description !== "string")
+      unsupported(path2, "description must be text");
+    for (const key of ["minLength", "maxLength", "minItems", "maxItems"]) {
+      if (value2[key] !== void 0 && (!Number.isSafeInteger(value2[key]) || Number(value2[key]) < 0))
+        unsupported([...path2, key], "Length bounds must be nonnegative safe integers");
+    }
+    for (const key of ["min", "max"]) {
+      if (value2[key] !== void 0 && typeof value2[key] !== "number")
+        unsupported([...path2, key], "Numeric bounds must be numbers");
+    }
+    for (const [low, high] of [
+      ["min", "max"],
+      ["minLength", "maxLength"],
+      ["minItems", "maxItems"]
+    ]) {
+      if (typeof value2[low] === "number" && typeof value2[high] === "number" && value2[low] > value2[high])
+        unsupported(path2, "Minimum exceeds maximum");
+    }
+    if (value2.integer !== void 0 && typeof value2.integer !== "boolean")
+      unsupported(path2, "integer must be boolean");
+    switch (value2.kind) {
+      case "object": {
+        if (!formObject(value2.fields)) return unsupported(path2, "Object schema requires fields");
+        const fields2 = /* @__PURE__ */ Object.create(null);
+        for (const [key, field] of Object.entries(value2.fields))
+          fields2[key] = visit4(field, [...path2, key]);
+        return { ...value2, kind: "object", fields: fields2 };
+      }
+      case "array":
+        return { ...value2, kind: "array", item: visit4(value2.item, [...path2, "*"]) };
+      case "record":
+        return { ...value2, kind: "record", value: visit4(value2.value, [...path2, "*"]) };
+      case "union":
+        if (!Array.isArray(value2.options) || value2.options.length < 2)
+          return unsupported(path2, "Union requires at least two options");
+        return {
+          ...value2,
+          kind: "union",
+          options: value2.options.map((v, i2) => visit4(v, [...path2, i2]))
+        };
+      case "enum":
+        if (!Array.isArray(value2.values) || !value2.values.length || value2.values.some((v) => v !== null && typeof v === "object"))
+          return unsupported(path2, "Enum requires primitive JSON values");
+    }
+    return value2;
+  };
+  let root2;
+  try {
+    const value2 = widgetJson(source);
+    if (!formObject(value2) || value2.format !== "pathux.form-schema" || value2.version !== 1 || Object.keys(value2).some((k) => !["format", "version", "root"].includes(k)))
+      root2 = unsupported([], "Unsupported declarative schema envelope or version");
+    else root2 = visit4(value2.root, []);
+  } catch (error2) {
+    root2 = unsupported([], String(error2));
+  }
+  const validate = (input) => {
+    let budget = 5e4;
+    const check = (node2, value2, path2) => {
+      if (--budget < 0) throw new Error("Schema validation exceeds its work limit");
+      const fail = (message2) => [{ path: path2, message: message2 }];
+      if (value2 === void 0) return node2.optional ? [] : fail("Required value is missing");
+      switch (node2.kind) {
+        case "string":
+          return typeof value2 !== "string" ? fail("Expected text") : value2.length < (node2.minLength ?? 0) || value2.length > (node2.maxLength ?? Infinity) ? fail("Text length is outside schema bounds") : [];
+        case "number":
+          return typeof value2 !== "number" || !Number.isFinite(value2) ? fail("Expected a finite number") : node2.integer && !Number.isSafeInteger(value2) ? fail("Expected a safe integer") : value2 < (node2.min ?? -Infinity) || value2 > (node2.max ?? Infinity) ? fail("Number is outside schema bounds") : [];
+        case "boolean":
+          return typeof value2 === "boolean" ? [] : fail("Expected a boolean");
+        case "null":
+          return value2 === null ? [] : fail("Expected null");
+        case "enum":
+          return node2.values.includes(value2) ? [] : fail("Value is not in the enum");
+        case "object":
+          return formObject(value2) ? Object.entries(node2.fields).flatMap(
+            ([key, field]) => check(field, Object.hasOwn(value2, key) ? value2[key] : void 0, [...path2, key])
+          ) : fail("Expected an object");
+        case "array":
+          if (!Array.isArray(value2)) return fail("Expected an array");
+          if (value2.length < (node2.minItems ?? 0) || value2.length > (node2.maxItems ?? Infinity))
+            return fail("Array length is outside schema bounds");
+          return value2.flatMap((v, i2) => check(node2.item, v, [...path2, i2]));
+        case "record":
+          return formObject(value2) ? Object.entries(value2).flatMap(([key, v]) => check(node2.value, v, [...path2, key])) : fail("Expected a record");
+        case "union":
+          for (const option of node2.options) if (!check(option, value2, path2).length) return [];
+          return fail("Value does not match any union option");
+      }
+    };
+    return check(root2, input, []);
+  };
+  return {
+    root: root2,
+    diagnostics,
+    async validate(input) {
+      if (diagnostics.length) return { success: false, issues: diagnostics };
+      try {
+        const output = widgetJson(input);
+        const issues = validate(output);
+        return issues.length ? { success: false, issues } : { success: true, output };
+      } catch (error2) {
+        return { success: false, issues: [{ path: [], message: String(error2) }] };
+      }
+    }
+  };
+}
+
+// scripts/widgets/richtext/resource.ts
+function resourceReference(value2) {
+  return formObject(value2) && Object.keys(value2).sort().join(",") === "key,service" && typeof value2.service === "string" && /^[a-zA-Z][a-zA-Z0-9._-]{0,127}$/.test(value2.service) && typeof value2.key === "string" && value2.key.length > 0 && value2.key.length <= 2048;
+}
+function destination(value2) {
+  if (typeof value2 !== "string" || !value2 || value2.length > 4096 || [...value2].some((character) => character.charCodeAt(0) < 32))
+    throw new Error("Invalid resource destination");
+  return value2;
+}
+function version(value2) {
+  if (typeof value2 !== "string" || !value2 || value2.length > 1024)
+    throw new Error("Invalid resource version");
+  return value2;
+}
+function snapshot2(value2) {
+  const copy = widgetJson(value2);
+  if (!formObject(copy) || !Object.hasOwn(copy, "value"))
+    throw new Error("Invalid resource snapshot");
+  return Object.freeze({ version: version(copy.version), value: copy.value });
+}
+function authorize(services, access) {
+  const allowed = services.authorize(access);
+  return allowed === true;
+}
+function resourceAllowed(services, scope, action, reference) {
+  try {
+    const ref = widgetJson(reference);
+    if (!resourceReference(ref)) return false;
+    const service = services.services.get(ref.service);
+    return !!service && authorize(services, {
+      ...scope,
+      action,
+      reference: ref,
+      destination: destination(service.resolve(ref, scope))
+    });
+  } catch {
+    return false;
+  }
+}
+function abortable(promise2, signal) {
+  return new Promise((resolve, reject) => {
+    const abort = () => {
+      signal.removeEventListener("abort", abort);
+      reject(new Error("Resource request cancelled"));
+    };
+    signal.addEventListener("abort", abort, { once: true });
+    if (signal.aborted) abort();
+    promise2.then(resolve, reject).finally(() => signal.removeEventListener("abort", abort));
+  });
+}
+var WidgetResources = class {
+  constructor(host, services, record) {
+    this.host = host;
+    this.services = services;
+    this.record = record;
+  }
+  host;
+  services;
+  record;
+  requests = /* @__PURE__ */ new Set();
+  disposed = false;
+  cancel() {
+    for (const request of this.requests) request.abort();
+  }
+  dispose() {
+    this.disposed = true;
+    this.cancel();
+  }
+  allowed(action, reference) {
+    return !this.disposed && !this.host.signal.aborted && this.host.isCurrent() && resourceAllowed(
+      this.services,
+      { document: this.host.document, record: this.record() },
+      action,
+      reference
+    );
+  }
+  async request(action, reference, submission) {
+    if (!this.allowed(action, reference) || action === "submit" !== !!submission)
+      return { status: "refused" };
+    const controller = new AbortController();
+    this.requests.add(controller);
+    const abort = () => controller.abort();
+    this.host.signal.addEventListener("abort", abort, { once: true });
+    if (this.host.signal.aborted) abort();
+    try {
+      const record = widgetRecord(this.record());
+      const signature = JSON.stringify(record);
+      const ref = widgetJson(reference);
+      if (!resourceReference(ref)) return { status: "refused" };
+      const service = this.services.services.get(ref.service);
+      const scope = { document: this.host.document, record };
+      const schema4 = submission?.schema;
+      const schemaReference2 = schema4 ? widgetJson(schema4.reference) : void 0;
+      if (schema4 && (!schemaReference2 || !resourceReference(schemaReference2)))
+        throw new Error("Invalid schema reference");
+      const values = submission ? {
+        expectedVersion: version(submission.expectedVersion),
+        schema: schema4 && schemaReference2 && resourceReference(schemaReference2) ? { reference: schemaReference2, version: version(schema4.version) } : void 0,
+        values: widgetJson(submission.values),
+        output: widgetJson(submission.output),
+        requestId: crypto.randomUUID()
+      } : void 0;
+      const current = () => !this.disposed && !controller.signal.aborted && this.host.isCurrent() && JSON.stringify(this.record()) === signature && this.services.services.get(ref.service) === service;
+      const result = await this.host.external(`resource:${action}`, async () => {
+        let target = destination(service.resolve(ref, scope));
+        const visited = /* @__PURE__ */ new Set();
+        for (let redirects = 0; redirects <= 5; redirects++) {
+          const access = { ...scope, reference: ref, action, destination: target };
+          if (!current() || !authorize(this.services, access))
+            return { status: "refused" };
+          if (visited.has(target)) throw new Error("Resource redirect loop");
+          visited.add(target);
+          const response = await abortable(
+            service.request({ ...access, signal: controller.signal, submission: values }),
+            controller.signal
+          );
+          if (!current() || !authorize(this.services, access))
+            return { status: "refused" };
+          if (response.status === "redirect") {
+            target = destination(response.destination);
+            continue;
+          }
+          if (response.status === "ready")
+            return { status: "ready", snapshot: snapshot2(response.snapshot) };
+          if (response.status === "conflict")
+            return response.current ? { status: "conflict", current: snapshot2(response.current) } : { status: "conflict" };
+          if (response.status === "failed")
+            return { status: "failed", message: String(response.message).slice(0, 2048) };
+          if (response.status === "refused" || response.status === "cancelled")
+            return { status: response.status };
+          throw new Error("Invalid resource response");
+        }
+        throw new Error("Too many resource redirects");
+      });
+      if (controller.signal.aborted) return { status: "cancelled" };
+      if (result.status === "complete") return result.value;
+      return result.status === "failed" ? { status: "failed", message: String(result.error).slice(0, 2048) } : { status: "refused" };
+    } catch (error2) {
+      return controller.signal.aborted ? { status: "cancelled" } : { status: "failed", message: String(error2).slice(0, 2048) };
+    } finally {
+      this.requests.delete(controller);
+      this.host.signal.removeEventListener("abort", abort);
+    }
+  }
+};
+
+// scripts/widgets/richtext/form_external.ts
 function payload(value2) {
+  return formObject(value2) && resourceReference(value2.resource);
+}
+function schemaReference(value2) {
+  return value2 !== void 0 && formObject(value2) && (Object.keys(value2).join(",") === "resource" && resourceReference(value2.resource) || typeof value2.id === "string" && Number.isSafeInteger(value2.version) && Number(value2.version) > 0 && !("resource" in value2));
+}
+function config2(snapshot3) {
+  const data = snapshot3.record.payload;
+  return payload(data) ? JSON.stringify([data.resource, data.schema ?? null]) : "";
+}
+var ExternalFormView = class {
+  constructor(initial, host, services, context, resolveSchema) {
+    this.host = host;
+    this.services = services;
+    this.context = context;
+    this.resolveSchema = resolveSchema;
+    this.latest = initial;
+    this.signature = config2(initial);
+    this.client = new WidgetResources(host, services, () => this.latest.record);
+    this.element.className = "external-resource";
+    this.status.setAttribute("role", "status");
+    this.status.setAttribute("aria-live", "polite");
+    this.status.className = "resource-status";
+    const actions = document.createElement("div");
+    this.button("Refresh resource", () => this.refresh(), actions);
+    if (context) this.button("Submit answers", () => this.submit(), actions);
+    this.button("Save resource snapshot", () => this.saveSnapshot(), actions);
+    if (context) this.button("Discard resource draft", () => this.discard(), actions, "discard");
+    this.button("Cancel request", () => this.client.cancel(), actions, "cancel");
+    this.element.append(this.body, actions, this.status);
+    this.showSavedSnapshot();
+    this.unregister = host.registerDraft({
+      key: "external-answers",
+      pending: () => this.pending,
+      version: () => [this.generation, this.formDraft?.version()],
+      prepare: () => ({
+        status: "refused",
+        reason: "Submit or discard external answers explicitly"
+      }),
+      committed() {
+      },
+      discard: () => this.discard(),
+      recover: () => ({
+        resource: this.latest.record.payload,
+        remote: this.remote,
+        draft: this.formDraft?.recover(),
+        state: this.state
+      })
+    });
+    void this.refresh();
+  }
+  host;
+  services;
+  context;
+  resolveSchema;
+  element = document.createElement("div");
+  body = document.createElement("div");
+  status = document.createElement("div");
+  buttons = [];
+  client;
+  latest;
+  signature;
+  remote;
+  schemaVersion;
+  form;
+  formDraft;
+  readOnly = false;
+  disposed = false;
+  busy = false;
+  validating = false;
+  generation = 0;
+  loaded = false;
+  unregister;
+  state = "idle";
+  showSavedSnapshot() {
+    const data = this.latest.record.payload;
+    if (!payload(data) || !data.snapshot || !formObject(data.snapshot) || !Object.hasOwn(data.snapshot, "value"))
+      return;
+    const text6 = document.createElement("pre");
+    text6.textContent = "Saved snapshot (not refreshed)\n" + JSON.stringify(data.snapshot.value, null, 2);
+    this.body.replaceChildren(text6);
+  }
+  get pending() {
+    return !!this.form?.pending || this.busy && this.state === "submitting";
+  }
+  current() {
+    return !this.disposed && this.host.isCurrent() && config2(this.latest) === this.signature;
+  }
+  say(state, message2 = state) {
+    this.state = state;
+    this.status.textContent = message2;
+  }
+  button(label, action, target, kind = "normal") {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = label;
+    button.dataset.kind = kind;
+    button.addEventListener("pointerdown", (event) => event.preventDefault());
+    button.addEventListener("click", () => {
+      if (!button.disabled) void action();
+    });
+    target.append(button);
+    this.buttons.push(button);
+  }
+  sync() {
+    this.form?.update({
+      value: void 0,
+      readOnly: this.readOnly || this.busy || !this.current() || !this.loaded
+    });
+    for (const button of this.buttons) {
+      const kind = button.dataset.kind;
+      button.disabled = kind === "cancel" ? !this.busy : kind === "discard" ? this.busy : !this.current() || this.busy || this.validating || button.textContent !== "Refresh resource" && (this.readOnly || !this.loaded);
+    }
+  }
+  async schema() {
+    const data = this.latest.record.payload;
+    if (!payload(data) || !data.schema || !formObject(data.schema)) return;
+    if (resourceReference(data.schema.resource)) {
+      const result = await this.client.request("schema", data.schema.resource);
+      if (result.status !== "ready") {
+        this.say(result.status, "Schema: " + result.status);
+        return;
+      }
+      this.schemaVersion = { reference: data.schema.resource, version: result.snapshot.version };
+      return { schema: declarativeFormSchema(result.snapshot.value) };
+    }
+    return this.resolveSchema?.(
+      { id: String(data.schema.id), version: Number(data.schema.version) },
+      this.host.document
+    );
+  }
+  async refresh() {
+    if (!this.current() || this.busy || this.validating) return;
+    if (this.pending) {
+      this.say("draft", "Submit or discard the local draft before refreshing");
+      return;
+    }
+    const data = this.latest.record.payload;
+    if (!payload(data)) return;
+    const generation = ++this.generation;
+    this.loaded = false;
+    this.schemaVersion = void 0;
+    this.busy = true;
+    this.say("loading");
+    this.sync();
+    try {
+      const registered = this.context ? await this.schema() : void 0;
+      if (!this.current() || generation !== this.generation) return;
+      if (this.context && (!registered || registered.schema.diagnostics.length || registered.schema.root.kind !== "object")) {
+        if (registered || this.state === "loading")
+          this.say("unavailable", "Schema unavailable or unsupported");
+        return;
+      }
+      const result = await this.client.request("read", data.resource);
+      if (!this.current() || generation !== this.generation) return;
+      if (result.status !== "ready") {
+        this.say(result.status, result.status === "failed" ? result.message : result.status);
+        return;
+      }
+      if (this.context && !formObject(result.snapshot.value))
+        throw new Error("External form requires an object");
+      this.remote = result.snapshot;
+      this.loaded = true;
+      if (this.context && registered) {
+        this.form?.dispose();
+        this.form = new FormControl(
+          registered.schema,
+          {
+            key: "external-control",
+            read: () => this.remote && this.current() ? { revision: this.remote.version, values: this.remote.value } : void 0,
+            subscribe: () => () => {
+            },
+            prepare: () => {
+              throw new Error("External answers require explicit submission");
+            },
+            commit: async () => ({ status: "refused", reason: "Use Submit answers" }),
+            registerDraft: (controller) => {
+              this.formDraft = controller;
+              return () => {
+              };
+            },
+            canWrite: () => this.current() && this.loaded
+          },
+          this.context,
+          registered.presentation,
+          { commit: false, discard: false }
+        );
+        this.body.replaceChildren(this.form.element);
+      } else {
+        const text6 = document.createElement("pre");
+        text6.textContent = JSON.stringify(this.remote.value, null, 2);
+        this.body.replaceChildren(text6);
+      }
+      this.say("ready", "Loaded version " + this.remote.version);
+    } catch (error2) {
+      if (this.current()) this.say("failed", String(error2));
+    } finally {
+      if (generation === this.generation) {
+        this.busy = false;
+        this.sync();
+      }
+    }
+  }
+  async submit() {
+    const data = this.latest.record.payload;
+    if (!this.current() || this.readOnly || this.busy || this.validating || !this.loaded || !this.form || !this.remote || !payload(data))
+      return;
+    this.validating = true;
+    this.say("validating");
+    this.sync();
+    const form = this.form;
+    const remote = this.remote;
+    const generation = this.generation;
+    try {
+      const values = form.submissionValues();
+      const validated = await form.validateSubmission();
+      if (!validated.success) {
+        this.say("invalid", "Resolve validation errors before submission");
+        return;
+      }
+      if (!this.current() || this.readOnly || this.busy || this.form !== form || this.remote !== remote || generation !== this.generation || JSON.stringify(values) !== JSON.stringify(form.submissionValues()))
+        return;
+      const output = widgetJson(validated.output);
+      this.busy = true;
+      this.say("submitting");
+      this.sync();
+      const result = await this.client.request("submit", data.resource, {
+        expectedVersion: remote.version,
+        values,
+        output,
+        schema: this.schemaVersion
+      });
+      if (!this.current() || generation !== this.generation) return;
+      if (result.status === "ready") {
+        if (!formObject(result.snapshot.value)) throw new Error("External form requires an object");
+        this.remote = result.snapshot;
+        form.discard();
+        this.say("success", "Submitted version " + this.remote.version);
+      } else if (result.status === "conflict")
+        this.say(
+          "conflict",
+          "Resource changed; draft retained. Discard the draft and refresh to load the latest version."
+        );
+      else
+        this.say(
+          result.status,
+          result.status === "failed" ? result.message : result.status === "cancelled" ? "Cancelled; remote outcome may be unknown. Refresh before retrying." : result.status
+        );
+    } catch (error2) {
+      if (this.current()) this.say("failed", String(error2));
+    } finally {
+      this.validating = false;
+      if (generation === this.generation) {
+        this.busy = false;
+        this.sync();
+      }
+    }
+  }
+  async saveSnapshot() {
+    const data = this.latest.record.payload;
+    if (!this.current() || this.readOnly || this.busy || this.validating || !this.loaded || !this.remote || !payload(data))
+      return;
+    if (this.pending) {
+      this.say("draft", "Submit or discard answers before saving a resource snapshot");
+      return;
+    }
+    const saved = widgetJson(this.remote);
+    if (JSON.stringify(data.snapshot) === JSON.stringify(saved)) {
+      this.say("snapshot-saved");
+      return;
+    }
+    this.busy = true;
+    this.sync();
+    try {
+      const result = await this.host.update(this.latest, { ...data, snapshot: saved });
+      if (this.current()) this.say(result.status === "applied" ? "snapshot-saved" : result.status);
+    } finally {
+      this.busy = false;
+      this.sync();
+    }
+  }
+  discard() {
+    if (this.busy && !this.disposed) return;
+    this.busy = false;
+    this.form?.discard();
+    this.say(this.remote ? "ready" : "idle");
+    this.sync();
+  }
+  update(state) {
+    const next = state.value;
+    if (JSON.stringify(next.record) !== JSON.stringify(this.latest.record)) this.client.cancel();
+    if (state.readOnly && !this.readOnly && this.state === "submitting") this.client.cancel();
+    this.latest = next;
+    this.readOnly = state.readOnly;
+    if (!this.loaded && !this.form) this.showSavedSnapshot();
+    if (!this.current()) {
+      this.client.cancel();
+      this.say("unavailable", "Resource binding changed; rebind this view");
+    }
+    this.sync();
+  }
+  focus(last = false) {
+    if (this.form) this.form.focus(last);
+    else this.buttons[0]?.focus();
+  }
+  dispose() {
+    if (this.disposed) return;
+    this.disposed = true;
+    this.generation++;
+    this.client.dispose();
+    this.form?.dispose();
+    this.unregister();
+  }
+};
+function plugin(services, context, resolveSchema) {
+  return {
+    type: context ? "pathux.external-form" : "pathux.external-view",
+    version: 1,
+    label: context ? "External form" : "External data",
+    validate: (data) => payload(data) && (!context || schemaReference(data.schema)),
+    canMount(record, document4) {
+      const data = record.payload;
+      if (!payload(data) || !resourceAllowed(services, { record, document: document4 }, "read", data.resource))
+        return false;
+      return !context || !data.schema || !formObject(data.schema) || !resourceReference(data.schema.resource) || resourceAllowed(services, { record, document: document4 }, "schema", data.schema.resource);
+    },
+    create: (initial, host) => new ExternalFormView(initial, host, services, context, resolveSchema)
+  };
+}
+function createExternalFormPlugin(context, services, resolveSchema) {
+  return plugin(services, context, resolveSchema);
+}
+function createExternalViewPlugin(services) {
+  return plugin(services);
+}
+
+// example/editors/properties/external_demo.ts
+var schemaDescription = {
+  format: "pathux.form-schema",
+  version: 1,
+  root: {
+    kind: "object",
+    fields: {
+      name: { kind: "string", minLength: 1 },
+      count: { kind: "number", integer: true, min: 0 }
+    }
+  }
+};
+function createExternalDemo(parent, context) {
+  let schemaVersion = 1;
+  let remoteSchema = schemaDescription;
+  let remote = { version: "1", value: { name: "Ada", count: 1 } };
+  let offline = false;
+  let delayed = false;
+  let allowResources = true;
+  let allowSubmit = true;
+  let allowHost = true;
+  let base = "allowed";
+  let writes = 0;
+  const redirects = /* @__PURE__ */ new Map();
+  const requests = [];
+  const releases = [];
+  const service = {
+    resolve: (ref, scope) => `memory://${scope.document.base}/${ref.key}`,
+    async request(request) {
+      requests.push(request);
+      if (delayed) await new Promise((resolve) => releases.push(resolve));
+      if (request.signal.aborted) return { status: "cancelled" };
+      if (offline) return { status: "failed", message: "Simulated offline service" };
+      const redirect = redirects.get(request.destination);
+      if (redirect) return { status: "redirect", destination: redirect };
+      if (request.action === "schema")
+        return {
+          status: "ready",
+          snapshot: { version: `schema-${schemaVersion}`, value: remoteSchema }
+        };
+      if (request.action === "submit") {
+        if (request.submission?.expectedVersion !== remote.version || request.submission.schema && request.submission.schema.version !== `schema-${schemaVersion}`)
+          return { status: "conflict", current: remote };
+        remote = {
+          version: String(Number(remote.version) + 1),
+          value: widgetJson(request.submission.values)
+        };
+        writes++;
+      }
+      return { status: "ready", snapshot: remote };
+    }
+  };
+  const services = {
+    services: /* @__PURE__ */ new Map([["memory", service]]),
+    authorize: (request) => allowResources && request.destination.startsWith("memory://allowed/") && (request.action !== "submit" || allowSubmit)
+  };
+  const provider = new MarkdownProvider();
+  const stack = new ToolStack();
+  const initial = [
+    encodeWidgetFence({
+      id: "form",
+      type: "pathux.external-form",
+      version: 1,
+      payload: {
+        resource: { service: "memory", key: "customer" },
+        schema: { id: "intake", version: 1 }
+      }
+    }),
+    encodeWidgetFence({
+      id: "view",
+      type: "pathux.external-view",
+      version: 1,
+      payload: { resource: { service: "memory", key: "customer" } }
+    })
+  ].join("\n\n");
+  const session = new DocumentSession(markdownDocFromText(initial), provider, stack);
+  const registry = new WidgetRegistry();
+  registry.register(
+    createExternalFormPlugin(
+      context,
+      services,
+      (ref) => ref.id === "intake" && ref.version === 1 ? { schema: declarativeFormSchema(schemaDescription) } : void 0
+    )
+  );
+  registry.register(createExternalViewPlugin(services));
+  const options = () => ({ document: { base }, authorize: () => allowHost });
+  const host = new DocumentWidgetHost(session, registry, options());
+  let signature = "";
+  const bindings = () => JSON.stringify(
+    ["form", "view"].map((id) => {
+      const data = provider.widgets.read(session.doc, id)?.record.payload;
+      return data ? [data.resource, data.schema ?? null] : null;
+    })
+  );
+  signature = bindings();
+  const unsubscribe = session.onChange(() => {
+    const next = bindings();
+    if (next !== signature) {
+      signature = next;
+      host.invalidate(options());
+    }
+  });
+  const editors = [0, 1].map((index2) => {
+    const section = document.createElement("section");
+    section.id = `external${index2}`;
+    const heading3 = document.createElement("h3");
+    heading3.textContent = `External service, view ${index2 + 1}`;
+    const editor = UIBase.constructElement(
+      "rich-text-x",
+      context
+    );
+    editor.style.width = "600px";
+    section.append(heading3, editor);
+    parent.append(section);
+    editor.session = session;
+    return editor;
+  });
+  const button = (label, action) => {
+    const button2 = document.createElement("button");
+    button2.textContent = label;
+    button2.addEventListener("click", action);
+    parent.append(button2);
+  };
+  button("Toggle simulated offline", () => offline = !offline);
+  button(
+    "Simulate remote change",
+    () => remote = {
+      version: String(Number(remote.version) + 1),
+      value: { name: "Other author", count: 2 }
+    }
+  );
+  button("Undo document snapshot", () => void stack.undo());
+  button("Redo document snapshot", () => void stack.redo());
+  return {
+    session,
+    provider,
+    stack,
+    host,
+    editors,
+    requests,
+    initial,
+    source: () => markdownText(session.doc),
+    remote: () => remote,
+    writes: () => writes,
+    setSchema: (value2) => {
+      remoteSchema = value2;
+      schemaVersion++;
+    },
+    setOffline: (value2) => offline = value2,
+    setDelayed: (value2) => delayed = value2,
+    release: () => {
+      delayed = false;
+      for (const release of releases.splice(0)) release();
+    },
+    externalChange: (value2) => remote = { version: String(Number(remote.version) + 1), value: widgetJson(value2) },
+    redirect: (from, to) => redirects.set(from, to),
+    setResourcePolicy(value2) {
+      allowResources = value2;
+      host.invalidate(options());
+    },
+    setSubmitPolicy(value2) {
+      allowSubmit = value2;
+      host.invalidate(options());
+    },
+    setHostPolicy(value2) {
+      allowHost = value2;
+      host.invalidate(options());
+    },
+    rebind(value2) {
+      base = value2;
+      host.invalidate(options());
+    },
+    async remoteSchema() {
+      const expected = provider.widgets.read(session.doc, "form");
+      return host.update(
+        expected,
+        {
+          resource: { service: "memory", key: "customer" },
+          schema: { resource: { service: "memory", key: "schema" } }
+        },
+        context
+      );
+    },
+    dispose() {
+      unsubscribe();
+      for (const editor of editors) editor.remove();
+      session.dispose();
+    }
+  };
+}
+
+// example/editors/properties/note_plugin.ts
+var notePlugin = {
+  type: "example.note",
+  version: 1,
+  label: "Note",
+  validate(payload3) {
+    return payload3 !== null && typeof payload3 === "object" && !Array.isArray(payload3) && "text" in payload3 && typeof payload3.text === "string";
+  },
+  create(initial, context) {
+    const element2 = document.createElement("div");
+    const shadow = element2.attachShadow({ mode: "open" });
+    const input = document.createElement("input");
+    input.setAttribute("aria-label", "Note text");
+    const accept = document.createElement("button");
+    accept.textContent = "Apply note";
+    const status = document.createElement("span");
+    status.setAttribute("role", "status");
+    shadow.append(input, accept, status);
+    let base = initial;
+    let latest = initial;
+    let dirty2 = false;
+    let version2 = 0;
+    const text6 = (snapshot3) => snapshot3.record.payload.text;
+    input.value = text6(initial);
+    const payload3 = () => ({ ...base.record.payload, text: input.value });
+    const committed = () => {
+      dirty2 = false;
+      base = latest;
+      input.value = text6(latest);
+      status.textContent = "Saved in document";
+    };
+    input.addEventListener("input", () => {
+      dirty2 = true;
+      version2++;
+      status.textContent = "Draft";
+    });
+    accept.addEventListener("pointerdown", (event) => event.preventDefault());
+    accept.addEventListener("click", async () => {
+      if (!dirty2) return;
+      const expectedVersion = version2;
+      const result = await context.update(base, payload3());
+      if (result.status === "applied" && version2 === expectedVersion) committed();
+      else status.textContent = "Draft retained; refresh or resolve the conflict";
+    });
+    context.registerDraft({
+      key: "text",
+      pending: () => dirty2,
+      version: () => version2,
+      recover: () => input.value,
+      discard: () => {
+        dirty2 = false;
+        base = latest;
+        input.value = text6(latest);
+        version2++;
+      },
+      committed,
+      prepare: () => ({ status: "ready", command: context.prepareUpdate(base, payload3()) })
+    });
+    return {
+      element: element2,
+      update(state) {
+        latest = state.value;
+        input.readOnly = state.readOnly;
+        accept.disabled = state.readOnly;
+        if (!dirty2) {
+          base = latest;
+          input.value = text6(latest);
+        } else if (base.revision !== latest.revision)
+          status.textContent = "Saved value changed; draft retained";
+      },
+      dispose() {
+      }
+    };
+  }
+};
+
+// scripts/widgets/richtext/form_plugin.ts
+function payload2(value2) {
   return formObject(value2) && formObject(value2.schema) && formObject(value2.values);
 }
 function createFormPlugin(context, resolveSchema, resolveEmbedded) {
-  const valid = (value2) => payload(value2) && ("embedded" in value2.schema ? !!resolveEmbedded && Object.keys(value2.schema).length === 1 : typeof value2.schema.id === "string" && Number.isSafeInteger(value2.schema.version) && Number(value2.schema.version) > 0);
+  const valid = (value2) => payload2(value2) && ("embedded" in value2.schema ? !!resolveEmbedded && Object.keys(value2.schema).length === 1 : typeof value2.schema.id === "string" && Number.isSafeInteger(value2.schema.version) && Number(value2.schema.version) > 0);
   return {
     type: "pathux.form",
     version: 1,
     label: "Form",
     validate: valid,
     create(initial, host) {
-      if (!valid(initial.record.payload) || !payload(initial.record.payload))
+      if (!valid(initial.record.payload) || !payload2(initial.record.payload))
         throw new Error("Invalid form payload");
       const reference = initial.record.payload.schema;
       const signature = JSON.stringify(reference);
@@ -91926,10 +92750,10 @@ function createFormPlugin(context, resolveSchema, resolveEmbedded) {
       const snapshots = /* @__PURE__ */ new WeakMap();
       const read2 = () => {
         const data = latest.record.payload;
-        if (!payload(data) || JSON.stringify(data.schema) !== signature) return;
-        const snapshot2 = { revision: latest.revision, values: data.values };
-        snapshots.set(snapshot2, latest);
-        return snapshot2;
+        if (!payload2(data) || JSON.stringify(data.schema) !== signature) return;
+        const snapshot3 = { revision: latest.revision, values: data.values };
+        snapshots.set(snapshot3, latest);
+        return snapshot3;
       };
       const source = (expected) => {
         const value2 = snapshots.get(expected);
@@ -92532,13 +93356,13 @@ var Directives = class _Directives {
           onError(0, "%YAML directive should contain exactly one part");
           return false;
         }
-        const [version] = parts;
-        if (version === "1.1" || version === "1.2") {
-          this.yaml.version = version;
+        const [version2] = parts;
+        if (version2 === "1.1" || version2 === "1.2") {
+          this.yaml.version = version2;
           return true;
         } else {
-          const isValid2 = /^\d+\.\d+$/.test(version);
-          onError(6, `Unsupported YAML version ${version}`, isValid2);
+          const isValid2 = /^\d+\.\d+$/.test(version2);
+          onError(6, `Unsupported YAML version ${version2}`, isValid2);
           return false;
         }
       }
@@ -95194,14 +96018,14 @@ var Document = class _Document {
       version: "1.2"
     }, options);
     this.options = opt;
-    let { version } = opt;
+    let { version: version2 } = opt;
     if (options?._directives) {
       this.directives = options._directives.atDocument();
       if (this.directives.yaml.explicit)
-        version = this.directives.yaml.version;
+        version2 = this.directives.yaml.version;
     } else
-      this.directives = new Directives({ version });
-    this.setSchema(version, options);
+      this.directives = new Directives({ version: version2 });
+    this.setSchema(version2, options);
     this.contents = value2 === void 0 ? null : this.createNode(value2, _replacer, options);
   }
   /**
@@ -95381,11 +96205,11 @@ var Document = class _Document {
    *
    * Overrides all previously set schema options.
    */
-  setSchema(version, options = {}) {
-    if (typeof version === "number")
-      version = String(version);
+  setSchema(version2, options = {}) {
+    if (typeof version2 === "number")
+      version2 = String(version2);
     let opt;
-    switch (version) {
+    switch (version2) {
       case "1.1":
         if (this.directives)
           this.directives.yaml.version = "1.1";
@@ -95396,9 +96220,9 @@ var Document = class _Document {
       case "1.2":
       case "next":
         if (this.directives)
-          this.directives.yaml.version = version;
+          this.directives.yaml.version = version2;
         else
-          this.directives = new Directives({ version });
+          this.directives = new Directives({ version: version2 });
         opt = { resolveKnownTags: true, schema: "core" };
         break;
       case null:
@@ -95407,7 +96231,7 @@ var Document = class _Document {
         opt = null;
         break;
       default: {
-        const sv = JSON.stringify(version);
+        const sv = JSON.stringify(version2);
         throw new Error(`Expected '1.1', '1.2' or null as first argument, but found: ${sv}`);
       }
     }
@@ -99917,11 +100741,11 @@ function datetimeRegex(args) {
   regex = `${regex}(${opts.join("|")})`;
   return new RegExp(`^${regex}$`);
 }
-function isValidIP(ip, version) {
-  if ((version === "v4" || !version) && ipv4Regex.test(ip)) {
+function isValidIP(ip, version2) {
+  if ((version2 === "v4" || !version2) && ipv4Regex.test(ip)) {
     return true;
   }
-  if ((version === "v6" || !version) && ipv6Regex.test(ip)) {
+  if ((version2 === "v6" || !version2) && ipv6Regex.test(ip)) {
     return true;
   }
   return false;
@@ -99948,11 +100772,11 @@ function isValidJWT(jwt, alg) {
     return false;
   }
 }
-function isValidCidr(ip, version) {
-  if ((version === "v4" || !version) && ipv4CidrRegex.test(ip)) {
+function isValidCidr(ip, version2) {
+  if ((version2 === "v4" || !version2) && ipv4CidrRegex.test(ip)) {
     return true;
   }
-  if ((version === "v6" || !version) && ipv6CidrRegex.test(ip)) {
+  if ((version2 === "v6" || !version2) && ipv6CidrRegex.test(ip)) {
     return true;
   }
   return false;
@@ -103035,144 +103859,6 @@ var locationFormSchema = external_exports.object({
   ]).optional()
 });
 
-// scripts/widgets/richtext/form_declarative.ts
-function declarativeFormSchema(source) {
-  const diagnostics = [];
-  const unsupported = (path2, message2) => {
-    diagnostics.push({ path: path2, message: message2 });
-    return { kind: "unsupported", reason: message2 };
-  };
-  const visit4 = (value2, path2) => {
-    if (!formObject(value2)) return unsupported(path2, "Schema node must be an object");
-    const allowed = {
-      string: ["minLength", "maxLength"],
-      number: ["integer", "min", "max"],
-      boolean: [],
-      null: [],
-      enum: ["values"],
-      object: ["fields"],
-      array: ["item", "minItems", "maxItems"],
-      record: ["value"],
-      union: ["options"]
-    };
-    if (typeof value2.kind !== "string" || !Object.hasOwn(allowed, value2.kind))
-      return unsupported(path2, "Unsupported schema kind; use a host-registered implementation");
-    const keys2 = ["kind", "optional", "description", ...allowed[value2.kind]];
-    for (const key of Object.keys(value2)) {
-      if (!keys2.includes(key))
-        unsupported(
-          [...path2, key],
-          "Unsupported schema keyword; use a host-registered implementation"
-        );
-    }
-    if (value2.optional !== void 0 && typeof value2.optional !== "boolean")
-      unsupported(path2, "optional must be boolean");
-    if (value2.description !== void 0 && typeof value2.description !== "string")
-      unsupported(path2, "description must be text");
-    for (const key of ["minLength", "maxLength", "minItems", "maxItems"]) {
-      if (value2[key] !== void 0 && (!Number.isSafeInteger(value2[key]) || Number(value2[key]) < 0))
-        unsupported([...path2, key], "Length bounds must be nonnegative safe integers");
-    }
-    for (const key of ["min", "max"]) {
-      if (value2[key] !== void 0 && typeof value2[key] !== "number")
-        unsupported([...path2, key], "Numeric bounds must be numbers");
-    }
-    for (const [low, high] of [
-      ["min", "max"],
-      ["minLength", "maxLength"],
-      ["minItems", "maxItems"]
-    ]) {
-      if (typeof value2[low] === "number" && typeof value2[high] === "number" && value2[low] > value2[high])
-        unsupported(path2, "Minimum exceeds maximum");
-    }
-    if (value2.integer !== void 0 && typeof value2.integer !== "boolean")
-      unsupported(path2, "integer must be boolean");
-    switch (value2.kind) {
-      case "object": {
-        if (!formObject(value2.fields)) return unsupported(path2, "Object schema requires fields");
-        const fields2 = /* @__PURE__ */ Object.create(null);
-        for (const [key, field] of Object.entries(value2.fields))
-          fields2[key] = visit4(field, [...path2, key]);
-        return { ...value2, kind: "object", fields: fields2 };
-      }
-      case "array":
-        return { ...value2, kind: "array", item: visit4(value2.item, [...path2, "*"]) };
-      case "record":
-        return { ...value2, kind: "record", value: visit4(value2.value, [...path2, "*"]) };
-      case "union":
-        if (!Array.isArray(value2.options) || value2.options.length < 2)
-          return unsupported(path2, "Union requires at least two options");
-        return {
-          ...value2,
-          kind: "union",
-          options: value2.options.map((v, i2) => visit4(v, [...path2, i2]))
-        };
-      case "enum":
-        if (!Array.isArray(value2.values) || !value2.values.length || value2.values.some((v) => v !== null && typeof v === "object"))
-          return unsupported(path2, "Enum requires primitive JSON values");
-    }
-    return value2;
-  };
-  let root2;
-  try {
-    const value2 = widgetJson(source);
-    if (!formObject(value2) || value2.format !== "pathux.form-schema" || value2.version !== 1 || Object.keys(value2).some((k) => !["format", "version", "root"].includes(k)))
-      root2 = unsupported([], "Unsupported declarative schema envelope or version");
-    else root2 = visit4(value2.root, []);
-  } catch (error2) {
-    root2 = unsupported([], String(error2));
-  }
-  const validate = (input) => {
-    let budget = 5e4;
-    const check = (node2, value2, path2) => {
-      if (--budget < 0) throw new Error("Schema validation exceeds its work limit");
-      const fail = (message2) => [{ path: path2, message: message2 }];
-      if (value2 === void 0) return node2.optional ? [] : fail("Required value is missing");
-      switch (node2.kind) {
-        case "string":
-          return typeof value2 !== "string" ? fail("Expected text") : value2.length < (node2.minLength ?? 0) || value2.length > (node2.maxLength ?? Infinity) ? fail("Text length is outside schema bounds") : [];
-        case "number":
-          return typeof value2 !== "number" || !Number.isFinite(value2) ? fail("Expected a finite number") : node2.integer && !Number.isSafeInteger(value2) ? fail("Expected a safe integer") : value2 < (node2.min ?? -Infinity) || value2 > (node2.max ?? Infinity) ? fail("Number is outside schema bounds") : [];
-        case "boolean":
-          return typeof value2 === "boolean" ? [] : fail("Expected a boolean");
-        case "null":
-          return value2 === null ? [] : fail("Expected null");
-        case "enum":
-          return node2.values.includes(value2) ? [] : fail("Value is not in the enum");
-        case "object":
-          return formObject(value2) ? Object.entries(node2.fields).flatMap(
-            ([key, field]) => check(field, Object.hasOwn(value2, key) ? value2[key] : void 0, [...path2, key])
-          ) : fail("Expected an object");
-        case "array":
-          if (!Array.isArray(value2)) return fail("Expected an array");
-          if (value2.length < (node2.minItems ?? 0) || value2.length > (node2.maxItems ?? Infinity))
-            return fail("Array length is outside schema bounds");
-          return value2.flatMap((v, i2) => check(node2.item, v, [...path2, i2]));
-        case "record":
-          return formObject(value2) ? Object.entries(value2).flatMap(([key, v]) => check(node2.value, v, [...path2, key])) : fail("Expected a record");
-        case "union":
-          for (const option of node2.options) if (!check(option, value2, path2).length) return [];
-          return fail("Value does not match any union option");
-      }
-    };
-    return check(root2, input, []);
-  };
-  return {
-    root: root2,
-    diagnostics,
-    async validate(input) {
-      if (diagnostics.length) return { success: false, issues: diagnostics };
-      try {
-        const output = widgetJson(input);
-        const issues = validate(output);
-        return issues.length ? { success: false, issues } : { success: true, output };
-      } catch (error2) {
-        return { success: false, issues: [{ path: [], message: String(error2) }] };
-      }
-    }
-  };
-}
-
 // scripts/widgets/richtext/form_embedded.ts
 function createDeclarativeFormPlugin(context, resolveSchema) {
   return createFormPlugin(context, resolveSchema, (source) => ({
@@ -103404,8 +104090,8 @@ function createAdapterDemo(parent, context) {
       schema: target,
       values: { ...values, ...Object.hasOwn(values, "name") ? { displayName: values.name } : {} }
     });
-    const authorize = command.authorize;
-    command.authorize = () => !session.pendingDrafts.length && (authorize?.() ?? true);
+    const authorize2 = command.authorize;
+    command.authorize = () => !session.pendingDrafts.length && (authorize2?.() ?? true);
     const result = await session.command(command, context);
     return result.status;
   };
@@ -103879,6 +104565,23 @@ var PropsEditor = class extends Editor2 {
     editor.style.width = "560px";
     tab2.label("A markdown document on its own toolstack; every block kind the provider renders:");
     const controls = tab2.row();
+    controls.button("Open external data demo", () => {
+      const dialog = document.createElement("dialog");
+      dialog.style.cssText = "max-height:85vh;overflow:auto;width:650px";
+      document.body.append(dialog);
+      const demo = createExternalDemo(dialog, this.ctx);
+      const close2 = document.createElement("button");
+      close2.textContent = "Close external demo";
+      close2.addEventListener("click", async () => {
+        if ((await demo.session.prepareSave()).status !== "ready") return;
+        demo.dispose();
+        dialog.close();
+        dialog.remove();
+      });
+      dialog.addEventListener("cancel", (event) => event.preventDefault());
+      dialog.append(close2);
+      dialog.showModal();
+    });
     controls.button("Open forms demo", () => {
       const dialog = document.createElement("dialog");
       dialog.style.cssText = "max-height:85vh;overflow:auto;width:650px";
@@ -104492,11 +105195,11 @@ var AppState2 = class {
       }
     }
     writestr("STRT");
-    const version = const_default2.VERSION.toJSON();
-    packbyte(version[0]);
-    packbyte(version[1]);
-    packbyte(version[2]);
-    packbyte(version[3]);
+    const version2 = const_default2.VERSION.toJSON();
+    packbyte(version2[0]);
+    packbyte(version2[1]);
+    packbyte(version2[2]);
+    packbyte(version2[3]);
     const str = struct_default.write_scripts();
     packint(str.length);
     writestr(str);
