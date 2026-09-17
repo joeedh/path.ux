@@ -356,7 +356,7 @@ function setLink(doc: MdDoc, b: MdBlock, data: JsonRecord): EditResult {
 /** Patches the image at `data.offset`: `width` (null removes it), `alt`, `src`, `title`. */
 function setImage(doc: MdDoc, b: MdBlock, data: JsonRecord): EditResult {
   const atom = b.atoms.find((a) => a.offset === data.offset);
-  if (atom === undefined) {
+  if (atom === undefined || atom.image === undefined) {
     return {
       dirtyBlocks  : [],
       removedBlocks: [],

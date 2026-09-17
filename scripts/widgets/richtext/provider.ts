@@ -150,6 +150,8 @@ export interface LinkInfo {
  * widget and toolbar item is built under. One bridge per editor.
  */
 export interface EditorBridge {
+  /** Resolves an inline record through the configured session host. */
+  inlineWidget?(position: DocPos): WidgetDescriptor | undefined;
   /** Creates a placement for a retained view; omitted by legacy render-only contexts. */
   widget?(descriptor: WidgetDescriptor): HTMLElement;
   /** Ends the typing run and commits `op` through the session's toolstack; `undefined` when read-only. */

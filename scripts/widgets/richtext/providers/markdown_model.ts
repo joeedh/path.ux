@@ -47,13 +47,12 @@ export interface MdImage {
   attrs?: Record<string, string>;
 }
 
-/** An image, sitting at `offset` in the block's text as one `ATOM_CHAR`. */
-export interface MdAtom {
+/** An image or portable widget occupying one `ATOM_CHAR`. */
+export type MdAtom = {
   /** Stable within the runtime document and its history; omitted from Markdown source. */
   id?: string;
   offset: number;
-  image: MdImage;
-}
+} & ({ image: MdImage; widget?: never } | { widget: string; image?: never });
 
 /** What a block remembers of the HTML it came from, when the kind alone does not reproduce it. */
 export interface MdHtml {

@@ -1,4 +1,10 @@
-import { decodeWidgetFence, reidentifyWidgetFence } from "../widget_codec";
+import { inlineWidgetSyntax, inlineWidgetFromMarkdown } from "./markdown_widget_syntax";
+import {
+  decodeInlineWidget,
+  reidentifyInlineWidget,
+  decodeWidgetFence,
+  reidentifyWidgetFence,
+} from "../widget_codec";
 // Markdown text to the block model: mdast's tree, flattened one block per node, with inline
 // HTML paired into marks and wikilinks lifted out of the text.
 
@@ -33,7 +39,7 @@ import {
 } from "./markdown_html";
 import type { HtmlContext } from "./markdown_html";
 import { mdBlock } from "./markdown_model";
-import type { MdBlock, MdDoc, MdKind } from "./markdown_model";
+import type { MdAtom, MdBlock, MdDoc, MdKind } from "./markdown_model";
 
 const DROPPED_INLINE: ReadonlySet<string> = new Set(["script", "style", "template"]);
 
@@ -44,6 +50,7 @@ interface OpenTag {
   at: number;
   source: string;
   dropping: boolean;
+  widget?: boolean;
 }
 
 /** The text of a node and its children, for a reference that fails to resolve. */
@@ -68,6 +75,7 @@ function plainText(node: PhrasingContent): string {
 class Parser {
   readonly blocks: MdBlock[] = [];
   readonly widgetRanges = new Map<BlockId, { from: number; to: number }>();
+  readonly inlineRanges = new WeakMap<MdAtom, { from: number; to: number }>();
   private flowDepth = 0;
   private readonly definitions = new Map<string, Definition>();
   private readonly wrappers: HtmlContext[] = [];
@@ -345,6 +353,15 @@ class Parser {
       }
 
       switch (node.type) {
+        case "inlineWidget": {
+          if (open.some((tag) => tag.tag === "code" && !tag.widget)) {
+            builder.append(node.value);
+            break;
+          }
+          const atom = builder.widget(this.originalSlice(node));
+          this.inlineRanges.set(atom, this.originalRange(node));
+          break;
+        }
         case "text":
           builder.append(node.value);
           break;
@@ -465,6 +482,7 @@ class Parser {
         at      : builder.length,
         source  : value,
         dropping: false,
+        widget  : tag.tag === "code" && tag.element.hasAttribute("data-pathux-widget"),
       });
     }
   }
@@ -474,6 +492,9 @@ class Parser {
     const covered = (from: number, to: number) =>
       builder.marks.some(
         (m) => (m.name === "code" || m.name === "link") && m.from < to && m.to > from
+      ) ||
+      builder.atoms.some(
+        (atom) => atom.widget !== undefined && atom.offset >= from && atom.offset < to
       );
 
     let search = 0;
@@ -514,7 +535,8 @@ const structural = (ctx: HtmlContext) => ({
 
 /**
  * Parses markdown into an `MdDoc`. GFM tables, task lists and strikethrough and YAML front
- * matter are understood; `newId` supplies block ids, fresh per parse by default.
+ * matter are understood; `newId` supplies block ids, fresh per parse by default. A repair
+ * callback receives negative offsets when imported HTML lacks an exact source range.
  */
 export function markdownDocFromText(
   text: string,
@@ -523,8 +545,12 @@ export function markdownDocFromText(
 ): MdDoc {
   const source = text.replace(/\r\n?/g, "\n");
   const tree = fromMarkdown(source, {
-    extensions     : [gfm(), frontmatter(["yaml"])],
-    mdastExtensions: [gfmFromMarkdown(), frontmatterFromMarkdown(["yaml"])],
+    extensions     : [gfm(), frontmatter(["yaml"]), inlineWidgetSyntax],
+    mdastExtensions: [
+      gfmFromMarkdown(),
+      frontmatterFromMarkdown(["yaml"]),
+      inlineWidgetFromMarkdown,
+    ],
   });
 
   const crlfOffsets: number[] = [];
@@ -533,24 +559,58 @@ export function markdownDocFromText(
   parser.collectDefinitions(tree.children);
   parser.flow(tree.children, rootHtmlContext());
 
-  const records = parser.blocks.map((block) =>
-    block.kind === "widget" ? decodeWidgetFence(block.source) : undefined
+  const records = parser.blocks.flatMap((block) => {
+    const entries: {
+      source: string;
+      decode: typeof decodeWidgetFence;
+      identify: typeof reidentifyWidgetFence;
+      set(source: string): void;
+      range?: { from: number; to: number };
+    }[] = [];
+    if (block.kind === "widget")
+      entries.push({
+        source  : block.source,
+        decode  : decodeWidgetFence,
+        identify: reidentifyWidgetFence,
+        set: (source) => {
+          block.source = source;
+        },
+        range   : parser.widgetRanges.get(block.id),
+      });
+    for (const atom of block.atoms)
+      if (atom.widget !== undefined)
+        entries.push({
+          source  : atom.widget,
+          decode  : decodeInlineWidget,
+          identify: reidentifyInlineWidget,
+          set: (source) => {
+            atom.widget = source;
+          },
+          range   : parser.inlineRanges.get(atom),
+        });
+    return entries;
+  });
+  const reserved = new Set(
+    records.flatMap((entry) => {
+      const record = entry.decode(entry.source);
+      return record ? [record.id] : [];
+    })
   );
-  const reserved = new Set(records.flatMap((record) => (record ? [record.id] : [])));
   const seen = new Set<string>();
-  parser.blocks.forEach((block, index) => {
-    const record = records[index];
-    if (!record || block.kind !== "widget") return;
+  for (const entry of records) {
+    const record = entry.decode(entry.source);
+    if (!record) continue;
     if (seen.has(record.id)) {
       let id: string;
       do {
         id = newBlockId();
       } while (reserved.has(id));
       reserved.add(id);
-      block.source = reidentifyWidgetFence(block.source, id);
-      const range = parser.widgetRanges.get(block.id)!;
-      repaired?.(range.from, range.to, block.source);
+      const source = entry.identify(entry.source, id);
+      entry.set(source);
+      if (entry.range) repaired?.(entry.range.from, entry.range.to, source);
+      else repaired?.(-1, -1, source);
     } else seen.add(record.id);
-  });
+  }
   return { blocks: parser.blocks };
 }

@@ -1,6 +1,8 @@
 import { newBlockId } from "../provider";
 import { WIDGET_CLIPBOARD_MIME } from "../widget_mime";
 import {
+  decodeInlineWidget,
+  reidentifyInlineWidget,
   decodeWidgetFence,
   decodeWidgetTransfer,
   encodeWidgetFence,
@@ -106,6 +108,7 @@ export function toClipboard(doc: MdDoc, range: DocRange): ClipboardContent {
     } else {
       blocks.push(entryOf(sliced));
     }
+    hasWidget ||= sliced.atoms.some((atom) => atom.widget !== undefined);
     html += htmlForBlock(sliced);
   }
 
@@ -183,6 +186,9 @@ export function fromClipboard(data: DataTransfer): ClipboardContent | undefined 
 /** A pasted occurrence is always a new instance, including unknown payload versions. */
 function freshWidgetIds(doc: MdDoc): void {
   for (const block of doc.blocks) {
+    for (const atom of block.atoms)
+      if (atom.widget !== undefined && decodeInlineWidget(atom.widget))
+        atom.widget = reidentifyInlineWidget(atom.widget, newBlockId());
     if (block.kind === "widget" && decodeWidgetFence(block.source))
       block.source = reidentifyWidgetFence(block.source, newBlockId());
   }

@@ -1,6 +1,6 @@
 # Embedded rich text widget tasks
 
-Status: Stages 1–6 are complete. Stopped at the Stage 6 boundary.
+Status: Stages 1–6 are complete. The inline follow-up is in progress.
 
 This is the sole status and completion tracker for the [widget architecture](rich-text-widgets.md)
 and [forms/front-matter design](rich-text-widget-forms.md). Task IDs and existing completion
@@ -50,7 +50,7 @@ unit/browser checks when implementation changes the public surface.
 
 This checklist is the implementation tracker. The stage table above summarizes the same
 work. Update both when a stage changes; do not maintain a second independent task list.
-The continuation authorizes Stage 6. Stop after E5; inline records and visualnovel remain outside this run.
+The continuation authorizes I1–I3. Stop after inline verification; visualnovel remains outside this run.
 
 Task IDs remain stable when work is split or reordered. Before starting a task, record its
 ID in the current-work entry below. Mark a checkbox complete only after its acceptance
@@ -58,10 +58,9 @@ condition is demonstrated, and record the relevant commit and checks in the comp
 Record blockers with the affected task ID and the concrete dependency needed to continue.
 Tasks without a checkbox marked complete are pending, including partially implemented work.
 
-- Current work: none; E1–E5 are complete and verified.
-- Next task: I1, finalize bounded true-inline plugin syntax and supported placements.
-- Blockers: none for Stage 6. Remaining [design decisions](rich-text-widgets.md#decisions-still-requiring-implementation-prototypes)
-  belong to the inline follow-up work.
+- Current work: I3 acceptance passed; commit the implementation and record final verification.
+- Next task: finish I3 verification, review and commit I1–I3; then stop before V1.
+- Blockers: none. The [inline decisions](rich-text-widgets.md#inline-record-syntax-and-prototype-decisions) are specified.
 
 ### Preparation
 
@@ -206,15 +205,15 @@ Dependencies: W1–W8 and F1–F8. This stage introduces no default video or ser
 
 ### Follow-up: true inline plugin records
 
-Status: deferred from the block implementation, still required to complete inline plugin
+Status: in progress after Stage 6; required to complete inline plugin
 support. Existing image atoms are not a substitute for this work. Dependencies: stages 1,
 3, and 4; revisit the stage schedule after their browser and persistence results.
 
-- [ ] I1. Finalize a bounded, escaped inline record syntax and supported placements without
+- [x] I1. Finalize a bounded, escaped inline record syntax and supported placements without
       putting arbitrary payloads in URLs or accepting executable custom HTML.
-- [ ] I2. Implement inline parsing, serialization, insertion, movement, and clipboard transfer,
+- [x] I2. Implement inline parsing, serialization, insertion, movement, and clipboard transfer,
       with stable identity through split/join, range replacement, adjacent atoms, and undo/redo.
-- [ ] I3. Verify caret slots, composition, keyboard entry/exit, focus retention, unknown-record
+- [x] I3. Verify caret slots, composition, keyboard entry/exit, focus retention, unknown-record
       preservation, and cross-provider fallback using inline controls in browser tests.
 
 ### Follow-up: visualnovel application migration
@@ -489,3 +488,12 @@ schemas; a remote-schema binding over native YAML is outside this implementation
 fields retain JSON text controls. Default media behavior is unchanged. Earlier WebKit,
 physical/mobile IME and movement-without-`moveBefore` limits remain. True inline records and
 the separate visualnovel migration remain pending.
+
+### Inline follow-up verification in progress
+
+I1 and I2 acceptance passes in the working tree: 21 focused unit cases cover bounded syntax,
+escaped lookalikes, adjacent atoms, placements, unknown records, ID repair, split/join,
+movement, range replacement, undo/redo, clipboard and authorization. The inline
+browser suite passes 18 cases across Chromium and Firefox, including retained focus and
+independent drafts. The raw-token parser and outer composition checks are included in the
+final regression run. Commit hashes and final verification will be recorded after I3 passes.

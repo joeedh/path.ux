@@ -1,6 +1,13 @@
 import type { IContextBase } from "../../core/context_base";
 import type { DocumentSession } from "./context";
-import type { BlockId, ClipboardContent, EditOp, JsonValue, ProviderContext } from "./provider";
+import type {
+  BlockId,
+  ClipboardContent,
+  DocPos,
+  EditOp,
+  JsonValue,
+  ProviderContext,
+} from "./provider";
 import type { DraftController } from "./drafts";
 import type { CommandResult, DocumentCommand, WidgetDescriptor, WidgetView } from "./widget";
 
@@ -14,7 +21,8 @@ export interface WidgetRecord {
 
 /** Identifies a record's current location and relevant-value precondition. */
 export interface WidgetSnapshot {
-  readonly placement: "block";
+  readonly placement: "block" | "inline";
+  readonly offset?: number;
   readonly block: BlockId;
   readonly revision: string;
   readonly record: WidgetRecord;
@@ -22,6 +30,9 @@ export interface WidgetSnapshot {
 
 /** Builds data-only edits; reads return deeply frozen, detached values. */
 export interface WidgetStorage<Doc> {
+  atInline?(doc: Doc, position: DocPos): WidgetSnapshot | undefined;
+  insertInline?(doc: Doc, position: DocPos, record: WidgetRecord): EditOp | undefined;
+  moveInline?(doc: Doc, snapshot: WidgetSnapshot, position: DocPos): EditOp | undefined;
   read(doc: Doc, id: string): WidgetSnapshot | undefined;
   atBlock(doc: Doc, block: BlockId): WidgetSnapshot | undefined;
   insert(doc: Doc, after: BlockId | null, block: BlockId, record: WidgetRecord): EditOp;
@@ -33,6 +44,7 @@ export interface WidgetStorage<Doc> {
 
 /** Provides session-level rendering and checks initial edits without participating in replay. */
 export interface SessionWidgetHost {
+  resolveInline?(position: DocPos, context: ProviderContext): WidgetDescriptor | undefined;
   resolve(block: BlockId, context: ProviderContext): WidgetDescriptor | undefined;
   authorizeEdit(op: EditOp): boolean;
   dispose(): void;
@@ -69,6 +81,8 @@ export interface PluginViewContext {
 }
 
 export interface WidgetPlugin {
+  /** Defaults to block placement for existing plugins. */
+  readonly placements?: readonly ("block" | "inline")[];
   readonly type: string;
   readonly version: number;
   readonly label: string;

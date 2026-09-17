@@ -63,6 +63,13 @@ export class InlineBuilder {
     this.text += ATOM_CHAR;
   }
 
+  widget(source: string): MdAtom {
+    const atom: MdAtom = { offset: this.text.length, widget: source };
+    this.atoms.push(atom);
+    this.text += ATOM_CHAR;
+    return atom;
+  }
+
   /** A line break: `\n`, marked `break` when it is hard. */
   lineBreak(hard: boolean): void {
     const at = this.text.length;
@@ -176,7 +183,21 @@ export function inlineTree(block: MdBlock): InlineNode[] {
   const stack: { mark: MdMark; node: InlineWrap }[] = [];
   const breaks = new Set(block.marks.filter((m) => m.name === "break").map((m) => m.from));
   const atoms = new Map(block.atoms.map((a) => [a.offset, a]));
-  const wrapMarks = block.marks.filter(isWrapMark);
+  const widgets = block.atoms
+    .filter((atom) => atom.widget !== undefined)
+    .sort((a, b) => a.offset - b.offset);
+  const wrapMarks = block.marks.filter(isWrapMark).flatMap((mark) => {
+    if (mark.name !== "code" && mark.name !== "link") return [mark];
+    const ranges: MdMark[] = [];
+    let from = mark.from;
+    for (const atom of widgets) {
+      if (atom.offset < from || atom.offset >= mark.to) continue;
+      if (atom.offset > from) ranges.push({ ...mark, from, to: atom.offset });
+      from = atom.offset + 1;
+    }
+    if (from < mark.to) ranges.push({ ...mark, from });
+    return ranges;
+  });
 
   const top = () => (stack.length > 0 ? stack[stack.length - 1].node.children : root);
 

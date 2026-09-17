@@ -46758,16 +46758,19 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       (slot, before) => {
         const block = slot.closest("[data-doc-block]")?.dataset.docBlock;
         if (!block || !this._session) return;
+        const atom = slot.closest("[data-doc-atom]");
+        const at = atom ? toDocPos(root2, atom, 0) : void 0;
         this.select(
           collapsed({
             block,
-            offset: before ? 0 : this._session.provider.blockText(this._session.doc, block).length
+            offset: at ? at.offset + (before ? 0 : 1) : before ? 0 : this._session.provider.blockText(this._session.doc, block).length
           })
         );
       }
     );
     const editor = this;
     this.bridge = {
+      inlineWidget: (position2) => this._session?.widgetHost?.resolveInline?.(position2, this.richCtx),
       widget: widgetSlot,
       dispatch: (op) => this.dispatch(op),
       get readOnly() {
@@ -76598,6 +76601,7 @@ struct_default.register(MenuBarEditor2);
 
 // scripts/widgets/richtext/widget_codec.ts
 var MAX_BYTES = 65536;
+var INLINE_WIDGET_MAX_SOURCE = MAX_BYTES * 2 + 256;
 var NAME = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
 var TYPE = /^[a-zA-Z][a-zA-Z0-9_-]*(?:\.[a-zA-Z0-9_-]+)+$/;
 var FORBIDDEN = /* @__PURE__ */ new Set(["__proto__", "prototype", "constructor"]);
@@ -76766,6 +76770,107 @@ function decodeWidgetTransfer(source) {
     return void 0;
   }
 }
+function encodeInlineWidget(record) {
+  return inlineJson(JSON.stringify(widgetRecord(record)));
+}
+function inlineJson(json) {
+  const hex = Array.from(
+    new TextEncoder().encode(json),
+    (byte) => byte.toString(16).padStart(2, "0")
+  ).join("");
+  return "{{pathux-widget-v1:" + hex + "}}";
+}
+function isInlineWidget(source) {
+  return source.length <= INLINE_WIDGET_MAX_SOURCE && /^\{\{pathux-widget-v[0-9]+:[A-Za-z0-9%_.~-]*\}\}$/.test(source);
+}
+function inlineJsonText(source) {
+  const hex = source.slice(19, -2);
+  if (!/^(?:[0-9a-fA-F]{2})+$/.test(hex)) throw new Error("Invalid inline encoding");
+  const bytes = Uint8Array.from(hex.match(/../g), (pair) => Number.parseInt(pair, 16));
+  return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+}
+function decodeInlineWidget(source) {
+  if (!isInlineWidget(source) || !source.startsWith("{{pathux-widget-v1:")) return void 0;
+  try {
+    return widgetRecord(parseJson(inlineJsonText(source), MAX_BYTES));
+  } catch {
+    return void 0;
+  }
+}
+function reidentifyInlineWidget(source, id) {
+  if (!decodeInlineWidget(source)) throw new Error("Invalid inline widget");
+  const json = inlineJsonText(source);
+  let fence3 = "```";
+  while (json.includes(fence3)) fence3 += "`";
+  const updated = reidentifyWidgetFence(fence3 + "pathux-widget-v1\n" + json + "\n" + fence3, id);
+  return inlineJson(updated.slice(updated.indexOf("\n") + 1, updated.lastIndexOf("\n")));
+}
+
+// scripts/widgets/richtext/providers/markdown_widget_syntax.ts
+var inlineWidgetSyntax = {
+  text: {
+    123: {
+      name: "inlineWidget",
+      tokenize(effects, ok3, nok) {
+        const type = "inlineWidget";
+        const prefix2 = "{{pathux-widget-v";
+        let index2 = 0;
+        let length = 0;
+        let digits = 0;
+        const consume = (code4) => {
+          effects.consume(code4);
+          length++;
+        };
+        const start2 = (code4) => {
+          if (index2 === 0) effects.enter(type);
+          if (code4 !== prefix2.charCodeAt(index2)) return nok(code4);
+          consume(code4);
+          return ++index2 === prefix2.length ? version2 : start2;
+        };
+        const version2 = (code4) => {
+          if (code4 === null || length >= INLINE_WIDGET_MAX_SOURCE) return nok(code4);
+          if (code4 >= 48 && code4 <= 57) {
+            digits++;
+            consume(code4);
+            return version2;
+          }
+          if (code4 !== 58 || !digits) return nok(code4);
+          consume(code4);
+          return body;
+        };
+        const body = (code4) => {
+          if (code4 === null || length > INLINE_WIDGET_MAX_SOURCE - 2) return nok(code4);
+          if (code4 === 125) {
+            consume(code4);
+            return close2;
+          }
+          if (code4 < 0 || !/[A-Za-z0-9%_.~-]/.test(String.fromCharCode(code4))) return nok(code4);
+          consume(code4);
+          return body;
+        };
+        const close2 = (code4) => {
+          if (code4 !== 125) return nok(code4);
+          consume(code4);
+          effects.exit(type);
+          return ok3;
+        };
+        return start2;
+      }
+    }
+  }
+};
+var inlineWidgetFromMarkdown = {
+  enter: {
+    inlineWidget(token4) {
+      this.enter({ type: "inlineWidget", value: this.sliceSerialize(token4) }, token4);
+    }
+  },
+  exit: {
+    inlineWidget(token4) {
+      this.exit(token4);
+    }
+  }
+};
 
 // node_modules/.pnpm/mdast-util-to-string@4.0.0/node_modules/mdast-util-to-string/lib/index.js
 var emptyOptions = {};
@@ -86757,6 +86862,12 @@ var InlineBuilder = class {
     this.atoms.push({ offset: this.text.length, image: image2 });
     this.text += ATOM_CHAR;
   }
+  widget(source) {
+    const atom = { offset: this.text.length, widget: source };
+    this.atoms.push(atom);
+    this.text += ATOM_CHAR;
+    return atom;
+  }
   /** A line break: `\n`, marked `break` when it is hard. */
   lineBreak(hard) {
     const at = this.text.length;
@@ -86825,7 +86936,19 @@ function inlineTree(block) {
   const stack = [];
   const breaks = new Set(block.marks.filter((m) => m.name === "break").map((m) => m.from));
   const atoms = new Map(block.atoms.map((a2) => [a2.offset, a2]));
-  const wrapMarks = block.marks.filter(isWrapMark);
+  const widgets = block.atoms.filter((atom) => atom.widget !== void 0).sort((a2, b) => a2.offset - b.offset);
+  const wrapMarks = block.marks.filter(isWrapMark).flatMap((mark2) => {
+    if (mark2.name !== "code" && mark2.name !== "link") return [mark2];
+    const ranges = [];
+    let from = mark2.from;
+    for (const atom of widgets) {
+      if (atom.offset < from || atom.offset >= mark2.to) continue;
+      if (atom.offset > from) ranges.push({ ...mark2, from, to: atom.offset });
+      from = atom.offset + 1;
+    }
+    if (from < mark2.to) ranges.push({ ...mark2, from });
+    return ranges;
+  });
   const top = () => stack.length > 0 ? stack[stack.length - 1].node.children : root2;
   for (const seg of markSegments(block.text.length, wrapMarks)) {
     const wanted = [...seg.marks].sort((a2, b) => a2.from - b.from || b.to - a2.to);
@@ -87670,6 +87793,10 @@ var HtmlWalker = class {
     if (DROPPED_ELEMENTS.has(tag)) {
       return;
     }
+    if (tag === "code" && element2.hasAttribute("data-pathux-widget") && !element2.children.length && isInlineWidget(element2.textContent ?? "")) {
+      builder.widget(element2.textContent ?? "");
+      return;
+    }
     if (tag === "br") {
       builder.lineBreak(true);
       return;
@@ -87771,7 +87898,7 @@ function inlineHtml(nodes) {
     if (node2.type === "text") {
       out += escapeHtml(node2.value);
     } else if (node2.type === "atom") {
-      out += imageTag(node2.atom.image);
+      out += node2.atom.widget !== void 0 ? "<code data-pathux-widget>" + escapeHtml(node2.atom.widget) + "</code>" : imageTag(node2.atom.image);
     } else if (node2.type === "break") {
       out += "<br>";
     } else if (node2.mark.name === "link" && node2.mark.kind === "wiki") {
@@ -87847,6 +87974,7 @@ var Parser2 = class {
   crlfOffsets;
   blocks = [];
   widgetRanges = /* @__PURE__ */ new Map();
+  inlineRanges = /* @__PURE__ */ new WeakMap();
   flowDepth = 0;
   definitions = /* @__PURE__ */ new Map();
   wrappers = [];
@@ -88071,6 +88199,15 @@ var Parser2 = class {
         continue;
       }
       switch (node2.type) {
+        case "inlineWidget": {
+          if (open.some((tag) => tag.tag === "code" && !tag.widget)) {
+            builder.append(node2.value);
+            break;
+          }
+          const atom = builder.widget(this.originalSlice(node2));
+          this.inlineRanges.set(atom, this.originalRange(node2));
+          break;
+        }
         case "text":
           builder.append(node2.value);
           break;
@@ -88180,7 +88317,8 @@ var Parser2 = class {
         handle: mark2 === void 0 ? void 0 : builder.start(mark2),
         at: builder.length,
         source: value2,
-        dropping: false
+        dropping: false,
+        widget: tag.tag === "code" && tag.element.hasAttribute("data-pathux-widget")
       });
     }
   }
@@ -88188,6 +88326,8 @@ var Parser2 = class {
   wikilinks(builder) {
     const covered = (from, to) => builder.marks.some(
       (m) => (m.name === "code" || m.name === "link") && m.from < to && m.to > from
+    ) || builder.atoms.some(
+      (atom) => atom.widget !== void 0 && atom.offset >= from && atom.offset < to
     );
     let search2 = 0;
     for (; ; ) {
@@ -88220,33 +88360,65 @@ var structural = (ctx) => ({
 function markdownDocFromText(text6, newId = newBlockId, repaired) {
   const source = text6.replace(/\r\n?/g, "\n");
   const tree = fromMarkdown(source, {
-    extensions: [gfm(), frontmatter(["yaml"])],
-    mdastExtensions: [gfmFromMarkdown(), frontmatterFromMarkdown(["yaml"])]
+    extensions: [gfm(), frontmatter(["yaml"]), inlineWidgetSyntax],
+    mdastExtensions: [
+      gfmFromMarkdown(),
+      frontmatterFromMarkdown(["yaml"]),
+      inlineWidgetFromMarkdown
+    ]
   });
   const crlfOffsets = [];
   for (const match of text6.matchAll(/\r\n/g)) crlfOffsets.push(match.index - crlfOffsets.length);
   const parser3 = new Parser2(source, newId, text6, crlfOffsets);
   parser3.collectDefinitions(tree.children);
   parser3.flow(tree.children, rootHtmlContext());
-  const records = parser3.blocks.map(
-    (block) => block.kind === "widget" ? decodeWidgetFence(block.source) : void 0
+  const records = parser3.blocks.flatMap((block) => {
+    const entries = [];
+    if (block.kind === "widget")
+      entries.push({
+        source: block.source,
+        decode: decodeWidgetFence,
+        identify: reidentifyWidgetFence,
+        set: (source2) => {
+          block.source = source2;
+        },
+        range: parser3.widgetRanges.get(block.id)
+      });
+    for (const atom of block.atoms)
+      if (atom.widget !== void 0)
+        entries.push({
+          source: atom.widget,
+          decode: decodeInlineWidget,
+          identify: reidentifyInlineWidget,
+          set: (source2) => {
+            atom.widget = source2;
+          },
+          range: parser3.inlineRanges.get(atom)
+        });
+    return entries;
+  });
+  const reserved2 = new Set(
+    records.flatMap((entry) => {
+      const record = entry.decode(entry.source);
+      return record ? [record.id] : [];
+    })
   );
-  const reserved2 = new Set(records.flatMap((record) => record ? [record.id] : []));
   const seen = /* @__PURE__ */ new Set();
-  parser3.blocks.forEach((block, index2) => {
-    const record = records[index2];
-    if (!record || block.kind !== "widget") return;
+  for (const entry of records) {
+    const record = entry.decode(entry.source);
+    if (!record) continue;
     if (seen.has(record.id)) {
       let id;
       do {
         id = newBlockId();
       } while (reserved2.has(id));
       reserved2.add(id);
-      block.source = reidentifyWidgetFence(block.source, id);
-      const range = parser3.widgetRanges.get(block.id);
-      repaired?.(range.from, range.to, block.source);
+      const source2 = entry.identify(entry.source, id);
+      entry.set(source2);
+      if (entry.range) repaired?.(entry.range.from, entry.range.to, source2);
+      else repaired?.(-1, -1, source2);
     } else seen.add(record.id);
-  });
+  }
   return { blocks: parser3.blocks };
 }
 
@@ -88264,7 +88436,9 @@ function phrasing2(nodes, htmlTags) {
     if (node2.type === "text") {
       out.push({ type: "text", value: node2.value });
     } else if (node2.type === "atom") {
-      out.push(imageNode(node2.atom.image));
+      out.push(
+        node2.atom.widget !== void 0 ? { type: "inlineWidget", value: node2.atom.widget } : imageNode(node2.atom.image)
+      );
     } else if (node2.type === "break") {
       out.push(node2.hard ? { type: "break" } : { type: "text", value: "\n" });
     } else {
@@ -88432,7 +88606,11 @@ function markdownText(doc) {
 function canonicalMarkdownText(doc) {
   return toMarkdown(markdownTree(doc), {
     extensions: [gfmToMarkdown(), frontmatterToMarkdown(["yaml"])],
-    handlers: { wikilink: (node2) => node2.value },
+    unsafe: [{ character: "{", after: "\\{pathux-widget-v[0-9]+:" }],
+    handlers: {
+      wikilink: (node2) => node2.value,
+      inlineWidget: (node2) => node2.value
+    },
     bullet: "-",
     bulletOrdered: ".",
     emphasis: "*",
@@ -88442,86 +88620,6 @@ function canonicalMarkdownText(doc) {
     listItemIndent: "one"
   });
 }
-
-// scripts/widgets/richtext/providers/markdown_widgets.ts
-function atBlock(doc, id) {
-  const block = doc.blocks.find((block2) => block2.id === id);
-  if (block?.kind !== "widget") return void 0;
-  const record = decodeWidgetFence(block.source);
-  return record ? Object.freeze({ placement: "block", block: id, revision: block.source, record }) : void 0;
-}
-var snapshot = (block) => ({
-  id: block.id,
-  state: structuredClone(block)
-});
-var markdownWidgetStorage = {
-  atBlock,
-  read(doc, id) {
-    for (const block of doc.blocks) {
-      if (block.kind !== "widget") continue;
-      const record = decodeWidgetFence(block.source);
-      if (record?.id === id)
-        return Object.freeze({
-          placement: "block",
-          block: block.id,
-          revision: block.source,
-          record
-        });
-    }
-    return void 0;
-  },
-  insert(_doc, after, block, record) {
-    return {
-      type: "replaceBlocks",
-      after,
-      remove: [],
-      blocks: [snapshot(mdBlock(block, { kind: "widget", source: encodeWidgetFence(record) }))]
-    };
-  },
-  update(doc, expected, record) {
-    const index2 = doc.blocks.findIndex((block) => block.id === expected.block);
-    return {
-      type: "replaceBlocks",
-      after: doc.blocks[index2 - 1]?.id ?? null,
-      remove: [expected.block],
-      blocks: [
-        snapshot(mdBlock(expected.block, { kind: "widget", source: encodeWidgetFence(record) }))
-      ]
-    };
-  },
-  remove(doc, expected) {
-    const index2 = doc.blocks.findIndex((block) => block.id === expected.block);
-    return {
-      type: "replaceBlocks",
-      after: doc.blocks[index2 - 1]?.id ?? null,
-      remove: [expected.block],
-      blocks: []
-    };
-  },
-  move(doc, expected, after) {
-    const from = doc.blocks.findIndex((block) => block.id === expected.block);
-    const to = after === null ? -1 : doc.blocks.findIndex((block) => block.id === after);
-    const first2 = Math.min(from, to + 1);
-    const last = Math.max(from, to);
-    const span = doc.blocks.slice(first2, last + 1);
-    const moving = doc.blocks[from];
-    const next = span.filter((block) => block !== moving);
-    if (to < from) next.unshift(moving);
-    else next.push(moving);
-    return {
-      type: "replaceBlocks",
-      after: doc.blocks[first2 - 1]?.id ?? null,
-      remove: span.map((block) => block.id),
-      blocks: next.map(snapshot)
-    };
-  },
-  pasted(content3) {
-    return content3.blocks.flatMap((source) => {
-      const record = decodeWidgetFence(source);
-      return record ? [record] : [];
-    });
-  }
-};
 
 // scripts/widgets/richtext/providers/markdown_image.ts
 init_ui_base();
@@ -88907,6 +89005,156 @@ var ImageMoveOp = class extends ToolOp {
 };
 ToolOp.register(ImageMoveOp);
 
+// scripts/widgets/richtext/providers/markdown_widgets.ts
+function atBlock(doc, id) {
+  const block = doc.blocks.find((block2) => block2.id === id);
+  if (block?.kind !== "widget") return void 0;
+  const record = decodeWidgetFence(block.source);
+  return record ? Object.freeze({ placement: "block", block: id, revision: block.source, record }) : void 0;
+}
+var snapshot = (block) => ({
+  id: block.id,
+  state: structuredClone(block)
+});
+var markdownWidgetStorage = {
+  atBlock,
+  atInline,
+  insertInline(doc, position2, record) {
+    if (!acceptsInline(doc, position2)) return void 0;
+    return {
+      type: "insertContent",
+      at: { anchor: position2, head: position2 },
+      content: { blocks: [encodeInlineWidget(record)] },
+      newBlocks: []
+    };
+  },
+  moveInline(doc, expected, position2) {
+    if (expected.placement !== "inline" || expected.offset === void 0 || !acceptsInline(doc, position2))
+      return void 0;
+    if (position2.block === expected.block && (position2.offset === expected.offset || position2.offset === expected.offset + 1))
+      return void 0;
+    return moveAtomOp(
+      doc.blocks.map((block) => block.id),
+      { block: expected.block, offset: expected.offset },
+      position2
+    );
+  },
+  read(doc, id) {
+    for (const block of doc.blocks) {
+      for (const atom of block.atoms) {
+        const found = inlineSnapshot(block.id, atom);
+        if (found?.record.id === id) return found;
+      }
+      if (block.kind !== "widget") continue;
+      const record = decodeWidgetFence(block.source);
+      if (record?.id === id)
+        return Object.freeze({
+          placement: "block",
+          block: block.id,
+          revision: block.source,
+          record
+        });
+    }
+    return void 0;
+  },
+  insert(_doc, after, block, record) {
+    return {
+      type: "replaceBlocks",
+      after,
+      remove: [],
+      blocks: [snapshot(mdBlock(block, { kind: "widget", source: encodeWidgetFence(record) }))]
+    };
+  },
+  update(doc, expected, record) {
+    const index2 = doc.blocks.findIndex((block) => block.id === expected.block);
+    if (expected.placement === "inline") {
+      const block = structuredClone(doc.blocks[index2]);
+      const atom = block.atoms.find((atom2) => atom2.offset === expected.offset);
+      if (atom?.widget === void 0) throw new Error("Missing inline widget");
+      atom.widget = encodeInlineWidget(record);
+      return {
+        type: "replaceBlocks",
+        after: doc.blocks[index2 - 1]?.id ?? null,
+        remove: [block.id],
+        blocks: [snapshot(block)]
+      };
+    }
+    return {
+      type: "replaceBlocks",
+      after: doc.blocks[index2 - 1]?.id ?? null,
+      remove: [expected.block],
+      blocks: [
+        snapshot(mdBlock(expected.block, { kind: "widget", source: encodeWidgetFence(record) }))
+      ]
+    };
+  },
+  remove(doc, expected) {
+    if (expected.placement === "inline" && expected.offset !== void 0)
+      return {
+        type: "deleteRange",
+        range: {
+          anchor: { block: expected.block, offset: expected.offset },
+          head: { block: expected.block, offset: expected.offset + 1 }
+        }
+      };
+    const index2 = doc.blocks.findIndex((block) => block.id === expected.block);
+    return {
+      type: "replaceBlocks",
+      after: doc.blocks[index2 - 1]?.id ?? null,
+      remove: [expected.block],
+      blocks: []
+    };
+  },
+  move(doc, expected, after) {
+    const from = doc.blocks.findIndex((block) => block.id === expected.block);
+    const to = after === null ? -1 : doc.blocks.findIndex((block) => block.id === after);
+    const first2 = Math.min(from, to + 1);
+    const last = Math.max(from, to);
+    const span = doc.blocks.slice(first2, last + 1);
+    const moving = doc.blocks[from];
+    const next = span.filter((block) => block !== moving);
+    if (to < from) next.unshift(moving);
+    else next.push(moving);
+    return {
+      type: "replaceBlocks",
+      after: doc.blocks[first2 - 1]?.id ?? null,
+      remove: span.map((block) => block.id),
+      blocks: next.map(snapshot)
+    };
+  },
+  pasted(content3) {
+    return content3.blocks.flatMap(
+      (source) => markdownDocFromText(source).blocks.flatMap((block) => {
+        const records = block.atoms.flatMap((atom) => {
+          const record2 = atom.widget === void 0 ? void 0 : decodeInlineWidget(atom.widget);
+          return record2 ? [record2] : [];
+        });
+        const record = block.kind === "widget" ? decodeWidgetFence(block.source) : void 0;
+        return record ? [record, ...records] : records;
+      })
+    );
+  }
+};
+function atInline(doc, position2) {
+  const atom = doc.blocks.find((block) => block.id === position2.block)?.atoms.find((atom2) => atom2.offset === position2.offset);
+  return atom ? inlineSnapshot(position2.block, atom) : void 0;
+}
+function inlineSnapshot(block, atom) {
+  if (atom.widget === void 0) return void 0;
+  const record = decodeInlineWidget(atom.widget);
+  return record ? Object.freeze({
+    placement: "inline",
+    block,
+    offset: atom.offset,
+    revision: atom.widget,
+    record
+  }) : void 0;
+}
+function acceptsInline(doc, position2) {
+  const block = doc.blocks.find((block2) => block2.id === position2.block);
+  return !!block && ["paragraph", "heading", "quote", "listItem"].includes(block.kind) && Number.isSafeInteger(position2.offset) && position2.offset >= 0 && position2.offset <= block.text.length;
+}
+
 // scripts/widgets/richtext/providers/markdown_render.ts
 init_ui_base();
 var COUNTER_DEPTHS = 8;
@@ -88969,6 +89217,15 @@ function markElement(block, mark2, ctx) {
 }
 function atomElement(block, atom, ctx, options) {
   const wrap = document.createElement("span");
+  if (atom.widget !== void 0) {
+    wrap.className = "md-inline-widget";
+    wrap.dataset.docAtom = "";
+    wrap.contentEditable = "false";
+    const descriptor2 = ctx.editor.inlineWidget?.({ block: block.id, offset: atom.offset });
+    if (descriptor2 && ctx.editor.widget) wrap.append(ctx.editor.widget(descriptor2));
+    else wrap.textContent = "Widget unavailable";
+    return wrap;
+  }
   wrap.className = "md-image";
   wrap.setAttribute("data-doc-atom", "");
   wrap.setAttribute("contenteditable", "false");
@@ -89104,7 +89361,12 @@ function renderTable(source, ctx, options) {
       }
       const md = toMarkdown(
         { type: "paragraph", children: cell.children },
-        { extensions: [gfmToMarkdown()], emphasis: "*", strong: "*" }
+        {
+          extensions: [gfmToMarkdown()],
+          emphasis: "*",
+          strong: "*",
+          unsafe: [{ character: "{", after: "\\{pathux-widget-v[0-9]+:" }]
+        }
       );
       const block = markdownDocFromText(md).blocks[0];
       if (block !== void 0 && block.text.length > 0) {
@@ -89263,6 +89525,7 @@ function markdownStyles() {
       cursor         : pointer;
     }
 
+    .md-inline-widget { display: inline-block; vertical-align: middle; max-width: 100%; }
     .md-image { display: inline-block; vertical-align: middle; }
     .md-image img { max-width: 100%; vertical-align: middle; }
     [readonly] .md-image { cursor: default; }
@@ -89421,6 +89684,9 @@ function withKind(block, kind) {
     atoms: block.atoms
   };
   if (kind.kind === "code") {
+    for (const atom of [...next.atoms].sort((a2, b) => b.offset - a2.offset)) {
+      next.text = next.text.slice(0, atom.offset) + (atom.widget ?? "") + next.text.slice(atom.offset + 1);
+    }
     next.text = next.text.split(ATOM_CHAR).join("");
     next.marks = [];
     next.atoms = [];
@@ -89561,6 +89827,7 @@ function toClipboard(doc, range) {
     } else {
       blocks.push(entryOf(sliced));
     }
+    hasWidget ||= sliced.atoms.some((atom) => atom.widget !== void 0);
     html3 += htmlForBlock(sliced);
   }
   let widgetData;
@@ -89620,6 +89887,9 @@ function fromClipboard(data) {
 }
 function freshWidgetIds(doc) {
   for (const block of doc.blocks) {
+    for (const atom of block.atoms)
+      if (atom.widget !== void 0 && decodeInlineWidget(atom.widget))
+        atom.widget = reidentifyInlineWidget(atom.widget, newBlockId());
     if (block.kind === "widget" && decodeWidgetFence(block.source))
       block.source = reidentifyWidgetFence(block.source, newBlockId());
   }
@@ -90418,7 +90688,7 @@ function setLink(doc, b, data) {
 }
 function setImage(doc, b, data) {
   const atom = b.atoms.find((a2) => a2.offset === data.offset);
-  if (atom === void 0) {
+  if (atom === void 0 || atom.image === void 0) {
     return {
       dirtyBlocks: [],
       removedBlocks: [],
@@ -91307,6 +91577,7 @@ var WidgetRegistry = class {
     widgetRecord({ id: "registration", type: plugin2.type, version: plugin2.version, payload: null });
     if (this.plugins.has(plugin2.type)) throw new Error(`Duplicate widget type: ${plugin2.type}`);
     const entry = Object.freeze({
+      placements: Object.freeze([...plugin2.placements ?? ["block"]]),
       type: plugin2.type,
       version: plugin2.version,
       label: plugin2.label,
@@ -91389,11 +91660,12 @@ var DocumentWidgetHost = class {
   }
   current(expected) {
     const found = this.session.provider.widgets?.read(this.session.doc, expected.record.id);
-    return found?.revision === expected.revision && found.block === expected.block && JSON.stringify(found.record) === JSON.stringify(expected.record) ? found : void 0;
+    return found?.revision === expected.revision && found.placement === expected.placement && (found.placement === "inline" || found.block === expected.block) && JSON.stringify(found.record) === JSON.stringify(expected.record) ? found : void 0;
   }
   capture(snapshot3) {
     return Object.freeze({
-      placement: "block",
+      placement: snapshot3.placement,
+      offset: snapshot3.offset,
       block: snapshot3.block,
       revision: snapshot3.revision,
       record: widgetRecord(snapshot3.record)
@@ -91405,7 +91677,7 @@ var DocumentWidgetHost = class {
     const epoch = this.epoch;
     const plugin2 = this.registry.get(next.type);
     return {
-      authorize: () => epoch === this.epoch && this.registry.get(next.type) === plugin2 && this.allowed("edit", expected.record) && this.allowed("edit", next) && this.supported(next, plugin2),
+      authorize: () => epoch === this.epoch && this.registry.get(next.type) === plugin2 && this.allowed("edit", expected.record) && this.allowed("edit", next) && this.supported(next, plugin2) && this.placement(next, expected.placement),
       resolve: () => {
         const current = this.current(expected);
         return current ? this.session.provider.widgets?.update(this.session.doc, current, next) : void 0;
@@ -91426,7 +91698,7 @@ var DocumentWidgetHost = class {
       const epoch = this.epoch;
       return this.session.command(
         {
-          authorize: () => epoch === this.epoch && this.allowed("insert", next) && this.supported(next),
+          authorize: () => epoch === this.epoch && this.allowed("insert", next) && this.supported(next) && this.placement(next, "block"),
           resolve: () => {
             const storage = this.session.provider.widgets;
             if (!storage || storage.read(this.session.doc, next.id) || after !== null && !this.session.provider.blocks(this.session.doc).includes(after))
@@ -91439,6 +91711,40 @@ var DocumentWidgetHost = class {
     } catch (error2) {
       return Promise.resolve({ status: "failed", error: error2 });
     }
+  }
+  insertInline(record, at, context) {
+    try {
+      const next = widgetRecord(record);
+      const position2 = { ...at };
+      const epoch = this.epoch;
+      return this.session.command(
+        {
+          authorize: () => epoch === this.epoch && this.allowed("insert", next) && this.supported(next) && this.placement(next, "inline"),
+          resolve: () => {
+            const storage = this.session.provider.widgets;
+            return storage?.read(this.session.doc, next.id) ? void 0 : storage?.insertInline?.(this.session.doc, position2, next);
+          }
+        },
+        context
+      );
+    } catch (error2) {
+      return Promise.resolve({ status: "failed", error: error2 });
+    }
+  }
+  moveInline(expected, at, context) {
+    expected = this.capture(expected);
+    const position2 = { ...at };
+    const epoch = this.epoch;
+    return this.session.command(
+      {
+        authorize: () => epoch === this.epoch && this.allowed("edit", expected.record),
+        resolve: () => {
+          const current = this.current(expected);
+          return current ? this.session.provider.widgets?.moveInline?.(this.session.doc, current, position2) : void 0;
+        }
+      },
+      context
+    );
   }
   remove(expected, context) {
     expected = this.capture(expected);
@@ -91462,7 +91768,7 @@ var DocumentWidgetHost = class {
         authorize: () => epoch === this.epoch && this.allowed("edit", expected.record),
         resolve: () => {
           const current = this.current(expected);
-          if (!current || after === current.block || after !== null && !this.session.provider.blocks(this.session.doc).includes(after))
+          if (current?.placement !== "block" || after === current.block || after !== null && !this.session.provider.blocks(this.session.doc).includes(after))
             return void 0;
           return this.session.provider.widgets?.move(this.session.doc, current, after);
         }
@@ -91501,9 +91807,18 @@ var DocumentWidgetHost = class {
   }
   resolve(block, _context) {
     const snapshot3 = this.session.provider.widgets?.atBlock(this.session.doc, block);
-    if (!snapshot3) return void 0;
+    return snapshot3 ? this.descriptor(snapshot3) : void 0;
+  }
+  resolveInline(position2, _context) {
+    const snapshot3 = this.session.provider.widgets?.atInline?.(this.session.doc, position2);
+    return snapshot3 ? this.descriptor(snapshot3) : void 0;
+  }
+  placement(record, placement) {
+    return this.registry.get(record.type)?.placements?.includes(placement) ?? false;
+  }
+  descriptor(snapshot3) {
     const plugin2 = this.registry.get(snapshot3.record.type);
-    const allowed = this.allowed("mount", snapshot3.record) && this.supported(snapshot3.record, plugin2);
+    const allowed = this.allowed("mount", snapshot3.record) && this.supported(snapshot3.record, plugin2) && this.placement(snapshot3.record, snapshot3.placement);
     return {
       id: `plugin:${snapshot3.record.id}`,
       implementation: plugin2 ?? this,
@@ -91512,7 +91827,7 @@ var DocumentWidgetHost = class {
       allowed,
       editable: this.allowed("edit", snapshot3.record),
       create: (context) => {
-        if (!plugin2 || !this.allowed("mount", snapshot3.record) || !this.supported(snapshot3.record, plugin2))
+        if (!plugin2 || !this.allowed("mount", snapshot3.record) || !this.supported(snapshot3.record, plugin2) || !this.placement(snapshot3.record, snapshot3.placement))
           throw new Error("Widget mounting refused");
         return plugin2.create(snapshot3, this.viewContext(snapshot3, plugin2, context));
       }
@@ -91523,7 +91838,7 @@ var DocumentWidgetHost = class {
     const preparedUpdates = /* @__PURE__ */ new WeakSet();
     const isCurrent = () => {
       const current = this.session.provider.widgets?.read(this.session.doc, snapshot3.record.id);
-      return !!current && context.isCurrent() && epoch === this.epoch && this.registry.get(plugin2.type) === plugin2 && this.supported(current.record, plugin2) && this.allowed("mount", current.record);
+      return !!current && context.isCurrent() && epoch === this.epoch && this.registry.get(plugin2.type) === plugin2 && this.supported(current.record, plugin2) && this.placement(current.record, current.placement) && this.allowed("mount", current.record);
     };
     const prepare = (expected, payload3) => {
       const own6 = expected.record.id === snapshot3.record.id;
@@ -92930,7 +93245,8 @@ function markdownSourceDoc(source) {
     (from, to, source2) => repairs.push({ from, to, source: source2 })
   );
   const bodyStart = split.frontmatter.length + split.separator.length;
-  for (const repair of repairs.reverse()) {
+  const unmappedRepair = repairs.some((repair) => repair.from < 0);
+  for (const repair of repairs.filter((repair2) => repair2.from >= 0).reverse()) {
     split.body = split.body.slice(0, repair.from - bodyStart) + repair.source + split.body.slice(repair.to - bodyStart);
   }
   if (!doc.blocks.length) doc.blocks.push(mdBlock(newBlockId(), { kind: "paragraph" }));
@@ -92944,6 +93260,7 @@ function markdownSourceDoc(source) {
   }
   if (front) front.source = split.frontmatter;
   const body = front ? doc.blocks.slice(1) : doc.blocks;
+  if (unmappedRepair) split.body = markdownText({ blocks: body });
   const retained = {
     prefix: split.prefix,
     separator: split.frontmatter ? split.separator : source.includes("\r\n") ? "\r\n\r\n" : "\n\n",

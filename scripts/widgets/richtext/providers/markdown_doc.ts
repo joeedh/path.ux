@@ -158,6 +158,10 @@ export function withKind(block: MdBlock, kind: MdKind): MdBlock {
   };
 
   if (kind.kind === "code") {
+    for (const atom of [...next.atoms].sort((a, b) => b.offset - a.offset)) {
+      next.text =
+        next.text.slice(0, atom.offset) + (atom.widget ?? "") + next.text.slice(atom.offset + 1);
+    }
     next.text = next.text.split(ATOM_CHAR).join("");
     next.marks = [];
     next.atoms = [];

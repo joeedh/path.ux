@@ -512,7 +512,7 @@ describe("sanitizing", () => {
       text : "a  b",
       atoms: [],
     });
-    expect(first('<img src="data:image/png;base64,AA==" alt="a">\n').atoms[0].image.src).toBe(
+    expect(first('<img src="data:image/png;base64,AA==" alt="a">\n').atoms[0].image!.src).toBe(
       "data:image/png;base64,AA=="
     );
     expect(safeUrl("data:image/png;base64,AA==")).toBeUndefined();

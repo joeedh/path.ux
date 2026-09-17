@@ -42,7 +42,7 @@ export default defineConfig({
     {
       name     : "firefox",
       use      : { ...devices["Desktop Firefox"] },
-      testMatch: /richtext[\\/](markdown|widgets|tables|plugins|forms|external)\.spec\.ts/,
+      testMatch: /richtext[\\/](markdown|widgets|tables|plugins|forms|external|inline)\.spec\.ts/,
     },
 
     /* Test against mobile viewports. */

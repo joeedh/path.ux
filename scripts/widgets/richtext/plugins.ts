@@ -1,5 +1,5 @@
 import { newBlockId } from "./provider";
-import type { BlockId, EditOp, JsonValue, ProviderContext } from "./provider";
+import type { BlockId, DocPos, EditOp, JsonValue, ProviderContext } from "./provider";
 import type { IContextBase } from "../../core/context_base";
 import type { DocumentSession } from "./context";
 import type { CommandResult, DocumentCommand, WidgetContext, WidgetDescriptor } from "./widget";
@@ -26,13 +26,14 @@ export class WidgetRegistry {
     widgetRecord({ id: "registration", type: plugin.type, version: plugin.version, payload: null });
     if (this.plugins.has(plugin.type)) throw new Error(`Duplicate widget type: ${plugin.type}`);
     const entry: WidgetPlugin = Object.freeze({
-      type    : plugin.type,
-      version : plugin.version,
-      label   : plugin.label,
-      validate: plugin.validate.bind(plugin),
-      canMount: plugin.canMount?.bind(plugin),
-      create  : plugin.create.bind(plugin),
-      migrate : plugin.migrate?.bind(plugin),
+      placements: Object.freeze([...(plugin.placements ?? ["block"])]),
+      type      : plugin.type,
+      version   : plugin.version,
+      label     : plugin.label,
+      validate  : plugin.validate.bind(plugin),
+      canMount  : plugin.canMount?.bind(plugin),
+      create    : plugin.create.bind(plugin),
+      migrate   : plugin.migrate?.bind(plugin),
     });
     this.plugins.set(entry.type, entry);
     this.changed();
@@ -116,7 +117,8 @@ export class DocumentWidgetHost<Doc> implements SessionWidgetHost {
   private current(expected: WidgetSnapshot): WidgetSnapshot | undefined {
     const found = this.session.provider.widgets?.read(this.session.doc, expected.record.id);
     return found?.revision === expected.revision &&
-      found.block === expected.block &&
+      found.placement === expected.placement &&
+      (found.placement === "inline" || found.block === expected.block) &&
       JSON.stringify(found.record) === JSON.stringify(expected.record)
       ? found
       : undefined;
@@ -124,7 +126,8 @@ export class DocumentWidgetHost<Doc> implements SessionWidgetHost {
 
   private capture(snapshot: WidgetSnapshot): WidgetSnapshot {
     return Object.freeze({
-      placement: "block",
+      placement: snapshot.placement,
+      offset   : snapshot.offset,
       block    : snapshot.block,
       revision : snapshot.revision,
       record   : widgetRecord(snapshot.record),
@@ -142,7 +145,8 @@ export class DocumentWidgetHost<Doc> implements SessionWidgetHost {
         this.registry.get(next.type) === plugin &&
         this.allowed("edit", expected.record) &&
         this.allowed("edit", next) &&
-        this.supported(next, plugin),
+        this.supported(next, plugin) &&
+        this.placement(next, expected.placement),
       resolve: () => {
         const current = this.current(expected);
         return current
@@ -176,7 +180,10 @@ export class DocumentWidgetHost<Doc> implements SessionWidgetHost {
       return this.session.command(
         {
           authorize: () =>
-            epoch === this.epoch && this.allowed("insert", next) && this.supported(next),
+            epoch === this.epoch &&
+            this.allowed("insert", next) &&
+            this.supported(next) &&
+            this.placement(next, "block"),
           resolve: () => {
             const storage = this.session.provider.widgets;
             if (
@@ -193,6 +200,50 @@ export class DocumentWidgetHost<Doc> implements SessionWidgetHost {
     } catch (error) {
       return Promise.resolve({ status: "failed", error });
     }
+  }
+
+  insertInline(record: WidgetRecord, at: DocPos, context: IContextBase): Promise<CommandResult> {
+    try {
+      const next = widgetRecord(record);
+      const position = { ...at };
+      const epoch = this.epoch;
+      return this.session.command(
+        {
+          authorize: () =>
+            epoch === this.epoch &&
+            this.allowed("insert", next) &&
+            this.supported(next) &&
+            this.placement(next, "inline"),
+          resolve: () => {
+            const storage = this.session.provider.widgets;
+            return storage?.read(this.session.doc, next.id)
+              ? undefined
+              : storage?.insertInline?.(this.session.doc, position, next);
+          },
+        },
+        context
+      );
+    } catch (error) {
+      return Promise.resolve({ status: "failed", error });
+    }
+  }
+
+  moveInline(expected: WidgetSnapshot, at: DocPos, context: IContextBase): Promise<CommandResult> {
+    expected = this.capture(expected);
+    const position = { ...at };
+    const epoch = this.epoch;
+    return this.session.command(
+      {
+        authorize: () => epoch === this.epoch && this.allowed("edit", expected.record),
+        resolve: () => {
+          const current = this.current(expected);
+          return current
+            ? this.session.provider.widgets?.moveInline?.(this.session.doc, current, position)
+            : undefined;
+        },
+      },
+      context
+    );
   }
 
   remove(expected: WidgetSnapshot, context: IContextBase): Promise<CommandResult> {
@@ -225,7 +276,7 @@ export class DocumentWidgetHost<Doc> implements SessionWidgetHost {
         resolve: () => {
           const current = this.current(expected);
           if (
-            !current ||
+            current?.placement !== "block" ||
             after === current.block ||
             (after !== null && !this.session.provider.blocks(this.session.doc).includes(after))
           )
@@ -273,10 +324,24 @@ export class DocumentWidgetHost<Doc> implements SessionWidgetHost {
 
   resolve(block: BlockId, _context: ProviderContext): WidgetDescriptor | undefined {
     const snapshot = this.session.provider.widgets?.atBlock(this.session.doc, block);
-    if (!snapshot) return undefined;
+    return snapshot ? this.descriptor(snapshot) : undefined;
+  }
+
+  resolveInline(position: DocPos, _context: ProviderContext): WidgetDescriptor | undefined {
+    const snapshot = this.session.provider.widgets?.atInline?.(this.session.doc, position);
+    return snapshot ? this.descriptor(snapshot) : undefined;
+  }
+
+  private placement(record: WidgetRecord, placement: "block" | "inline"): boolean {
+    return this.registry.get(record.type)?.placements?.includes(placement) ?? false;
+  }
+
+  private descriptor(snapshot: WidgetSnapshot): WidgetDescriptor {
     const plugin = this.registry.get(snapshot.record.type);
     const allowed =
-      this.allowed("mount", snapshot.record) && this.supported(snapshot.record, plugin);
+      this.allowed("mount", snapshot.record) &&
+      this.supported(snapshot.record, plugin) &&
+      this.placement(snapshot.record, snapshot.placement);
     return {
       id            : `plugin:${snapshot.record.id}`,
       implementation: plugin ?? this,
@@ -288,7 +353,8 @@ export class DocumentWidgetHost<Doc> implements SessionWidgetHost {
         if (
           !plugin ||
           !this.allowed("mount", snapshot.record) ||
-          !this.supported(snapshot.record, plugin)
+          !this.supported(snapshot.record, plugin) ||
+          !this.placement(snapshot.record, snapshot.placement)
         )
           throw new Error("Widget mounting refused");
         return plugin.create(snapshot, this.viewContext(snapshot, plugin, context));
@@ -311,6 +377,7 @@ export class DocumentWidgetHost<Doc> implements SessionWidgetHost {
         epoch === this.epoch &&
         this.registry.get(plugin.type) === plugin &&
         this.supported(current.record, plugin) &&
+        this.placement(current.record, current.placement) &&
         this.allowed("mount", current.record)
       );
     };

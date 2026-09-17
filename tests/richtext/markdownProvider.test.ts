@@ -1022,8 +1022,8 @@ describe("inverse and snapshots", () => {
   test("snapshots are deep copies and a foreign snapshot is refused", () => {
     const doc = parse();
     const [snap] = provider.snapshots(doc, ["b12"]);
-    (snap.state as MdBlock).atoms[0].image.alt = "changed";
-    expect(block(doc, "b12").atoms[0].image.alt).toBe("alt");
+    (snap.state as MdBlock).atoms[0].image!.alt = "changed";
+    expect(block(doc, "b12").atoms[0].image!.alt).toBe("alt");
 
     expect(() =>
       provider.applyEdit(doc, {

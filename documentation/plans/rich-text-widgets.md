@@ -117,12 +117,52 @@ file format. The envelope has its own format version in the serialized container
 
 Placement belongs to the provider: a record may occupy an inline atom or an opaque block.
 Plugins declare supported placements; insertion requires both provider and plugin support.
-Forms and tables start as block widgets. Inline plugins remain part of the design, but their
-Markdown syntax is deferred until the block implementation proves the hosting contract.
+Existing plugins default to block placement. Plugins opt into inline placement through
+`placements: ["inline"]` (or both placements). The Markdown provider supports inline records
+in paragraphs, headings, list items and quotes. Code blocks and native table cells keep the
+syntax as literal data.
 
 Payloads contain saved configuration, values, and resource references. They contain no DOM,
 credentials, constructors, functions, or active requests. Focus, validation display, loading
 state, and other temporary UI state belong to the view.
+
+### Inline record syntax and prototype decisions
+
+An inline record uses `{{pathux-widget-v1:HEX}}`, where `HEX` encodes the UTF-8 bytes of the
+same JSON envelope used by block records. The encoder emits lowercase hexadecimal; the
+decoder accepts either case. The decoded record has the existing 64 KiB, 32-level and 10,000-value
+limits. Source tokens are bounded at 131,328 characters before decoding. No payload enters
+a URL, executable HTML, or an automatically fetched resource.
+
+The raw Markdown tokenizer recognizes the token before escape or entity decoding. Escaping
+the opening brace or placing the token in a code span leaves literal text; serialization
+escapes literal lookalikes. Unknown payload/container versions and bounded malformed tokens
+remain inert atoms with their original source. Incomplete or oversized tokens remain text.
+A reserved code-span prototype was rejected because adjacent closing/opening backticks merge.
+The braced syntax round-trips adjacent atoms without adding separator characters.
+
+Inline storage uses the existing atom arithmetic for split/join, replacement, deletion and
+movement. Each record contributes one `ATOM_CHAR` and receives the existing caret slots.
+The session host resolves records by saved ID; location changes alone do not invalidate an
+inline draft's relevant-value precondition. Payload changes still refuse stale updates.
+Optional `atInline`, `insertInline` and `moveInline` storage methods preserve existing provider
+implementations. `DocumentWidgetHost.insertInline` and `moveInline` use the shared command
+boundary, authorization and data-only history. Existing block methods keep their meaning.
+
+Inline rendering uses the same per-editor mount host as native widgets and media. Tab enters
+the first control, Shift+Tab enters the last, and exiting returns to the adjacent document
+position. Independent view drafts, focus and composition survive connected DOM moves in the
+tested Chromium and Firefox engines. Link and code marks split around widget atoms so
+formatting cannot swallow a record or place interactive controls inside a link. Wikilink
+wrappers containing widget atoms stay literal text.
+
+Clipboard transfers include the structured MIME for inline selections; their source entries
+preserve placement and allocate new IDs on paste. Plain providers refuse structured records
+and can accept an explicitly selected plain-text fallback. HTML fallback contains an escaped
+token in a standard code element marked `data-pathux-widget`; importing it still requires normal host authorization.
+Duplicate IDs are repaired across block and inline records together, preserving unknown JSON.
+Retained Markdown source receives precise ID repairs. Repairing IDs in imported HTML without
+source positions canonicalizes the retained body while preserving front matter.
 
 ## Provider capability and edit flow
 
@@ -447,11 +487,10 @@ true inline plugins, and the separate visualnovel migration using stable task ID
 
 ## Decisions still requiring implementation prototypes
 
-- Specify true inline plugin syntax separately; do not encode arbitrary payloads in image
-  URLs or accept executable custom HTML as a shortcut.
-  The [form adapter decisions](rich-text-widget-forms.md#nstructjs-metadata-adapter) specify
-  the supported nstructjs metadata and declarative schema subsets, rejected references/helpers,
-  optional bundle boundaries, and explicit schema changes.
+The [inline decisions](#inline-record-syntax-and-prototype-decisions) specify raw token parsing,
+placement opt-in, shared atom hosting and clipboard behavior. The
+[form adapter decisions](rich-text-widget-forms.md#nstructjs-metadata-adapter) specify supported
+metadata, rejected helpers, optional bundle boundaries and explicit schema changes.
 
 ## Design review
 

@@ -3,6 +3,7 @@ import type { WidgetRecord } from "./plugin_types";
 
 export { WIDGET_CLIPBOARD_MIME } from "./widget_mime";
 const MAX_BYTES = 65536;
+export const INLINE_WIDGET_MAX_SOURCE = MAX_BYTES * 2 + 256;
 const NAME = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
 const TYPE = /^[a-zA-Z][a-zA-Z0-9_-]*(?:\.[a-zA-Z0-9_-]+)+$/;
 const FORBIDDEN = new Set(["__proto__", "prototype", "constructor"]);
@@ -209,4 +210,51 @@ export function decodeWidgetTransfer(source: string): readonly WidgetTransferIte
   } catch {
     return undefined;
   }
+}
+
+/** Encodes bounded JSON as hexadecimal UTF-8 inside a reserved inline token. */
+export function encodeInlineWidget(record: WidgetRecord): string {
+  return inlineJson(JSON.stringify(widgetRecord(record)));
+}
+
+function inlineJson(json: string): string {
+  const hex = Array.from(new TextEncoder().encode(json), (byte) =>
+    byte.toString(16).padStart(2, "0")
+  ).join("");
+  return "{{pathux-widget-v1:" + hex + "}}";
+}
+
+/** Recognizes bounded reserved containers, including malformed and future envelopes. */
+export function isInlineWidget(source: string): boolean {
+  return (
+    source.length <= INLINE_WIDGET_MAX_SOURCE &&
+    /^\{\{pathux-widget-v[0-9]+:[A-Za-z0-9%_.~-]*\}\}$/.test(source)
+  );
+}
+
+function inlineJsonText(source: string): string {
+  const hex = source.slice(19, -2);
+  if (!/^(?:[0-9a-fA-F]{2})+$/.test(hex)) throw new Error("Invalid inline encoding");
+  const bytes = Uint8Array.from(hex.match(/../g)!, (pair) => Number.parseInt(pair, 16));
+  return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+}
+
+/** Decodes only the current container and validates the portable record independently. */
+export function decodeInlineWidget(source: string): WidgetRecord | undefined {
+  if (!isInlineWidget(source) || !source.startsWith("{{pathux-widget-v1:")) return undefined;
+  try {
+    return widgetRecord(parseJson(inlineJsonText(source), MAX_BYTES));
+  } catch {
+    return undefined;
+  }
+}
+
+/** Changes an inline ID without normalizing unknown payload JSON. */
+export function reidentifyInlineWidget(source: string, id: string): string {
+  if (!decodeInlineWidget(source)) throw new Error("Invalid inline widget");
+  const json = inlineJsonText(source);
+  let fence = "```";
+  while (json.includes(fence)) fence += "`";
+  const updated = reidentifyWidgetFence(fence + "pathux-widget-v1\n" + json + "\n" + fence, id);
+  return inlineJson(updated.slice(updated.indexOf("\n") + 1, updated.lastIndexOf("\n")));
 }

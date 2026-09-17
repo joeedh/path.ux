@@ -32,7 +32,8 @@ export function markdownSourceDoc(source: string): MdDoc {
     (from, to, source) => repairs.push({ from, to, source })
   );
   const bodyStart = split.frontmatter.length + split.separator.length;
-  for (const repair of repairs.reverse()) {
+  const unmappedRepair = repairs.some((repair) => repair.from < 0);
+  for (const repair of repairs.filter((repair) => repair.from >= 0).reverse()) {
     split.body =
       split.body.slice(0, repair.from - bodyStart) +
       repair.source +
@@ -49,6 +50,7 @@ export function markdownSourceDoc(source: string): MdDoc {
   }
   if (front) front.source = split.frontmatter;
   const body = front ? doc.blocks.slice(1) : doc.blocks;
+  if (unmappedRepair) split.body = markdownText({ blocks: body });
   const retained = {
     prefix   : split.prefix,
     separator: split.frontmatter ? split.separator : source.includes("\r\n") ? "\r\n\r\n" : "\n\n",

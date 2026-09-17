@@ -113,6 +113,15 @@ function atomElement(
   options: MarkdownRenderOptions
 ): HTMLElement {
   const wrap = document.createElement("span");
+  if (atom.widget !== undefined) {
+    wrap.className = "md-inline-widget";
+    wrap.dataset.docAtom = "";
+    wrap.contentEditable = "false";
+    const descriptor = ctx.editor.inlineWidget?.({ block: block.id, offset: atom.offset });
+    if (descriptor && ctx.editor.widget) wrap.append(ctx.editor.widget(descriptor));
+    else wrap.textContent = "Widget unavailable";
+    return wrap;
+  }
   wrap.className = "md-image";
   wrap.setAttribute("data-doc-atom", "");
   wrap.setAttribute("contenteditable", "false");
@@ -289,7 +298,12 @@ function renderTable(source: string, ctx: ProviderContext, options: MarkdownRend
 
       const md = toMarkdown(
         { type: "paragraph", children: cell.children },
-        { extensions: [gfmToMarkdown()], emphasis: "*", strong: "*" }
+        {
+          extensions: [gfmToMarkdown()],
+          emphasis  : "*",
+          strong    : "*",
+          unsafe    : [{ character: "{", after: "\\{pathux-widget-v[0-9]+:" }],
+        }
       );
       const block = markdownDocFromText(md).blocks[0];
       if (block !== undefined && block.text.length > 0) {
@@ -476,6 +490,7 @@ export function markdownStyles(): string {
       cursor         : pointer;
     }
 
+    .md-inline-widget { display: inline-block; vertical-align: middle; max-width: 100%; }
     .md-image { display: inline-block; vertical-align: middle; }
     .md-image img { max-width: 100%; vertical-align: middle; }
     [readonly] .md-image { cursor: default; }

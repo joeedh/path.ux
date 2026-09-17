@@ -30,11 +30,11 @@ for plugin records and preserve their source.
 ## Provider and session contracts
 
 A provider opts in through `DocumentProvider.widgets`, a `WidgetStorage<Doc>`. It reports
-block placement, returns immutable detached records with relevant-value revisions, and builds
+block or inline placement, returns immutable detached records with relevant-value revisions, and builds
 insert/update/remove/move edits. Reads never activate plugins. Its clipboard parser allocates
 new IDs on paste; its `pasted` method reports incoming records for insertion policy checks.
 Its snapshots and inverses must preserve complete values and identities without plugin code.
-The Markdown implementation uses ordinary `replaceBlocks` edits. Other providers remain
+The Markdown implementation uses data-only block snapshots and atom edits. Other providers remain
 compatible without implementing this optional capability.
 
 `host.update(snapshot, payload, context)`, `remove`, `move`, and `migrate` require a current
@@ -44,7 +44,7 @@ and new record. Migration runs only through `host.migrate`; it validates output 
 the converted data once. Undo and redo replay data even after registry removal or mount-policy
 denial. Session write authorization still gates all history operations.
 
-A plugin supports one payload version and block placement. `validate` checks its saved value;
+A plugin supports one payload version and defaults to block placement. `validate` checks its saved value;
 `create` returns the common `WidgetView`. Its context exposes `prepareUpdate`, `update`, draft
 registration, an immutable application document descriptor, and cancellation. Each view has
 independent DOM and drafts. A view must retain the snapshot its draft began from so a remote
@@ -95,5 +95,25 @@ Plain-text paste is an explicit source fallback; pasting into a Markdown code bl
 literal source. Transfers exceeding the limits are refused without cutting the selection. Structured text
 entries are parsed separately so an unfinished ordinary code fence cannot consume a later
 record. An unclosed reserved container in a structured transfer is explicitly refused.
-Inline records, schema adapters, automatic migration, and external resource services are not
-part of this block API.
+Schema adapters and external resource services remain optional modules. Migration is explicit.
+
+## Inline records
+
+Register a plugin with `placements: ["inline"]` or `placements: ["block", "inline"]`, then use
+`host.insertInline(record, { block, offset }, applicationContext)`. Use
+`host.moveInline(snapshot, position, applicationContext)` to move an existing inline record.
+Updates, removal, migration and drafts use the same APIs as block plugins. A location-only
+change leaves an inline payload snapshot valid; changing its saved value makes it stale.
+
+Markdown stores each record as `{{pathux-widget-v1:HEX}}`, with hexadecimal UTF-8 JSON produced
+by `encodeInlineWidget` from the optional widget codec module. Paragraphs, headings, list
+items and quotes support these atoms. Code blocks and table cells keep literal source.
+Escaping the opening brace or using a code span also produces literal text. Code/link marks
+split around atoms; converting a paragraph to code preserves record source as literal text.
+Unknown records stay inert and retain their source. No media view or network service is implied.
+
+Inline selection uses one document character per record. Tab enters its first control;
+Shift+Tab enters its last. Escape exits after the atom, and Shift+Tab from the first control
+exits before it. Controls own their internal clipboard and composition. Outer copy/paste uses
+the structured widget transfer, with fresh IDs on paste and explicit refusal by unsupported
+providers. Mount identity and independent drafts are retained separately in each editor view.

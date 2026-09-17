@@ -7,7 +7,7 @@ import { RichTextContext } from "./context";
 import type { DocChangeInfo, DocumentSession } from "./context";
 import { WidgetHost, widgetSlot } from "./widget_host";
 import type { WidgetOptions } from "./widget";
-import { blockElement, mapThroughPending } from "./positions";
+import { blockElement, mapThroughPending, toDocPos } from "./positions";
 import type { PendingDocView } from "./positions";
 import { freezeComposition, resolveComposition } from "./composition";
 import type { CompositionSnapshot } from "./composition";
@@ -137,18 +137,26 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
       (slot, before) => {
         const block = slot.closest<HTMLElement>("[data-doc-block]")?.dataset.docBlock;
         if (!block || !this._session) return;
+        const atom = slot.closest<HTMLElement>("[data-doc-atom]");
+        const at = atom ? toDocPos(root, atom, 0) : undefined;
         this.select(
           collapsed({
             block,
-            offset: before ? 0 : this._session.provider.blockText(this._session.doc, block).length,
+            offset: at
+              ? at.offset + (before ? 0 : 1)
+              : before
+                ? 0
+                : this._session.provider.blockText(this._session.doc, block).length,
           })
         );
       }
     );
     const editor = this;
     this.bridge = {
-      widget  : widgetSlot,
-      dispatch: (op) => this.dispatch(op),
+      inlineWidget: (position) =>
+        this._session?.widgetHost?.resolveInline?.(position, this.richCtx!),
+      widget      : widgetSlot,
+      dispatch    : (op) => this.dispatch(op),
       get readOnly() {
         return editor.readOnly || editor.disabled || editor.session?.canWrite === false;
       },

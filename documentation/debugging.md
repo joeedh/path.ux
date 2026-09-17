@@ -150,3 +150,15 @@ and require host-side version/idempotency handling rather than replaying it thro
 A failed schema refresh must disable the previously loaded form. Keeping its old fields visible
 is useful for diagnosis, but they cannot remain writable against an unsupported newer schema.
 Likewise, an offline document snapshot is readable data, not a fresh external write baseline.
+
+### Inline widget source and caret boundaries
+
+Tokenize reserved inline syntax before Markdown unescapes text. Searching decoded text can
+activate an escaped token or associate it with a later identical source occurrence. Use a raw
+micromark token with source positions, and test escaped braces and character references beside
+an active token. Adjacent code spans merge at their backticks; braced hexadecimal tokens avoid
+that boundary problem without inserting document characters.
+
+An inline widget exits to its atom offset, not its containing block's edge. Backward Tab enters
+the last focusable control; a test expecting the first input would incorrectly report a focus
+failure. Both directions need assertions over document positions and control focus.

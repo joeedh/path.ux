@@ -46632,16 +46632,19 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       (slot, before) => {
         const block = slot.closest("[data-doc-block]")?.dataset.docBlock;
         if (!block || !this._session) return;
+        const atom = slot.closest("[data-doc-atom]");
+        const at = atom ? toDocPos(root, atom, 0) : void 0;
         this.select(
           collapsed({
             block,
-            offset: before ? 0 : this._session.provider.blockText(this._session.doc, block).length
+            offset: at ? at.offset + (before ? 0 : 1) : before ? 0 : this._session.provider.blockText(this._session.doc, block).length
           })
         );
       }
     );
     const editor = this;
     this.bridge = {
+      inlineWidget: (position) => this._session?.widgetHost?.resolveInline?.(position, this.richCtx),
       widget: widgetSlot,
       dispatch: (op) => this.dispatch(op),
       get readOnly() {

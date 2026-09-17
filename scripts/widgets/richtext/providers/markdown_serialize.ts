@@ -19,6 +19,7 @@ import type {
 import { htmlForBlock, imageTag, markTag } from "./markdown_html";
 import { inlineTree, treeText } from "./markdown_inline";
 import type { InlineNode } from "./markdown_inline";
+import type { InlineWidget } from "./markdown_widget_syntax";
 import { blockNeedsHtml, wikilinkSource, markdownBodyKey } from "./markdown_model";
 import type { MdBlock, MdDoc, MdImage } from "./markdown_model";
 
@@ -63,7 +64,11 @@ function phrasing(nodes: readonly InlineNode[], htmlTags: boolean): PhrasingCont
     if (node.type === "text") {
       out.push({ type: "text", value: node.value });
     } else if (node.type === "atom") {
-      out.push(imageNode(node.atom.image));
+      out.push(
+        node.atom.widget !== undefined
+          ? { type: "inlineWidget", value: node.atom.widget }
+          : imageNode(node.atom.image)
+      );
     } else if (node.type === "break") {
       out.push(node.hard ? { type: "break" } : { type: "text", value: "\n" });
     } else {
@@ -281,7 +286,11 @@ export function markdownText(doc: MdDoc): string {
 function canonicalMarkdownText(doc: MdDoc): string {
   return toMarkdown(markdownTree(doc), {
     extensions    : [gfmToMarkdown(), frontmatterToMarkdown(["yaml"])],
-    handlers      : { wikilink: (node: Wikilink) => node.value },
+    unsafe        : [{ character: "{", after: "\\{pathux-widget-v[0-9]+:" }],
+    handlers: {
+      wikilink    : (node: Wikilink) => node.value,
+      inlineWidget: (node: InlineWidget) => node.value,
+    },
     bullet        : "-",
     bulletOrdered : ".",
     emphasis      : "*",

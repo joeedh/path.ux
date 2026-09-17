@@ -1,3 +1,4 @@
+import { isInlineWidget } from "../widget_codec";
 // HTML in a markdown source, both ways: the element table that folds a tag into a block kind
 // or a mark, the sanitizer that decides which attributes and styles survive into the model,
 // and the emitter that writes a block back as HTML when markdown syntax cannot carry it.
@@ -949,6 +950,15 @@ class HtmlWalker {
     if (DROPPED_ELEMENTS.has(tag)) {
       return;
     }
+    if (
+      tag === "code" &&
+      element.hasAttribute("data-pathux-widget") &&
+      !element.children.length &&
+      isInlineWidget(element.textContent ?? "")
+    ) {
+      builder.widget(element.textContent ?? "");
+      return;
+    }
     if (tag === "br") {
       builder.lineBreak(true);
       return;
@@ -1081,7 +1091,10 @@ export function inlineHtml(nodes: readonly InlineNode[]): string {
     if (node.type === "text") {
       out += escapeHtml(node.value);
     } else if (node.type === "atom") {
-      out += imageTag(node.atom.image);
+      out +=
+        node.atom.widget !== undefined
+          ? "<code data-pathux-widget>" + escapeHtml(node.atom.widget) + "</code>"
+          : imageTag(node.atom.image);
     } else if (node.type === "break") {
       out += "<br>";
     } else if (node.mark.name === "link" && node.mark.kind === "wiki") {
