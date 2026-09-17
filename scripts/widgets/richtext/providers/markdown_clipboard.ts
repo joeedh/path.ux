@@ -35,7 +35,9 @@ function clipboardHtml(html: string): string {
 
 /** One clipboard entry: the block's markdown source, an item indented two spaces per depth. */
 export function entryOf(block: MdBlock): string {
-  const source = markdownText({ blocks: [block] }).replace(/\n+$/, "");
+  const content = { ...block };
+  delete content.retainedSource;
+  const source = markdownText({ blocks: [content] }).replace(/\n+$/, "");
   return block.kind === "listItem" ? "  ".repeat(block.depth) + source : source;
 }
 

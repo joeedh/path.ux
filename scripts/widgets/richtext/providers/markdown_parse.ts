@@ -67,6 +67,7 @@ function plainText(node: PhrasingContent): string {
 
 class Parser {
   readonly blocks: MdBlock[] = [];
+  readonly widgetRanges = new Map<BlockId, { from: number; to: number }>();
   private flowDepth = 0;
   private readonly definitions = new Map<string, Definition>();
   private readonly wrappers: HtmlContext[] = [];
@@ -78,7 +79,7 @@ class Parser {
     private readonly crlfOffsets: readonly number[] = []
   ) {}
 
-  private originalSlice(node: Nodes): string {
+  private originalRange(node: Nodes): { from: number; to: number } {
     const offset = (value: number) => {
       let lo = 0;
       let hi = this.crlfOffsets.length;
@@ -89,10 +90,12 @@ class Parser {
       }
       return value + lo;
     };
-    return this.original.slice(
-      offset(node.position!.start.offset!),
-      offset(node.position!.end.offset!)
-    );
+    return { from: offset(node.position!.start.offset!), to: offset(node.position!.end.offset!) };
+  }
+
+  private originalSlice(node: Nodes): string {
+    const { from, to } = this.originalRange(node);
+    return this.original.slice(from, to);
   }
 
   private get ctx(): HtmlContext {
@@ -176,7 +179,8 @@ class Parser {
           !ctx.quoteDepth &&
           !this.wrappers.length
         ) {
-          this.push({ kind: "widget", source: this.originalSlice(node) });
+          const block = this.push({ kind: "widget", source: this.originalSlice(node) });
+          this.widgetRanges.set(block.id, this.originalRange(node));
         } else this.push({ kind: "code", lang: node.lang ?? "" }, node.value);
         break;
       case "thematicBreak":
@@ -512,7 +516,11 @@ const structural = (ctx: HtmlContext) => ({
  * Parses markdown into an `MdDoc`. GFM tables, task lists and strikethrough and YAML front
  * matter are understood; `newId` supplies block ids, fresh per parse by default.
  */
-export function markdownDocFromText(text: string, newId: () => BlockId = newBlockId): MdDoc {
+export function markdownDocFromText(
+  text: string,
+  newId: () => BlockId = newBlockId,
+  repaired?: (from: number, to: number, source: string) => void
+): MdDoc {
   const source = text.replace(/\r\n?/g, "\n");
   const tree = fromMarkdown(source, {
     extensions     : [gfm(), frontmatter(["yaml"])],
@@ -540,6 +548,8 @@ export function markdownDocFromText(text: string, newId: () => BlockId = newBloc
       } while (reserved.has(id));
       reserved.add(id);
       block.source = reidentifyWidgetFence(block.source, id);
+      const range = parser.widgetRanges.get(block.id)!;
+      repaired?.(range.from, range.to, block.source);
     } else seen.add(record.id);
   });
   return { blocks: parser.blocks };

@@ -87,3 +87,23 @@ Markdown browser screenshots use `test.info().outputPath()` so each project and 
 its own artifacts. Repeated Windows runs could fail with an `UNKNOWN` file-open error while
 overwriting shared tracked PNGs even when their attributes and ACL allowed writes. Per-test
 output also keeps diagnostics from changing the repository's committed screenshots.
+
+## Form drafts and retained Markdown source
+
+Form field parsing and full schema validation serve different purposes. Saving an empty
+required answer must not invoke a schema transform or write defaults. Preserve untouched
+authored keys, encode only edited controls, and return transformed values only from explicit
+validation. A plugin draft must return the exact prepared command from its scoped host;
+wrapping that command breaks the host's command-identity check.
+
+Retained source must travel with provider snapshots to survive undo. Keep a copy on the
+first body block as well as front matter so deleting metadata does not normalize an untouched
+body. Exclude runtime media IDs when comparing body projections: mounting an image allocates
+an ID without editing authored content. Strip retention metadata when serializing a clipboard
+fragment, or a copied block may acquire the document BOM or unrelated source.
+
+Empty YAML front matter has adjacent opening and closing delimiter lines. A splitter that
+requires another newline between them misclassifies the prefix. Test empty metadata,
+metadata without a final newline, CRLF, BOM/blank prefixes, and duplicate plugin ID repairs.
+Source retention must include those repairs or saving restores duplicate IDs that the parser
+already fixed in its projected blocks.

@@ -446,8 +446,9 @@ true inline plugins, and the separate visualnovel migration using stable task ID
 
 - Specify true inline plugin syntax separately; do not encode arbitrary payloads in image
   URLs or accept executable custom HTML as a shortcut.
-- Define the normalized form schema subset and adapter diagnostics using real Zod and
-  nstructjs fixtures, including arrays, nested objects, unions, and reference fields.
+- Extend the [normalized form contract](rich-text-widget-forms.md#resolved-form-contracts)
+  to nstructjs fixtures, including references and helper expressions. The Zod 3 subset,
+  JSON controls, native source retention, and input/output separation are specified there.
 
 ## Design review
 

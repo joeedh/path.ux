@@ -1,0 +1,89 @@
+import type { JsonValue } from "./provider";
+import type { CommandResult, DocumentCommand } from "./widget";
+import type { DraftController } from "./drafts";
+import { widgetJson } from "./widget_codec";
+
+export type FormNode = {
+  readonly optional?: boolean;
+  readonly hasDefault?: boolean;
+  readonly description?: string;
+} & (
+  | { readonly kind: "string" | "number" | "boolean" | "null" }
+  | { readonly kind: "enum"; readonly values: readonly JsonValue[] }
+  | { readonly kind: "object"; readonly fields: Readonly<Record<string, FormNode>> }
+  | { readonly kind: "array"; readonly item: FormNode }
+  | { readonly kind: "record"; readonly value: FormNode }
+  | { readonly kind: "union"; readonly options: readonly FormNode[] }
+  | { readonly kind: "unsupported"; readonly reason: string }
+);
+
+export interface FormIssue {
+  readonly path: readonly (string | number)[];
+  readonly message: string;
+}
+
+export type FormValidation<Output = unknown> =
+  | { readonly success: true; readonly output: Output }
+  | { readonly success: false; readonly issues: readonly FormIssue[] };
+
+/** Validates authored input; transformed output is never a storage replacement. */
+export interface FormSchema<Output = unknown> {
+  readonly root: FormNode;
+  readonly diagnostics: readonly FormIssue[];
+  validate(input: JsonValue): Promise<FormValidation<Output>>;
+}
+
+export interface FormPresentation {
+  readonly order?: readonly string[];
+  readonly fields?: Readonly<
+    Record<
+      string,
+      {
+        readonly label?: string;
+        readonly help?: string;
+        readonly group?: string;
+        readonly control?: "text" | "json";
+      }
+    >
+  >;
+}
+
+export interface FormSnapshot {
+  readonly revision: string;
+  readonly values: JsonValue;
+}
+
+/** Owns committed values and history; controls keep editable text in per-view drafts. */
+export interface FormBinding {
+  readonly key: string;
+  read(): FormSnapshot | undefined;
+  subscribe(changed: () => void): () => void;
+  prepare(expected: FormSnapshot, values: JsonValue): DocumentCommand;
+  commit(expected: FormSnapshot, values: JsonValue): Promise<CommandResult>;
+  registerDraft(controller: DraftController): () => void;
+  canWrite(): boolean;
+}
+
+export function formObject(value: JsonValue): value is { readonly [key: string]: JsonValue } {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+/** Encodes controls without applying defaults, coercions, refinements or transforms. */
+export function decodeFormField(node: FormNode, text: string, json = false): JsonValue {
+  if (node.kind === "unsupported") throw new Error(node.reason);
+  if (node.kind === "string" && !json) return text;
+  if (node.kind === "enum" && node.values.every((v) => typeof v === "string") && !json) return text;
+  if (text.length > 65536) throw new Error("Field exceeds the JSON size limit");
+  return widgetJson(JSON.parse(text));
+}
+
+export function encodeFormField(
+  node: FormNode,
+  value: JsonValue | undefined,
+  json = false
+): string {
+  if (value === undefined) return "";
+  if (!json && (node.kind === "string" || (node.kind === "enum" && typeof value === "string")))
+    return typeof value === "string" ? value : JSON.stringify(value);
+  return JSON.stringify(value);
+}

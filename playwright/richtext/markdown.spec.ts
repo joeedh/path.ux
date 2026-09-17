@@ -83,6 +83,25 @@ test("application note plugin inserts, commits and updates the second Markdown v
   await page.screenshot({ path: test.info().outputPath("plugin-example.png") });
 });
 
+test("application forms demo mounts native and embedded bindings", async ({ page }) => {
+  await openMarkdown(page);
+  await page.locator('button-x[name="Open forms demo"]').click();
+  const dialog = page.locator("dialog");
+  const name = dialog.locator("#native0").getByRole("textbox", { name: "name", exact: true });
+  await expect(name).toHaveValue("Ada");
+  await name.fill("Bea");
+  await dialog.locator("#native0").getByRole("button", { name: "Apply answers" }).click();
+  await expect(
+    dialog.locator("#native1").getByRole("textbox", { name: "name", exact: true })
+  ).toHaveValue("Bea");
+  await expect(
+    dialog.locator("#plugin0").getByRole("textbox", { name: "name", exact: true })
+  ).toHaveValue("Ada");
+  await page.screenshot({ path: test.info().outputPath("forms-example.png") });
+  await dialog.getByRole("button", { name: "Close forms demo", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+});
+
 async function openMarkdown(page: Page, text?: string): Promise<Locator> {
   await page.goto(PLAYWRIGHT_HOST);
   await page.getByTestId("tab-markdown").click();

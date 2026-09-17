@@ -40,13 +40,13 @@ behavior requires that registered implementation and otherwise produces an inert
 Dates, large integers, references, and class instances require explicit JSON-compatible
 codecs before they can enter widget records or document history.
 
-Schema and values independently support embedded data or external references. For example:
+The broader design allows schema and values to use embedded data or external references
+independently. The local form payload uses a host-registered schema and embedded answers:
 
 ```json
 {
-  "schema": { "kind": "reference", "id": "customer-intake", "version": 3 },
-  "values": { "kind": "embedded", "data": { "name": "", "priority": "normal" } },
-  "layout": { "fields": ["name", "priority"] }
+  "schema": { "id": "customer-intake", "version": 3 },
+  "values": { "name": "", "priority": "normal" }
 }
 ```
 
@@ -149,3 +149,91 @@ API for the inspected client, which declares Zod 3.
 
 This is an intended application migration, not authorization to change the visualnovel
 checkout as part of this design task. Its code and domain schemas remain application-owned.
+
+## Resolved form contracts
+
+The optional forms entry point is scripts/widgets/richtext/forms.ts. `FormSchema` describes
+input fields and retains a full validator returning a separate `FormValidation.output`.
+`FormSnapshot.values` contains authored JSON; editable text stays inside each `FormControl`.
+Only fields the user changes pass through the editable-value codec. Untouched fields,
+including unknown keys and absent defaults, pass through unchanged. Omit is an explicit
+action, including for required fields. An incomplete but encodable object can enter history;
+`validateSubmission()` returns success only after full validation of the current answers.
+It performs no external action and never stores transformed output.
+
+`FormBinding` supplies reads, subscriptions, prepared commands, explicit commits, draft
+registration, and write authorization. Prepared commands must retain their identity when a
+plugin host supplies them. The embedded binding returns `prepareUpdate()` directly so the
+existing scoped-command checks remain effective. Native bindings compare the exact front-matter
+source and selected schema at the history boundary. Conflicts retain the local editable text.
+
+`FormPresentation` supplies field order, labels, help, groups, and text/JSON preferences.
+The first renderer uses path.ux textboxes with datapath undo disabled and no saved-value
+datapath. Strings and string enums use text; numbers, booleans, null, arrays, objects,
+records, and unions use JSON text. Complex fields are edited as one JSON value, with nested
+validation paths displayed as text. This bounded renderer does not claim nested visual
+array builders or automatic controls for every possible schema construct.
+
+### Zod 3 adapter
+
+Import `zodFormSchema` from scripts/widgets/richtext/form_zod.ts. Its Zod import is type-only;
+the application supplies its actual Zod 3 schema. Normalization understands strings,
+numbers, booleans, null, JSON literals, enums, objects, arrays, records, unions,
+discriminated unions, optional/nullable/default wrappers, refinements, and transforms.
+Defaults are annotated without evaluating their factories. Validation delegates to the
+original `safeParseAsync`, preserving refinements, coercions, unknown-key policy, and
+transformed output. Validation exceptions become diagnostics.
+
+Preprocessors, recursive/lazy schemas, dates, bigint, functions, sets, and other unsupported
+constructs produce explicit diagnostics and prevent structured mounting. Applications can
+provide their own normalized schema and JSON input codec/validator contract for these cases.
+The adapter does not serialize executable schemas into documents. The Zod 3 fixtures in
+example/editors/properties/form_schemas.ts were checked against the consumer's character and
+location schema shapes, including record unions, nested variants, optional tags and defaults.
+
+### Embedded and native bindings
+
+`createFormPlugin(context, resolveSchema)` creates the opt-in `pathux.form` block plugin.
+Its payload version is 1; its payload contains `schema: {id, version}` and `values`.
+The schema version names an application catalog entry independently of the plugin version.
+The host resolves the catalog using its document context; unknown schemas remain inert.
+Changing a record's schema externally makes an existing incompatible view unavailable until
+the host rebinds it. It never interprets document text as executable schema code.
+
+Native documents opt into `markdownSourceDoc()` before opening a session. Source retention
+travels in block snapshots, so history restores source as well as projected values.
+`markdownText()` preserves BOM/blank prefixes, line endings, separators, and the unchanged
+body, including source not represented in the block model. Metadata patches preserve that
+body byte-for-byte. Body edits use the existing canonical body serializer while retaining
+the original YAML prefix; undo restores the original body spelling. Duplicate plugin IDs
+still receive the existing source-preserving identity repair. The default Markdown parser
+and serializer keep their existing behavior for documents without retained-source metadata.
+Native form bindings refuse to mount on those documents, so attaching a form cannot silently
+normalize an unretained body. `onDiagnostic()` reports parser, schema, and retention refusals
+to the application's status UI while the provider keeps its raw block fallback.
+The native splitter recognizes `---` delimiters with LF or CRLF. Other delimiter/line-ending
+forms retain their source without enabling a structured front-matter view.
+
+`nativeFormWidgets({codec, select})` supplies the native resolver. `select()` returns a stable
+registered-form object, or declines on unsupported/path-conflicting content. The host's
+`FrontmatterCodec` owns bounded YAML parsing and source patching. The library imports no
+YAML runtime. The example codec accepts core mappings, refuses aliases/anchors/tags,
+duplicate or hostile keys, malformed input, and oversized input. Scalar range patches
+preserve comments, existing quotes, ordering and untouched values. Nested equal-shape
+collections patch their leaves. Structural replacement of comment-bearing collections,
+block scalar edits, and unsupported flow-map insertion/removal require raw source editing.
+These refusals retain the draft and original source. They do not silently reformat YAML.
+
+`addFrontmatter()` explicitly creates missing metadata in one undoable edit.
+`markdownSourceCommand()` replaces raw source with a whole-source precondition.
+`switchFormBinding()` resolves drafts before a host changes document classification and
+invalidates native mounts. An external replacement may detach a conflicting draft; the
+session's recovery API retains it. Source and structured views must never maintain separate
+authoritative values or write on a stale blur event.
+
+The Markdown example's **Open forms demo** button shows both routes, a standalone control,
+two views per document, and a raw source draft. Its simulated disk writer demonstrates
+`prepareSave()` followed by a separate expected-hash check. A conflict retains unsaved
+work and the accepted hash; a successful older snapshot does not mark newer local edits as
+saved. Applications must replace this fake writer with their own authoritative save path.
+No visualnovel file or save route is changed by this implementation.

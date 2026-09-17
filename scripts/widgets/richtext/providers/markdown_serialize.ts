@@ -19,7 +19,7 @@ import type {
 import { htmlForBlock, imageTag, markTag } from "./markdown_html";
 import { inlineTree, treeText } from "./markdown_inline";
 import type { InlineNode } from "./markdown_inline";
-import { blockNeedsHtml, wikilinkSource } from "./markdown_model";
+import { blockNeedsHtml, wikilinkSource, markdownBodyKey } from "./markdown_model";
 import type { MdBlock, MdDoc, MdImage } from "./markdown_model";
 
 /**
@@ -265,6 +265,20 @@ export function markdownTree(doc: MdDoc): Root {
  * inline HTML, and a block the model marks as HTML is one HTML block.
  */
 export function markdownText(doc: MdDoc): string {
+  const retained = doc.blocks.find((b) => b.retainedSource)?.retainedSource;
+  if (retained) {
+    const front = doc.blocks[0]?.kind === "frontmatter" ? doc.blocks[0] : undefined;
+    const blocks = front ? doc.blocks.slice(1) : doc.blocks;
+    const body =
+      markdownBodyKey(blocks) === retained.bodyKey
+        ? retained.body
+        : canonicalMarkdownText({ blocks }).replace(/\r?\n/g, retained.eol);
+    return retained.prefix + (front ? front.source + retained.separator : "") + body;
+  }
+  return canonicalMarkdownText(doc);
+}
+
+function canonicalMarkdownText(doc: MdDoc): string {
   return toMarkdown(markdownTree(doc), {
     extensions    : [gfmToMarkdown(), frontmatterToMarkdown(["yaml"])],
     handlers      : { wikilink: (node: Wikilink) => node.value },

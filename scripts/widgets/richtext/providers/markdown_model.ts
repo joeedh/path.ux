@@ -69,7 +69,27 @@ export type MdBlock = MdKind & {
   marks: MdMark[];
   atoms: MdAtom[];
   html?: MdHtml;
+  /** Opt-in authored source carried by snapshots and restored with document history. */
+  retainedSource?: MdRetainedSource;
 };
+
+export interface MdRetainedSource {
+  prefix: string;
+  separator: string;
+  body: string;
+  bodyKey: string;
+  eol: string;
+}
+
+/** Compares projected body blocks without recursively including retained source. */
+export function markdownBodyKey(blocks: readonly MdBlock[]): string {
+  return JSON.stringify(
+    blocks.map(({ retainedSource: _source, atoms, ...block }) => ({
+      ...block,
+      atoms: atoms.map(({ id: _id, ...atom }) => atom),
+    }))
+  );
+}
 
 export interface MdDoc {
   blocks: MdBlock[];

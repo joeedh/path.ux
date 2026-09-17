@@ -1,5 +1,6 @@
 import { DocumentWidgetHost, WidgetRegistry } from "../../../scripts/widgets/richtext/plugins";
 import { notePlugin } from "./note_plugin";
+import { createFormsDemo } from "./forms_demo";
 import {
   UIBase,
   nstructjs,
@@ -249,6 +250,27 @@ export class PropsEditor extends Editor {
     tab.label("A markdown document on its own toolstack; every block kind the provider renders:");
 
     const controls = tab.row();
+    controls.button("Open forms demo", () => {
+      const dialog = document.createElement("dialog");
+      dialog.style.cssText = "max-height:85vh;overflow:auto;width:650px";
+      document.body.append(dialog);
+      const demo = createFormsDemo(dialog, this.ctx);
+      const close = document.createElement("button");
+      close.textContent = "Close forms demo";
+      close.addEventListener("click", async () => {
+        if (
+          (await demo.session.prepareSave()).status !== "ready" ||
+          (await demo.pluginSession.prepareSave()).status !== "ready"
+        )
+          return;
+        dialog.close();
+        demo.dispose();
+        dialog.remove();
+      });
+      dialog.addEventListener("cancel", (event) => event.preventDefault());
+      dialog.append(close);
+      dialog.showModal();
+    });
     const readOnly = controls.check(undefined, "Read-only");
     readOnly.setAttribute("data-testid", "markdown-readonly");
     readOnly.on_change = (value: boolean) => {
