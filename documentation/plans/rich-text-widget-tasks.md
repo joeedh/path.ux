@@ -1,6 +1,6 @@
 # Embedded rich text widget tasks
 
-Status: Stages 1–3 are complete. Stopped at the Stage 3 boundary.
+Status: Stages 1–4 are complete. Stopped at the Stage 4 boundary.
 
 This is the sole status and completion tracker for the [widget architecture](rich-text-widgets.md)
 and [forms/front-matter design](rich-text-widget-forms.md). Task IDs and existing completion
@@ -16,7 +16,7 @@ proposed; update their status here when implementation begins.
 | 1. Hosting             | Complete    | Keyed mounts, disposal, input ownership, focus-preserving changes, and a synthetic editable widget work in two views               |
 | 2. Native table        | Complete    | GFM table cells and structure edit through document history and round-trip formatting                                              |
 | 3. Plugin storage      | Complete    | Registry, session host, command validation, Markdown envelopes, unknown-record preservation, and structured clipboard              |
-| 4. Local forms         | Not started | Standalone form control, Zod adapter, embedded and native front-matter bindings, source preservation, drafts, validation, and undo |
+| 4. Local forms         | Complete    | Standalone form control, Zod adapter, embedded and native front-matter bindings, source preservation, drafts, validation, and undo |
 | 5. Additional adapters | Not started | Second schema adapter and declarative embedded schemas with explicit unsupported cases                                             |
 | 6. External data       | Not started | Host-supplied resource services, policy invalidation, conflicts, cancellation, and explicit submission                             |
 
@@ -50,7 +50,7 @@ unit/browser checks when implementation changes the public surface.
 
 This checklist is the implementation tracker. The stage table above summarizes the same
 work. Update both when a stage changes; do not maintain a second independent task list.
-The continuation authorizes Stage 3. Stop after W8; later stages and visualnovel remain outside this run.
+The continuation authorizes Stage 4. Stop after F8; later stages and visualnovel remain outside this run.
 
 Task IDs remain stable when work is split or reordered. Before starting a task, record its
 ID in the current-work entry below. Mark a checkbox complete only after its acceptance
@@ -58,9 +58,9 @@ condition is demonstrated, and record the relevant commit and checks in the comp
 Record blockers with the affected task ID and the concrete dependency needed to continue.
 Tasks without a checkbox marked complete are pending, including partially implemented work.
 
-- Current work: none; W1–W8 are complete and verified.
-- Next task: F1, finalize the normalized form schema and binding contract.
-- Blockers: none for Stage 3. Remaining [design decisions](rich-text-widgets.md#decisions-still-requiring-implementation-prototypes)
+- Current work: none; F1–F8 are complete and verified.
+- Next task: A1, implement the optional nstructjs adapter for a documented subset.
+- Blockers: none for Stage 4. Remaining [design decisions](rich-text-widgets.md#decisions-still-requiring-implementation-prototypes)
   belong to later stages.
 
 ### Preparation
@@ -153,27 +153,27 @@ Dependencies: H1–H9. T1–T6 should validate native hosting before the plugin 
 Dependencies: H1–H9 and W1–W8 for embedded plugin values. Native front-matter forms also
 require source retention; the current canonical Markdown serializer is not sufficient.
 
-- [ ] F1. Finalize the normalized form schema, presentation metadata, value codecs, and
+- [x] F1. Finalize the normalized form schema, presentation metadata, value codecs, and
       binding interface against real fixtures. Separate authored input, editable representation,
       and transformed validation output; specify unsupported constructs explicitly.
-- [ ] F2. Implement the optional Zod adapter with support for the consumer's Zod major
+- [x] F2. Implement the optional Zod adapter with support for the consumer's Zod major
       version. Test required/optional values, defaults, nested objects/arrays, unions, and
       refinements without silently weakening validation or writing defaults on mount.
-- [ ] F3. Implement the standalone form control using path.ux controls and command-backed
+- [x] F3. Implement the standalone form control using path.ux controls and command-backed
       drafts. Verify incomplete answers can be saved, full validation gates submission, and no
       duplicate `DataPathSetOp` or direct saved-payload mutation occurs.
-- [ ] F4. Wrap the form as a block plugin with a host-supplied schema and embedded answers.
+- [x] F4. Wrap the form as a block plugin with a host-supplied schema and embedded answers.
       Verify payload/schema version separation, history, read-only modes, and two-view updates.
-- [ ] F5. Implement or expose the source-retention and patch integration needed by native
+- [x] F5. Implement or expose the source-retention and patch integration needed by native
       front matter. Verify metadata-only edits preserve body source, body-only edits preserve
       YAML, and undo restores comments, ordering, unknown fields, line endings, and prefixes.
-- [ ] F6. Bind the shared form to a native front-matter block through the opt-in resolver,
+- [x] F6. Bind the shared form to a native front-matter block through the opt-in resolver,
       with host-owned bounded YAML parsing and schema selection. Test missing front matter,
       path/type conflicts, malformed YAML, unsupported aliases/tags, and raw-source fallback.
-- [ ] F7. Demonstrate form/raw-source views sharing one session and draft barrier. Verify a
+- [x] F7. Demonstrate form/raw-source views sharing one session and draft barrier. Verify a
       schema switch resolves drafts, external changes cannot be overwritten by stale blur, and
       save preparation does not bypass the application's disk conflict checks.
-- [ ] F8. Add an example using visualnovel-shaped fixtures and document both binding routes.
+- [x] F8. Add an example using visualnovel-shaped fixtures and document both binding routes.
       Run schema/provider tests and browser form tests, including partially filled required
       fields and cross-field errors, before closing stage 4.
 
@@ -359,3 +359,47 @@ the surrounding Markdown document still uses its existing canonical serializer. 
 transfers with an unclosed reserved container are explicitly refused. Host metadata/policy
 changes require invalidation. The five existing browser skips and the earlier WebKit,
 physical/mobile IME, and movement-without-`moveBefore` limitations remain.
+
+Stage 4 completion on 2026-09-16:
+
+| Tasks | Commit and acceptance evidence                                                                                                                                                                                                                                                                                                |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| F1    | `b0a6195f`: normalized input schema, presentation metadata, editable JSON/text codecs, and versioned binding contract. Consumer-shaped character/location fixtures exercise records, nested arrays/objects and unions. Tests preserve unknown authored keys and separate transformed output from saved values.                |
+| F2    | `b0a6195f`: optional Zod 3 adapter retains original asynchronous validation, refinements, transforms, defaults and unknown-key policy. Defaults are not evaluated during normalization. Unsupported constructs produce diagnostics; no executable schema is stored in a document.                                             |
+| F3    | `b0a6195f`: standalone path.ux controls keep local text drafts with datapath undo disabled. Unit/browser cases verify incomplete answers, unencodable drafts, omission, full submission validation, stale validation results, and one document history entry per commit.                                                      |
+| F4    | `b0a6195f`: explicit `pathux.form` plugin uses host schema references and embedded answers. Both engines verify separate payload/schema versions, unavailable schema preservation, two independent views, undo, read-only behavior, and shared-stack write refusal.                                                           |
+| F5    | `b0a6195f`: opt-in retained source travels through provider snapshots. Tests cover exact metadata/body preservation, comments, quotes, unknown fields, CRLF/BOM/blank prefixes, undo/redo, missing/deleted front matter, unsupported delimiters, clipboard isolation, runtime media IDs and duplicate widget identity repair. |
+| F6    | `b0a6195f`: native resolver requires retained source and delegates parsing/selection to the host. The example's bounded YAML codec rejects malformed input, aliases, anchors, tags, hostile keys and unsupported patches. Tests cover missing front matter, path/type conflicts, diagnostics and raw fallback.                |
+| F7    | `b0a6195f`: raw/form views share a session and draft barrier. Tests verify schema-switch flushing, stale raw refusal, detached draft recovery, simulated disk hash conflicts, and successful earlier saves leaving later edits unsaved.                                                                                       |
+| F8    | `b0a6195f`: the Markdown example includes both bindings, standalone controls, shared views and a raw editor. The example was inspected visually; all form and example cases pass in Chromium and Firefox. Both binding routes and their limitations are documented in the forms design.                                       |
+
+Final verification:
+
+- `pnpm run typecheck` passes the full library and example checks; `pnpm run build` passes.
+- `pnpm run test --maxWorkers=4` passes all 1,074 tests across 76 files. The form suite adds
+  42 cases, and the main barrel surface remains unchanged. The final focused form/Markdown/plugin
+  unit regression passes all 129 tests.
+- `pnpm exec playwright test playwright/richtext --workers=2 --reporter=line` passes 172 tests
+  with the five existing skips. After the final source-fallback and field-visibility changes,
+  the forms/example regression passes all 32 cases in both engines. No new skips were added.
+- `pnpm run lint:check` passes with seven existing datapath warnings and zero prose findings.
+  Changed-file Prettier and CRLF-aware whitespace checks pass. Full `pnpm run format:check`
+  still reports only the same 66 unchanged path-controller files.
+
+Review covered authored/input/output separation, immutable snapshots, scoped plugin commands,
+shared history authorization, schema invalidation, raw/source conflicts, source-offset repairs,
+clipboard boundaries, mount-only media identities, and application save ownership. Native
+forms refuse documents opened without source retention. Unsupported delimiter variants retain
+raw source instead of losing a prefix. Browser assertions were corrected to accept the error
+prefix on stale validation diagnostics and click the path.ux button host rather than its
+internal label. The final form and example runs pass. Generated example bundles are committed;
+the main library bundle contains no form, Zod or YAML runtime imports. No submodule change or
+gitlink update was needed. Visualnovel was not modified.
+
+Complex fields use JSON text controls. Unsupported Zod constructs need an application adapter;
+unsupported YAML patches remain raw-editable and retain their drafts. Metadata-only edits retain
+untouched body source, while body edits use the existing canonical body serializer; undo restores
+the authored source. Retained source increases history snapshot memory. The example's disk writer
+is simulated, so applications must retain their own authoritative hash/identity checks. WebKit,
+physical/mobile IMEs and uninterrupted movement without `moveBefore` retain the earlier limits.
+Stage 5 adapters, external services, inline records and the visualnovel migration remain pending.
