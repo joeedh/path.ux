@@ -1,6 +1,6 @@
 # Embedded rich text widget tasks
 
-Status: Stages 1 and 2 are complete. Stopped at the Stage 2 boundary.
+Status: Stages 1 and 2 are complete. Stage 1 acceptance is reverified; later work is paused.
 
 This is the sole status and completion tracker for the [widget architecture](rich-text-widgets.md)
 and [forms/front-matter design](rich-text-widget-forms.md). Task IDs and existing completion
@@ -50,7 +50,8 @@ unit/browser checks when implementation changes the public surface.
 
 This checklist is the implementation tracker. The stage table above summarizes the same
 work. Update both when a stage changes; do not maintain a second independent task list.
-Stages 1 and 2 are authorized. Stop after T6; later stages and visualnovel remain outside this run.
+The current request stops at H9. Preserve the existing Stage 2 commits; do not advance
+Stage 3 or modify visualnovel during this run.
 
 Task IDs remain stable when work is split or reordered. Before starting a task, record its
 ID in the current-work entry below. Mark a checkbox complete only after its acceptance
@@ -58,9 +59,9 @@ condition is demonstrated, and record the relevant commit and checks in the comp
 Record blockers with the affected task ID and the concrete dependency needed to continue.
 Tasks without a checkbox marked complete are pending, including partially implemented work.
 
-- Current work: none; T1–T6 are complete and verified.
-- Next task: W1, finalize the versioned Markdown block envelope and clipboard grammar.
-- Blockers: none for Stage 2. Remaining [design decisions](rich-text-widgets.md#decisions-still-requiring-implementation-prototypes)
+- Current work: none; H1–H9 are complete and reverified at the requested boundary.
+- Next task: W1, pending authorization; T1–T6 are already committed and verified.
+- Blockers: none for Stage 1. Remaining [design decisions](rich-text-widgets.md#decisions-still-requiring-implementation-prototypes)
   belong to later stages.
 
 ### Preparation
@@ -305,3 +306,18 @@ HTML tables and extra authored columns remain read-only. The existing three Fire
 remain, plus two table cases that require Chromium's clipboard permissions or CDP composition.
 WebKit, physical/mobile IMEs and movement without `Element.moveBefore` remain unverified.
 Stage 3 and later work is pending; no plugin persistence or media service behavior was added.
+
+Stage 1 boundary recheck on 2026-09-16:
+
+The current request stops at H9. The existing hosting implementation (`5500c3d4`, with
+path-controller `6de53ad`) and acceptance record (`6df6a5f4`) remain complete. Existing
+Stage 2 commits through `9ac40766` were preserved. The unintegrated Stage 3 prototype files
+and checklist diff were set aside outside the source tree; no W task passed acceptance.
+
+On this checkout, `pnpm run typecheck` passed both library and example passes,
+`pnpm run build` passed without changing tracked bundles, and `pnpm run test` passed all
+995 tests in 73 files. `pnpm exec playwright test playwright/richtext/widgets.spec.ts
+--workers=2 --reporter=line` passed 19 cases with one Firefox CDP composition skip.
+`pnpm run lint:check` passed with seven existing datapath warnings and no prose findings.
+Review reconfirmed connected mount retention, command/history authorization, draft recovery,
+legacy media compatibility, and the documented browser limitations. Visualnovel was untouched.
