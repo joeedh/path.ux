@@ -1,6 +1,6 @@
 # Embedded rich text widget tasks
 
-Status: Stages 1–6 are complete. The inline follow-up is in progress.
+Status: Stages 1–6 and I1–I3 are complete. Stopped at the inline follow-up boundary.
 
 This is the sole status and completion tracker for the [widget architecture](rich-text-widgets.md)
 and [forms/front-matter design](rich-text-widget-forms.md). Task IDs and existing completion
@@ -19,6 +19,7 @@ proposed; update their status here when implementation begins.
 | 4. Local forms         | Complete | Standalone form control, Zod adapter, embedded and native front-matter bindings, source preservation, drafts, validation, and undo |
 | 5. Additional adapters | Complete | Second schema adapter and declarative embedded schemas with explicit unsupported cases                                             |
 | 6. External data       | Complete | Host-supplied resource services, policy invalidation, conflicts, cancellation, and explicit submission                             |
+| Inline follow-up       | Complete | Bounded inline records, stable identity, clipboard, shared hosting and browser acceptance                                          |
 
 Stage 1 includes a review of serialization at the toolstack boundary before later stages
 depend on widget commands. Begin forms with a host-supplied Zod schema; add nstructjs against
@@ -58,8 +59,8 @@ condition is demonstrated, and record the relevant commit and checks in the comp
 Record blockers with the affected task ID and the concrete dependency needed to continue.
 Tasks without a checkbox marked complete are pending, including partially implemented work.
 
-- Current work: I3 acceptance passed; commit the implementation and record final verification.
-- Next task: finish I3 verification, review and commit I1–I3; then stop before V1.
+- Current work: none; I1–I3 are complete and verified.
+- Next task: V1, the separate visualnovel integration stage.
 - Blockers: none. The [inline decisions](rich-text-widgets.md#inline-record-syntax-and-prototype-decisions) are specified.
 
 ### Preparation
@@ -205,9 +206,8 @@ Dependencies: W1–W8 and F1–F8. This stage introduces no default video or ser
 
 ### Follow-up: true inline plugin records
 
-Status: in progress after Stage 6; required to complete inline plugin
-support. Existing image atoms are not a substitute for this work. Dependencies: stages 1,
-3, and 4; revisit the stage schedule after their browser and persistence results.
+Status: complete after Stage 6. Dependencies on stages 1, 3 and 4 are satisfied.
+Acceptance includes true inline plugin records, independently of existing image atoms.
 
 - [x] I1. Finalize a bounded, escaped inline record syntax and supported placements without
       putting arbitrary payloads in URLs or accepting executable custom HTML.
@@ -489,11 +489,44 @@ fields retain JSON text controls. Default media behavior is unchanged. Earlier W
 physical/mobile IME and movement-without-`moveBefore` limits remain. True inline records and
 the separate visualnovel migration remain pending.
 
-### Inline follow-up verification in progress
+### Inline follow-up acceptance — 2026-09-17
 
-I1 and I2 acceptance passes in the working tree: 21 focused unit cases cover bounded syntax,
-escaped lookalikes, adjacent atoms, placements, unknown records, ID repair, split/join,
-movement, range replacement, undo/redo, clipboard and authorization. The inline
-browser suite passes 18 cases across Chromium and Firefox, including retained focus and
-independent drafts. The raw-token parser and outer composition checks are included in the
-final regression run. Commit hashes and final verification will be recorded after I3 passes.
+| Tasks | Commit and acceptance evidence                                                                                                                                                                                                                                                                                                     |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| I1    | `1cae18e2`: bounded hexadecimal UTF-8 JSON tokens are parsed before Markdown escape/entity decoding. Explicit placement opt-in preserves existing plugins. Adjacent code spans were rejected by the syntax prototype; the braced form round-trips adjacent atoms and escaped literals.                                             |
+| I2    | `1cae18e2`: inline storage, update/removal, insertion and movement use shared commands and data-only history. Split/join, range replacement, undo/redo, source repair, clipboard identities and authorization pass unit coverage. Code/link marks, wikilinks, literal HTML code and table cells preserve their intended semantics. |
+| I3    | `1cae18e2`: Chromium and Firefox verify caret slots, keyboard entry/exit, control and adjacent prose composition, focus across split/join/movement, independent drafts, unknown-record fallback, deletion/undo and unsupported-provider clipboard refusal. The inline fixture was inspected visually.                              |
+
+Final verification:
+
+- Full `pnpm run typecheck` and `pnpm run build` pass. The main barrel export regression passes;
+  only the editor bridge and atom exit behavior change in the main library bundle. Library and
+  example generated artifacts are committed.
+- `pnpm run test --maxWorkers=4` passes 1,169 tests in 79 files. After the final render-only
+  table regression was added, the inline/Markdown provider check passes all 99 tests,
+  including the final 21 inline cases.
+- The full rich-text Playwright suite passes 240 tests with five existing skips. Final
+  inline/block-plugin verification passes 32 tests. The final inline/table verification
+  passes 38 tests with its two existing Firefox clipboard/CDP skips. There are no new skips.
+- `pnpm run lint:check` passes with seven existing datapath warnings and zero prose findings.
+  Changed-file Prettier and CRLF-aware whitespace checks pass. Full formatting still reports
+  the same 66 unchanged path-controller files.
+
+Review covered escaped-token activation, duplicate ID repair in retained Markdown/HTML,
+unknown records, literal code and table fallbacks, widget formatting boundaries, clipboard
+policy, stale payloads versus changed locations, retained mounts and shared history gating.
+No default player, iframe renderer, service detection or network fetch was introduced.
+Legacy media callbacks remain covered by the full browser regression. The path-controller
+submodule stays at `6de53ada9134e9152c82d64fd3b30c704160ba3e`; visualnovel was not modified.
+
+Verification logs are in the system temporary directory: `pathux-inline-typecheck.log`,
+`pathux-inline-build.log`, `pathux-inline-unit-final.log`, `pathux-inline-unit-accepted.log`,
+`pathux-inline-browser-full.log`, `pathux-inline-browser-accepted.log`,
+`pathux-inline-table-browser.log`, `pathux-inline-lint-accepted.log`,
+`pathux-inline-format.log` and `pathux-inline-changed-format.log`. The inline-widgets screenshot
+is produced by the unknown-record browser case in the test output directory.
+
+Code blocks and native table cells keep literal record source. Repairing duplicate IDs in
+imported HTML without exact source positions canonicalizes the retained body, preserving
+front matter. WebKit, physical/mobile IMEs and connected movement without `Element.moveBefore`
+remain unverified. V1–V4 are separate consumer work and remain unchecked.
