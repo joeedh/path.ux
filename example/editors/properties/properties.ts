@@ -260,7 +260,8 @@ export class PropsEditor extends Editor {
       close.addEventListener("click", async () => {
         if (
           (await demo.session.prepareSave()).status !== "ready" ||
-          (await demo.pluginSession.prepareSave()).status !== "ready"
+          (await demo.pluginSession.prepareSave()).status !== "ready" ||
+          (await demo.adapters.session.prepareSave()).status !== "ready"
         )
           return;
         dialog.close();

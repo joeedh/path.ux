@@ -32979,9 +32979,9 @@ var init_icon_enum = __esm({
 });
 
 // scripts/core/base/ui_icons.ts
-function withDrawSize(manager3, sheet, cb) {
-  const base = manager3.iconsheets[sheet];
-  const found = manager3.findSheet(sheet);
+function withDrawSize(manager4, sheet, cb) {
+  const base = manager4.iconsheets[sheet];
+  const found = manager4.findSheet(sheet);
   const ds = found.drawsize;
   found.drawsize = base.drawsize;
   const ret = cb(found);
@@ -32997,8 +32997,8 @@ function iconSheetFromPackFlag(flag) {
 function getIconManager() {
   return iconmanager;
 }
-function setIconManager(manager3, IconSheetsOverride) {
-  iconmanager.load(manager3);
+function setIconManager(manager4, IconSheetsOverride) {
+  iconmanager.load(manager4);
   if (IconSheetsOverride !== void 0) {
     for (const k in IconSheetsOverride) {
       IconSheets[k] = IconSheetsOverride[k];
@@ -33152,15 +33152,15 @@ var init_ui_icons = __esm({
       images;
       id;
       manager;
-      constructor(manager3, key, id, baseImage) {
+      constructor(manager4, key, id, baseImage) {
         this.key = key;
         this.baseImage = baseImage;
         this.images = [];
         this.id = id;
-        this.manager = manager3;
+        this.manager = manager4;
       }
       regenIcons() {
-        const manager3 = this.manager;
+        const manager4 = this.manager;
         const doSheet = (sheet) => {
           const size = sheet.drawsize;
           const canvas = document.createElement("canvas");
@@ -33175,7 +33175,7 @@ var init_ui_icons = __esm({
             });
           });
         };
-        for (const sheet of manager3.iconsheets) {
+        for (const sheet of manager4.iconsheets) {
           doSheet(sheet);
         }
       }
@@ -37349,15 +37349,15 @@ function getNativeIcon(icon, size = 16) {
     return iconcache[icon];
   }
   try {
-    const manager3 = getIconManager();
-    const closestSheet = manager3.findClosestSheet(size);
-    const tilesize = manager3.getTileSize(closestSheet);
+    const manager4 = getIconManager();
+    const closestSheet = manager4.findClosestSheet(size);
+    const tilesize = manager4.getTileSize(closestSheet);
     const canvas = document.createElement("canvas");
     const g = canvas.getContext("2d");
     canvas.width = canvas.height = size;
     const scale = size / tilesize;
     g.scale(scale, scale);
-    manager3.canvasDraw(
+    manager4.canvasDraw(
       { getDPI: () => 1 },
       canvas,
       g,
@@ -37725,11 +37725,11 @@ function getNativeIcon2(icon, iconsheet2 = 0, invertColors = false, size = 16) {
     icongen = myRequire2("./icogen.cjs");
   }
   window.icongen = icongen;
-  const manager3 = getIconManager();
+  const manager4 = getIconManager();
   const images = [];
   if (1) {
-    const closestSheet = manager3.findClosestSheet(size);
-    const tilesize = manager3.getTileSize(closestSheet);
+    const closestSheet = manager4.findClosestSheet(size);
+    const tilesize = manager4.getTileSize(closestSheet);
     const canvas = document.createElement("canvas");
     const g = canvas.getContext("2d");
     canvas.width = canvas.height = size;
@@ -37738,7 +37738,7 @@ function getNativeIcon2(icon, iconsheet2 = 0, invertColors = false, size = 16) {
     }
     const scale = size / tilesize;
     g.scale(scale, scale);
-    manager3.canvasDraw(
+    manager4.canvasDraw(
       { getDPI: () => 1 },
       canvas,
       g,
@@ -91906,25 +91906,27 @@ var FormControl = class {
 
 // scripts/widgets/richtext/form_plugin.ts
 function payload(value2) {
-  return formObject(value2) && formObject(value2.schema) && typeof value2.schema.id === "string" && Number.isSafeInteger(value2.schema.version) && Number(value2.schema.version) > 0 && formObject(value2.values);
+  return formObject(value2) && formObject(value2.schema) && formObject(value2.values);
 }
-function createFormPlugin(context, resolveSchema) {
+function createFormPlugin(context, resolveSchema, resolveEmbedded) {
+  const valid = (value2) => payload(value2) && ("embedded" in value2.schema ? !!resolveEmbedded && Object.keys(value2.schema).length === 1 : typeof value2.schema.id === "string" && Number.isSafeInteger(value2.schema.version) && Number(value2.schema.version) > 0);
   return {
     type: "pathux.form",
     version: 1,
     label: "Form",
-    validate: payload,
+    validate: valid,
     create(initial, host) {
-      if (!payload(initial.record.payload)) throw new Error("Invalid form payload");
+      if (!valid(initial.record.payload) || !payload(initial.record.payload))
+        throw new Error("Invalid form payload");
       const reference = initial.record.payload.schema;
-      const registered = resolveSchema(reference, host.document);
+      const signature = JSON.stringify(reference);
+      const registered = "embedded" in reference ? resolveEmbedded?.(reference.embedded, host.document) : resolveSchema(reference, host.document);
       if (!registered) throw new Error("Unregistered form schema");
       let latest = initial;
       const snapshots = /* @__PURE__ */ new WeakMap();
       const read2 = () => {
         const data = latest.record.payload;
-        if (!payload(data) || data.schema.id !== reference.id || data.schema.version !== reference.version)
-          return;
+        if (!payload(data) || JSON.stringify(data.schema) !== signature) return;
         const snapshot2 = { revision: latest.revision, values: data.values };
         snapshots.set(snapshot2, latest);
         return snapshot2;
@@ -103033,6 +103035,402 @@ var locationFormSchema = external_exports.object({
   ]).optional()
 });
 
+// scripts/widgets/richtext/form_declarative.ts
+function declarativeFormSchema(source) {
+  const diagnostics = [];
+  const unsupported = (path2, message2) => {
+    diagnostics.push({ path: path2, message: message2 });
+    return { kind: "unsupported", reason: message2 };
+  };
+  const visit4 = (value2, path2) => {
+    if (!formObject(value2)) return unsupported(path2, "Schema node must be an object");
+    const allowed = {
+      string: ["minLength", "maxLength"],
+      number: ["integer", "min", "max"],
+      boolean: [],
+      null: [],
+      enum: ["values"],
+      object: ["fields"],
+      array: ["item", "minItems", "maxItems"],
+      record: ["value"],
+      union: ["options"]
+    };
+    if (typeof value2.kind !== "string" || !Object.hasOwn(allowed, value2.kind))
+      return unsupported(path2, "Unsupported schema kind; use a host-registered implementation");
+    const keys2 = ["kind", "optional", "description", ...allowed[value2.kind]];
+    for (const key of Object.keys(value2)) {
+      if (!keys2.includes(key))
+        unsupported(
+          [...path2, key],
+          "Unsupported schema keyword; use a host-registered implementation"
+        );
+    }
+    if (value2.optional !== void 0 && typeof value2.optional !== "boolean")
+      unsupported(path2, "optional must be boolean");
+    if (value2.description !== void 0 && typeof value2.description !== "string")
+      unsupported(path2, "description must be text");
+    for (const key of ["minLength", "maxLength", "minItems", "maxItems"]) {
+      if (value2[key] !== void 0 && (!Number.isSafeInteger(value2[key]) || Number(value2[key]) < 0))
+        unsupported([...path2, key], "Length bounds must be nonnegative safe integers");
+    }
+    for (const key of ["min", "max"]) {
+      if (value2[key] !== void 0 && typeof value2[key] !== "number")
+        unsupported([...path2, key], "Numeric bounds must be numbers");
+    }
+    for (const [low, high] of [
+      ["min", "max"],
+      ["minLength", "maxLength"],
+      ["minItems", "maxItems"]
+    ]) {
+      if (typeof value2[low] === "number" && typeof value2[high] === "number" && value2[low] > value2[high])
+        unsupported(path2, "Minimum exceeds maximum");
+    }
+    if (value2.integer !== void 0 && typeof value2.integer !== "boolean")
+      unsupported(path2, "integer must be boolean");
+    switch (value2.kind) {
+      case "object": {
+        if (!formObject(value2.fields)) return unsupported(path2, "Object schema requires fields");
+        const fields2 = /* @__PURE__ */ Object.create(null);
+        for (const [key, field] of Object.entries(value2.fields))
+          fields2[key] = visit4(field, [...path2, key]);
+        return { ...value2, kind: "object", fields: fields2 };
+      }
+      case "array":
+        return { ...value2, kind: "array", item: visit4(value2.item, [...path2, "*"]) };
+      case "record":
+        return { ...value2, kind: "record", value: visit4(value2.value, [...path2, "*"]) };
+      case "union":
+        if (!Array.isArray(value2.options) || value2.options.length < 2)
+          return unsupported(path2, "Union requires at least two options");
+        return {
+          ...value2,
+          kind: "union",
+          options: value2.options.map((v, i2) => visit4(v, [...path2, i2]))
+        };
+      case "enum":
+        if (!Array.isArray(value2.values) || !value2.values.length || value2.values.some((v) => v !== null && typeof v === "object"))
+          return unsupported(path2, "Enum requires primitive JSON values");
+    }
+    return value2;
+  };
+  let root2;
+  try {
+    const value2 = widgetJson(source);
+    if (!formObject(value2) || value2.format !== "pathux.form-schema" || value2.version !== 1 || Object.keys(value2).some((k) => !["format", "version", "root"].includes(k)))
+      root2 = unsupported([], "Unsupported declarative schema envelope or version");
+    else root2 = visit4(value2.root, []);
+  } catch (error2) {
+    root2 = unsupported([], String(error2));
+  }
+  const validate = (input) => {
+    let budget = 5e4;
+    const check = (node2, value2, path2) => {
+      if (--budget < 0) throw new Error("Schema validation exceeds its work limit");
+      const fail = (message2) => [{ path: path2, message: message2 }];
+      if (value2 === void 0) return node2.optional ? [] : fail("Required value is missing");
+      switch (node2.kind) {
+        case "string":
+          return typeof value2 !== "string" ? fail("Expected text") : value2.length < (node2.minLength ?? 0) || value2.length > (node2.maxLength ?? Infinity) ? fail("Text length is outside schema bounds") : [];
+        case "number":
+          return typeof value2 !== "number" || !Number.isFinite(value2) ? fail("Expected a finite number") : node2.integer && !Number.isSafeInteger(value2) ? fail("Expected a safe integer") : value2 < (node2.min ?? -Infinity) || value2 > (node2.max ?? Infinity) ? fail("Number is outside schema bounds") : [];
+        case "boolean":
+          return typeof value2 === "boolean" ? [] : fail("Expected a boolean");
+        case "null":
+          return value2 === null ? [] : fail("Expected null");
+        case "enum":
+          return node2.values.includes(value2) ? [] : fail("Value is not in the enum");
+        case "object":
+          return formObject(value2) ? Object.entries(node2.fields).flatMap(
+            ([key, field]) => check(field, Object.hasOwn(value2, key) ? value2[key] : void 0, [...path2, key])
+          ) : fail("Expected an object");
+        case "array":
+          if (!Array.isArray(value2)) return fail("Expected an array");
+          if (value2.length < (node2.minItems ?? 0) || value2.length > (node2.maxItems ?? Infinity))
+            return fail("Array length is outside schema bounds");
+          return value2.flatMap((v, i2) => check(node2.item, v, [...path2, i2]));
+        case "record":
+          return formObject(value2) ? Object.entries(value2).flatMap(([key, v]) => check(node2.value, v, [...path2, key])) : fail("Expected a record");
+        case "union":
+          for (const option of node2.options) if (!check(option, value2, path2).length) return [];
+          return fail("Value does not match any union option");
+      }
+    };
+    return check(root2, input, []);
+  };
+  return {
+    root: root2,
+    diagnostics,
+    async validate(input) {
+      if (diagnostics.length) return { success: false, issues: diagnostics };
+      try {
+        const output = widgetJson(input);
+        const issues = validate(output);
+        return issues.length ? { success: false, issues } : { success: true, output };
+      } catch (error2) {
+        return { success: false, issues: [{ path: [], message: String(error2) }] };
+      }
+    }
+  };
+}
+
+// scripts/widgets/richtext/form_embedded.ts
+function createDeclarativeFormPlugin(context, resolveSchema) {
+  return createFormPlugin(context, resolveSchema, (source) => ({
+    schema: declarativeFormSchema(source)
+  }));
+}
+
+// scripts/widgets/richtext/form_nstruct.ts
+init_nstructjs_es6();
+function nstructFormSchema(struct) {
+  const diagnostics = [];
+  const types = struct_parser_exports.StructEnum;
+  let nodes = 0;
+  const unsupported = (path2, message2) => {
+    diagnostics.push({ path: path2, message: message2 });
+    return { kind: "null" };
+  };
+  const visit4 = (type, path2, depth = 0) => {
+    if (++nodes > 1e4 || depth > 24)
+      return unsupported(path2, "Recursive or oversized nstructjs metadata");
+    const integer = (min, max) => ({
+      kind: "number",
+      integer: true,
+      min,
+      max
+    });
+    switch (type.type) {
+      case types.INT:
+        return integer(-2147483648, 2147483647);
+      case types.UINT:
+        return integer(0, 4294967295);
+      case types.SHORT:
+        return integer(-32768, 32767);
+      case types.USHORT:
+        return integer(0, 65535);
+      case types.BYTE:
+        return integer(0, 255);
+      case types.SIGNED_BYTE:
+        return integer(-128, 127);
+      case types.FLOAT:
+        return { kind: "number", min: -34028234663852886e22, max: 34028234663852886e22 };
+      case types.DOUBLE:
+        return { kind: "number" };
+      case types.STRING:
+        return { kind: "string" };
+      case types.BOOL:
+        return { kind: "boolean" };
+      case types.OPTIONAL:
+        return {
+          kind: "union",
+          optional: true,
+          options: [visit4(type.data, path2, depth + 1), { kind: "null" }]
+        };
+      case types.ARRAY:
+        if (type.data.iname)
+          return unsupported(path2, "Iterator variables require an explicit JSON codec");
+        return { kind: "array", item: visit4(type.data.type, [...path2, "*"], depth + 1) };
+      case types.STRUCT:
+      case types.TSTRUCT:
+        return unsupported(
+          path2,
+          "Struct references and class instances require a host-registered JSON codec"
+        );
+      default:
+        return unsupported(
+          path2,
+          "Unsupported nstructjs value encoding; use a host-registered JSON codec"
+        );
+    }
+  };
+  const fields2 = /* @__PURE__ */ Object.create(null);
+  for (const field of struct.fields) {
+    if (++nodes > 1e4) {
+      unsupported([], "Oversized nstructjs metadata");
+      break;
+    }
+    if (["this", "__proto__", "constructor", "prototype"].includes(field.name)) {
+      unsupported(
+        [field.name],
+        "Class-value encodings and unsafe field names require an explicit codec"
+      );
+      continue;
+    }
+    if (Object.hasOwn(fields2, field.name)) unsupported([field.name], "Duplicate struct field");
+    if (field.get)
+      unsupported([field.name], "Helper expressions require a host-registered implementation");
+    fields2[field.name] = visit4(field.type, [field.name]);
+  }
+  const schema4 = declarativeFormSchema({
+    format: "pathux.form-schema",
+    version: 1,
+    root: { kind: "object", fields: fields2 }
+  });
+  if (!diagnostics.length) return schema4;
+  return {
+    root: { kind: "unsupported", reason: "Unsupported nstructjs schema" },
+    diagnostics: [...diagnostics, ...schema4.diagnostics],
+    async validate() {
+      return { success: false, issues: diagnostics };
+    }
+  };
+}
+
+// example/editors/properties/form_adapters.ts
+init_nstructjs_es6();
+var manager3 = new STRUCT();
+var Intake = class {
+  loadSTRUCT(reader) {
+    reader(this);
+  }
+  static STRUCT = `ExampleFormIntake { name: string; age: uint; active: bool; tags: array(string); note: optional(string); }`;
+};
+manager3.register(Intake);
+var intakeDescription = {
+  format: "pathux.form-schema",
+  version: 1,
+  root: {
+    kind: "object",
+    fields: {
+      name: { kind: "string" },
+      age: { kind: "number", integer: true, min: 0, max: 4294967295 },
+      active: { kind: "boolean" },
+      tags: { kind: "array", item: { kind: "string" } },
+      note: { kind: "union", optional: true, options: [{ kind: "string" }, { kind: "null" }] }
+    }
+  }
+};
+var intakeSchemas = {
+  nstruct: nstructFormSchema(manager3.get_struct("ExampleFormIntake")),
+  declarative: declarativeFormSchema(intakeDescription)
+};
+var intakeValues = {
+  name: "Ada",
+  age: 32,
+  active: true,
+  tags: ["author"],
+  unknown: "retained"
+};
+
+// example/editors/properties/form_adapters_demo.ts
+function createAdapterDemo(parent, context) {
+  const nextDescription = {
+    ...intakeDescription,
+    root: {
+      kind: "object",
+      fields: {
+        ...intakeDescription.root.fields,
+        displayName: { kind: "string" }
+      }
+    }
+  };
+  const nextSchema = declarativeFormSchema(nextDescription);
+  const provider = new MarkdownProvider();
+  const stack = new ToolStack();
+  const session = new DocumentSession(
+    markdownDocFromText(
+      ["nstruct", "declarative"].map(
+        (id) => encodeWidgetFence({
+          id,
+          type: "pathux.form",
+          version: 1,
+          payload: {
+            schema: id === "nstruct" ? { id: "intake", version: 1 } : { embedded: intakeDescription },
+            values: intakeValues
+          }
+        })
+      ).join("\n\n")
+    ),
+    provider,
+    stack
+  );
+  const registry = new WidgetRegistry();
+  registry.register(
+    createDeclarativeFormPlugin(
+      context,
+      (ref) => ref.id === "intake" && ref.version === 1 ? { schema: intakeSchemas.nstruct } : ref.id === "intake" && ref.version === 2 ? { schema: nextSchema } : void 0
+    )
+  );
+  const host = new DocumentWidgetHost(session, registry, {
+    document: {},
+    authorize: ({ action }) => action !== "external"
+  });
+  const schemaSignature = () => JSON.stringify(
+    ["nstruct", "declarative"].map((id) => {
+      const data = provider.widgets.read(session.doc, id)?.record.payload;
+      return data && formObject(data) ? data.schema : null;
+    })
+  );
+  let signature = schemaSignature();
+  const unsubscribe = session.onChange(() => {
+    const next = schemaSignature();
+    if (next !== signature) {
+      signature = next;
+      host.invalidate();
+    }
+  });
+  const editors = [0, 1].map((index2) => {
+    const section = document.createElement("section");
+    section.id = `adapter${index2}`;
+    const heading3 = document.createElement("h3");
+    heading3.textContent = `Optional schema adapters, view ${index2 + 1}`;
+    const editor = UIBase.constructElement(
+      "rich-text-x",
+      context
+    );
+    editor.style.width = "580px";
+    section.append(heading3, editor);
+    parent.append(section);
+    editor.session = session;
+    return editor;
+  });
+  let conversions = 0;
+  const migrate = async (id) => {
+    if (!["nstruct", "declarative"].includes(id)) return "refused";
+    const prepared = await session.prepareSave();
+    if (prepared.status !== "ready") return prepared.status;
+    const expected = provider.widgets.read(session.doc, id);
+    if (!expected || !formObject(expected.record.payload) || !formObject(expected.record.payload.values))
+      return "refused";
+    const old = expected.record.payload;
+    const values = expected.record.payload.values;
+    const target = id === "nstruct" ? { id: "intake", version: 2 } : { embedded: nextDescription };
+    const original = id === "nstruct" ? { id: "intake", version: 1 } : { embedded: intakeDescription };
+    if (JSON.stringify(old.schema) !== JSON.stringify(original)) return "refused";
+    if (!session.canWrite) return "refused";
+    conversions++;
+    const command = host.prepareUpdate(expected, {
+      ...old,
+      schema: target,
+      values: { ...values, ...Object.hasOwn(values, "name") ? { displayName: values.name } : {} }
+    });
+    const authorize = command.authorize;
+    command.authorize = () => !session.pendingDrafts.length && (authorize?.() ?? true);
+    const result = await session.command(command, context);
+    return result.status;
+  };
+  const button = document.createElement("button");
+  button.textContent = "Migrate intake schema";
+  button.addEventListener("click", () => void migrate("nstruct"));
+  parent.append(button);
+  return {
+    session,
+    stack,
+    provider,
+    host,
+    editors,
+    migrate,
+    conversions: () => conversions,
+    source: () => markdownText(session.doc),
+    dispose() {
+      unsubscribe();
+      for (const editor of editors) editor.remove();
+      host.dispose();
+      session.dispose();
+    }
+  };
+}
+
 // example/editors/properties/forms_demo.ts
 function createFormsDemo(parent, context) {
   const character = {
@@ -103218,7 +103616,9 @@ function createFormsDemo(parent, context) {
   button("Commit embedded drafts", async () => {
     status.textContent = (await pluginSession.prepareSave()).status;
   });
+  const adapters = createAdapterDemo(parent, context);
   return {
+    adapters,
     session,
     provider,
     stack,
@@ -103243,6 +103643,7 @@ function createFormsDemo(parent, context) {
       context
     ),
     dispose() {
+      adapters.dispose();
       rawDraft();
       unsubscribe();
       standalone.dispose();
@@ -103486,7 +103887,7 @@ var PropsEditor = class extends Editor2 {
       const close2 = document.createElement("button");
       close2.textContent = "Close forms demo";
       close2.addEventListener("click", async () => {
-        if ((await demo.session.prepareSave()).status !== "ready" || (await demo.pluginSession.prepareSave()).status !== "ready")
+        if ((await demo.session.prepareSave()).status !== "ready" || (await demo.pluginSession.prepareSave()).status !== "ready" || (await demo.adapters.session.prepareSave()).status !== "ready")
           return;
         dialog.close();
         demo.dispose();

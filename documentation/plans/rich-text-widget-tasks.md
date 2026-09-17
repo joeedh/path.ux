@@ -1,6 +1,6 @@
 # Embedded rich text widget tasks
 
-Status: Stages 1–4 are complete. Stopped at the Stage 4 boundary.
+Status: Stages 1–4 are complete. Stage 5 is in progress.
 
 This is the sole status and completion tracker for the [widget architecture](rich-text-widgets.md)
 and [forms/front-matter design](rich-text-widget-forms.md). Task IDs and existing completion
@@ -17,7 +17,7 @@ proposed; update their status here when implementation begins.
 | 2. Native table        | Complete    | GFM table cells and structure edit through document history and round-trip formatting                                              |
 | 3. Plugin storage      | Complete    | Registry, session host, command validation, Markdown envelopes, unknown-record preservation, and structured clipboard              |
 | 4. Local forms         | Complete    | Standalone form control, Zod adapter, embedded and native front-matter bindings, source preservation, drafts, validation, and undo |
-| 5. Additional adapters | Not started | Second schema adapter and declarative embedded schemas with explicit unsupported cases                                             |
+| 5. Additional adapters | In progress | Second schema adapter and declarative embedded schemas with explicit unsupported cases                                             |
 | 6. External data       | Not started | Host-supplied resource services, policy invalidation, conflicts, cancellation, and explicit submission                             |
 
 Stage 1 includes a review of serialization at the toolstack boundary before later stages
@@ -50,7 +50,7 @@ unit/browser checks when implementation changes the public surface.
 
 This checklist is the implementation tracker. The stage table above summarizes the same
 work. Update both when a stage changes; do not maintain a second independent task list.
-The continuation authorizes Stage 4. Stop after F8; later stages and visualnovel remain outside this run.
+The continuation authorizes Stage 5. Stop after A3; later stages and visualnovel remain outside this run.
 
 Task IDs remain stable when work is split or reordered. Before starting a task, record its
 ID in the current-work entry below. Mark a checkbox complete only after its acceptance
@@ -58,9 +58,9 @@ condition is demonstrated, and record the relevant commit and checks in the comp
 Record blockers with the affected task ID and the concrete dependency needed to continue.
 Tasks without a checkbox marked complete are pending, including partially implemented work.
 
-- Current work: none; F1–F8 are complete and verified.
-- Next task: A1, implement the optional nstructjs adapter for a documented subset.
-- Blockers: none for Stage 4. Remaining [design decisions](rich-text-widgets.md#decisions-still-requiring-implementation-prototypes)
+- Current work: A3; shared adapter fixtures and schema-migration browser verification. A1 and A2 are implemented; acceptance is pending final checks.
+- Next task: finish A3 verification and record Stage 5 acceptance.
+- Blockers: none for Stage 5. Remaining [design decisions](rich-text-widgets.md#decisions-still-requiring-implementation-prototypes)
   belong to later stages.
 
 ### Preparation

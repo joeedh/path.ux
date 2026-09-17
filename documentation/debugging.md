@@ -107,3 +107,24 @@ requires another newline between them misclassifies the prefix. Test empty metad
 metadata without a final newline, CRLF, BOM/blank prefixes, and duplicate plugin ID repairs.
 Source retention must include those repairs or saving restores duplicate IDs that the parser
 already fixed in its projected blocks.
+
+### Optional schema adapters
+
+nstructjs 0.8.12 exposes parsed fields through `manager.get_struct(name)` and numeric type
+identifiers through `parser.StructEnum`. Its JSON reader constructs classes and can apply
+migrations, so schema-only forms should inspect metadata without invoking readers. Optional
+values accept null as well as absence. General JSON integer validation does not enforce every
+binary type's range; the form adapter must state its numeric boundary policy explicitly.
+The package ships type declarations for its internal modules without corresponding standalone
+JavaScript files. Derive descriptor types from `NStructInterface` and use the public runtime
+exports instead of importing a nonexistent internal JavaScript module.
+
+Struct helper tokens extend to the end of their line. Put fixture fields and the closing
+brace on separate lines when checking helper diagnostics; otherwise a parser failure can hide
+the adapter behavior being tested. The example YAML codec expects complete front-matter
+separators, even in isolated projection tests.
+
+Schema migration must settle drafts before capturing its source snapshot. A document operation
+can replace the schema and answers together, but the application must also invalidate views
+when undo or redo restores a different schema. Compare schema descriptions rather than all
+answer values so ordinary field edits preserve mounted controls and focus.

@@ -237,3 +237,103 @@ two views per document, and a raw source draft. Its simulated disk writer demons
 work and the accepted hash; a successful older snapshot does not mark newer local edits as
 saved. Applications must replace this fake writer with their own authoritative save path.
 No visualnovel file or save route is changed by this implementation.
+
+### nstructjs metadata adapter
+
+Import `nstructFormSchema` from scripts/widgets/richtext/form_nstruct.ts and pass metadata
+from a trusted application's `manager.get_struct(name)`. The adapter reads the installed
+nstructjs 0.8.12 field descriptors and `parser.StructEnum`; it does not parse document-provided
+STRUCT programs, call constructors, run `loadSTRUCT`, invoke migrations, or call helper expressions.
+Its output is plain authored JSON, not a deserialized class instance.
+
+The supported subset is `string`, `bool`, `int`, `uint`, `short`, `ushort`, `byte`, `sbyte`,
+`float`, `double`, `array(T)` without an iterator variable, and `optional(T)` (including `?:`).
+Arrays and optionals may nest. Optional values can be absent or null, matching nstructjs's
+optional JSON representation. Integer validation uses the storage type's range and requires
+safe integers; float values must fit finite float32 range, and doubles must be finite.
+The adapter preserves authored numeric precision and does not promise a lossless float32
+binary round trip. Unknown JSON fields pass through and no class defaults are inferred.
+This form validation is deliberately stricter than nstructjs's general JSON validator at
+numeric storage boundaries.
+
+Helpers, named/abstract struct references, class-as-value `this` fields, iterator variables,
+iterators, static strings/arrays, buffers and other encodings produce explicit diagnostics.
+They require an application-owned JSON codec and registered `FormSchema`. A struct reference
+is not assumed to be an editable nested object. The adapter checks at most 10,000 metadata
+nodes with a nesting limit of 24, then uses the same bounded JSON validator as declarative
+schemas. The shared fixtures use actual registered nstructjs metadata and prove that adapting
+or validating it never constructs the class or runs its reader.
+
+### Declarative schemas and optional plugin support
+
+`declarativeFormSchema` in scripts/widgets/richtext/form_declarative.ts accepts this envelope:
+
+```json
+{
+  "format" : "pathux.form-schema",
+  "version": 1,
+  "root": {
+    "kind"  : "object",
+    "fields": {
+      "name": { "kind": "string", "minLength": 1 },
+      "age" : { "kind": "number", "integer": true, "min": 0 },
+      "tags": { "kind": "array", "item": { "kind": "string" }, "optional": true }
+    }
+  }
+}
+```
+
+This is a path.ux format, not JSON Schema. It supports strings, finite numbers, booleans,
+null, primitive enums, objects, arrays, records and unions. Every node may declare `optional`
+and a text `description`. Strings accept `minLength`/`maxLength` in JavaScript UTF-16 code
+units; numbers accept `integer` and inclusive `min`/`max`; arrays accept `minItems`/`maxItems`.
+Bounds must be consistent and length bounds must be nonnegative safe integers. Object fields
+are required unless marked optional; unknown answer fields are preserved. Unions accept the
+first valid option without transforming input. Error paths identify nested fields and indices;
+a failed union reports at the union's own path.
+
+Unknown envelope versions, kinds or keywords produce diagnostics and prevent structured
+mounting. Defaults, coercions, regular expressions, references, class names, custom validation,
+transforms and executable code are unsupported. A document requiring these behaviors must
+use the existing `{id, version}` route to a host-registered implementation. There is no
+automatic resolution, schema fetching or fallback from embedded code to registered behavior.
+Validation freezes a detached JSON output without changing authored input. Both descriptions
+and answers use the widget JSON limits (64 KiB, 10,000 values, depth 32); validation additionally
+limits traversal to 50,000 node visits to bound repeated union work.
+
+To opt in, register `createDeclarativeFormPlugin(context, resolveSchema)` from
+scripts/widgets/richtext/form_embedded.ts. It shares the existing form binding and accepts
+`schema: {embedded: description}` as an alternative to the existing schema reference.
+Mixing the two representations is refused. The original `createFormPlugin` still accepts
+only references unless the host explicitly supplies its optional embedded resolver. Unknown
+embedded formats stay in the opaque record and render an inert fallback. The plugin payload
+version remains 1; the embedded grammar version and a registered schema's catalog version
+have separate meanings. An embedded schema is replaced explicitly when its fields change;
+its grammar version is not an application schema revision.
+
+### Schema changes, migrations and bundle boundaries
+
+The optional adapter example in example/editors/properties/form_adapters_demo.ts shows
+registered-schema version 1 to 2 migration and explicit embedded-schema replacement. It calls
+`prepareSave()`, refuses unresolved drafts, reads a fresh widget snapshot and verifies the
+source schema before computing the application-owned conversion. A guarded `prepareUpdate()`
+commits schema and answers in one document operation, refusing a newly pending draft at the
+history boundary. Earlier draft commits remain separate undo entries. Missing answers and
+unknown keys are retained, and migration never requires full submission validity.
+
+The converter is trusted host code and must be pure. Redo replays stored data and never runs
+the converter. The existing host checks snapshot freshness and write policy at execution.
+The application invalidates widget views when schema descriptions change, including during
+undo/redo; ordinary answer changes retain mounted controls. Registry or presentation changes
+without a document schema change still require explicit host invalidation. An external schema
+replacement with unresolved drafts leaves the detached drafts recoverable through the session.
+No migration occurs on mount, validation or save alone.
+
+All adapters remain optional deep imports. The main path.ux barrel and base rich text bundle
+import none of the form control or adapter modules. The declarative validator imports only
+lightweight form/JSON helpers and needs no schema runtime or DOM. The nstructjs adapter adds
+an explicit nstructjs dependency; Zod and YAML remain separately supplied by their respective
+adapter and application codec. The shared intake fixtures in
+example/editors/properties/form_adapters.ts exercise both new adapters with identical values,
+control codecs and source-preserving YAML patches. Complex values still use JSON text controls;
+this stage adds no nested visual builder, external service, media renderer or consumer migration.

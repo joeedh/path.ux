@@ -322,3 +322,208 @@ test("composition blocks save until the field finishes and rendered values stay 
   });
   await expect(page.locator("#native0 .schema-form img")).toHaveCount(0);
 });
+
+for (const [index, id] of ["nstruct", "declarative"].entries()) {
+  test(`${id} adapter shares values while retaining independent drafts`, async ({ page }) => {
+    const form = page.locator("#adapter0 .schema-form").nth(index);
+    const other = page.locator("#adapter1 .schema-form").nth(index);
+    await expect(form.getByRole("textbox", { name: "name", exact: true })).toHaveValue("Ada");
+    expect(await page.evaluate(() => window.forms.adapters.stack.length)).toBe(0);
+    await form.getByRole("textbox", { name: "age", exact: true }).fill("-1");
+    await expect(other.getByRole("textbox", { name: "age", exact: true })).toHaveValue("32");
+    await form.getByRole("button", { name: "Validate submission" }).click();
+    await expect(form.getByRole("status")).toContainText("outside schema bounds");
+    expect(await page.evaluate(() => window.forms.adapters.session.prepareSave())).toMatchObject({
+      status: "ready",
+    });
+    await expect(other.getByRole("textbox", { name: "age", exact: true })).toHaveValue("-1");
+    expect(await page.evaluate(() => window.forms.adapters.stack.length)).toBe(1);
+    expect(await page.evaluate(() => window.forms.adapters.source())).toContain(
+      '"unknown":"retained"'
+    );
+  });
+  test(`${id} schema migration flushes drafts and undo restores schema and values`, async ({
+    page,
+  }) => {
+    const form = page.locator("#adapter0 .schema-form").nth(index);
+    await form.getByRole("textbox", { name: "name", exact: true }).fill("Bea");
+    expect(await page.evaluate((id) => window.forms.adapters.migrate(id), id)).toBe("applied");
+    await expect(form.getByRole("textbox", { name: "displayName", exact: true })).toHaveValue(
+      "Bea"
+    );
+    await expect(
+      page
+        .locator("#adapter1 .schema-form")
+        .nth(index)
+        .getByRole("textbox", { name: "displayName", exact: true })
+    ).toHaveValue("Bea");
+    expect(await page.evaluate(() => window.forms.adapters.stack.length)).toBe(2);
+    await page.evaluate(() => window.forms.adapters.stack.undo());
+    await expect(form.getByRole("textbox", { name: "displayName", exact: true })).toHaveCount(0);
+    await expect(form.getByRole("textbox", { name: "name", exact: true })).toHaveValue("Bea");
+    await page.evaluate(() => window.forms.adapters.stack.redo());
+    await expect(form.getByRole("textbox", { name: "displayName", exact: true })).toHaveValue(
+      "Bea"
+    );
+    expect(await page.evaluate(() => window.forms.adapters.conversions())).toBe(1);
+    expect(
+      await page.evaluate(
+        (id) =>
+          window.forms.adapters.provider.widgets.read(window.forms.adapters.session.doc, id)!.record
+            .version,
+        id
+      )
+    ).toBe(1);
+  });
+  test(`${id} unencodable drafts prevent migration and remain recoverable`, async ({ page }) => {
+    const form = page.locator("#adapter0 .schema-form").nth(index);
+    await form.getByRole("textbox", { name: "age", exact: true }).fill("-");
+    expect(await page.evaluate((id) => window.forms.adapters.migrate(id), id)).toBe("unencodable");
+    expect(
+      await page.evaluate(() => [
+        window.forms.adapters.conversions(),
+        window.forms.adapters.stack.length,
+      ])
+    ).toEqual([0, 0]);
+    await expect(form.getByRole("textbox", { name: "age", exact: true })).toHaveValue("-");
+    await form.getByRole("button", { name: "Discard answers" }).click();
+    expect(await page.evaluate((id) => window.forms.adapters.migrate(id), id)).toBe("applied");
+  });
+}
+
+test("unrecognized embedded code is inert and a registered implementation is required", async ({
+  page,
+}) => {
+  expect(
+    await page.evaluate(async () => {
+      const api = window.forms.adapters;
+      const before = api.provider.widgets.read(api.session.doc, "declarative")!;
+      return (
+        await api.host.update(
+          before,
+          {
+            schema: {
+              embedded: {
+                format : "pathux.form-schema",
+                version: 1,
+                root   : { kind: "object", fields: {}, transform: "window.executed = true" },
+              },
+            },
+            values: {},
+          },
+          api.editors[0].ctx
+        )
+      ).status;
+    })
+  ).toBe("applied");
+  await expect(page.locator("#adapter0 .schema-form")).toHaveCount(1);
+  expect(await page.evaluate(() => "executed" in window)).toBe(false);
+  expect(await page.evaluate(() => window.forms.adapters.source())).toContain(
+    "window.executed = true"
+  );
+  await page.evaluate(async () => {
+    const api = window.forms.adapters;
+    const before = api.provider.widgets.read(api.session.doc, "declarative")!;
+    await api.host.update(
+      before,
+      {
+        schema: { id: "intake", version: 1 },
+        values: { name: "Host", age: 3, active: true, tags: [] },
+      },
+      api.editors[0].ctx
+    );
+  });
+  await expect(
+    page
+      .locator("#adapter0 .schema-form")
+      .nth(1)
+      .getByRole("textbox", { name: "name", exact: true })
+  ).toHaveValue("Host");
+});
+
+test("adapter migration conflicts and history obey shared session authorization", async ({
+  page,
+}) => {
+  const first = page
+    .locator("#adapter0 .schema-form")
+    .first()
+    .getByRole("textbox", { name: "name", exact: true });
+  const second = page
+    .locator("#adapter1 .schema-form")
+    .first()
+    .getByRole("textbox", { name: "name", exact: true });
+  await first.fill("First");
+  await second.fill("Second");
+  expect(await page.evaluate(() => window.forms.adapters.migrate("nstruct"))).toBe("conflict");
+  await page
+    .locator("#adapter1 .schema-form")
+    .first()
+    .getByRole("button", { name: "Discard answers" })
+    .click();
+  expect(await page.evaluate(() => window.forms.adapters.migrate("nstruct"))).toBe("applied");
+  const source = await page.evaluate(() => window.forms.adapters.source());
+  const result = await page.evaluate(async () => {
+    const api = window.forms.adapters;
+    api.session.setWriteAllowed(false);
+    try {
+      await api.stack.undo();
+    } catch {
+      // Refusal preserves the shared history cursor
+    }
+    return {
+      source   : api.source(),
+      cursor   : api.stack.cur,
+      migration: await api.migrate("declarative"),
+    };
+  });
+  expect(result.source).toBe(source);
+  expect(result.cursor).toBe(1);
+  expect(result.migration).toBe("refused");
+  await page.evaluate(() => window.forms.adapters.session.setWriteAllowed(true));
+  await page.evaluate(() => window.forms.adapters.stack.undo());
+  await expect(
+    page
+      .locator("#adapter0 .schema-form")
+      .first()
+      .getByRole("textbox", { name: "displayName", exact: true })
+  ).toHaveCount(0);
+});
+
+test("schema migrations preserve incomplete answers and stale prepared changes refuse", async ({
+  page,
+}) => {
+  const form = page.locator("#adapter0 .schema-form").first();
+  await form.getByRole("button", { name: "Omit name", exact: true }).click();
+  expect(await page.evaluate(() => window.forms.adapters.migrate("nstruct"))).toBe("applied");
+  expect(
+    await page.evaluate(() => {
+      const api = window.forms.adapters;
+      const data = api.provider.widgets.read(api.session.doc, "nstruct")!.record.payload as {
+        values: Record<string, unknown>;
+      };
+      return [Object.hasOwn(data.values, "name"), Object.hasOwn(data.values, "displayName")];
+    })
+  ).toEqual([false, false]);
+  const result = await page.evaluate(async () => {
+    const api = window.forms.adapters;
+    const snapshot = api.provider.widgets.read(api.session.doc, "declarative")!;
+    const stale = api.host.prepareUpdate(snapshot, {
+      schema: { id: "intake", version: 2 },
+      values: { name: "Stale" },
+    });
+    await api.host.update(
+      snapshot,
+      { schema: { id: "intake", version: 1 }, values: { name: "Latest" } },
+      api.editors[0].ctx
+    );
+    const before = api.source();
+    const cursor = api.stack.cur;
+    const update = await api.session.command(stale, api.editors[0].ctx);
+    return {
+      status         : update.status,
+      unchanged      : api.source() === before,
+      cursorUnchanged: cursor === api.stack.cur,
+    };
+  });
+  expect(result).toEqual({ status: "refused", unchanged: true, cursorUnchanged: true });
+});

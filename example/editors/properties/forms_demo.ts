@@ -17,6 +17,7 @@ import { DocumentWidgetHost, WidgetRegistry } from "../../../scripts/widgets/ric
 import { encodeWidgetFence } from "../../../scripts/widgets/richtext/widget_codec";
 import { exampleYamlCodec } from "./form_yaml";
 import { characterFormSchema, locationFormSchema } from "./form_schemas";
+import { createAdapterDemo } from "./form_adapters_demo";
 
 /** Demonstrates local forms and an application-owned save/conflict protocol. */
 export function createFormsDemo(parent: HTMLElement, context: IContextBase) {
@@ -224,7 +225,9 @@ export function createFormsDemo(parent: HTMLElement, context: IContextBase) {
     status.textContent = (await pluginSession.prepareSave()).status;
   });
 
+  const adapters = createAdapterDemo(parent, context);
   return {
+    adapters,
     session,
     provider,
     stack,
@@ -251,6 +254,7 @@ export function createFormsDemo(parent: HTMLElement, context: IContextBase) {
         context
       ),
     dispose() {
+      adapters.dispose();
       rawDraft();
       unsubscribe();
       standalone.dispose();

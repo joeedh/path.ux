@@ -16,44 +16,45 @@ export interface FormReference {
 }
 
 function payload(value: JsonValue): value is {
-  schema: { id: string; version: number };
+  schema: { [key: string]: JsonValue };
   values: { [key: string]: JsonValue };
 } {
-  return (
-    formObject(value) &&
-    formObject(value.schema) &&
-    typeof value.schema.id === "string" &&
-    Number.isSafeInteger(value.schema.version) &&
-    Number(value.schema.version) > 0 &&
-    formObject(value.values)
-  );
+  return formObject(value) && formObject(value.schema) && formObject(value.values);
 }
 
 /** Creates an opt-in block plugin; schema versions are independent of its payload version. */
 export function createFormPlugin(
   context: IContextBase,
-  resolveSchema: (reference: FormReference, document: JsonValue) => RegisteredForm | undefined
+  resolveSchema: (reference: FormReference, document: JsonValue) => RegisteredForm | undefined,
+  resolveEmbedded?: (schema: JsonValue, document: JsonValue) => RegisteredForm | undefined
 ): WidgetPlugin {
+  const valid = (value: JsonValue) =>
+    payload(value) &&
+    ("embedded" in value.schema
+      ? !!resolveEmbedded && Object.keys(value.schema).length === 1
+      : typeof value.schema.id === "string" &&
+        Number.isSafeInteger(value.schema.version) &&
+        Number(value.schema.version) > 0);
   return {
     type    : "pathux.form",
     version : 1,
     label   : "Form",
-    validate: payload,
+    validate: valid,
     create(initial, host) {
-      if (!payload(initial.record.payload)) throw new Error("Invalid form payload");
+      if (!valid(initial.record.payload) || !payload(initial.record.payload))
+        throw new Error("Invalid form payload");
       const reference = initial.record.payload.schema;
-      const registered = resolveSchema(reference, host.document);
+      const signature = JSON.stringify(reference);
+      const registered =
+        "embedded" in reference
+          ? resolveEmbedded?.(reference.embedded, host.document)
+          : resolveSchema(reference as unknown as FormReference, host.document);
       if (!registered) throw new Error("Unregistered form schema");
       let latest = initial;
       const snapshots = new WeakMap<FormSnapshot, WidgetSnapshot>();
       const read = () => {
         const data = latest.record.payload;
-        if (
-          !payload(data) ||
-          data.schema.id !== reference.id ||
-          data.schema.version !== reference.version
-        )
-          return;
+        if (!payload(data) || JSON.stringify(data.schema) !== signature) return;
         const snapshot = { revision: latest.revision, values: data.values };
         snapshots.set(snapshot, latest);
         return snapshot;

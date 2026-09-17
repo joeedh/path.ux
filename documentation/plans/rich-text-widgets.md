@@ -446,9 +446,9 @@ true inline plugins, and the separate visualnovel migration using stable task ID
 
 - Specify true inline plugin syntax separately; do not encode arbitrary payloads in image
   URLs or accept executable custom HTML as a shortcut.
-- Extend the [normalized form contract](rich-text-widget-forms.md#resolved-form-contracts)
-  to nstructjs fixtures, including references and helper expressions. The Zod 3 subset,
-  JSON controls, native source retention, and input/output separation are specified there.
+  The [form adapter decisions](rich-text-widget-forms.md#nstructjs-metadata-adapter) specify
+  the supported nstructjs metadata and declarative schema subsets, rejected references/helpers,
+  optional bundle boundaries, and explicit schema changes.
 
 ## Design review
 
