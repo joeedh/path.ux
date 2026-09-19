@@ -1,12 +1,11 @@
-// inside a worker?
+// A worker has `self` and node has neither `self` nor `window`; only `globalThis` is on every
+// runtime that can evaluate `class UIBase extends HTMLElement`
 if (typeof HTMLElement === "undefined") {
-  // @ts-expect-error
-  window.HTMLElement = class HTMLElement {};
-  // @ts-expect-error
-  window.customElements = {
+  const g = globalThis as Record<string, unknown>;
+  g.HTMLElement = class HTMLElement {};
+  g.customElements = {
     define: () => {},
   };
-  window.devicePixelRatio = 1.0;
-  // @ts-expect-error
-  window.PointerEvent = class PointerEvent {};
+  g.devicePixelRatio = 1.0;
+  g.PointerEvent = class PointerEvent {};
 }

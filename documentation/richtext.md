@@ -400,6 +400,15 @@ outline built from `headings()` that selects a heading on click, a status line f
 construct by construct, what each becomes in the model, what comes back out, and what is
 dropped. Its samples are a test fixture, so it tracks the parser.
 
+A host that runs documents outside a browser (a node test, an Electron main process) imports
+`scripts/widgets/richtext/headless.ts` instead: `DocumentSession`, `ToolStack`, the `MdDoc`
+model, `markdownDocFromText`, `markdownText`, and the source-retention helpers
+`markdownSourceDoc` and `markdownSourceCommand`. Nothing in it reads the DOM at import time,
+and `tests/richtext/headless.test.ts` runs in vitest's node environment to keep it so. The
+provider a session needs is the host's own, since `MarkdownProvider` renders and stays with
+the editor; a document containing HTML also needs a `DOMParser` on the global, which node
+does not supply.
+
 ### The document
 
 - `MdDoc` is `{ blocks: MdBlock[] }`. A block is its kind plus `id`, `text`, `marks` and
