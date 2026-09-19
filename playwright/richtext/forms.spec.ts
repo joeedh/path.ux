@@ -63,6 +63,20 @@ test("schema versions stay independent and unavailable schemas preserve payloads
   ).toHaveValue("Ada");
 });
 
+test("every form button says what it does on hover", async ({ page }) => {
+  const untitled = await page
+    .locator("#native0")
+    .getByRole("button")
+    .evaluateAll((buttons) =>
+      buttons.filter((b) => !(b as HTMLButtonElement).title).map((b) => b.textContent)
+    );
+  expect(untitled).toEqual([]);
+  await expect(page.locator("#native0").getByRole("button", { name: "Omit name" })).toHaveAttribute(
+    "title",
+    /Leave name out of the document/
+  );
+});
+
 test("nested JSON controls preserve unknown authored values and omission remains explicit", async ({
   page,
 }) => {

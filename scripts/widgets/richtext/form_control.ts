@@ -82,6 +82,7 @@ export class FormControl<Output = unknown> implements WidgetView {
       row.append(label, box);
       this.button(
         "Omit " + name,
+        `Leave ${meta?.label ?? name} out of the document; applying the answers then removes it`,
         () => {
           this.edits.set(name, undefined);
           this.version++;
@@ -93,10 +94,27 @@ export class FormControl<Output = unknown> implements WidgetView {
       this.element.append(row);
     }
     const actions = document.createElement("div");
-    if (options.commit !== false) this.button("Apply answers", () => void this.commit(), actions);
+    if (options.commit !== false)
+      this.button(
+        "Apply answers",
+        "Write the answers typed here into the document, as one undoable edit",
+        () => void this.commit(),
+        actions
+      );
     if (options.discard !== false)
-      this.button("Discard answers", () => this.discard(), actions, true);
-    this.button("Validate submission", () => void this.validateSubmission(), actions);
+      this.button(
+        "Discard answers",
+        "Drop the answers typed here and show what the document holds",
+        () => this.discard(),
+        actions,
+        true
+      );
+    this.button(
+      "Validate submission",
+      "Check the answers against the schema without applying them",
+      () => void this.validateSubmission(),
+      actions
+    );
     this.element.append(actions, this.status);
     this.element.addEventListener("compositionstart", () => (this.composing = true));
     this.element.addEventListener("compositionend", () => (this.composing = false));
@@ -121,10 +139,17 @@ export class FormControl<Output = unknown> implements WidgetView {
     return this.disposed || this.readOnly || !this.binding.canWrite() || !this.latest || this.busy;
   }
 
-  private button(label: string, action: () => void, parent: HTMLElement, recovery = false) {
+  private button(
+    label: string,
+    title: string,
+    action: () => void,
+    parent: HTMLElement,
+    recovery = false
+  ) {
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = label;
+    button.title = title;
     button.dataset.recovery = String(recovery);
     button.addEventListener("pointerdown", (event) => event.preventDefault());
     button.addEventListener("click", () => {
