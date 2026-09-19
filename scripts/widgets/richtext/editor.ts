@@ -360,6 +360,9 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
 
     if (this.root.getAttribute("contenteditable") !== editable) {
       this.root.contentEditable = editable;
+      // Embedded widgets read the editable state once, when they mount, so one that mounted
+      // while an ancestor was disabled stays locked until it is told
+      this.widgetHost.refresh();
     }
     this.root.toggleAttribute("readonly", readOnly);
 

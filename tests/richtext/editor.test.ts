@@ -418,6 +418,42 @@ describe("readOnly", () => {
     expect(editor.root.getAttribute("contenteditable")).toBe("true");
   });
 
+  test("a widget mounted while the editor was disabled is told when it is enabled again", () => {
+    const session = openSession();
+    const ctx = new AppCtx();
+    const editor = UIBase.constructElement<Editor>(RichTextEditor.define().tagname, ctx);
+    const states: boolean[] = [];
+    editor.widgetOptions = {
+      resolveNativeBlock: (_session, block) =>
+        block === "a"
+          ? {
+              id            : "native:a",
+              implementation: "test",
+              label         : "Native",
+              create: () => ({
+                element: document.createElement("span"),
+                update : (state) => states.push(state.readOnly),
+                dispose: () => {},
+              }),
+            }
+          : undefined,
+    };
+    document.body.append(editor);
+    editor.internalDisabled = true;
+    editor.session = session;
+    editor.update();
+    expect(states.at(-1)).toBe(true);
+
+    editor.internalDisabled = false;
+    editor.update();
+    expect(states.at(-1)).toBe(false);
+
+    // happy-dom's ShadowRoot.activeElement throws over a mounted widget once the test is done
+    // with the editor, and the document's selectionchange listener would reach it
+    editor.session = undefined;
+    editor.remove();
+  });
+
   test("the attribute set from outside is picked up on update", () => {
     const editor = openEditor(openSession());
 
