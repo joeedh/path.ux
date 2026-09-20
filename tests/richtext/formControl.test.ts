@@ -135,7 +135,7 @@ describe("custom field controls", () => {
       fields: { outfits: { control: () => wardrobe } },
     });
     const omit = [...form.element.querySelectorAll("button")].find(
-      (b) => b.textContent === "Omit outfits"
+      (b) => b.getAttribute("aria-label") === "Omit outfits"
     )!;
     omit.click();
     expect(wardrobe.shown.get("outfits")).toBeUndefined();

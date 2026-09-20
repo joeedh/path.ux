@@ -18,6 +18,10 @@ export function formStyles(): string {
       flex-wrap  : wrap;
     }
     :where(.schema-form-label) { flex: 0 0 105px; }
-    :where(.schema-form-row) > :where(textbox-x) { box-shadow: inset 0 0 0 1px #888; }
+    :where(.schema-form-row) > :where(textbox-x) {
+      flex      : 1 1 120px;
+      min-width : 0;
+      box-shadow: inset 0 0 0 1px #888;
+    }
   `;
 }

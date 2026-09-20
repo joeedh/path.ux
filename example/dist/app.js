@@ -91950,7 +91950,11 @@ function formStyles() {
       flex-wrap  : wrap;
     }
     :where(.schema-form-label) { flex: 0 0 105px; }
-    :where(.schema-form-row) > :where(textbox-x) { box-shadow: inset 0 0 0 1px #888; }
+    :where(.schema-form-row) > :where(textbox-x) {
+      flex      : 1 1 120px;
+      min-width : 0;
+      box-shadow: inset 0 0 0 1px #888;
+    }
   `;
 }
 
@@ -91962,7 +91966,8 @@ var TextFieldControl = class {
     this.key = key;
     const box = UIBase.constructElement("textbox-x", context);
     box.useDataPathUndo = false;
-    box.width = 220;
+    box.width = "100%";
+    box.dom.style.minWidth = "0";
     box.overrideDefault("border-width", 1);
     box.setCSS();
     box.setAttribute("modal", "false");
@@ -92054,7 +92059,7 @@ var FormControl = class {
       this.views.push(control);
       row.append(label, control.element);
       this.button(
-        "Omit " + name,
+        "Omit",
         `Leave ${meta.label ?? name} out of the document; applying the answers then removes it`,
         () => {
           this.edits.set(name, void 0);
@@ -92063,7 +92068,7 @@ var FormControl = class {
           this.status.textContent = "Draft: field omitted";
         },
         row
-      );
+      ).setAttribute("aria-label", "Omit " + name);
       this.element.append(row);
     }
     const actions = document.createElement("div");
@@ -92140,6 +92145,7 @@ var FormControl = class {
     });
     parent.append(button);
     this.buttons.push(button);
+    return button;
   }
   values() {
     if (!formObject(this.base.values)) throw new Error("Form input is no longer an object");

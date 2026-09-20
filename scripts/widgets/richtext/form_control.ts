@@ -41,8 +41,10 @@ class TextFieldControl implements FieldControl {
   ) {
     const box = UIBase.constructElement<TextBox>("textbox-x", context);
     box.useDataPathUndo = false;
-    // the widget copies its own width onto the inner input, so a stylesheet cannot set it
-    box.width = 220;
+    // the widget copies its own width onto the inner input, so the row's width reaches the input
+    // only through the widget's; the stylesheet's flex-basis then sizes the widget
+    box.width = "100%";
+    box.dom.style.minWidth = "0";
     box.overrideDefault("border-width", 1);
     box.setCSS();
     box.setAttribute("modal", "false");
@@ -162,8 +164,10 @@ export class FormControl<Output = unknown> implements WidgetView {
         this.fields.set(key, { node: nodes[key]!, control, json: false });
       this.views.push(control);
       row.append(label, control.element);
+      // the row's label already names the field, so the button reads as one word and keeps
+      // the field's name for assistive technology
       this.button(
-        "Omit " + name,
+        "Omit",
         `Leave ${meta.label ?? name} out of the document; applying the answers then removes it`,
         () => {
           this.edits.set(name, undefined);
@@ -172,7 +176,7 @@ export class FormControl<Output = unknown> implements WidgetView {
           this.status.textContent = "Draft: field omitted";
         },
         row
-      );
+      ).setAttribute("aria-label", "Omit " + name);
       this.element.append(row);
     }
     const actions = document.createElement("div");
@@ -241,6 +245,7 @@ export class FormControl<Output = unknown> implements WidgetView {
     });
     parent.append(button);
     this.buttons.push(button);
+    return button;
   }
 
   private values(): JsonValue {
