@@ -1,4 +1,5 @@
 import { markdownDocFromText } from "./markdown_parse";
+import type { MarkdownParseOptions } from "./markdown_parse";
 import { markdownText } from "./markdown_serialize";
 import { markdownBodyKey, mdBlock } from "./markdown_model";
 import type { MdDoc } from "./markdown_model";
@@ -22,14 +23,19 @@ export function splitMarkdownSource(source: string) {
   return { prefix, frontmatter: match[0], separator, body: tail.slice(separator.length) };
 }
 
-/** Opts a document into exact untouched-body and front-matter source retention. */
-export function markdownSourceDoc(source: string): MdDoc {
+/**
+ * Opts a document into exact untouched-body and front-matter source retention. The body is
+ * kept as written until a block changes, so a source read under `softBreaks: "reflow"` keeps
+ * its wrapped lines on disk until the first edit, which writes the paragraphs reflowed.
+ */
+export function markdownSourceDoc(source: string, options: MarkdownParseOptions = {}): MdDoc {
   const split = splitMarkdownSource(source);
   const repairs: { from: number; to: number; source: string }[] = [];
   const doc = markdownDocFromText(
     split.frontmatter + split.separator + split.body,
     newBlockId,
-    (from, to, source) => repairs.push({ from, to, source })
+    (from, to, source) => repairs.push({ from, to, source }),
+    options
   );
   const bodyStart = split.frontmatter.length + split.separator.length;
   const unmappedRepair = repairs.some((repair) => repair.from < 0);
@@ -67,9 +73,10 @@ export function markdownSourceDoc(source: string): MdDoc {
 export function markdownSourceCommand(
   doc: MdDoc,
   expected: string,
-  source: string
+  source: string,
+  options: MarkdownParseOptions = {}
 ): DocumentCommand {
-  const next = markdownSourceDoc(source);
+  const next = markdownSourceDoc(source, options);
   return {
     resolve: () =>
       markdownText(doc) === expected

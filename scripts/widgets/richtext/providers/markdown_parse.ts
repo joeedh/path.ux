@@ -43,6 +43,25 @@ import type { MdAtom, MdBlock, MdDoc, MdKind } from "./markdown_model";
 
 const DROPPED_INLINE: ReadonlySet<string> = new Set(["script", "style", "template"]);
 
+/** How a soft break, a newline inside a paragraph, reaches the block's text. */
+export interface MarkdownParseOptions {
+  /**
+   * `"keep"` (the default) keeps it as a newline, so a wrapped source shows its lines;
+   * `"reflow"` joins it into one space, as a renderer would, so the paragraph wraps to the
+   * editor alone. A hard break is the `break` mark either way.
+   */
+  readonly softBreaks?: "keep" | "reflow";
+}
+
+/**
+ * A text run with its soft breaks reflowed: a newline and the indentation after it become one
+ * space, dropped when the run follows a hard break, where the space would start the next line.
+ */
+function reflowed(value: string, builder: InlineBuilder): string {
+  const joined = value.replace(/\r?\n[ \t]*/g, " ");
+  return builder.text.endsWith("\n") ? joined.replace(/^ /, "") : joined;
+}
+
 interface OpenTag {
   tag: string;
   handle?: number;
@@ -84,7 +103,8 @@ class Parser {
     private readonly source: string,
     private readonly newId: () => BlockId,
     private readonly original = source,
-    private readonly crlfOffsets: readonly number[] = []
+    private readonly crlfOffsets: readonly number[] = [],
+    private readonly reflow = false
   ) {}
 
   private originalRange(node: Nodes): { from: number; to: number } {
@@ -363,7 +383,7 @@ class Parser {
           break;
         }
         case "text":
-          builder.append(node.value);
+          builder.append(this.reflow ? reflowed(node.value, builder) : node.value);
           break;
         case "break":
           builder.lineBreak(true);
@@ -541,7 +561,8 @@ const structural = (ctx: HtmlContext) => ({
 export function markdownDocFromText(
   text: string,
   newId: () => BlockId = newBlockId,
-  repaired?: (from: number, to: number, source: string) => void
+  repaired?: (from: number, to: number, source: string) => void,
+  options: MarkdownParseOptions = {}
 ): MdDoc {
   const source = text.replace(/\r\n?/g, "\n");
   const tree = fromMarkdown(source, {
@@ -555,7 +576,7 @@ export function markdownDocFromText(
 
   const crlfOffsets: number[] = [];
   for (const match of text.matchAll(/\r\n/g)) crlfOffsets.push(match.index - crlfOffsets.length);
-  const parser = new Parser(source, newId, text, crlfOffsets);
+  const parser = new Parser(source, newId, text, crlfOffsets, options.softBreaks === "reflow");
   parser.collectDefinitions(tree.children);
   parser.flow(tree.children, rootHtmlContext());
 

@@ -15,6 +15,7 @@ export * from "./widget";
 export { ToolStack } from "../../path-controller/toolsys/toolstack";
 export * from "./providers/markdown_model";
 export { markdownDocFromText } from "./providers/markdown_parse";
+export type { MarkdownParseOptions } from "./providers/markdown_parse";
 export { markdownText, markdownTree } from "./providers/markdown_serialize";
 export {
   markdownSourceDoc,

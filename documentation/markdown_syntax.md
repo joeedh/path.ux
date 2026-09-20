@@ -68,6 +68,14 @@ A blank line separates paragraphs. A single newline inside a paragraph is a soft
 in the block's text as a newline and written back as one. Extra blank lines are not kept; two
 paragraphs always come back with one blank line between them.
 
+That is the default, `softBreaks: "keep"` in `MarkdownParseOptions`, and it suits a source
+whose lines mean something, such as a screenplay. `markdownDocFromText(text, newId, repaired,
+{ softBreaks: "reflow" })` instead joins a soft break and the indentation after it into one
+space, as a renderer does, so a hard-wrapped paragraph wraps to the editor alone and a line
+break inside a paragraph is only ever a hard one. The samples below are read with the default;
+under `"reflow"` the first comes back as `A paragraph continues on the next line.` once a
+block has changed, since `markdownSourceDoc` keeps the body as written until then.
+
 ```markdown
 A paragraph
 continues on the next line.

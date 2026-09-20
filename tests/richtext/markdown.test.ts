@@ -11,6 +11,7 @@ import {
   sanitizeStyle,
 } from "../../scripts/widgets/richtext/markdown";
 import type { MdBlock, MdDoc, MdMark } from "../../scripts/widgets/richtext/markdown";
+import { markdownSourceDoc } from "../../scripts/widgets/richtext/providers/markdown_source";
 import { normalizeMdMarks } from "../../scripts/widgets/richtext/providers/markdown_inline";
 
 const FIXTURES = join(import.meta.dirname, "fixtures");
@@ -206,6 +207,28 @@ describe("inline content", () => {
       ["break", 7, 8],
     ]);
     expect(roundTrip("one\\\ntwo  \nthree\nfour\n")).toBe("one\\\ntwo\\\nthree\nfour\n");
+  });
+
+  test("softBreaks: reflow joins wrapped lines into spaces and keeps hard breaks", () => {
+    const reflow = (text: string) =>
+      markdownDocFromText(text, undefined, undefined, { softBreaks: "reflow" });
+    const [block] = reflow("one\\\ntwo  \nthree\n   four *five\r\n  six*\n").blocks;
+    expect(block.text).toBe("one\ntwo\nthree four five six");
+    expect(marks(block)).toEqual([
+      ["break", 3, 4],
+      ["break", 7, 8],
+      ["italic", 19, 27],
+    ]);
+    // a wrapped item and a wrapped quote reflow the same way; a fence keeps its lines
+    const doc = reflow("- an item\n  wrapped\n\n> quoted\n> on\n\n```\na\nb\n```\n");
+    expect(texts(doc)).toEqual(["an item wrapped", "quoted on", "a\nb"]);
+    // the source-retaining document keeps the wrapped body until a block changes
+    const source = "A paragraph\ncontinues here.\n";
+    const kept = markdownSourceDoc(source, { softBreaks: "reflow" });
+    expect(kept.blocks[0].text).toBe("A paragraph continues here.");
+    expect(markdownText(kept)).toBe(source);
+    kept.blocks[0].text += " Edited.";
+    expect(markdownText(kept)).toBe("A paragraph continues here. Edited.\n");
   });
 
   test("a newline in a heading becomes a space", () => {

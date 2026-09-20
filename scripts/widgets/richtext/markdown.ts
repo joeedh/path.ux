@@ -10,6 +10,7 @@ import type { MdDoc } from "./providers/markdown_model";
 
 export * from "./providers/markdown_model";
 export { markdownDocFromText } from "./providers/markdown_parse";
+export type { MarkdownParseOptions } from "./providers/markdown_parse";
 export { markdownText, markdownTree } from "./providers/markdown_serialize";
 export { sanitizeAttrs, sanitizeStyle, safeUrl } from "./providers/markdown_html";
 export { MarkdownProvider } from "./providers/markdown_provider";

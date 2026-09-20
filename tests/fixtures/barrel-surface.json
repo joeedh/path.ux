@@ -714,6 +714,7 @@
     "KnownDataPath",
     "KnownWidgetTag",
     "Level",
+    "LinkClick",
     "LinkInfo",
     "LinkRef",
     "LinkSegment",

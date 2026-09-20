@@ -87945,6 +87945,10 @@ function htmlForBlock(block) {
 
 // scripts/widgets/richtext/providers/markdown_parse.ts
 var DROPPED_INLINE = /* @__PURE__ */ new Set(["script", "style", "template"]);
+function reflowed(value2, builder) {
+  const joined = value2.replace(/\r?\n[ \t]*/g, " ");
+  return builder.text.endsWith("\n") ? joined.replace(/^ /, "") : joined;
+}
 function plainText(node2) {
   switch (node2.type) {
     case "text":
@@ -87963,16 +87967,18 @@ function plainText(node2) {
   }
 }
 var Parser2 = class {
-  constructor(source, newId, original = source, crlfOffsets = []) {
+  constructor(source, newId, original = source, crlfOffsets = [], reflow = false) {
     this.source = source;
     this.newId = newId;
     this.original = original;
     this.crlfOffsets = crlfOffsets;
+    this.reflow = reflow;
   }
   source;
   newId;
   original;
   crlfOffsets;
+  reflow;
   blocks = [];
   widgetRanges = /* @__PURE__ */ new Map();
   inlineRanges = /* @__PURE__ */ new WeakMap();
@@ -88210,7 +88216,7 @@ var Parser2 = class {
           break;
         }
         case "text":
-          builder.append(node2.value);
+          builder.append(this.reflow ? reflowed(node2.value, builder) : node2.value);
           break;
         case "break":
           builder.lineBreak(true);
@@ -88358,7 +88364,7 @@ var structural = (ctx) => ({
   listDepth: ctx.listDepth,
   ordered: ctx.ordered
 });
-function markdownDocFromText(text6, newId = newBlockId, repaired) {
+function markdownDocFromText(text6, newId = newBlockId, repaired, options = {}) {
   const source = text6.replace(/\r\n?/g, "\n");
   const tree = fromMarkdown(source, {
     extensions: [gfm(), frontmatter(["yaml"]), inlineWidgetSyntax],
@@ -88370,7 +88376,7 @@ function markdownDocFromText(text6, newId = newBlockId, repaired) {
   });
   const crlfOffsets = [];
   for (const match of text6.matchAll(/\r\n/g)) crlfOffsets.push(match.index - crlfOffsets.length);
-  const parser3 = new Parser2(source, newId, text6, crlfOffsets);
+  const parser3 = new Parser2(source, newId, text6, crlfOffsets, options.softBreaks === "reflow");
   parser3.collectDefinitions(tree.children);
   parser3.flow(tree.children, rootHtmlContext());
   const records = parser3.blocks.flatMap((block) => {
@@ -93469,13 +93475,14 @@ function splitMarkdownSource(source) {
   const separator = /^(?:[ \t]*\r?\n)*/.exec(tail)[0];
   return { prefix: prefix2, frontmatter: match[0], separator, body: tail.slice(separator.length) };
 }
-function markdownSourceDoc(source) {
+function markdownSourceDoc(source, options = {}) {
   const split = splitMarkdownSource(source);
   const repairs = [];
   const doc = markdownDocFromText(
     split.frontmatter + split.separator + split.body,
     newBlockId,
-    (from, to, source2) => repairs.push({ from, to, source: source2 })
+    (from, to, source2) => repairs.push({ from, to, source: source2 }),
+    options
   );
   const bodyStart = split.frontmatter.length + split.separator.length;
   const unmappedRepair = repairs.some((repair) => repair.from < 0);
@@ -93505,8 +93512,8 @@ function markdownSourceDoc(source) {
   if (front && body[0]) body[0].retainedSource = retained;
   return doc;
 }
-function markdownSourceCommand(doc, expected, source) {
-  const next = markdownSourceDoc(source);
+function markdownSourceCommand(doc, expected, source, options = {}) {
+  const next = markdownSourceDoc(source, options);
   return {
     resolve: () => markdownText(doc) === expected ? {
       type: "replaceBlocks",

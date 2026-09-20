@@ -491,7 +491,12 @@ does not supply.
   strong, fenced code, `---` rules, ATX headings) and falls back to inline or block HTML for
   what markdown cannot say (a wikilink, an underline, a sized image, a preserved element);
   `markdownTree` is the mdast it builds. `sanitizeAttrs`, `sanitizeStyle` and `safeUrl` are
-  the HTML rules, shared with the renderer.
+  the HTML rules, shared with the renderer. A fourth argument, `MarkdownParseOptions`, takes
+  `softBreaks: "reflow"` to join a paragraph's wrapped lines into spaces rather than keep them
+  as newlines ([markdown_syntax.md](markdown_syntax.md#paragraphs-and-line-breaks));
+  `markdownSourceDoc` and `markdownSourceCommand` take the same options as their last
+  argument, and a source-retaining document keeps its wrapped body on disk until a block
+  changes.
 
 ### The provider
 
