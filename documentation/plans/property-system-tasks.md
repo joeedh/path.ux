@@ -1,10 +1,10 @@
-# Property system: tasks
+# Property and tool system: tasks
 
-Four plans, in the order they land. The first two are written and pressure-tested; the
-last two are named by the second and not yet written. Each plan records its own stage
+Five plans, in the order they land. Tasks 1, 2 and 5 are written and pressure-tested;
+tasks 3 and 4 are named by task 2 and not yet written. Each plan records its own stage
 status; this file records only whether the plan is written and whether it has landed.
 
-Status: none landed. Tasks 1 and 2 written; tasks 3 and 4 to be written.
+Status: none landed. Tasks 1, 2 and 5 written; tasks 3 and 4 to be written.
 
 <!-- toc -->
 
@@ -13,6 +13,7 @@ Status: none landed. Tasks 1 and 2 written; tasks 3 and 4 to be written.
 - [Task 2 — property categories](#task-2--property-categories)
 - [Task 3 — the property STRUCT format](#task-3--the-property-struct-format)
 - [Task 4 — colour as a unit dimension](#task-4--colour-as-a-unit-dimension)
+- [Task 5 — tool handlers](#task-5--tool-handlers)
 
 <!-- regenerate with pnpm markdown-toc -->
 
@@ -30,6 +31,9 @@ Status: none landed. Tasks 1 and 2 written; tasks 3 and 4 to be written.
 - Task 4 needs `Units.dimension` from task 2 and a vector-aware conversion in
   `units/units.ts`; nothing consumes a colour unit yet, so it waits for a consumer that
   does.
+- Task 5 is independent of tasks 2–4 in substance, but it edits `toolop.ts` too and opens
+  a record of its own, and one record is open at a time, so it lands after task 2 has
+  closed its record. It could equally land between task 2 and task 3.
 
 ## Task 1 — migration records
 
@@ -85,3 +89,17 @@ Plan: not yet written. Named in `property-categories.md` § Decisions.
   keeps its storage and converts at its boundary.
 - Open: how `Units.display` is interpreted for a multidimensional unit.
 - Waits for a consumer that needs a non-sRGB colour property.
+
+## Task 5 — tool handlers
+
+Plan: [`tool-handlers.md`](tool-handlers.md). Written, pressure-tested.
+
+- `ToolOp` goes headless; `ToolHandler` is the event side, bound or op-less, pushed on the
+  event modal stack or resting — four kinds that are four different hacks today. A
+  handler reaches its op only through `inputs` and `apply()`, which defaults to `exec`
+  alone. `startHandler` for op-less gestures; `MacroHandler` for a macro's modal steps,
+  with per-member cancel; the resting op-less form is a toolmode.
+- Removes `is_modal`, `modalStart`/`modalEnd`, `modal_ctx`, the `ModalCTX` generics,
+  `ToolOp`'s `EventHandler` base and the module-level `modalstack`.
+- Acceptance is webgl-app-framework converting its transform ops and composing a
+  toolmode with the base.
