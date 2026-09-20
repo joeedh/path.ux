@@ -500,9 +500,10 @@ does not supply.
 - `markdownOps` builds the custom ops the toolbar, the inline editors and a consumer share:
   `setKind` (paragraph, heading level, list kind, quote, code; a fence splitting into lines
   takes the ids in `data`), `setDepth`, `setTask`, `setLink` (an empty target removes),
-  `setImage` (`width`, `alt`), `moveAtom` (across blocks, with `shifts`), `insertBreak` and
-  `insertWikilink` (replaces a range with a wiki link to a target, shown as its text or the
-  target). Each inverse snapshots the span between the op's first and last block.
+  `insertImage` (a new atom at an offset, refused into a fence), `setImage` (`width`,
+  `alt`), `moveAtom` (across blocks, with `shifts`), `insertBreak` and `insertWikilink`
+  (replaces a range with a wiki link to a target, shown as its text or the target). Each
+  inverse snapshots the span between the op's first and last block.
 - Wikilink completion is the app's: `MarkdownProviderOptions.onWikilinkStart` is called from
   `handleKey` as the second `[` of a `[[` is typed, with the block, the offset the caret will
   have once the key lands, and the event; the key still inserts. The app opens whatever
@@ -516,7 +517,10 @@ does not supply.
   marks its HTML and pastes as the markdown it wrote. `emitDocFile` is a `text/markdown` blob.
 - `headings(doc)` lists `{ block, level }` in document order for an outline.
 - `MarkdownProviderOptions.renderMedia(image, ctx)` supplies the element for an image atom,
-  for an app whose media are not plain `<img>`s.
+  for an app whose media are not plain `<img>`s. `resolveSrc(src)` is the lighter hook: the
+  default image widget checks the authored `src` with `safeUrl` and then loads what
+  `resolveSrc` answers for it (`undefined` loads the text as written), so an app can serve a
+  relative path from its own store without the path changing in the document.
 - The provider's source is split by concern: `markdown_provider.ts` holds the protocol
   surface, `markdown_doc.ts` the block helpers its modules share, `markdown_edits.ts` the
   standard ops, `markdown_custom.ts` the custom ops, `markdown_ops.ts` the `markdownOps`

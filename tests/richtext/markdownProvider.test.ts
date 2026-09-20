@@ -681,6 +681,25 @@ describe("custom ops", () => {
     ).toEqual([]);
   });
 
+  test("insertImage puts an atom into a paragraph and shifts what follows", () => {
+    const doc = parse();
+    const op = markdownOps.insertImage("b2", 2, { src: "../a.png", alt: "a", width: 40.6 });
+    expect(op).toMatchObject({ shifts: [{ block: "b2", at: 2, delta: 1 }] });
+    const result = applyAndUndo(doc, op);
+    expect(block(doc, "b2").text.slice(0, 4)).toBe(`A ${ATOM_CHAR}p`);
+    expect(block(doc, "b2").atoms).toEqual([
+      { offset: 2, image: { src: "../a.png", alt: "a", width: 41 } },
+    ]);
+    expect(marks(block(doc, "b2"))[0]).toEqual(["italic", 3, 12]);
+    expect(result.selection).toEqual(caret("b2", 3));
+    expect(markdownText(doc)).toContain(`A <img src="../a.png" alt="a" width="41">*paragraph*`);
+
+    const fence = provider.applyEdit(doc, markdownOps.insertImage("b9", 0, { src: "x", alt: "" }));
+    expect(fence.dirtyBlocks).toEqual([]);
+    const empty = provider.applyEdit(doc, markdownOps.insertImage("b2", 0, { src: "", alt: "" }));
+    expect(empty.dirtyBlocks).toEqual([]);
+  });
+
   test("moveAtom moves an image into another paragraph and back", () => {
     const doc = parse();
     const op = markdownOps.moveAtom(doc, pos("b12", 0), pos("b2", 2));

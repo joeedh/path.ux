@@ -157,6 +157,8 @@ export function applyCustom(
       return setLink(doc, first, data);
     case "insertWikilink":
       return insertWikilink(doc, first, data, shortcuts);
+    case "insertImage":
+      return insertImage(doc, first, data);
     case "setImage":
       return setImage(doc, first, data);
     case "moveAtom":
@@ -351,6 +353,40 @@ function setLink(doc: MdDoc, b: MdBlock, data: JsonRecord): EditResult {
     removedBlocks: [],
     selection    : data.selection === undefined ? range : customSelection(doc, data, b.id),
   };
+}
+
+/** Puts a new image atom at `data.offset`; refused into a fence or an opaque block, or without a `src`. */
+function insertImage(doc: MdDoc, b: MdBlock, data: JsonRecord): EditResult {
+  const written = objectOf(data.image);
+  const src = written === undefined ? undefined : written.src;
+  const none = {
+    dirtyBlocks  : [],
+    removedBlocks: [],
+    selection    : customSelection(doc, data, b.id),
+  };
+  if (isOpaque(b) || b.kind === "code" || typeof src !== "string" || src === "") {
+    return none;
+  }
+
+  const image: MdImage = { src, alt: typeof written!.alt === "string" ? written!.alt : "" };
+  if (typeof written!.title === "string" && written!.title !== "") {
+    image.title = written!.title;
+  }
+  if (typeof written!.width === "number") {
+    image.width = Math.max(1, Math.round(written!.width));
+  }
+  const at = Math.max(
+    0,
+    Math.min(typeof data.offset === "number" ? data.offset : 0, b.text.length)
+  );
+  b.text = b.text.slice(0, at) + ATOM_CHAR + b.text.slice(at);
+  b.marks = marksAfterTyping(b.marks, at, 1, normalizeMdMarks);
+  b.atoms = [...atomsAfterInsert(b.atoms, at, 1), { offset: at, image }].sort(
+    (x, y) => x.offset - y.offset
+  );
+  b.marks = fixMarks(b);
+
+  return { dirtyBlocks: [b.id], removedBlocks: [], selection: collapsed(b.id, at + 1) };
 }
 
 /** Patches the image at `data.offset`: `width` (null removes it), `alt`, `src`, `title`. */

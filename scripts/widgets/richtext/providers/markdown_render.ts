@@ -29,6 +29,12 @@ export interface MarkdownRenderOptions {
     image: MdImage,
     ctx: ProviderContext
   ) => HTMLElement | WidgetDescriptor | undefined;
+  /**
+   * What the default image widget loads for an authored `src` that `safeUrl` kept; `undefined`
+   * loads the text as written. The authored text is what is checked, the answer is what is loaded,
+   * so a host can serve a relative path from its own store without the path changing in the document.
+   */
+  resolveSrc?: (src: string) => string | undefined;
 }
 
 /** Depths the numbering rules are generated for; a deeper item still lists, without a counter. */
@@ -154,7 +160,7 @@ function atomElement(
             element: widget,
             update: ({ value }) => {
               const state = value as { block: string; offset: number; image: MdImage };
-              widget.setAtom(state.block, state.offset, state.image);
+              widget.setAtom(state.block, state.offset, state.image, options.resolveSrc);
             },
             dispose: () => widget.remove(),
           };
@@ -163,7 +169,7 @@ function atomElement(
   if (ctx.editor.widget) wrap.append(ctx.editor.widget(descriptor));
   else {
     const widget = UIBase.constructElement<MdImageWidget>("md-image-x", ctx);
-    widget.setAtom(block.id, atom.offset, atom.image);
+    widget.setAtom(block.id, atom.offset, atom.image, options.resolveSrc);
     wrap.append(widget);
   }
   return wrap;

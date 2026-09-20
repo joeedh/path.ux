@@ -88723,11 +88723,12 @@ var MdImageWidget = class extends UIBase {
     this.handle.setAttribute("data-testid", "md-image-handle");
     this.shadow.appendChild(this.handle);
   }
-  /** Points the widget at the atom it renders and shows its image. */
-  setAtom(block, offset, image2) {
+  /** Points the widget at the atom it renders and shows its image; `resolve` maps a kept `src` to what is loaded. */
+  setAtom(block, offset, image2, resolve) {
     this.block = block;
     this.offset = offset;
-    const src = safeUrl(image2.src, true);
+    const safe2 = safeUrl(image2.src, true);
+    const src = safe2 === void 0 ? void 0 : resolve?.(safe2) ?? safe2;
     if (src !== void 0) {
       this.img.setAttribute("src", src);
     } else {
@@ -89254,7 +89255,7 @@ function atomElement(block, atom, ctx, options) {
         element: widget,
         update: ({ value: value2 }) => {
           const state = value2;
-          widget.setAtom(state.block, state.offset, state.image);
+          widget.setAtom(state.block, state.offset, state.image, options.resolveSrc);
         },
         dispose: () => widget.remove()
       };
@@ -89263,7 +89264,7 @@ function atomElement(block, atom, ctx, options) {
   if (ctx.editor.widget) wrap.append(ctx.editor.widget(descriptor));
   else {
     const widget = UIBase.constructElement("md-image-x", ctx);
-    widget.setAtom(block.id, atom.offset, atom.image);
+    widget.setAtom(block.id, atom.offset, atom.image, options.resolveSrc);
     wrap.append(widget);
   }
   return wrap;
@@ -90517,6 +90518,8 @@ function applyCustom(doc, op, shortcuts) {
       return setLink(doc, first2, data);
     case "insertWikilink":
       return insertWikilink(doc, first2, data, shortcuts);
+    case "insertImage":
+      return insertImage(doc, first2, data);
     case "setImage":
       return setImage(doc, first2, data);
     case "moveAtom":
@@ -90687,6 +90690,36 @@ function setLink(doc, b, data) {
     selection: data.selection === void 0 ? range : customSelection(doc, data, b.id)
   };
 }
+function insertImage(doc, b, data) {
+  const written = objectOf(data.image);
+  const src = written === void 0 ? void 0 : written.src;
+  const none = {
+    dirtyBlocks: [],
+    removedBlocks: [],
+    selection: customSelection(doc, data, b.id)
+  };
+  if (isOpaque(b) || b.kind === "code" || typeof src !== "string" || src === "") {
+    return none;
+  }
+  const image2 = { src, alt: typeof written.alt === "string" ? written.alt : "" };
+  if (typeof written.title === "string" && written.title !== "") {
+    image2.title = written.title;
+  }
+  if (typeof written.width === "number") {
+    image2.width = Math.max(1, Math.round(written.width));
+  }
+  const at = Math.max(
+    0,
+    Math.min(typeof data.offset === "number" ? data.offset : 0, b.text.length)
+  );
+  b.text = b.text.slice(0, at) + ATOM_CHAR + b.text.slice(at);
+  b.marks = marksAfterTyping(b.marks, at, 1, normalizeMdMarks);
+  b.atoms = [...atomsAfterInsert(b.atoms, at, 1), { offset: at, image: image2 }].sort(
+    (x, y) => x.offset - y.offset
+  );
+  b.marks = fixMarks(b);
+  return { dirtyBlocks: [b.id], removedBlocks: [], selection: collapsed3(b.id, at + 1) };
+}
 function setImage(doc, b, data) {
   const atom = b.atoms.find((a2) => a2.offset === data.offset);
   if (atom === void 0 || atom.image === void 0) {
@@ -90817,6 +90850,24 @@ var markdownOps = {
       blocks: [block],
       data,
       shifts: [{ block, at: from, delta: shown.length - (to - from) }]
+    };
+  },
+  /** Inserts an image atom at `offset` of `block`, before whatever is there; the caret lands after it. */
+  insertImage(block, offset, image2) {
+    const written = { src: image2.src, alt: image2.alt };
+    if (image2.title !== void 0) {
+      written.title = image2.title;
+    }
+    if (image2.width !== void 0) {
+      written.width = image2.width;
+    }
+    const data = { offset, image: written };
+    return {
+      type: "custom",
+      name: "insertImage",
+      blocks: [block],
+      data,
+      shifts: [{ block, at: offset, delta: 1 }]
     };
   },
   /** Patches the image at `offset`; `width: null` removes the width. */

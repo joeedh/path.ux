@@ -135,12 +135,18 @@ export class MdImageWidget extends UIBase<ProviderContext, unknown, "MdImageWidg
     this.shadow.appendChild(this.handle);
   }
 
-  /** Points the widget at the atom it renders and shows its image. */
-  setAtom(block: BlockId, offset: number, image: MdImage): void {
+  /** Points the widget at the atom it renders and shows its image; `resolve` maps a kept `src` to what is loaded. */
+  setAtom(
+    block: BlockId,
+    offset: number,
+    image: MdImage,
+    resolve?: (src: string) => string | undefined
+  ): void {
     this.block = block;
     this.offset = offset;
 
-    const src = safeUrl(image.src, true);
+    const safe = safeUrl(image.src, true);
+    const src = safe === undefined ? undefined : (resolve?.(safe) ?? safe);
     if (src !== undefined) {
       this.img.setAttribute("src", src);
     } else {

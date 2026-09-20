@@ -1,6 +1,6 @@
 import type { BlockId, DocPos, DocRange, EditOp, JsonValue } from "../provider";
 import { moveAtomOp } from "./markdown_image";
-import type { MdDoc } from "./markdown_model";
+import type { MdDoc, MdImage } from "./markdown_model";
 import { markdownTableChange } from "./markdown_table";
 
 // The provider's custom ops as a consumer builds them: each is a `custom` EditOp whose JSON
@@ -99,6 +99,25 @@ export const markdownOps = {
       blocks: [block],
       data,
       shifts: [{ block, at: from, delta: shown.length - (to - from) }],
+    };
+  },
+
+  /** Inserts an image atom at `offset` of `block`, before whatever is there; the caret lands after it. */
+  insertImage(block: BlockId, offset: number, image: MdImage): EditOp {
+    const written: JsonRecord = { src: image.src, alt: image.alt };
+    if (image.title !== undefined) {
+      written.title = image.title;
+    }
+    if (image.width !== undefined) {
+      written.width = image.width;
+    }
+    const data: JsonRecord = { offset, image: written };
+    return {
+      type  : "custom",
+      name  : "insertImage",
+      blocks: [block],
+      data,
+      shifts: [{ block, at: offset, delta: 1 }],
     };
   },
 
