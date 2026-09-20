@@ -641,6 +641,28 @@ under any superproject.
 default branch (path.ux has no pinned exceptions) must be committed and pushed, so
 no work is lost when the checkout goes away.
 
+## Git history
+
+`master` is linear from here on. Existing merge commits stay; no new ones are added.
+
+- A branch lands by rebasing onto `master` (`git rebase master`, or `git pull --rebase`
+  where a remote is involved), then fast-forwarding from the `master` checkout with
+  `git merge --ff-only <branch>`. If `--ff-only` refuses, rebase again rather than
+  falling back to a plain `git merge`.
+- Keep `pull.rebase` set to `true` in every clone so a routine pull cannot introduce a
+  merge commit.
+- Squash a branch that is one idea; keep the stages of a branch that is several. `wip`,
+  `fix typo` and `address review` commits are folded into the commit they repair with
+  `git commit --fixup <sha>` and collapsed before landing with
+  `GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash master`.
+- Every commit on `master` passes `pnpm run typecheck`, `pnpm run test` and
+  `pnpm run lint:check`, so `git bisect` always lands on a buildable tree.
+- Only rewrite history nobody else has pulled. Once a commit is on `origin/master`, treat
+  it as append-only.
+- A migration record's commit range (see `documentation/migrations/`) is read along the
+  first-parent line of whatever commit is being checked, which is why new merge commits
+  are not allowed: a range has to name a straight line of commits.
+
 ## Commit Messages
 
 Commit messages should be terse and use bullet points. The message should lead with
