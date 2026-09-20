@@ -84,3 +84,5 @@ matter.
 [ ]: better wrappers around the web file system APIs, to cover what
 simple_docsys did for locally served, Electron and NW.js apps. Unrelated to
 the rich text work; noted here so it is not lost when simple_docsys goes.
+[ ]: property system rewrite, four plans in order; see
+documentation/plans/property-system-tasks.md.
