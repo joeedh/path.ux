@@ -86,12 +86,26 @@ export const markdownOps = {
     return { type: "custom", name: "setLink", blocks: [block], data };
   },
 
-  /** Replaces `[from, to)` of `block` (the typed `[[` and whatever followed) with a wikilink to `target`, shown as `text` or the target. */
-  insertWikilink(block: BlockId, from: number, to: number, target: string, text?: string): EditOp {
+  /**
+   * Replaces `[from, to)` of `block` (the typed `[[` and whatever followed) with a link to
+   * `target`, shown as `text` or the target; `kind` is the mark's, `"wiki"` unless the consumer
+   * writes its completions as ordinary `[text](target)` links.
+   */
+  insertWikilink(
+    block: BlockId,
+    from: number,
+    to: number,
+    target: string,
+    text?: string,
+    kind = "wiki"
+  ): EditOp {
     const shown = text === undefined || text === "" ? target : text;
     const data: JsonRecord = { from, to, target };
     if (text !== undefined) {
       data.text = text;
+    }
+    if (kind !== "wiki") {
+      data.kind = kind;
     }
     return {
       type  : "custom",

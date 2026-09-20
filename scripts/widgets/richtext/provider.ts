@@ -145,6 +145,11 @@ export interface LinkInfo {
   range: DocRange;
 }
 
+/** The `linkclick` event's detail: the link, and the click itself for its modifiers. */
+export interface LinkClick extends LinkInfo {
+  event: MouseEvent;
+}
+
 /**
  * The editor as a provider reaches it, through `ctx.editor` on the context every embedded
  * widget and toolbar item is built under. One bridge per editor.

@@ -368,8 +368,10 @@ it shows; `RichViewer` is not extended for this.
 
 ## Link clicks
 
-A `CustomEvent("linkclick")`, `detail: LinkInfo` (`{ kind, target, text, range }`), cancelable
-and non-bubbling, fires on the editor's host element when a provider's link is clicked. The
+A `CustomEvent("linkclick")`, `detail: LinkClick` (`{ kind, target, text, range, event }`, the
+last being the click itself, for a consumer that follows a link only under a modifier),
+cancelable and non-bubbling, fires on the editor's host element when a provider's link is
+clicked. The
 editor attaches no meaning to a link: it never navigates, opens a tab or resolves a target, in
 either mode. The consumer listens on the element and resolves the target itself, by `kind`:
 the markdown provider reports `url` for `[text](target)` and `wiki` for `[[target]]`.
@@ -504,8 +506,9 @@ does not supply.
   takes the ids in `data`), `setDepth`, `setTask`, `setLink` (an empty target removes),
   `insertImage` (a new atom at an offset, refused into a fence), `setImage` (`width`,
   `alt`), `moveAtom` (across blocks, with `shifts`), `insertBreak` and `insertWikilink`
-  (replaces a range with a wiki link to a target, shown as its text or the target). Each
-  inverse snapshots the span between the op's first and last block.
+  (replaces a range with a link to a target, shown as its text or the target; a `kind` of
+  `"url"` writes an ordinary `[text](target)` link instead of a wiki one). Each inverse
+  snapshots the span between the op's first and last block.
 - Wikilink completion is the app's: `MarkdownProviderOptions.onWikilinkStart` is called from
   `handleKey` as the second `[` of a `[[` is typed, with the block, the offset the caret will
   have once the key lands, and the event; the key still inserts. The app opens whatever

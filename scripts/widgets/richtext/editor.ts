@@ -24,6 +24,7 @@ import type {
   EditOp,
   EditResult,
   EditorBridge,
+  LinkClick,
   LinkInfo,
   ProviderContext,
   ToolbarSync,
@@ -447,7 +448,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
    */
   linkClicked(link: LinkInfo, event: MouseEvent): boolean {
     const proceed = this.dispatchEvent(
-      new CustomEvent<LinkInfo>("linkclick", { detail: link, cancelable: true })
+      new CustomEvent<LinkClick>("linkclick", { detail: { ...link, event }, cancelable: true })
     );
 
     if (proceed && !this.readOnly) {

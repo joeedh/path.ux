@@ -853,6 +853,17 @@ describe("wikilinks", () => {
       []
     );
   });
+
+  test("insertWikilink with kind url writes an ordinary link", () => {
+    const doc = parse("see [[Pa here\n");
+    const op = markdownOps.insertWikilink("b0", 4, 8, "../page.md", "the page", "url");
+    expect(op).toMatchObject({ data: { kind: "url" } });
+    applyAndUndo(doc, op);
+    expect(doc.blocks[0].marks).toEqual([
+      { from: 4, to: 12, name: "link", kind: "url", target: "../page.md" },
+    ]);
+    expect(markdownText(doc)).toBe("see [the page](../page.md) here\n");
+  });
 });
 
 describe("clipboard", () => {

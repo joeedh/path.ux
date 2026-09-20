@@ -484,7 +484,7 @@ describe("linkclick", () => {
     const click = new MouseEvent("click");
 
     expect(editor.bridge.linkClicked(link, click)).toBe(true);
-    expect(heard).toEqual([link]);
+    expect(heard).toEqual([{ ...link, event: click }]);
     expect(fallback).toHaveBeenCalledTimes(1);
 
     prevent = true;

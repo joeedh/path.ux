@@ -47021,7 +47021,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
    */
   linkClicked(link2, event) {
     const proceed = this.dispatchEvent(
-      new CustomEvent("linkclick", { detail: link2, cancelable: true })
+      new CustomEvent("linkclick", { detail: { ...link2, event }, cancelable: true })
     );
     if (proceed && !this.readOnly) {
       this.linkDefault(link2, event);
@@ -90636,6 +90636,7 @@ function insertWikilink(doc, b, data, shortcuts) {
   const to = typeof data.to === "number" ? data.to : from;
   const target = typeof data.target === "string" ? data.target : "";
   const text6 = typeof data.text === "string" && data.text !== "" ? data.text : target;
+  const kind = typeof data.kind === "string" ? data.kind : "wiki";
   if (isOpaque(b) || b.kind === "code" || from > to || to > b.text.length || target === "") {
     return { dirtyBlocks: [], removedBlocks: [], selection: collapsed3(b.id, to) };
   }
@@ -90646,7 +90647,7 @@ function insertWikilink(doc, b, data, shortcuts) {
     false,
     shortcuts
   );
-  const mark2 = { from, to: from + text6.length, name: "link", kind: "wiki", target };
+  const mark2 = { from, to: from + text6.length, name: "link", kind, target };
   b.marks = normalizeMdMarks([
     ...cutMark(b.marks, "link", mark2.from, mark2.to, normalizeMdMarks),
     mark2
@@ -90837,12 +90838,19 @@ var markdownOps = {
     }
     return { type: "custom", name: "setLink", blocks: [block], data };
   },
-  /** Replaces `[from, to)` of `block` (the typed `[[` and whatever followed) with a wikilink to `target`, shown as `text` or the target. */
-  insertWikilink(block, from, to, target, text6) {
+  /**
+   * Replaces `[from, to)` of `block` (the typed `[[` and whatever followed) with a link to
+   * `target`, shown as `text` or the target; `kind` is the mark's, `"wiki"` unless the consumer
+   * writes its completions as ordinary `[text](target)` links.
+   */
+  insertWikilink(block, from, to, target, text6, kind = "wiki") {
     const shown = text6 === void 0 || text6 === "" ? target : text6;
     const data = { from, to, target };
     if (text6 !== void 0) {
       data.text = text6;
+    }
+    if (kind !== "wiki") {
+      data.kind = kind;
     }
     return {
       type: "custom",

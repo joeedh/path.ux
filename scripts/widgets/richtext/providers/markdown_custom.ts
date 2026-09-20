@@ -293,6 +293,7 @@ function insertWikilink(doc: MdDoc, b: MdBlock, data: JsonRecord, shortcuts: boo
   const to = typeof data.to === "number" ? data.to : from;
   const target = typeof data.target === "string" ? data.target : "";
   const text = typeof data.text === "string" && data.text !== "" ? data.text : target;
+  const kind = typeof data.kind === "string" ? data.kind : "wiki";
 
   if (isOpaque(b) || b.kind === "code" || from > to || to > b.text.length || target === "") {
     return { dirtyBlocks: [], removedBlocks: [], selection: collapsed(b.id, to) };
@@ -305,7 +306,7 @@ function insertWikilink(doc: MdDoc, b: MdBlock, data: JsonRecord, shortcuts: boo
     false,
     shortcuts
   );
-  const mark: MdMark = { from, to: from + text.length, name: "link", kind: "wiki", target };
+  const mark: MdMark = { from, to: from + text.length, name: "link", kind, target };
   b.marks = normalizeMdMarks([
     ...cutMark(b.marks, "link", mark.from, mark.to, normalizeMdMarks),
     mark,

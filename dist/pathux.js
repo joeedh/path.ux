@@ -46895,7 +46895,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
    */
   linkClicked(link, event) {
     const proceed = this.dispatchEvent(
-      new CustomEvent("linkclick", { detail: link, cancelable: true })
+      new CustomEvent("linkclick", { detail: { ...link, event }, cancelable: true })
     );
     if (proceed && !this.readOnly) {
       this.linkDefault(link, event);
