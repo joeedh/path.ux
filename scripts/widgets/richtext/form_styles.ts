@@ -23,5 +23,6 @@ export function formStyles(): string {
       min-width : 0;
       box-shadow: inset 0 0 0 1px #888;
     }
+    :where(.schema-form-row) > :where(textbox-x[readonly]) { opacity: 0.6; }
   `;
 }

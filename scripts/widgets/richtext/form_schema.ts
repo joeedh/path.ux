@@ -73,6 +73,8 @@ export interface FieldMeta {
    * a factory draws its own editor.
    */
   readonly control?: "text" | "json" | "none" | FieldControlFactory;
+  /** Shown and never edited: the control stays read-only whatever the form's state, and the row draws no Omit. */
+  readonly readOnly?: boolean;
 }
 
 export interface FormPresentation {

@@ -64,8 +64,10 @@ class TextFieldControl implements FieldControl {
     if (this.box.text !== next) this.box.text = next;
   }
 
+  /** The attribute mirrors the input's state onto the host, where a stylesheet can reach it. */
   setReadOnly(on: boolean): void {
     this.box.dom.readOnly = on;
+    this.box.toggleAttribute("readonly", on);
   }
 
   focus(): void {
@@ -83,6 +85,12 @@ interface Field {
   json: boolean;
 }
 
+/** A row's Omit button, which reads Keep while the field is omitted so the click is reversible. */
+interface OmitButton {
+  button: HTMLButtonElement;
+  label: string;
+}
+
 /** A standalone control whose text drafts commit through its supplied history binding. */
 export class FormControl<Output = unknown> implements WidgetView {
   readonly element = document.createElement("div");
@@ -91,6 +99,9 @@ export class FormControl<Output = unknown> implements WidgetView {
   private readonly views: FieldControl[] = [];
   private readonly edits = new Map<string, string | undefined>();
   private readonly buttons: HTMLButtonElement[] = [];
+  private readonly omits = new Map<string, OmitButton>();
+  /** Controls a `readOnly` field meta keeps read-only whatever the form's state. */
+  private readonly fixed = new Set<FieldControl>();
   private base: FormSnapshot;
   private latest?: FormSnapshot;
   private version = 0;
@@ -158,25 +169,21 @@ export class FormControl<Output = unknown> implements WidgetView {
         this.edits.set(key, text);
         this.version++;
         this.status.textContent = "Draft";
+        this.paintOmits();
       };
       this.fields.set(name, { node, control, json });
       for (const key of control.also ?? [])
         this.fields.set(key, { node: nodes[key]!, control, json: false });
       this.views.push(control);
+      if (meta.readOnly) this.fixed.add(control);
       row.append(label, control.element);
       // the row's label already names the field, so the button reads as one word and keeps
       // the field's name for assistive technology
-      this.button(
-        "Omit",
-        `Leave ${meta.label ?? name} out of the document; applying the answers then removes it`,
-        () => {
-          this.edits.set(name, undefined);
-          this.version++;
-          control.write(name, undefined);
-          this.status.textContent = "Draft: field omitted";
-        },
-        row
-      ).setAttribute("aria-label", "Omit " + name);
+      if (!meta.readOnly) {
+        const button = this.button("Omit", "", () => this.toggleOmit(name), row);
+        button.setAttribute("aria-label", "Omit " + name);
+        this.omits.set(name, { button, label: meta.label ?? name });
+      }
       this.element.append(row);
     }
     const actions = document.createElement("div");
@@ -248,6 +255,43 @@ export class FormControl<Output = unknown> implements WidgetView {
     return button;
   }
 
+  private omitted(name: string): boolean {
+    return this.edits.has(name) && this.edits.get(name) === undefined;
+  }
+
+  /** Omit leaves the field out of the document; pressed again, as Keep, it puts the value back. */
+  private toggleOmit(name: string): void {
+    const { node, control, json } = this.fields.get(name)!;
+    if (this.omitted(name)) {
+      this.edits.delete(name);
+      control.write(
+        name,
+        encodeFormField(
+          node,
+          formObject(this.base.values) ? this.base.values[name] : undefined,
+          json
+        )
+      );
+      this.status.textContent = this.pending ? "Draft" : "";
+    } else {
+      this.edits.set(name, undefined);
+      control.write(name, undefined);
+      this.status.textContent = "Draft: field omitted";
+    }
+    this.version++;
+    this.paintOmits();
+  }
+
+  private paintOmits(): void {
+    for (const [name, { button, label }] of this.omits) {
+      const omitted = this.omitted(name);
+      button.textContent = omitted ? "Keep" : "Omit";
+      button.title = omitted
+        ? `Put ${label} back as the document has it`
+        : `Leave ${label} out of the document; applying the answers then removes it`;
+    }
+  }
+
   private values(): JsonValue {
     if (!formObject(this.base.values)) throw new Error("Form input is no longer an object");
     const result = { ...this.base.values };
@@ -261,14 +305,32 @@ export class FormControl<Output = unknown> implements WidgetView {
     return widgetJson(result);
   }
 
-  private prepare(): DraftPreparation {
+  /**
+   * The draft as a command, once the answers pass the schema; answers that fail it are refused
+   * here, with the issues as the reason, so an omitted required field never reaches the document.
+   */
+  private async prepare(): Promise<DraftPreparation> {
     this.latest = this.binding.read();
     if (this.locked() || this.composing)
       return { status: "refused", reason: "Form is unavailable or read-only" };
     if (this.latest?.revision !== this.base.revision)
       return { status: "conflict", reason: "Saved answers changed; recover or discard this draft" };
+    let values: JsonValue;
     try {
-      return { status: "ready", command: this.binding.prepare(this.base, this.values()) };
+      values = this.values();
+    } catch (error) {
+      return { status: "unencodable", reason: String(error) };
+    }
+    const version = this.version;
+    const checked = await this.schema.validate(values);
+    if (this.disposed || version !== this.version)
+      return { status: "conflict", reason: "Answers changed during validation" };
+    if (!checked.success) {
+      const issues = checked.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
+      return { status: "unencodable", reason: issues.join("; ") };
+    }
+    try {
+      return { status: "ready", command: this.binding.prepare(this.base, values) };
     } catch (error) {
       return { status: "unencodable", reason: String(error) };
     }
@@ -283,7 +345,7 @@ export class FormControl<Output = unknown> implements WidgetView {
 
   async commit(): Promise<void> {
     if (!this.pending) return;
-    const prepared = this.prepare();
+    const prepared = await this.prepare();
     if (prepared.status !== "ready") {
       this.status.textContent = prepared.reason ?? prepared.status;
       return;
@@ -344,6 +406,7 @@ export class FormControl<Output = unknown> implements WidgetView {
     }
     this.version++;
     this.status.textContent = RECOVERED;
+    this.paintOmits();
     return true;
   }
 
@@ -369,9 +432,10 @@ export class FormControl<Output = unknown> implements WidgetView {
         control.write(name, encodeFormField(node, this.latest.values[name], json));
     }
     const locked = this.locked();
-    for (const control of this.views) control.setReadOnly(locked);
+    for (const control of this.views) control.setReadOnly(locked || this.fixed.has(control));
     for (const button of this.buttons)
       button.disabled = this.busy || (locked && button.dataset.recovery !== "true");
+    this.paintOmits();
     if (!this.latest) this.status.textContent = "Structured view unavailable; use raw source";
     else if (this.pending && this.base.revision !== this.latest.revision)
       this.status.textContent = "Saved answers changed; draft retained";

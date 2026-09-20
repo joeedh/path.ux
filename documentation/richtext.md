@@ -107,6 +107,17 @@ editor:
   row. A factory that throws, or whose `also` names a key the schema lacks or one drawn
   already, falls back to the text box and the status line says why.
 
+Every row but a `readOnly` one ends in **Omit**, which leaves the key out of the document
+when the answers are applied. While a field is omitted the same button reads **Keep** and
+puts the document's value back, so an Omit is undone in place rather than through
+**Discard answers**; typing into the omitted field's control also makes it a typed answer
+again. The answers are checked against the schema when the draft is prepared, before
+anything reaches the document: an omitted required field, or any answer the schema
+refuses, leaves the draft pending with the issues on the status line (and as the reason a
+`prepareSave` reports), so the document never holds a front matter the form could not
+show again. `presentation.fields[key].readOnly` shows a field the form may never change: its
+control stays read-only whatever the form's state, and the row draws no Omit.
+
 `NativeFormOptions.view(parts)` builds the mounted view instead of the default
 `new FormControl(...)`; `parts` is the block id, the selected form, the binding and the
 context, and `formView(parts)` is the default for a host that only wants to keep the

@@ -142,6 +142,58 @@ describe("custom field controls", () => {
     await form.commit();
     expect(committed).toEqual([{ name: "Ada" }]);
   });
+  test("an omitted field reads Keep, and Keep puts the document's value back", () => {
+    const wardrobe = new FakeWardrobe();
+    const { binding } = memoryBinding({ name: "Ada", outfits: { day: "Blue" } });
+    const form = new FormControl(schema, binding, ctx, {
+      fields: { outfits: { control: () => wardrobe } },
+    });
+    const omit = [...form.element.querySelectorAll("button")].find(
+      (b) => b.getAttribute("aria-label") === "Omit outfits"
+    )!;
+    expect(omit.textContent).toBe("Omit");
+    omit.click();
+    expect(omit.textContent).toBe("Keep");
+    expect(form.pending).toBe(true);
+    omit.click();
+    expect(omit.textContent).toBe("Omit");
+    expect(wardrobe.shown.get("outfits")).toBe('{"day":"Blue"}');
+    expect(form.pending).toBe(false);
+    // typing into an omitted field is a typed answer again, not an omission
+    omit.click();
+    wardrobe.oninput!("outfits", "{}");
+    expect(omit.textContent).toBe("Omit");
+  });
+  test("answers the schema refuses never reach the document; the draft stays for Keep", async () => {
+    const { binding, committed, draft } = memoryBinding({ name: "Ada", outfits: { day: "Blue" } });
+    const form = new FormControl(schema, binding, ctx);
+    const omit = [...form.element.querySelectorAll("button")].find(
+      (b) => b.getAttribute("aria-label") === "Omit name"
+    )!;
+    omit.click();
+    await form.commit();
+    expect(committed).toEqual([]);
+    expect(form.pending).toBe(true);
+    const status = form.element.querySelector(".schema-form-status")!.textContent!;
+    expect(status).toMatch(/^name: /);
+    expect(await draft().prepare()).toMatchObject({ status: "unencodable", reason: status });
+    omit.click();
+    expect(form.pending).toBe(false);
+  });
+  test("a readOnly field is shown, never edited, and has no Omit", () => {
+    const wardrobe = new FakeWardrobe();
+    const { binding } = memoryBinding({ name: "Ada", outfits: { day: "Blue" } });
+    const form = new FormControl(schema, binding, ctx, {
+      fields: { outfits: { control: () => wardrobe, readOnly: true } },
+    });
+    expect(wardrobe.shown.get("outfits")).toBe('{"day":"Blue"}');
+    expect(wardrobe.readOnly).toBe(true);
+    const labels = [...form.element.querySelectorAll("button")].map((b) => b.getAttribute("aria-label"));
+    expect(labels).toContain("Omit name");
+    expect(labels).not.toContain("Omit outfits");
+    form.update({ value: undefined, readOnly: false });
+    expect(wardrobe.readOnly).toBe(true);
+  });
   test("a factory that throws or names an unknown key falls back to the text box", () => {
     const { binding } = memoryBinding({ name: "Ada", outfits: {} });
     const form = new FormControl(schema, binding, ctx, {
