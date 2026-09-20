@@ -34,7 +34,8 @@ test("opening forms is a pure read with no defaults or duplicate history", async
     await page.evaluate(() => [window.forms.stack.length, window.forms.pluginStack.length])
   ).toEqual([0, 0]);
   expect(await page.evaluate(() => window.forms.pluginSource())).not.toContain('"tags"');
-  await expect(page.locator("#native0 textbox-x")).toHaveCount(15);
+  await expect(page.locator("#native0 textbox-x")).toHaveCount(14);
+  await expect(page.locator("#native0 .palette-control")).toHaveCount(1);
 });
 
 test("schema versions stay independent and unavailable schemas preserve payloads", async ({
@@ -154,6 +155,34 @@ test("native forms preserve source, focus and independent drafts through save an
   await expect(other).toHaveValue("Ada");
   await page.evaluate(() => window.forms.stack.redo());
   await expect(other).toHaveValue("Bea");
+});
+
+test("a custom field control sits in the Tab order and its input is the form's draft", async ({
+  page,
+}) => {
+  const form = page.locator("#native0");
+  const palette = form.locator(".palette-control");
+  await form.getByTitle("Add a swatch").click();
+  await expect(palette.getByTitle("Remove this swatch")).toHaveCount(1);
+  await palette.locator("input[type=color]").evaluate((el) => {
+    (el as HTMLInputElement).value = "#123456";
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await expect(form.locator(".schema-form-status")).toHaveText("Draft");
+  await form.getByRole("button", { name: "Apply answers" }).click();
+  expect(await page.evaluate(() => window.forms.source())).toContain('"palette": ["#123456"]');
+  await expect(page.locator("#native1 .palette-control input[type=color]")).toHaveValue("#123456");
+
+  const before = form.getByRole("button", { name: "Omit default_outfit" });
+  await before.focus();
+  await page.keyboard.press("Tab");
+  await expect(palette.locator("input[type=color]")).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(palette.getByTitle("Remove this swatch")).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(form.getByTitle("Add a swatch")).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(form.getByRole("button", { name: "Omit palette" })).toBeFocused();
 });
 
 test("incomplete and cross-field-invalid embedded answers save but cannot be submitted", async ({

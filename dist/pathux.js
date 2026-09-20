@@ -554,14 +554,15 @@ var init_ui_worker_shim = __esm({
   "scripts/core/base/ui_worker_shim.ts"() {
     "use strict";
     if (typeof HTMLElement === "undefined") {
-      window.HTMLElement = class HTMLElement {
+      const g = globalThis;
+      g.HTMLElement = class HTMLElement {
       };
-      window.customElements = {
+      g.customElements = {
         define: () => {
         }
       };
-      window.devicePixelRatio = 1;
-      window.PointerEvent = class PointerEvent {
+      g.devicePixelRatio = 1;
+      g.PointerEvent = class PointerEvent {
       };
     }
   }
@@ -46822,6 +46823,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     const editable = !readOnly && !this.disabled ? "true" : "false";
     if (this.root.getAttribute("contenteditable") !== editable) {
       this.root.contentEditable = editable;
+      this.widgetHost.refresh();
     }
     this.root.toggleAttribute("readonly", readOnly);
     if (this.toolbar !== void 0 && this.toolbarLocked !== readOnly) {

@@ -5,7 +5,10 @@ import type { IContextBase } from "../../core/context_base";
 import type { DraftPreparation } from "./drafts";
 import type { WidgetState, WidgetView } from "./widget";
 import { decodeFormField, encodeFormField, formObject } from "./form_schema";
+import { formStyles } from "./form_styles";
 import type {
+  FieldControl,
+  FieldMeta,
   FormBinding,
   FormNode,
   FormPresentation,
@@ -16,11 +19,74 @@ import type {
 import type { JsonValue } from "./provider";
 import { widgetJson } from "./widget_codec";
 
+/** What `FormControl.restore` takes: the shape a form draft's `recover` answers with. */
+export interface RecoveredForm {
+  readonly base: FormSnapshot;
+  readonly edits: Iterable<readonly [string, string | undefined]>;
+}
+
+const RECOVERED = "Recovered answers from a form that closed";
+
+/** The default editor: one `textbox-x`, keyed by the field it shows. */
+class TextFieldControl implements FieldControl {
+  readonly element: HTMLElement;
+  private readonly box: TextBox;
+  oninput?: (key: string, text: string | undefined) => void;
+
+  constructor(
+    private readonly key: string,
+    meta: FieldMeta,
+    node: FormNode,
+    context: IContextBase
+  ) {
+    const box = UIBase.constructElement<TextBox>("textbox-x", context);
+    box.useDataPathUndo = false;
+    // the widget copies its own width onto the inner input, so a stylesheet cannot set it
+    box.width = 220;
+    box.overrideDefault("border-width", 1);
+    box.setCSS();
+    box.setAttribute("modal", "false");
+    box.dom.setAttribute("aria-label", meta.label ?? key);
+    box.dom.title = meta.help ?? node.description ?? "";
+    box.dom.addEventListener("input", () => this.oninput?.(key, box.text));
+    this.box = box;
+    this.element = box;
+  }
+
+  read(): string {
+    return this.box.text;
+  }
+
+  write(_key: string, text: string | undefined): void {
+    const next = text ?? "";
+    if (this.box.text !== next) this.box.text = next;
+  }
+
+  setReadOnly(on: boolean): void {
+    this.box.dom.readOnly = on;
+  }
+
+  focus(): void {
+    this.box.dom.focus();
+  }
+
+  dispose(): void {
+    this.box.remove();
+  }
+}
+
+interface Field {
+  node: FormNode;
+  control: FieldControl;
+  json: boolean;
+}
+
 /** A standalone control whose text drafts commit through its supplied history binding. */
 export class FormControl<Output = unknown> implements WidgetView {
   readonly element = document.createElement("div");
   private readonly status = document.createElement("div");
-  private readonly controls = new Map<string, { node: FormNode; box: TextBox; json: boolean }>();
+  private readonly fields = new Map<string, Field>();
+  private readonly views: FieldControl[] = [];
   private readonly edits = new Map<string, string | undefined>();
   private readonly buttons: HTMLButtonElement[] = [];
   private base: FormSnapshot;
@@ -48,45 +114,61 @@ export class FormControl<Output = unknown> implements WidgetView {
       );
     this.latest = this.base = initial;
     this.element.className = "schema-form";
-    this.element.style.cssText =
-      "display:flex;flex-direction:column;gap:6px;padding:8px;min-width:260px";
+    const style = document.createElement("style");
+    style.textContent = formStyles();
+    this.element.append(style);
+    this.status.className = "schema-form-status";
     this.status.setAttribute("role", "status");
-    const fields = schema.root.fields;
-    const order = [...new Set([...(presentation.order ?? []), ...Object.keys(fields)])];
+    const nodes = schema.root.fields;
+    const order = [...new Set([...(presentation.order ?? []), ...Object.keys(nodes)])];
+    const fallbacks: string[] = [];
     for (const name of order) {
-      const node = fields[name];
-      if (!node) continue;
-      const meta = presentation.fields?.[name];
+      const node = nodes[name];
+      if (!node || this.fields.has(name)) continue;
+      const meta = presentation.fields?.[name] ?? {};
+      if (meta.control === "none") continue;
       const row = document.createElement("div");
-      row.style.cssText = "display:flex;align-items:center;gap:6px;flex-wrap:wrap";
+      row.className = "schema-form-row";
       const label = document.createElement("span");
-      label.textContent = (meta?.group ? `${meta.group}: ` : "") + (meta?.label ?? name);
-      label.style.flex = "0 0 105px";
-      const box = UIBase.constructElement<TextBox>("textbox-x", context);
-      box.useDataPathUndo = false;
-      box.style.width = "220px";
-      box.style.boxShadow = "inset 0 0 0 1px #888";
-      box.overrideDefault("border-width", 1);
-      box.setCSS();
-      box.setAttribute("modal", "false");
-      box.dom.setAttribute("aria-label", meta?.label ?? name);
-      box.dom.title = meta?.help ?? node.description ?? "";
-      const json = meta?.control === "json";
-      this.controls.set(name, { node, box, json });
-      box.dom.addEventListener("input", () => {
+      label.className = "schema-form-label";
+      label.textContent = (meta.group ? `${meta.group}: ` : "") + (meta.label ?? name);
+      let control: FieldControl | undefined;
+      let json = meta.control === "json";
+      if (typeof meta.control === "function") {
+        try {
+          control = meta.control({ name, node, meta, context });
+          for (const key of control.also ?? []) {
+            if (!nodes[key]) throw new Error(`${name} also edits ${key}, which the schema lacks`);
+            if (this.fields.has(key)) throw new Error(`${key} is drawn twice`);
+          }
+        } catch (error) {
+          control?.dispose();
+          control = undefined;
+          fallbacks.push(`${name}: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }
+      if (!control) {
+        control = new TextFieldControl(name, meta, node, context);
+        json = meta.control === "json";
+      }
+      control.oninput = (key, text) => {
         if (this.locked()) return;
-        this.edits.set(name, box.text);
+        this.edits.set(key, text);
         this.version++;
         this.status.textContent = "Draft";
-      });
-      row.append(label, box);
+      };
+      this.fields.set(name, { node, control, json });
+      for (const key of control.also ?? [])
+        this.fields.set(key, { node: nodes[key]!, control, json: false });
+      this.views.push(control);
+      row.append(label, control.element);
       this.button(
         "Omit " + name,
-        `Leave ${meta?.label ?? name} out of the document; applying the answers then removes it`,
+        `Leave ${meta.label ?? name} out of the document; applying the answers then removes it`,
         () => {
           this.edits.set(name, undefined);
           this.version++;
-          box.text = "";
+          control.write(name, undefined);
           this.status.textContent = "Draft: field omitted";
         },
         row
@@ -94,6 +176,7 @@ export class FormControl<Output = unknown> implements WidgetView {
       this.element.append(row);
     }
     const actions = document.createElement("div");
+    actions.className = "schema-form-actions";
     if (options.commit !== false)
       this.button(
         "Apply answers",
@@ -125,10 +208,11 @@ export class FormControl<Output = unknown> implements WidgetView {
       prepare  : () => this.prepare(),
       committed: () => this.committed(),
       discard  : () => this.discard(),
-      recover  : () => ({ base: structuredClone(this.base), edits: [...this.edits] }),
+      recover: (): RecoveredForm => ({ base: structuredClone(this.base), edits: [...this.edits] }),
     });
     this.unsubscribe = binding.subscribe(() => this.refresh());
     this.refresh();
+    if (fallbacks.length) this.status.textContent = "Text box instead: " + fallbacks.join("; ");
   }
 
   get pending(): boolean {
@@ -165,7 +249,7 @@ export class FormControl<Output = unknown> implements WidgetView {
     for (const [name, text] of this.edits) {
       if (text === undefined) delete result[name];
       else {
-        const { node, json } = this.controls.get(name)!;
+        const { node, json } = this.fields.get(name)!;
         result[name] = decodeFormField(node, text, json);
       }
     }
@@ -238,6 +322,26 @@ export class FormControl<Output = unknown> implements WidgetView {
     return result;
   }
 
+  /**
+   * Plays a closed form's answers into this one. Refused, answering `false`, when this form
+   * is locked or already holds answers, when the draft was typed over different values, or
+   * when it names a field this form does not draw.
+   */
+  restore(draft: RecoveredForm): boolean {
+    this.refresh();
+    if (this.locked() || this.composing || this.pending) return false;
+    if (JSON.stringify(draft.base.values) !== JSON.stringify(this.base.values)) return false;
+    const entries = [...draft.edits];
+    if (entries.some(([name]) => !this.fields.has(name))) return false;
+    for (const [name, text] of entries) {
+      this.edits.set(name, text);
+      this.fields.get(name)!.control.write(name, text);
+    }
+    this.version++;
+    this.status.textContent = RECOVERED;
+    return true;
+  }
+
   private committed() {
     this.edits.clear();
     this.version++;
@@ -256,13 +360,11 @@ export class FormControl<Output = unknown> implements WidgetView {
     this.latest = this.binding.read();
     if (!this.pending && !this.composing && this.latest && formObject(this.latest.values)) {
       this.base = this.latest;
-      for (const [name, { node, box, json }] of this.controls) {
-        const text = encodeFormField(node, this.latest.values[name], json);
-        if (box.text !== text) box.text = text;
-      }
+      for (const [name, { node, control, json }] of this.fields)
+        control.write(name, encodeFormField(node, this.latest.values[name], json));
     }
     const locked = this.locked();
-    for (const { box } of this.controls.values()) box.dom.readOnly = locked;
+    for (const control of this.views) control.setReadOnly(locked);
     for (const button of this.buttons)
       button.disabled = this.busy || (locked && button.dataset.recovery !== "true");
     if (!this.latest) this.status.textContent = "Structured view unavailable; use raw source";
@@ -276,8 +378,7 @@ export class FormControl<Output = unknown> implements WidgetView {
   }
 
   focus(last = false): void {
-    const fields = [...this.controls.values()];
-    fields[last ? fields.length - 1 : 0]?.box.dom.focus();
+    this.views[last ? this.views.length - 1 : 0]?.focus();
   }
 
   dispose(): void {
@@ -285,6 +386,6 @@ export class FormControl<Output = unknown> implements WidgetView {
     this.disposed = true;
     this.unsubscribe();
     this.unregister();
-    for (const { box } of this.controls.values()) box.remove();
+    for (const control of this.views) control.dispose();
   }
 }

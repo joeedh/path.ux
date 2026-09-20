@@ -77,6 +77,52 @@ them with `recoverDraft(id)` or explicitly calls `discardDraft(id)`. Retain the 
 deciding. Keep recoverable input separately from subscriptions and requests that disposal
 must release.
 
+### Native front-matter forms
+
+`nativeFormWidgets(options)` (`form_native.ts`, imported by path rather than from the
+barrel) is a `widgetOptions` that mounts a `FormControl` over a document's front matter
+block. `options.codec` reads the fence's YAML to JSON and patches values back into the
+source; `options.select(values)` answers the `RegisteredForm` (a `FormSchema` and a
+`FormPresentation`) for the document, `undefined` to keep the raw block, or throws a
+message `onDiagnostic` receives. The form's binding is `nativeFormBinding`, whose draft is
+keyed `frontmatter:<block>`.
+
+`FormControl` draws one row per key of the schema's root object, in `presentation.order`
+then schema order, and keeps its draft as encoded text per key: the string itself for a
+string field, JSON for anything else. `presentation.fields[key].control` picks the row's
+editor:
+
+- `"text"` (the default) and `"json"` are a `textbox-x`; `"json"` decodes the text as JSON
+  even for a string field.
+- `"none"` draws no row. The key still passes through the draft unchanged, so it reaches
+  the codec as the document holds it; another control's `also` may own it.
+- A `FieldControlFactory` — `(host: FieldHost) => FieldControl` — draws its own editor.
+  `FieldHost` carries the field's `name`, `node`, `meta` and the context widgets are built
+  in. The control speaks the same encoded text: `read(key)` answers what it shows,
+  `write(key, text)` shows a value and must be a no-op when the text is what it last read
+  or wrote, because `FormControl` writes every control on every session change while
+  nothing is pending; `undefined` in either direction means the key is omitted. The
+  control calls the `oninput` `FormControl` sets on it with every change the author
+  makes. `also` lists further keys the control encodes; each is routed to it and gets no
+  row. A factory that throws, or whose `also` names a key the schema lacks or one drawn
+  already, falls back to the text box and the status line says why.
+
+`NativeFormOptions.view(parts)` builds the mounted view instead of the default
+`new FormControl(...)`; `parts` is the block id, the selected form, the binding and the
+context, and `formView(parts)` is the default for a host that only wants to keep the
+instance. That is how a host recovers a closed form's answers: `session.recoverDraft(id)`
+on a detached `frontmatter:` draft answers `{ base, edits }`, and
+`form.restore(recovered)` plays them into the form that replaced it, answering `false` —
+and changing nothing — when the form is locked or already holds answers, when the draft
+was typed over different values than the form now shows, or when it names a key the form
+does not draw.
+
+The form's own stylesheet rides inside its element, every selector wrapped in `:where()`,
+so a host rule on `.schema-form`, `.schema-form-row`, `.schema-form-label`,
+`.schema-form-actions` or `.schema-form-status` wins on specificity alone. The text box's
+width is set through the widget, not the stylesheet, because `textbox-x` copies its own
+width onto its inner input.
+
 ### Media and bound fields
 
 `renderMedia` still accepts an `HTMLElement` with its legacy rerender behavior. It may return

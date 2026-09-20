@@ -17,13 +17,19 @@ import { DocumentWidgetHost, WidgetRegistry } from "../../../scripts/widgets/ric
 import { encodeWidgetFence } from "../../../scripts/widgets/richtext/widget_codec";
 import { exampleYamlCodec } from "./form_yaml";
 import { characterFormSchema, locationFormSchema } from "./form_schemas";
+import { paletteControl } from "./form_palette";
 import { createAdapterDemo } from "./form_adapters_demo";
 
 /** Demonstrates local forms and an application-owned save/conflict protocol. */
 export function createFormsDemo(parent: HTMLElement, context: IContextBase) {
   const character = {
     schema      : zodFormSchema(characterFormSchema),
-    presentation: { order: ["name", "type", "min", "max"] },
+    presentation: {
+      order : ["name", "type", "min", "max"],
+      fields: {
+        palette: { help: "Swatches, as a JSON list of hex colors", control: paletteControl },
+      },
+    },
   };
   const location = { schema: zodFormSchema(locationFormSchema) };
   let path = "characters/ada.md";

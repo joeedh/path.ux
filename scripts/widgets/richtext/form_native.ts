@@ -1,7 +1,7 @@
 import type { IContextBase } from "../../core/context_base";
 import type { DocumentSession } from "./context";
 import type { JsonValue } from "./provider";
-import type { WidgetContext, WidgetOptions } from "./widget";
+import type { WidgetContext, WidgetOptions, WidgetView } from "./widget";
 import type { MdDoc } from "./providers/markdown_model";
 import { mdBlock } from "./providers/markdown_model";
 import { newBlockId } from "./provider";
@@ -11,16 +11,32 @@ import { FormControl } from "./form_control";
 import type { RegisteredForm } from "./form_plugin";
 import { widgetJson } from "./widget_codec";
 
+export { FormControl } from "./form_control";
+export type { RecoveredForm } from "./form_control";
+
 /** A host parser must bound input and reject unsupported YAML before projecting values. */
 export interface FrontmatterCodec {
   read(source: string): JsonValue;
   patch(source: string, values: JsonValue): string;
 }
 
+/** What a form's view is built from: what `nativeFormWidgets` would hand `FormControl`. */
+export interface NativeFormParts {
+  readonly block: string;
+  readonly form: RegisteredForm;
+  readonly binding: FormBinding;
+  readonly context: IContextBase;
+}
+
 export interface NativeFormOptions {
   readonly codec: FrontmatterCodec;
   select(values: JsonValue): RegisteredForm | undefined;
   onDiagnostic?(block: string, message: string): void;
+  /**
+   * Builds the view for a mounted form; the default is `new FormControl(...)`. A host that
+   * needs the instance — to `restore` a recovered draft into it — supplies this and keeps it.
+   */
+  view?(parts: NativeFormParts): WidgetView;
 }
 
 /** Supplies a source-preconditioned binding without introducing a plugin envelope. */
@@ -69,6 +85,11 @@ export function nativeFormBinding(
   };
 }
 
+/** The default view: what a host's own `view` calls when it only wants the instance. */
+export function formView(parts: NativeFormParts): FormControl {
+  return new FormControl(parts.form.schema, parts.binding, parts.context, parts.form.presentation);
+}
+
 /** Installs only the host's recognized native schemas; failures retain the raw block view. */
 export function nativeFormWidgets(options: NativeFormOptions): WidgetOptions<MdDoc> {
   return {
@@ -88,12 +109,13 @@ export function nativeFormWidgets(options: NativeFormOptions): WidgetOptions<MdD
           implementation: selected,
           label         : "Document fields",
           create(context) {
-            return new FormControl(
-              selected.schema,
-              nativeFormBinding(session, block, context, options, selected),
-              providerContext,
-              selected.presentation
-            );
+            const parts: NativeFormParts = {
+              block,
+              form   : selected,
+              binding: nativeFormBinding(session, block, context, options, selected),
+              context: providerContext,
+            };
+            return options.view ? options.view(parts) : formView(parts);
           },
         };
       } catch (error) {

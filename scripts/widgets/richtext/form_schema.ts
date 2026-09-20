@@ -1,3 +1,4 @@
+import type { IContextBase } from "../../core/context_base";
 import type { JsonValue } from "./provider";
 import type { CommandResult, DocumentCommand } from "./widget";
 import type { DraftController } from "./drafts";
@@ -33,19 +34,50 @@ export interface FormSchema<Output = unknown> {
   validate(input: JsonValue): Promise<FormValidation<Output>>;
 }
 
+/**
+ * One field's editor in place of the text box. It speaks the encoded text `FormControl` keeps
+ * for the field (`encodeFormField` with `json` false), and never the decoded value.
+ */
+export interface FieldControl {
+  readonly element: HTMLElement;
+  /** Further keys this control also encodes; each is routed here and gets no row of its own. */
+  readonly also?: readonly string[];
+  /** The encoded text for `key` as the control shows it now; `undefined` omits the key. */
+  read(key: string): string | undefined;
+  /** Shows `text` for `key`; a no-op when it equals what the control last read or wrote. */
+  write(key: string, text: string | undefined): void;
+  setReadOnly(on: boolean): void;
+  focus(): void;
+  dispose(): void;
+  /** Set by `FormControl`; the control calls it with every change the author makes. */
+  oninput?: (key: string, text: string | undefined) => void;
+}
+
+/** What `FormControl` hands a factory: the field it is for and the context widgets are built in. */
+export interface FieldHost {
+  readonly name: string;
+  readonly node: FormNode;
+  readonly meta: FieldMeta;
+  readonly context: IContextBase;
+}
+
+export type FieldControlFactory = (host: FieldHost) => FieldControl;
+
+export interface FieldMeta {
+  readonly label?: string;
+  readonly help?: string;
+  readonly group?: string;
+  /**
+   * `"text"` and `"json"` are the text box, the latter decoding as JSON even for a string;
+   * `"none"` draws no row and leaves the key to another control's `also` or to the document;
+   * a factory draws its own editor.
+   */
+  readonly control?: "text" | "json" | "none" | FieldControlFactory;
+}
+
 export interface FormPresentation {
   readonly order?: readonly string[];
-  readonly fields?: Readonly<
-    Record<
-      string,
-      {
-        readonly label?: string;
-        readonly help?: string;
-        readonly group?: string;
-        readonly control?: "text" | "json";
-      }
-    >
-  >;
+  readonly fields?: Readonly<Record<string, FieldMeta>>;
 }
 
 export interface FormSnapshot {

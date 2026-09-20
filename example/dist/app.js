@@ -581,14 +581,15 @@ var init_ui_worker_shim = __esm({
   "scripts/core/base/ui_worker_shim.ts"() {
     "use strict";
     if (typeof HTMLElement === "undefined") {
-      window.HTMLElement = class HTMLElement {
+      const g = globalThis;
+      g.HTMLElement = class HTMLElement {
       };
-      window.customElements = {
+      g.customElements = {
         define: () => {
         }
       };
-      window.devicePixelRatio = 1;
-      window.PointerEvent = class PointerEvent {
+      g.devicePixelRatio = 1;
+      g.PointerEvent = class PointerEvent {
       };
     }
   }
@@ -46948,6 +46949,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
     const editable = !readOnly && !this.disabled ? "true" : "false";
     if (this.root.getAttribute("contenteditable") !== editable) {
       this.root.contentEditable = editable;
+      this.widgetHost.refresh();
     }
     this.root.toggleAttribute("readonly", readOnly);
     if (this.toolbar !== void 0 && this.toolbarLocked !== readOnly) {
@@ -91931,8 +91933,66 @@ function encodeFormField(node2, value2, json = false) {
   return JSON.stringify(value2);
 }
 
+// scripts/widgets/richtext/form_styles.ts
+function formStyles() {
+  return `
+    :where(.schema-form) {
+      display       : flex;
+      flex-direction: column;
+      gap           : 6px;
+      padding       : 8px;
+      min-width     : 260px;
+    }
+    :where(.schema-form-row) {
+      display    : flex;
+      align-items: center;
+      gap        : 6px;
+      flex-wrap  : wrap;
+    }
+    :where(.schema-form-label) { flex: 0 0 105px; }
+    :where(.schema-form-row) > :where(textbox-x) { box-shadow: inset 0 0 0 1px #888; }
+  `;
+}
+
 // scripts/widgets/richtext/form_control.ts
 init_ui_base();
+var RECOVERED = "Recovered answers from a form that closed";
+var TextFieldControl = class {
+  constructor(key, meta, node2, context) {
+    this.key = key;
+    const box = UIBase.constructElement("textbox-x", context);
+    box.useDataPathUndo = false;
+    box.width = 220;
+    box.overrideDefault("border-width", 1);
+    box.setCSS();
+    box.setAttribute("modal", "false");
+    box.dom.setAttribute("aria-label", meta.label ?? key);
+    box.dom.title = meta.help ?? node2.description ?? "";
+    box.dom.addEventListener("input", () => this.oninput?.(key, box.text));
+    this.box = box;
+    this.element = box;
+  }
+  key;
+  element;
+  box;
+  oninput;
+  read() {
+    return this.box.text;
+  }
+  write(_key, text6) {
+    const next = text6 ?? "";
+    if (this.box.text !== next) this.box.text = next;
+  }
+  setReadOnly(on) {
+    this.box.dom.readOnly = on;
+  }
+  focus() {
+    this.box.dom.focus();
+  }
+  dispose() {
+    this.box.remove();
+  }
+};
 var FormControl = class {
   constructor(schema4, binding, context, presentation = {}, options = {}) {
     this.schema = schema4;
@@ -91945,43 +92005,61 @@ var FormControl = class {
       );
     this.latest = this.base = initial;
     this.element.className = "schema-form";
-    this.element.style.cssText = "display:flex;flex-direction:column;gap:6px;padding:8px;min-width:260px";
+    const style = document.createElement("style");
+    style.textContent = formStyles();
+    this.element.append(style);
+    this.status.className = "schema-form-status";
     this.status.setAttribute("role", "status");
-    const fields2 = schema4.root.fields;
-    const order = [.../* @__PURE__ */ new Set([...presentation.order ?? [], ...Object.keys(fields2)])];
+    const nodes = schema4.root.fields;
+    const order = [.../* @__PURE__ */ new Set([...presentation.order ?? [], ...Object.keys(nodes)])];
+    const fallbacks = [];
     for (const name of order) {
-      const node2 = fields2[name];
-      if (!node2) continue;
-      const meta = presentation.fields?.[name];
+      const node2 = nodes[name];
+      if (!node2 || this.fields.has(name)) continue;
+      const meta = presentation.fields?.[name] ?? {};
+      if (meta.control === "none") continue;
       const row = document.createElement("div");
-      row.style.cssText = "display:flex;align-items:center;gap:6px;flex-wrap:wrap";
+      row.className = "schema-form-row";
       const label = document.createElement("span");
-      label.textContent = (meta?.group ? `${meta.group}: ` : "") + (meta?.label ?? name);
-      label.style.flex = "0 0 105px";
-      const box = UIBase.constructElement("textbox-x", context);
-      box.useDataPathUndo = false;
-      box.style.width = "220px";
-      box.style.boxShadow = "inset 0 0 0 1px #888";
-      box.overrideDefault("border-width", 1);
-      box.setCSS();
-      box.setAttribute("modal", "false");
-      box.dom.setAttribute("aria-label", meta?.label ?? name);
-      box.dom.title = meta?.help ?? node2.description ?? "";
-      const json = meta?.control === "json";
-      this.controls.set(name, { node: node2, box, json });
-      box.dom.addEventListener("input", () => {
+      label.className = "schema-form-label";
+      label.textContent = (meta.group ? `${meta.group}: ` : "") + (meta.label ?? name);
+      let control;
+      let json = meta.control === "json";
+      if (typeof meta.control === "function") {
+        try {
+          control = meta.control({ name, node: node2, meta, context });
+          for (const key of control.also ?? []) {
+            if (!nodes[key]) throw new Error(`${name} also edits ${key}, which the schema lacks`);
+            if (this.fields.has(key)) throw new Error(`${key} is drawn twice`);
+          }
+        } catch (error2) {
+          control?.dispose();
+          control = void 0;
+          fallbacks.push(`${name}: ${error2 instanceof Error ? error2.message : String(error2)}`);
+        }
+      }
+      if (!control) {
+        control = new TextFieldControl(name, meta, node2, context);
+        json = meta.control === "json";
+      }
+      control.oninput = (key, text6) => {
         if (this.locked()) return;
-        this.edits.set(name, box.text);
+        this.edits.set(key, text6);
         this.version++;
         this.status.textContent = "Draft";
-      });
-      row.append(label, box);
+      };
+      this.fields.set(name, { node: node2, control, json });
+      for (const key of control.also ?? [])
+        this.fields.set(key, { node: nodes[key], control, json: false });
+      this.views.push(control);
+      row.append(label, control.element);
       this.button(
         "Omit " + name,
+        `Leave ${meta.label ?? name} out of the document; applying the answers then removes it`,
         () => {
           this.edits.set(name, void 0);
           this.version++;
-          box.text = "";
+          control.write(name, void 0);
           this.status.textContent = "Draft: field omitted";
         },
         row
@@ -91989,10 +92067,28 @@ var FormControl = class {
       this.element.append(row);
     }
     const actions = document.createElement("div");
-    if (options.commit !== false) this.button("Apply answers", () => void this.commit(), actions);
+    actions.className = "schema-form-actions";
+    if (options.commit !== false)
+      this.button(
+        "Apply answers",
+        "Write the answers typed here into the document, as one undoable edit",
+        () => void this.commit(),
+        actions
+      );
     if (options.discard !== false)
-      this.button("Discard answers", () => this.discard(), actions, true);
-    this.button("Validate submission", () => void this.validateSubmission(), actions);
+      this.button(
+        "Discard answers",
+        "Drop the answers typed here and show what the document holds",
+        () => this.discard(),
+        actions,
+        true
+      );
+    this.button(
+      "Validate submission",
+      "Check the answers against the schema without applying them",
+      () => void this.validateSubmission(),
+      actions
+    );
     this.element.append(actions, this.status);
     this.element.addEventListener("compositionstart", () => this.composing = true);
     this.element.addEventListener("compositionend", () => this.composing = false);
@@ -92007,12 +92103,14 @@ var FormControl = class {
     });
     this.unsubscribe = binding.subscribe(() => this.refresh());
     this.refresh();
+    if (fallbacks.length) this.status.textContent = "Text box instead: " + fallbacks.join("; ");
   }
   schema;
   binding;
   element = document.createElement("div");
   status = document.createElement("div");
-  controls = /* @__PURE__ */ new Map();
+  fields = /* @__PURE__ */ new Map();
+  views = [];
   edits = /* @__PURE__ */ new Map();
   buttons = [];
   base;
@@ -92030,10 +92128,11 @@ var FormControl = class {
   locked() {
     return this.disposed || this.readOnly || !this.binding.canWrite() || !this.latest || this.busy;
   }
-  button(label, action, parent, recovery = false) {
+  button(label, title, action, parent, recovery = false) {
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = label;
+    button.title = title;
     button.dataset.recovery = String(recovery);
     button.addEventListener("pointerdown", (event) => event.preventDefault());
     button.addEventListener("click", () => {
@@ -92048,7 +92147,7 @@ var FormControl = class {
     for (const [name, text6] of this.edits) {
       if (text6 === void 0) delete result[name];
       else {
-        const { node: node2, json } = this.controls.get(name);
+        const { node: node2, json } = this.fields.get(name);
         result[name] = decodeFormField(node2, text6, json);
       }
     }
@@ -92109,6 +92208,25 @@ var FormControl = class {
     this.status.textContent = result.success ? "Valid for submission" : result.issues.map((i2) => `${i2.path.join(".")}: ${i2.message}`).join("; ");
     return result;
   }
+  /**
+   * Plays a closed form's answers into this one. Refused, answering `false`, when this form
+   * is locked or already holds answers, when the draft was typed over different values, or
+   * when it names a field this form does not draw.
+   */
+  restore(draft) {
+    this.refresh();
+    if (this.locked() || this.composing || this.pending) return false;
+    if (JSON.stringify(draft.base.values) !== JSON.stringify(this.base.values)) return false;
+    const entries = [...draft.edits];
+    if (entries.some(([name]) => !this.fields.has(name))) return false;
+    for (const [name, text6] of entries) {
+      this.edits.set(name, text6);
+      this.fields.get(name).control.write(name, text6);
+    }
+    this.version++;
+    this.status.textContent = RECOVERED;
+    return true;
+  }
   committed() {
     this.edits.clear();
     this.version++;
@@ -92125,13 +92243,11 @@ var FormControl = class {
     this.latest = this.binding.read();
     if (!this.pending && !this.composing && this.latest && formObject(this.latest.values)) {
       this.base = this.latest;
-      for (const [name, { node: node2, box, json }] of this.controls) {
-        const text6 = encodeFormField(node2, this.latest.values[name], json);
-        if (box.text !== text6) box.text = text6;
-      }
+      for (const [name, { node: node2, control, json }] of this.fields)
+        control.write(name, encodeFormField(node2, this.latest.values[name], json));
     }
     const locked = this.locked();
-    for (const { box } of this.controls.values()) box.dom.readOnly = locked;
+    for (const control of this.views) control.setReadOnly(locked);
     for (const button of this.buttons)
       button.disabled = this.busy || locked && button.dataset.recovery !== "true";
     if (!this.latest) this.status.textContent = "Structured view unavailable; use raw source";
@@ -92143,15 +92259,14 @@ var FormControl = class {
     this.refresh();
   }
   focus(last = false) {
-    const fields2 = [...this.controls.values()];
-    fields2[last ? fields2.length - 1 : 0]?.box.dom.focus();
+    this.views[last ? this.views.length - 1 : 0]?.focus();
   }
   dispose() {
     if (this.disposed) return;
     this.disposed = true;
     this.unsubscribe();
     this.unregister();
-    for (const { box } of this.controls.values()) box.remove();
+    for (const control of this.views) control.dispose();
   }
 };
 
@@ -93323,6 +93438,9 @@ function nativeFormBinding(session, block, context, options, selected) {
     canWrite: () => context.isCurrent() && session.canWrite
   };
 }
+function formView(parts) {
+  return new FormControl(parts.form.schema, parts.binding, parts.context, parts.form.presentation);
+}
 function nativeFormWidgets(options) {
   return {
     resolveNativeBlock(session, block, providerContext) {
@@ -93341,12 +93459,13 @@ function nativeFormWidgets(options) {
           implementation: selected,
           label: "Document fields",
           create(context) {
-            return new FormControl(
-              selected.schema,
-              nativeFormBinding(session, block, context, options, selected),
-              providerContext,
-              selected.presentation
-            );
+            const parts = {
+              block,
+              form: selected,
+              binding: nativeFormBinding(session, block, context, options, selected),
+              context: providerContext
+            };
+            return options.view ? options.view(parts) : formView(parts);
           }
         };
       } catch (error2) {
@@ -104176,6 +104295,76 @@ var locationFormSchema = external_exports.object({
   ]).optional()
 });
 
+// example/editors/properties/form_palette.ts
+function paletteControl(host) {
+  const element2 = document.createElement("div");
+  element2.className = "palette-control";
+  element2.title = host.meta.help ?? host.node.description ?? "";
+  const swatches = document.createElement("span");
+  const add = document.createElement("button");
+  add.type = "button";
+  add.textContent = "+";
+  add.title = "Add a swatch";
+  element2.append(swatches, add);
+  let colors = [];
+  let shown;
+  let readOnly = false;
+  const control = {
+    element: element2,
+    read: () => shown,
+    write: (_key, text6) => {
+      if (text6 === shown) return;
+      shown = text6;
+      colors = text6 === void 0 || text6 === "" ? void 0 : JSON.parse(text6);
+      render();
+    },
+    setReadOnly: (on) => {
+      readOnly = on;
+      render();
+    },
+    focus: () => (swatches.querySelector("input") ?? add).focus(),
+    dispose: () => element2.remove()
+  };
+  const changed = () => {
+    shown = colors === void 0 ? void 0 : JSON.stringify(colors);
+    control.oninput?.(host.name, shown);
+  };
+  const render = () => {
+    swatches.replaceChildren();
+    for (const [index2, color2] of (colors ?? []).entries()) {
+      const input = document.createElement("input");
+      input.type = "color";
+      input.value = color2;
+      input.disabled = readOnly;
+      input.setAttribute("aria-label", `Swatch ${index2 + 1}`);
+      input.title = "Pick this swatch's color";
+      input.addEventListener("input", () => {
+        colors[index2] = input.value;
+        changed();
+      });
+      const remove2 = document.createElement("button");
+      remove2.type = "button";
+      remove2.textContent = "\xD7";
+      remove2.title = "Remove this swatch";
+      remove2.disabled = readOnly;
+      remove2.addEventListener("click", () => {
+        colors.splice(index2, 1);
+        changed();
+        render();
+      });
+      swatches.append(input, remove2);
+    }
+    add.disabled = readOnly;
+  };
+  add.addEventListener("click", () => {
+    (colors ??= []).push("#000000");
+    changed();
+    render();
+  });
+  render();
+  return control;
+}
+
 // scripts/widgets/richtext/form_embedded.ts
 function createDeclarativeFormPlugin(context, resolveSchema) {
   return createFormPlugin(context, resolveSchema, (source) => ({
@@ -104438,7 +104627,12 @@ function createAdapterDemo(parent, context) {
 function createFormsDemo(parent, context) {
   const character = {
     schema: zodFormSchema(characterFormSchema),
-    presentation: { order: ["name", "type", "min", "max"] }
+    presentation: {
+      order: ["name", "type", "min", "max"],
+      fields: {
+        palette: { help: "Swatches, as a JSON list of hex colors", control: paletteControl }
+      }
+    }
   };
   const location2 = { schema: zodFormSchema(locationFormSchema) };
   let path2 = "characters/ada.md";
