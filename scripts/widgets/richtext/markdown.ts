@@ -29,6 +29,7 @@ export { renderMarkdownBlock, markdownStyles } from "./providers/markdown_render
 export type { MarkdownRenderOptions } from "./providers/markdown_render";
 export { MdImageWidget, ImageResizeOp, ImageMoveOp } from "./providers/markdown_image";
 export { LinkPopup, openLinkPopup, setLinkOp } from "./link_popup";
+export { ToolButton, addSeparator, addToolButton } from "./providers/toolbar";
 export type { LinkEdit } from "./link_popup";
 
 RichTextArea.registerFormat<MdDoc>("markdown", {

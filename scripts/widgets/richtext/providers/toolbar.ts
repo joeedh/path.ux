@@ -12,7 +12,8 @@ import type {
 } from "../provider";
 
 // The pieces a provider's buildToolbar assembles its row from. Imported by the providers and
-// never re-exported from the barrel; a consumer's provider reaches it through the deep export.
+// never re-exported from the barrel; a consumer's provider reaches it through the deep export
+// or, for the button and the separator, through the markdown entry.
 
 const isCollapsed = ({ anchor, head }: DocRange) =>
   anchor.block === head.block && anchor.offset === head.offset;

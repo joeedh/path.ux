@@ -156,7 +156,9 @@ Everything below is exported from the `pathux` barrel: `RichTextEditor`, `RichTe
 `DocumentSession`, `RichTextContext`, `DocEditOp`, `replaceContentsOp`, `PlainProvider`,
 `plainDocFromLines`, `newBlockId`, `ATOM_CHAR`, `CARET_SLOT` and the interfaces. The helpers
 in `providers/marks.ts` and `providers/toolbar.ts` are not: a provider imports them by path
-(`path.ux/scripts/widgets/richtext/providers/toolbar`). The `execCommand`-driven
+(`path.ux/scripts/widgets/richtext/providers/toolbar`), and the markdown entry re-exports
+`addToolButton`, `addSeparator` and `ToolButton` for a `MarkdownProvider` subclass that
+extends the toolbar it inherits. The `execCommand`-driven
 `RichEditor` (`rich-text-editor-x`) is gone; `RichViewer` (`html-viewer-x`) stays.
 
 ## The model
