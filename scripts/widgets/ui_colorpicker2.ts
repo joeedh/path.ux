@@ -1532,7 +1532,6 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
 
   _onClickButton(e: MouseEvent): void {
     this.abortToolTips(4000);
-    console.warn("CLICK COLORPICKER");
     this.blur();
 
     if (this.onclick) {

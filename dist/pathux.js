@@ -50219,7 +50219,6 @@ var ColorPickerButton = class extends UIBase {
   }
   _onClickButton(e) {
     this.abortToolTips(4e3);
-    console.warn("CLICK COLORPICKER");
     this.blur();
     if (this.onclick) {
       this.onclick(e);
