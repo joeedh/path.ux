@@ -495,6 +495,8 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     }
 
     this.endRun();
+    // a draft's own change is the freshest thing to reverse, and it is not in the history
+    if (session.undoDraft()) return;
     await session.toolstack.undo(this.richCtx);
     this.endRun();
   }
@@ -507,6 +509,7 @@ export class RichTextEditor<CTX extends IContextBase = IContextBase, Doc = unkno
     }
 
     this.endRun();
+    if (session.redoDraft()) return;
     await session.toolstack.redo(this.richCtx);
     this.endRun();
   }

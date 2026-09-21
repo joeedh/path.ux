@@ -14,6 +14,13 @@ export interface DraftController {
   discard(): void;
   /** Supplies recoverable authored input after the view has detached. */
   recover(): unknown;
+  /**
+   * Reverses the draft's own latest change (an omitted field, a control's pick), answering
+   * `false` when there is none so the editor's undo falls through to the document's history.
+   */
+  undo?(): boolean;
+  /** Replays what `undo` reversed; `false` when nothing was. */
+  redo?(): boolean;
 }
 
 export interface PendingDraft {

@@ -27,6 +27,12 @@ export interface RecoveredForm {
 
 const RECOVERED = "Recovered answers from a form that closed";
 
+/** Changes to one field closer together than this are one undo step, so typing is not reversed a character at a time. */
+const DRAFT_RUN_MS = 1500;
+
+/** The draft's answers at one moment: each edited field's encoded text, `undefined` for an omitted one. */
+type Answers = Map<string, string | undefined>;
+
 /** The default editor: one `textbox-x`, keyed by the field it shows. */
 class TextFieldControl implements FieldControl {
   readonly element: HTMLElement;
@@ -97,7 +103,12 @@ export class FormControl<Output = unknown> implements WidgetView {
   private readonly status = document.createElement("div");
   private readonly fields = new Map<string, Field>();
   private readonly views: FieldControl[] = [];
-  private readonly edits = new Map<string, string | undefined>();
+  private readonly edits: Answers = new Map();
+  /** The answers before each change still to be undone, oldest first, and those undone, for redo. */
+  private readonly past: Answers[] = [];
+  private readonly future: Answers[] = [];
+  /** The field the last recorded step edits, and when, so a change soon after on it joins the step. */
+  private run: { key: string; at: number } | undefined;
   private readonly buttons: HTMLButtonElement[] = [];
   private readonly omits = new Map<string, OmitButton>();
   /** Controls a `readOnly` field meta keeps read-only whatever the form's state. */
@@ -166,6 +177,7 @@ export class FormControl<Output = unknown> implements WidgetView {
       }
       control.oninput = (key, text) => {
         if (this.locked()) return;
+        this.record(key);
         this.edits.set(key, text);
         this.version++;
         this.status.textContent = "Draft";
@@ -220,6 +232,8 @@ export class FormControl<Output = unknown> implements WidgetView {
       committed: () => this.committed(),
       discard  : () => this.discard(),
       recover: (): RecoveredForm => ({ base: structuredClone(this.base), edits: [...this.edits] }),
+      undo     : () => this.undo(),
+      redo     : () => this.redo(),
     });
     this.unsubscribe = binding.subscribe(() => this.refresh());
     this.refresh();
@@ -261,17 +275,11 @@ export class FormControl<Output = unknown> implements WidgetView {
 
   /** Omit leaves the field out of the document; pressed again, as Keep, it puts the value back. */
   private toggleOmit(name: string): void {
-    const { node, control, json } = this.fields.get(name)!;
+    const { control } = this.fields.get(name)!;
+    this.record();
     if (this.omitted(name)) {
       this.edits.delete(name);
-      control.write(
-        name,
-        encodeFormField(
-          node,
-          formObject(this.base.values) ? this.base.values[name] : undefined,
-          json
-        )
-      );
+      control.write(name, this.baseText(name));
       this.status.textContent = this.pending ? "Draft" : "";
     } else {
       this.edits.set(name, undefined);
@@ -280,6 +288,73 @@ export class FormControl<Output = unknown> implements WidgetView {
     }
     this.version++;
     this.paintOmits();
+  }
+
+  /** The field's encoded text as the document has it. */
+  private baseText(name: string): string | undefined {
+    const { node, json } = this.fields.get(name)!;
+    return encodeFormField(
+      node,
+      formObject(this.base.values) ? this.base.values[name] : undefined,
+      json
+    );
+  }
+
+  /**
+   * Keeps the answers as they are before a change. A change to `key` within `DRAFT_RUN_MS` of
+   * the last one to it joins that step; an omit, or a change elsewhere, starts a new one.
+   */
+  private record(key?: string): void {
+    const now = Date.now();
+    if (key !== undefined && this.run?.key === key && now - this.run.at < DRAFT_RUN_MS) {
+      this.run.at = now;
+      return;
+    }
+    this.past.push(new Map(this.edits));
+    this.future.length = 0;
+    this.run = key === undefined ? undefined : { key, at: now };
+  }
+
+  private forget(): void {
+    this.past.length = 0;
+    this.future.length = 0;
+    this.run = undefined;
+  }
+
+  /** Shows `answers` in place of the current ones, writing every field that differs. */
+  private show(answers: Answers): void {
+    const names = new Set([...this.edits.keys(), ...answers.keys()]);
+    this.edits.clear();
+    for (const [name, text] of answers) this.edits.set(name, text);
+    for (const name of names) {
+      const field = this.fields.get(name);
+      if (!field) continue;
+      field.control.write(name, this.edits.has(name) ? this.edits.get(name) : this.baseText(name));
+    }
+    this.version++;
+    this.run = undefined;
+    this.status.textContent = this.pending ? "Draft" : "";
+    this.paintOmits();
+  }
+
+  /** Reverses the latest step of the draft; `false` with none, or while the form is locked. */
+  undo(): boolean {
+    if (this.locked() || this.composing) return false;
+    const answers = this.past.pop();
+    if (!answers) return false;
+    this.future.push(new Map(this.edits));
+    this.show(answers);
+    return true;
+  }
+
+  /** Replays the step `undo` last reversed; `false` with none, or while the form is locked. */
+  redo(): boolean {
+    if (this.locked() || this.composing) return false;
+    const answers = this.future.pop();
+    if (!answers) return false;
+    this.past.push(new Map(this.edits));
+    this.show(answers);
+    return true;
   }
 
   private paintOmits(): void {
@@ -400,6 +475,7 @@ export class FormControl<Output = unknown> implements WidgetView {
     if (JSON.stringify(draft.base.values) !== JSON.stringify(this.base.values)) return false;
     const entries = [...draft.edits];
     if (entries.some(([name]) => !this.fields.has(name))) return false;
+    this.record();
     for (const [name, text] of entries) {
       this.edits.set(name, text);
       this.fields.get(name)!.control.write(name, text);
@@ -412,6 +488,7 @@ export class FormControl<Output = unknown> implements WidgetView {
 
   private committed() {
     this.edits.clear();
+    this.forget();
     this.version++;
     this.refresh();
     this.status.textContent = "Saved in document";
@@ -419,6 +496,7 @@ export class FormControl<Output = unknown> implements WidgetView {
 
   discard(): void {
     this.edits.clear();
+    this.forget();
     this.version++;
     this.refresh();
     this.status.textContent = "";
@@ -427,6 +505,8 @@ export class FormControl<Output = unknown> implements WidgetView {
   refresh(): void {
     this.latest = this.binding.read();
     if (!this.pending && !this.composing && this.latest && formObject(this.latest.values)) {
+      // Steps kept over the old answers would replay onto different ones
+      if (this.latest.revision !== this.base.revision) this.forget();
       this.base = this.latest;
       for (const [name, { node, control, json }] of this.fields)
         control.write(name, encodeFormField(node, this.latest.values[name], json));

@@ -2,7 +2,11 @@ import { beforeAll, describe, expect, test } from "vitest";
 import { z } from "zod";
 import { zodFormSchema } from "../../scripts/widgets/richtext/form_zod";
 import { FormControl } from "../../scripts/widgets/richtext/form_control";
-import type { FieldControl, FormBinding, FormSnapshot } from "../../scripts/widgets/richtext/form_schema";
+import type {
+  FieldControl,
+  FormBinding,
+  FormSnapshot,
+} from "../../scripts/widgets/richtext/form_schema";
 import type { DraftController } from "../../scripts/widgets/richtext/drafts";
 import type { TextBox } from "../../scripts/widgets/ui_textbox";
 import { exampleYamlCodec as yaml } from "../../example/editors/properties/form_yaml";
@@ -45,14 +49,14 @@ function memoryBinding(values: JsonValue) {
   const listeners = new Set<() => void>();
   let draft: DraftController | undefined;
   const binding: FormBinding = {
-    key      : "test",
-    read     : () => snapshot,
+    key          : "test",
+    read         : () => snapshot,
     subscribe: (changed) => {
       listeners.add(changed);
       return () => listeners.delete(changed);
     },
-    prepare: () => ({ resolve: () => undefined }),
-    commit : async (_expected, next) => {
+    prepare      : () => ({ resolve: () => undefined }),
+    commit: async (_expected, next) => {
       committed.push(next);
       snapshot = { revision: String(committed.length + 1), values: next };
       for (const l of listeners) l();
@@ -62,7 +66,7 @@ function memoryBinding(values: JsonValue) {
       draft = controller;
       return () => {};
     },
-    canWrite: () => true,
+    canWrite     : () => true,
   };
   return { binding, committed, draft: () => draft! };
 }
@@ -164,6 +168,41 @@ describe("custom field controls", () => {
     wardrobe.oninput!("outfits", "{}");
     expect(omit.textContent).toBe("Omit");
   });
+  test("undo reverses the draft's latest step, redo replays it, and both fall through with none", async () => {
+    const wardrobe = new FakeWardrobe();
+    const { binding, draft } = memoryBinding({ name: "Ada", outfits: { day: "Blue" } });
+    const form = new FormControl(schema, binding, ctx, {
+      fields: { outfits: { control: () => wardrobe } },
+    });
+    const omit = [...form.element.querySelectorAll("button")].find(
+      (b) => b.getAttribute("aria-label") === "Omit outfits"
+    )!;
+    expect(draft().undo!()).toBe(false);
+    omit.click();
+    expect(wardrobe.shown.get("outfits")).toBeUndefined();
+    expect(draft().undo!()).toBe(true);
+    expect(wardrobe.shown.get("outfits")).toBe('{"day":"Blue"}');
+    expect(omit.textContent).toBe("Omit");
+    expect(form.pending).toBe(false);
+    expect(draft().undo!()).toBe(false);
+    expect(draft().redo!()).toBe(true);
+    expect(wardrobe.shown.get("outfits")).toBeUndefined();
+    expect(omit.textContent).toBe("Keep");
+    expect(draft().redo!()).toBe(false);
+    // typing is one step per field, an omit its own; a commit leaves nothing to undo
+    wardrobe.oninput!("outfits", "{}");
+    wardrobe.oninput!("outfits", '{"gala":"Green"}');
+    wardrobe.oninput!("default", "gala");
+    expect(draft().undo!()).toBe(true);
+    expect(wardrobe.shown.get("default")).toBe("");
+    expect(wardrobe.shown.get("outfits")).toBe('{"gala":"Green"}');
+    expect(draft().undo!()).toBe(true);
+    expect(wardrobe.shown.get("outfits")).toBeUndefined();
+    expect(draft().redo!()).toBe(true);
+    await form.commit();
+    expect(draft().undo!()).toBe(false);
+    expect(draft().redo!()).toBe(false);
+  });
   test("answers the schema refuses never reach the document; the draft stays for Keep", async () => {
     const { binding, committed, draft } = memoryBinding({ name: "Ada", outfits: { day: "Blue" } });
     const form = new FormControl(schema, binding, ctx);
@@ -188,7 +227,9 @@ describe("custom field controls", () => {
     });
     expect(wardrobe.shown.get("outfits")).toBe('{"day":"Blue"}');
     expect(wardrobe.readOnly).toBe(true);
-    const labels = [...form.element.querySelectorAll("button")].map((b) => b.getAttribute("aria-label"));
+    const labels = [...form.element.querySelectorAll("button")].map((b) =>
+      b.getAttribute("aria-label")
+    );
     expect(labels).toContain("Omit name");
     expect(labels).not.toContain("Omit outfits");
     form.update({ value: undefined, readOnly: false });
@@ -277,7 +318,7 @@ describe("the native form's view", () => {
     const widgets = nativeFormWidgets({
       codec : yaml,
       select: () => selected,
-      view  : (parts) => {
+      view: (parts) => {
         expect(parts.block).toBe(doc.blocks[0].id);
         expect(parts.form).toBe(selected);
         seen = new FormControl(parts.form.schema, parts.binding, parts.context);
@@ -288,7 +329,13 @@ describe("the native form's view", () => {
     const view = (await descriptor.create(context)) as WidgetView;
     expect(view).toBe(seen);
     expect(seen!.element.querySelector("textbox-x")).not.toBeNull();
-    const binding = nativeFormBinding(session, doc.blocks[0].id, context, { codec: yaml, select: () => selected }, selected);
+    const binding = nativeFormBinding(
+      session,
+      doc.blocks[0].id,
+      context,
+      { codec: yaml, select: () => selected },
+      selected
+    );
     await binding.commit(binding.read()!, { name: "Bea" });
     expect(markdownText(doc)).toBe("---\nname: Bea\n---\nBody\n");
   });

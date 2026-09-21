@@ -66,6 +66,14 @@ Retain input until the command commits. Native input undo belongs to the control
 draft is active; after acceptance the control can route undo to document history. Do not
 create a second `DataPathSetOp` for the same change.
 
+A draft may also supply `undo()` and `redo()`, each answering whether it reversed or replayed
+a step of its own. The editor's undo chord, when it reaches the editor rather than a focused
+input, asks the session's drafts first (`session.undoDraft()`, in registration order) and
+falls through to the document's history only when none takes it, so an omitted field or a
+control's pick is undone before the last committed edit is. `FormControl` keeps that history:
+an Omit or Keep is one step, typing into one field within `DRAFT_RUN_MS` of the last change
+to it joins a step, and a commit or a discard leaves nothing to undo.
+
 Await `session.prepareSave()` before saving or navigating. It waits behind queued history
 work, detects competing drafts for the same field before either commits, and checks for
 concurrent changes. Earlier successful draft commits remain undoable if another draft prevents

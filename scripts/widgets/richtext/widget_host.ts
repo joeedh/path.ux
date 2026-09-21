@@ -251,6 +251,8 @@ export class WidgetHost<Doc = unknown> {
               discard  : () => controller.discard(),
               recover  : () => controller.recover(),
               committed: () => controller.committed(),
+              undo     : () => current() && (controller.undo?.() ?? false),
+              redo     : () => current() && (controller.redo?.() ?? false),
               prepare: async () => {
                 const prepared = await controller.prepare();
                 if (prepared.status !== "ready") return prepared;

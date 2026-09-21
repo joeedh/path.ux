@@ -90,6 +90,25 @@ export class DocumentSession<Doc = unknown> {
     };
   }
 
+  /**
+   * Offers the undo chord to the attached drafts, in registration order, before the document's
+   * history; `true` when one reversed a change of its own.
+   */
+  undoDraft(): boolean {
+    for (const { controller, detached } of this.drafts.values()) {
+      if (!detached && controller.undo?.()) return true;
+    }
+    return false;
+  }
+
+  /** The redo half of `undoDraft`. */
+  redoDraft(): boolean {
+    for (const { controller, detached } of this.drafts.values()) {
+      if (!detached && controller.redo?.()) return true;
+    }
+    return false;
+  }
+
   discardDraft(id: number): void {
     const draft = this.drafts.get(id);
     draft?.controller.discard();
