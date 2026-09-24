@@ -410,11 +410,17 @@ export function renderMarkdownBlock(
   return el;
 }
 
-/** The counter rules: a non-item resets every depth, an item resets the depths below its own, a bullet its own too. */
+/**
+ * The counter rules: the root creates every depth's counter, a non-item zeroes every depth, an
+ * item zeroes the depths below its own, a bullet its own too. Blocks are siblings, and a
+ * `counter-reset` on one creates a counter that the blocks after it do not see, so the zeroing
+ * is `counter-set` on the root's counters.
+ */
 function counterRules(): string {
   const all = Array.from({ length: COUNTER_DEPTHS }, (_, d) => `md-ol-${d}`);
   let css = `
-    .rich-text-root, [data-doc-block]:not(.md-li) { counter-reset: ${all.join(" ")}; }
+    .rich-text-root { counter-reset: ${all.join(" ")}; }
+    [data-doc-block]:not(.md-li) { counter-set: ${all.join(" ")}; }
   `;
 
   for (let d = 0; d < COUNTER_DEPTHS; d++) {
@@ -423,10 +429,10 @@ function counterRules(): string {
     css += `
     .md-li[data-md-depth="${d}"][data-md-ordered="true"] {
       counter-increment: ${own};
-      ${below === "" ? "" : `counter-reset: ${below};`}
+      ${below === "" ? "" : `counter-set: ${below};`}
     }
     .md-li[data-md-depth="${d}"][data-md-ordered="true"]::marker { content: counter(${own}) ". "; }
-    .md-li[data-md-depth="${d}"][data-md-ordered="false"] { counter-reset: ${own}${below === "" ? "" : ` ${below}`}; }
+    .md-li[data-md-depth="${d}"][data-md-ordered="false"] { counter-set: ${own}${below === "" ? "" : ` ${below}`}; }
     `;
   }
 

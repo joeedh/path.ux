@@ -1198,6 +1198,10 @@ describe("renderBlock", () => {
     expect(css).toContain("counter(md-ol-0)");
     expect(css).toContain("counter(md-ol-7)");
     expect(css).toContain("--richtext-link-color");
+    // Only the root creates counters: a reset on a sibling block would not reach the blocks after it
+    const resets = [...css.matchAll(/([^{}]+)\{[^}]*counter-reset/g)].map((m) => m[1]!.trim());
+    expect(resets).toEqual([".rich-text-root"]);
+    expect(css).toMatch(/\[data-doc-block\]:not\(\.md-li\) \{ counter-set: md-ol-0 /);
     expect(markdownStyles()).toBe(css);
   });
 });

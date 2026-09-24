@@ -594,10 +594,13 @@ per block:
   node, since any text inside the block shifts the position walk. Numbering uses one named
   CSS counter per depth (`md-ol-0`, `md-ol-1`, …), not the built-in `list-item` counter,
   which every list item increments whatever its marker and which a nested run would shadow
-  for the siblings after it. The resets come from structure alone, in `styles()`: every block
-  that is not a list item resets every depth, every list item resets the depths below its
-  own, and every bullet item resets its own depth (a bullet between numbered items starts a
-  new list in markdown, so restarting is right). An ordered item therefore carries no index,
+  for the siblings after it. The resets come from structure alone, in `styles()`: the root
+  creates every depth's counter, every block that is not a list item sets every depth to
+  zero, every list item zeroes the depths below its own, and every bullet item zeroes its
+  own depth (a bullet between numbered items starts a new list in markdown, so restarting
+  is right). The zeroing is `counter-set`, not `counter-reset`: the blocks are siblings,
+  and a `counter-reset` on one block creates a counter that the blocks after it do not see
+  (Chromium 130), so a list after a paragraph went on counting from the list before it. An ordered item therefore carries no index,
   no block records who is first, and no neighbour is ever dirtied for numbering, which
   matters because an undo delivers the provider's own `replaceBlocks` result and dirties only
   the restored blocks.
