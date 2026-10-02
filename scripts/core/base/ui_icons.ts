@@ -271,7 +271,9 @@ export class IconManager {
       }
 
       if (util.isMobile()) {
-        drawsize = ~~(drawsize * ((theme.base as ThemeRecord).mobileSizeMultiplier as number));
+        // IconManager is built at module load, before the theme is populated.
+        const mul = (theme.base as ThemeRecord | undefined)?.mobileSizeMultiplier as number | undefined;
+        drawsize = ~~(drawsize * (mul ?? 1));
       }
 
       this.iconsheets.push(

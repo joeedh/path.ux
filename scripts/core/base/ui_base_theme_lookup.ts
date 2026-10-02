@@ -39,8 +39,9 @@ export function _doMobileDefault(
     }
   }
 
-  if (ok && ((theme.base as ThemeRecord).mobileSizeMultiplier as number)) {
-    val = (val as number) * ((theme.base as ThemeRecord).mobileSizeMultiplier as number);
+  const mul = (theme.base as ThemeRecord | undefined)?.mobileSizeMultiplier as number | undefined;
+  if (ok && mul) {
+    val = (val as number) * mul;
   }
 
   return val;
