@@ -77,6 +77,10 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
   menustyle: HTMLStyleElement;
   hasSearchBox: boolean;
   textbox!: UIBase<CTX> & { text: string; onchange: (() => void) | null; parentWidget: unknown };
+  /** The box `startSearch` builds around the search textbox and `dom`, removed by `close`. */
+  _searchBox: HTMLDivElement | undefined;
+  /** `dom`'s children as the menu was built, before a search filtered them. */
+  _unfiltered: ChildNode[] | undefined;
   _popup: PopupContainer | undefined;
   /**
    * Settles once every row whose `canRun` answered asynchronously has been enabled or refused.
@@ -246,6 +250,8 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
 
     this.remove();
     this.dom.remove();
+    this._searchBox?.remove();
+    this._searchBox = undefined;
 
     if (this._onclose) {
       this._onclose(this);
@@ -391,7 +397,16 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
     this.started = true;
     menuWrangler.pushMenu(this);
 
-    const dom2 = document.createElement("div");
+    // A submenu is started again on every hover, so the last search's box and filter are undone
+    this._searchBox?.remove();
+    if (this._unfiltered) {
+      for (const item of this.items) item.hidden = false;
+      this.dom.replaceChildren(...this._unfiltered);
+    } else {
+      this._unfiltered = [...this.dom.childNodes];
+    }
+
+    const dom2 = (this._searchBox = document.createElement("div"));
 
     this.dom.setAttribute("class", "menu");
     dom2.setAttribute("class", "menu");
