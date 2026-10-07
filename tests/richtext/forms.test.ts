@@ -204,6 +204,37 @@ describe("native authored source", () => {
   ])("opening and serializing preserves source exactly", (source) => {
     expect(markdownText(markdownSourceDoc(source))).toBe(source);
   });
+  test.each(["---\nname: Ada\n---\n", "---\nname: Ada\n---", "﻿---\r\nname: Ada\r\n---\r\n"])(
+    "front matter alone is followed by an empty paragraph that never reaches the file",
+    (source) => {
+      const doc = markdownSourceDoc(source);
+      expect(doc.blocks.map((b) => [b.kind, b.text])).toEqual([
+        ["frontmatter", ""],
+        ["paragraph", ""],
+      ]);
+      expect(markdownText(doc)).toBe(source);
+    }
+  );
+  test("text typed after front matter alone lands on a line of its own", () => {
+    const provider = new MarkdownProvider();
+    for (const [source, saved] of [
+      ["---\nname: Ada\n---\n", "---\nname: Ada\n---\nHi\n"],
+      ["---\nname: Ada\n---", "---\nname: Ada\n---\nHi\n"],
+      ["---\r\nname: Ada\r\n---", "---\r\nname: Ada\r\n---\r\nHi\r\n"],
+    ]) {
+      const doc = markdownSourceDoc(source);
+      const block = doc.blocks[1].id;
+      const at = { anchor: { block, offset: 0 }, head: { block, offset: 0 } };
+      provider.applyEdit(doc, { type: "insertText", at, text: "Hi" });
+      expect(markdownText(doc)).toBe(saved);
+      expect(markdownText(markdownSourceDoc(saved))).toBe(saved);
+      provider.applyEdit(doc, {
+        type : "deleteRange",
+        range: { anchor: { block, offset: 0 }, head: { block, offset: 2 } },
+      });
+      expect(markdownText(doc)).toBe(source);
+    }
+  });
   test("metadata changes preserve comments, quote style, unknown fields and body; undo restores bytes", async () => {
     const { binding, doc, stack } = setup();
     const snapshot = binding.read()!;

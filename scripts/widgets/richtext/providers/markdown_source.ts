@@ -55,6 +55,10 @@ export function markdownSourceDoc(source: string, options: MarkdownParseOptions 
     split.separator = "";
   }
   if (front) front.source = split.frontmatter;
+  // front matter alone gives the caret no position to type at; the paragraph is counted in
+  // the body key below, so an untouched document still saves byte for byte
+  if (front && doc.blocks.length === 1)
+    doc.blocks.push(mdBlock(newBlockId(), { kind: "paragraph" }));
   const body = front ? doc.blocks.slice(1) : doc.blocks;
   if (unmappedRepair) split.body = markdownText({ blocks: body });
   const retained = {

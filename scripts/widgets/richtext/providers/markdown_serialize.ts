@@ -278,7 +278,9 @@ export function markdownText(doc: MdDoc): string {
       markdownBodyKey(blocks) === retained.bodyKey
         ? retained.body
         : canonicalMarkdownText({ blocks }).replace(/\r?\n/g, retained.eol);
-    return retained.prefix + (front ? front.source + retained.separator : "") + body;
+    // front matter that ended the file has no separator, and the closing fence needs its own line
+    const separator = body !== "" && retained.separator === "" ? retained.eol : retained.separator;
+    return retained.prefix + (front ? front.source + separator : "") + body;
   }
   return canonicalMarkdownText(doc);
 }
