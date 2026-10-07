@@ -94,6 +94,19 @@ filed on the submenu and keyed by that submenu's ids. Picking a submenu entry ru
 that callback and then closes both menus. A submenu assembled by hand, with no
 dispatch of its own, falls back to the parent's.
 
+An open submenu extends its row's hit box with a safe triangle, so that a diagonal
+move toward the submenu doesn't open whichever rows it crosses:
+
+- The triangle runs from the pointer's last position on the submenu row to the
+  two corners of the submenu's near edge.
+- While the pointer stays inside it, other rows of the parent menu don't take the
+  hover.
+- A pointer that rests on a row inside the triangle for `cconst.menu_aim_delay`
+  milliseconds (300 by default) gives that row the hover anyway.
+- A pointer that leaves the triangle hovers rows normally again. Clicks and keyboard
+  navigation are never held.
+- Set `window.DEBUG.drawMenuTri = true` to draw the triangle over the screen.
+
 ### DOM callbacks
 
 A function entry is called with a fresh `div` and must return an item — usually a

@@ -162,3 +162,11 @@ that boundary problem without inserting document characters.
 An inline widget exits to its atom offset, not its containing block's edge. Backward Tab enters
 the last focusable control; a test expecting the first input would incorrectly report a focus
 failure. Both directions need assertions over document positions and control focus.
+
+## Menus: submenus that close on the way to them
+
+A parent menu holds the hover on an open submenu's row while the pointer is inside a
+triangle toward the submenu (`scripts/menu/menu_aim.ts`). Set
+`window.DEBUG.drawMenuTri = true` to draw it. A triangle hidden behind the menu means the
+overlay's z-index was lowered: menus float inside popups at `ZIndexes.popup`, not
+`ZIndexes.menu`.

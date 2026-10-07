@@ -24,6 +24,7 @@ interface PathUXDebug {
   domEvents?: boolean;
   areaContextPushes?: boolean;
   areadocker?: boolean;
+  drawMenuTri?: boolean;
 }
 
 interface Window {

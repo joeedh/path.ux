@@ -14506,6 +14506,7 @@ var init_const = __esm({
       simpleNumSliders: false,
       menusCanPopupAbove: false,
       menu_close_time: 100,
+      menu_aim_delay: 300,
       doubleClickTime: 500,
       doubleClickHoldTime: 750,
       DEBUG: {
@@ -14522,7 +14523,8 @@ var init_const = __esm({
         domEventAddRemove: false,
         debugUIUpdatePerf: false,
         screenAreaPosSizeAccesses: false,
-        buttonEvents: false
+        buttonEvents: false,
+        drawMenuTri: false
       },
       autoLoadSplineTemplates: true,
       addHelpPickers: true,
@@ -36417,6 +36419,57 @@ var init_wrangler = __esm({
   }
 });
 
+// scripts/menu/menu_aim.ts
+function aimTriangle(apex, submenu) {
+  const toRight = submenu.left + submenu.width * 0.5 >= apex.x;
+  const edgeX = toRight ? submenu.left : submenu.right;
+  const slack = toRight ? -APEX_SLACK : APEX_SLACK;
+  return [
+    { x: apex.x + slack, y: apex.y },
+    { x: edgeX, y: submenu.top },
+    { x: edgeX, y: submenu.bottom }
+  ];
+}
+function insideAimTriangle(p, tri) {
+  const [a2, b, c] = tri;
+  const side = (u, v) => (v.x - u.x) * (p.y - u.y) - (v.y - u.y) * (p.x - u.x);
+  const d1 = side(a2, b);
+  const d2 = side(b, c);
+  const d3 = side(c, a2);
+  const hasNeg = d1 < 0 || d2 < 0 || d3 < 0;
+  const hasPos = d1 > 0 || d2 > 0 || d3 > 0;
+  return !(hasNeg && hasPos);
+}
+function drawAimTriangle(tri, svg) {
+  if (!svg) {
+    svg = document.createElementNS(SVG_NS, "svg");
+    svg.style.position = "fixed";
+    svg.style.left = "0px";
+    svg.style.top = "0px";
+    svg.style.width = "100vw";
+    svg.style.height = "100vh";
+    svg.style.pointerEvents = "none";
+    svg.style.zIndex = "2147483647";
+    const poly = document.createElementNS(SVG_NS, "polygon");
+    poly.setAttribute("fill", "rgba(255, 64, 64, 0.25)");
+    poly.setAttribute("stroke", "rgba(255, 32, 32, 0.9)");
+    poly.setAttribute("stroke-width", "1");
+    svg.appendChild(poly);
+    document.body.appendChild(svg);
+  }
+  const points = tri.map((p) => `${p.x},${p.y}`).join(" ");
+  svg.firstElementChild.setAttribute("points", points);
+  return svg;
+}
+var APEX_SLACK, SVG_NS;
+var init_menu_aim = __esm({
+  "scripts/menu/menu_aim.ts"() {
+    "use strict";
+    APEX_SLACK = 4;
+    SVG_NS = "http://www.w3.org/2000/svg";
+  }
+});
+
 // scripts/menu/menu.ts
 function asRefusal(reason) {
   if (reason === void 0) {
@@ -36456,6 +36509,8 @@ var init_menu = __esm({
     init_constants();
     init_menu_types();
     init_wrangler();
+    init_menu_aim();
+    init_const();
     Menu = class _Menu extends UIBase {
       static SEP;
       /** The src button that created this menu, used to switch menus when hovering over other buttons. */
@@ -36509,6 +36564,13 @@ var init_menu = __esm({
        */
       _ownSelect;
       on_select;
+      /** Where the pointer last stood on the open submenu's row: the apex of the safe triangle. */
+      _aimApex;
+      /** The row a hover inside the safe triangle is waiting to activate. */
+      _aimPending;
+      _aimTimer;
+      /** The `DEBUG.drawMenuTri` overlay. */
+      _aimDebugSvg;
       constructor() {
         super();
         this.parentMenu = void 0;
@@ -36600,6 +36662,7 @@ var init_menu = __esm({
           return;
         }
         this.closed = true;
+        this._resetAim();
         if (this.started) {
           menuWrangler.popMenu(this);
         }
@@ -36613,6 +36676,56 @@ var init_menu = __esm({
         if (this._onclose) {
           this._onclose(this);
         }
+      }
+      /** Drops the safe triangle, any hover waiting on it, and its debug overlay. */
+      _resetAim() {
+        this._cancelAimHover();
+        this._aimApex = void 0;
+        this._aimDebugSvg?.remove();
+        this._aimDebugSvg = void 0;
+      }
+      _cancelAimHover() {
+        window.clearTimeout(this._aimTimer);
+        this._aimTimer = void 0;
+        this._aimPending = void 0;
+      }
+      /** Moves the safe triangle's apex to the pointer, if `li` is the open submenu's row. */
+      _aimFrom(li, e) {
+        const sub = this._submenu;
+        if (!sub || sub.closed || li._menu !== sub || !(e instanceof MouseEvent)) {
+          return;
+        }
+        this._aimApex = { x: e.clientX, y: e.clientY };
+        if (window.DEBUG?.drawMenuTri) {
+          const tri = aimTriangle(this._aimApex, sub.dom.getBoundingClientRect());
+          this._aimDebugSvg = drawAimTriangle(tri, this._aimDebugSvg);
+        }
+      }
+      /**
+       * Whether a hover on `li` is held back because the pointer is inside the safe triangle,
+       * crossing `li` on its way to the open submenu. A held hover still runs `activate` once the
+       * pointer rests on `li` for `cconst.menu_aim_delay` milliseconds.
+       */
+      _aimHolds(li, e, activate) {
+        const sub = this._submenu;
+        const apex = this._aimApex;
+        if (!sub || sub.closed || !apex || li === this.activeItem || !(e instanceof MouseEvent)) {
+          this._cancelAimHover();
+          return false;
+        }
+        const tri = aimTriangle(apex, sub.dom.getBoundingClientRect());
+        if (!insideAimTriangle({ x: e.clientX, y: e.clientY }, tri)) {
+          this._cancelAimHover();
+          return false;
+        }
+        window.clearTimeout(this._aimTimer);
+        this._aimPending = li;
+        this._aimTimer = window.setTimeout(() => {
+          this._aimTimer = void 0;
+          this._aimPending = void 0;
+          activate();
+        }, const_default.menu_aim_delay ?? 300);
+        return true;
       }
       /** Whether keyboard selection may land on `item`. */
       _selectable(item) {
@@ -36922,6 +37035,7 @@ var init_menu = __esm({
             if (this._submenu) {
               this._submenu.close();
               this._submenu = void 0;
+              this._resetAim();
             }
             if (li._isMenu && !li._disabled) {
               const sub = li._menu;
@@ -36960,13 +37074,25 @@ var init_menu = __esm({
             li.addEventListener(type, onclick, { capture: true });
           }
           li.addEventListener("focus", onfocus);
-          const hoverFocus = (e) => {
+          const activate = (e) => {
             onfocus(e);
             li.focus();
+          };
+          const hoverFocus = (e) => {
+            if (this._aimHolds(li, e, () => activate(e))) {
+              return;
+            }
+            activate(e);
+            this._aimFrom(li, e);
           };
           for (const type of ["pointermove", "mouseover", "mouseenter", "pointerover"]) {
             li.addEventListener(type, hoverFocus);
           }
+          li.addEventListener("pointerleave", () => {
+            if (this._aimPending === li) {
+              this._cancelAimHover();
+            }
+          });
           this.dom.appendChild(li);
         }
         return li;
@@ -45246,6 +45372,23 @@ var DocumentSession = class {
       else this.drafts.delete(id);
     };
   }
+  /**
+   * Offers the undo chord to the attached drafts, in registration order, before the document's
+   * history; `true` when one reversed a change of its own.
+   */
+  undoDraft() {
+    for (const { controller, detached } of this.drafts.values()) {
+      if (!detached && controller.undo?.()) return true;
+    }
+    return false;
+  }
+  /** The redo half of `undoDraft`. */
+  redoDraft() {
+    for (const { controller, detached } of this.drafts.values()) {
+      if (!detached && controller.redo?.()) return true;
+    }
+    return false;
+  }
   discardDraft(id) {
     const draft = this.drafts.get(id);
     draft?.controller.discard();
@@ -45941,6 +46084,8 @@ var WidgetHost = class {
               discard: () => controller.discard(),
               recover: () => controller.recover(),
               committed: () => controller.committed(),
+              undo: () => current() && (controller.undo?.() ?? false),
+              redo: () => current() && (controller.redo?.() ?? false),
               prepare: async () => {
                 const prepared = await controller.prepare();
                 if (prepared.status !== "ready") return prepared;
@@ -46934,6 +47079,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       return;
     }
     this.endRun();
+    if (session.undoDraft()) return;
     await session.toolstack.undo(this.richCtx);
     this.endRun();
   }
@@ -46944,6 +47090,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       return;
     }
     this.endRun();
+    if (session.redoDraft()) return;
     await session.toolstack.redo(this.richCtx);
     this.endRun();
   }

@@ -14533,6 +14533,7 @@ var init_const = __esm({
       simpleNumSliders: false,
       menusCanPopupAbove: false,
       menu_close_time: 100,
+      menu_aim_delay: 300,
       doubleClickTime: 500,
       doubleClickHoldTime: 750,
       DEBUG: {
@@ -14549,7 +14550,8 @@ var init_const = __esm({
         domEventAddRemove: false,
         debugUIUpdatePerf: false,
         screenAreaPosSizeAccesses: false,
-        buttonEvents: false
+        buttonEvents: false,
+        drawMenuTri: false
       },
       autoLoadSplineTemplates: true,
       addHelpPickers: true,
@@ -36444,6 +36446,57 @@ var init_wrangler = __esm({
   }
 });
 
+// scripts/menu/menu_aim.ts
+function aimTriangle(apex, submenu) {
+  const toRight = submenu.left + submenu.width * 0.5 >= apex.x;
+  const edgeX = toRight ? submenu.left : submenu.right;
+  const slack = toRight ? -APEX_SLACK : APEX_SLACK;
+  return [
+    { x: apex.x + slack, y: apex.y },
+    { x: edgeX, y: submenu.top },
+    { x: edgeX, y: submenu.bottom }
+  ];
+}
+function insideAimTriangle(p, tri) {
+  const [a2, b, c] = tri;
+  const side = (u, v) => (v.x - u.x) * (p.y - u.y) - (v.y - u.y) * (p.x - u.x);
+  const d1 = side(a2, b);
+  const d2 = side(b, c);
+  const d3 = side(c, a2);
+  const hasNeg = d1 < 0 || d2 < 0 || d3 < 0;
+  const hasPos = d1 > 0 || d2 > 0 || d3 > 0;
+  return !(hasNeg && hasPos);
+}
+function drawAimTriangle(tri, svg) {
+  if (!svg) {
+    svg = document.createElementNS(SVG_NS, "svg");
+    svg.style.position = "fixed";
+    svg.style.left = "0px";
+    svg.style.top = "0px";
+    svg.style.width = "100vw";
+    svg.style.height = "100vh";
+    svg.style.pointerEvents = "none";
+    svg.style.zIndex = "2147483647";
+    const poly = document.createElementNS(SVG_NS, "polygon");
+    poly.setAttribute("fill", "rgba(255, 64, 64, 0.25)");
+    poly.setAttribute("stroke", "rgba(255, 32, 32, 0.9)");
+    poly.setAttribute("stroke-width", "1");
+    svg.appendChild(poly);
+    document.body.appendChild(svg);
+  }
+  const points = tri.map((p) => `${p.x},${p.y}`).join(" ");
+  svg.firstElementChild.setAttribute("points", points);
+  return svg;
+}
+var APEX_SLACK, SVG_NS;
+var init_menu_aim = __esm({
+  "scripts/menu/menu_aim.ts"() {
+    "use strict";
+    APEX_SLACK = 4;
+    SVG_NS = "http://www.w3.org/2000/svg";
+  }
+});
+
 // scripts/menu/menu.ts
 function asRefusal(reason) {
   if (reason === void 0) {
@@ -36483,6 +36536,8 @@ var init_menu = __esm({
     init_constants();
     init_menu_types();
     init_wrangler();
+    init_menu_aim();
+    init_const();
     Menu = class _Menu extends UIBase {
       static SEP;
       /** The src button that created this menu, used to switch menus when hovering over other buttons. */
@@ -36536,6 +36591,13 @@ var init_menu = __esm({
        */
       _ownSelect;
       on_select;
+      /** Where the pointer last stood on the open submenu's row: the apex of the safe triangle. */
+      _aimApex;
+      /** The row a hover inside the safe triangle is waiting to activate. */
+      _aimPending;
+      _aimTimer;
+      /** The `DEBUG.drawMenuTri` overlay. */
+      _aimDebugSvg;
       constructor() {
         super();
         this.parentMenu = void 0;
@@ -36627,6 +36689,7 @@ var init_menu = __esm({
           return;
         }
         this.closed = true;
+        this._resetAim();
         if (this.started) {
           menuWrangler.popMenu(this);
         }
@@ -36640,6 +36703,56 @@ var init_menu = __esm({
         if (this._onclose) {
           this._onclose(this);
         }
+      }
+      /** Drops the safe triangle, any hover waiting on it, and its debug overlay. */
+      _resetAim() {
+        this._cancelAimHover();
+        this._aimApex = void 0;
+        this._aimDebugSvg?.remove();
+        this._aimDebugSvg = void 0;
+      }
+      _cancelAimHover() {
+        window.clearTimeout(this._aimTimer);
+        this._aimTimer = void 0;
+        this._aimPending = void 0;
+      }
+      /** Moves the safe triangle's apex to the pointer, if `li` is the open submenu's row. */
+      _aimFrom(li, e) {
+        const sub = this._submenu;
+        if (!sub || sub.closed || li._menu !== sub || !(e instanceof MouseEvent)) {
+          return;
+        }
+        this._aimApex = { x: e.clientX, y: e.clientY };
+        if (window.DEBUG?.drawMenuTri) {
+          const tri = aimTriangle(this._aimApex, sub.dom.getBoundingClientRect());
+          this._aimDebugSvg = drawAimTriangle(tri, this._aimDebugSvg);
+        }
+      }
+      /**
+       * Whether a hover on `li` is held back because the pointer is inside the safe triangle,
+       * crossing `li` on its way to the open submenu. A held hover still runs `activate` once the
+       * pointer rests on `li` for `cconst.menu_aim_delay` milliseconds.
+       */
+      _aimHolds(li, e, activate) {
+        const sub = this._submenu;
+        const apex = this._aimApex;
+        if (!sub || sub.closed || !apex || li === this.activeItem || !(e instanceof MouseEvent)) {
+          this._cancelAimHover();
+          return false;
+        }
+        const tri = aimTriangle(apex, sub.dom.getBoundingClientRect());
+        if (!insideAimTriangle({ x: e.clientX, y: e.clientY }, tri)) {
+          this._cancelAimHover();
+          return false;
+        }
+        window.clearTimeout(this._aimTimer);
+        this._aimPending = li;
+        this._aimTimer = window.setTimeout(() => {
+          this._aimTimer = void 0;
+          this._aimPending = void 0;
+          activate();
+        }, const_default.menu_aim_delay ?? 300);
+        return true;
       }
       /** Whether keyboard selection may land on `item`. */
       _selectable(item) {
@@ -36949,6 +37062,7 @@ var init_menu = __esm({
             if (this._submenu) {
               this._submenu.close();
               this._submenu = void 0;
+              this._resetAim();
             }
             if (li._isMenu && !li._disabled) {
               const sub = li._menu;
@@ -36987,13 +37101,25 @@ var init_menu = __esm({
             li.addEventListener(type, onclick, { capture: true });
           }
           li.addEventListener("focus", onfocus);
-          const hoverFocus = (e) => {
+          const activate = (e) => {
             onfocus(e);
             li.focus();
+          };
+          const hoverFocus = (e) => {
+            if (this._aimHolds(li, e, () => activate(e))) {
+              return;
+            }
+            activate(e);
+            this._aimFrom(li, e);
           };
           for (const type of ["pointermove", "mouseover", "mouseenter", "pointerover"]) {
             li.addEventListener(type, hoverFocus);
           }
+          li.addEventListener("pointerleave", () => {
+            if (this._aimPending === li) {
+              this._cancelAimHover();
+            }
+          });
           this.dom.appendChild(li);
         }
         return li;
@@ -45372,6 +45498,23 @@ var DocumentSession = class {
       else this.drafts.delete(id);
     };
   }
+  /**
+   * Offers the undo chord to the attached drafts, in registration order, before the document's
+   * history; `true` when one reversed a change of its own.
+   */
+  undoDraft() {
+    for (const { controller, detached } of this.drafts.values()) {
+      if (!detached && controller.undo?.()) return true;
+    }
+    return false;
+  }
+  /** The redo half of `undoDraft`. */
+  redoDraft() {
+    for (const { controller, detached } of this.drafts.values()) {
+      if (!detached && controller.redo?.()) return true;
+    }
+    return false;
+  }
   discardDraft(id) {
     const draft = this.drafts.get(id);
     draft?.controller.discard();
@@ -46067,6 +46210,8 @@ var WidgetHost = class {
               discard: () => controller.discard(),
               recover: () => controller.recover(),
               committed: () => controller.committed(),
+              undo: () => current() && (controller.undo?.() ?? false),
+              redo: () => current() && (controller.redo?.() ?? false),
               prepare: async () => {
                 const prepared = await controller.prepare();
                 if (prepared.status !== "ready") return prepared;
@@ -47060,6 +47205,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       return;
     }
     this.endRun();
+    if (session.undoDraft()) return;
     await session.toolstack.undo(this.richCtx);
     this.endRun();
   }
@@ -47070,6 +47216,7 @@ var RichTextEditor = class _RichTextEditor extends UIBase {
       return;
     }
     this.endRun();
+    if (session.redoDraft()) return;
     await session.toolstack.redo(this.richCtx);
     this.endRun();
   }
@@ -89458,7 +89605,8 @@ function renderMarkdownBlock(block, ctx, options = {}) {
 function counterRules() {
   const all2 = Array.from({ length: COUNTER_DEPTHS }, (_, d) => `md-ol-${d}`);
   let css = `
-    .rich-text-root, [data-doc-block]:not(.md-li) { counter-reset: ${all2.join(" ")}; }
+    .rich-text-root { counter-reset: ${all2.join(" ")}; }
+    [data-doc-block]:not(.md-li) { counter-set: ${all2.join(" ")}; }
   `;
   for (let d = 0; d < COUNTER_DEPTHS; d++) {
     const below = all2.slice(d + 1).join(" ");
@@ -89466,10 +89614,10 @@ function counterRules() {
     css += `
     .md-li[data-md-depth="${d}"][data-md-ordered="true"] {
       counter-increment: ${own6};
-      ${below === "" ? "" : `counter-reset: ${below};`}
+      ${below === "" ? "" : `counter-set: ${below};`}
     }
     .md-li[data-md-depth="${d}"][data-md-ordered="true"]::marker { content: counter(${own6}) ". "; }
-    .md-li[data-md-depth="${d}"][data-md-ordered="false"] { counter-reset: ${own6}${below === "" ? "" : ` ${below}`}; }
+    .md-li[data-md-depth="${d}"][data-md-ordered="false"] { counter-set: ${own6}${below === "" ? "" : ` ${below}`}; }
     `;
   }
   return css;
@@ -92026,6 +92174,7 @@ function formStyles() {
 // scripts/widgets/richtext/form_control.ts
 init_ui_base();
 var RECOVERED = "Recovered answers from a form that closed";
+var DRAFT_RUN_MS = 1500;
 var TextFieldControl = class {
   constructor(key, meta, node2, context) {
     this.key = key;
@@ -92116,6 +92265,7 @@ var FormControl = class {
       }
       control.oninput = (key, text6) => {
         if (this.locked()) return;
+        this.record(key);
         this.edits.set(key, text6);
         this.version++;
         this.status.textContent = "Draft";
@@ -92167,7 +92317,9 @@ var FormControl = class {
       prepare: () => this.prepare(),
       committed: () => this.committed(),
       discard: () => this.discard(),
-      recover: () => ({ base: structuredClone(this.base), edits: [...this.edits] })
+      recover: () => ({ base: structuredClone(this.base), edits: [...this.edits] }),
+      undo: () => this.undo(),
+      redo: () => this.redo()
     });
     this.unsubscribe = binding.subscribe(() => this.refresh());
     this.refresh();
@@ -92180,6 +92332,11 @@ var FormControl = class {
   fields = /* @__PURE__ */ new Map();
   views = [];
   edits = /* @__PURE__ */ new Map();
+  /** The answers before each change still to be undone, oldest first, and those undone, for redo. */
+  past = [];
+  future = [];
+  /** The field the last recorded step edits, and when, so a change soon after on it joins the step. */
+  run;
   buttons = [];
   omits = /* @__PURE__ */ new Map();
   /** Controls a `readOnly` field meta keeps read-only whatever the form's state. */
@@ -92218,17 +92375,11 @@ var FormControl = class {
   }
   /** Omit leaves the field out of the document; pressed again, as Keep, it puts the value back. */
   toggleOmit(name) {
-    const { node: node2, control, json } = this.fields.get(name);
+    const { control } = this.fields.get(name);
+    this.record();
     if (this.omitted(name)) {
       this.edits.delete(name);
-      control.write(
-        name,
-        encodeFormField(
-          node2,
-          formObject(this.base.values) ? this.base.values[name] : void 0,
-          json
-        )
-      );
+      control.write(name, this.baseText(name));
       this.status.textContent = this.pending ? "Draft" : "";
     } else {
       this.edits.set(name, void 0);
@@ -92237,6 +92388,67 @@ var FormControl = class {
     }
     this.version++;
     this.paintOmits();
+  }
+  /** The field's encoded text as the document has it. */
+  baseText(name) {
+    const { node: node2, json } = this.fields.get(name);
+    return encodeFormField(
+      node2,
+      formObject(this.base.values) ? this.base.values[name] : void 0,
+      json
+    );
+  }
+  /**
+   * Keeps the answers as they are before a change. A change to `key` within `DRAFT_RUN_MS` of
+   * the last one to it joins that step; an omit, or a change elsewhere, starts a new one.
+   */
+  record(key) {
+    const now = Date.now();
+    if (key !== void 0 && this.run?.key === key && now - this.run.at < DRAFT_RUN_MS) {
+      this.run.at = now;
+      return;
+    }
+    this.past.push(new Map(this.edits));
+    this.future.length = 0;
+    this.run = key === void 0 ? void 0 : { key, at: now };
+  }
+  forget() {
+    this.past.length = 0;
+    this.future.length = 0;
+    this.run = void 0;
+  }
+  /** Shows `answers` in place of the current ones, writing every field that differs. */
+  show(answers) {
+    const names = /* @__PURE__ */ new Set([...this.edits.keys(), ...answers.keys()]);
+    this.edits.clear();
+    for (const [name, text6] of answers) this.edits.set(name, text6);
+    for (const name of names) {
+      const field = this.fields.get(name);
+      if (!field) continue;
+      field.control.write(name, this.edits.has(name) ? this.edits.get(name) : this.baseText(name));
+    }
+    this.version++;
+    this.run = void 0;
+    this.status.textContent = this.pending ? "Draft" : "";
+    this.paintOmits();
+  }
+  /** Reverses the latest step of the draft; `false` with none, or while the form is locked. */
+  undo() {
+    if (this.locked() || this.composing) return false;
+    const answers = this.past.pop();
+    if (!answers) return false;
+    this.future.push(new Map(this.edits));
+    this.show(answers);
+    return true;
+  }
+  /** Replays the step `undo` last reversed; `false` with none, or while the form is locked. */
+  redo() {
+    if (this.locked() || this.composing) return false;
+    const answers = this.future.pop();
+    if (!answers) return false;
+    this.past.push(new Map(this.edits));
+    this.show(answers);
+    return true;
   }
   paintOmits() {
     for (const [name, { button, label }] of this.omits) {
@@ -92341,6 +92553,7 @@ var FormControl = class {
     if (JSON.stringify(draft.base.values) !== JSON.stringify(this.base.values)) return false;
     const entries = [...draft.edits];
     if (entries.some(([name]) => !this.fields.has(name))) return false;
+    this.record();
     for (const [name, text6] of entries) {
       this.edits.set(name, text6);
       this.fields.get(name).control.write(name, text6);
@@ -92352,12 +92565,14 @@ var FormControl = class {
   }
   committed() {
     this.edits.clear();
+    this.forget();
     this.version++;
     this.refresh();
     this.status.textContent = "Saved in document";
   }
   discard() {
     this.edits.clear();
+    this.forget();
     this.version++;
     this.refresh();
     this.status.textContent = "";
@@ -92365,6 +92580,7 @@ var FormControl = class {
   refresh() {
     this.latest = this.binding.read();
     if (!this.pending && !this.composing && this.latest && formObject(this.latest.values)) {
+      if (this.latest.revision !== this.base.revision) this.forget();
       this.base = this.latest;
       for (const [name, { node: node2, control, json }] of this.fields)
         control.write(name, encodeFormField(node2, this.latest.values[name], json));

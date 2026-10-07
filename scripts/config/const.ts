@@ -153,6 +153,8 @@ export interface DebugFlags {
   debugUIUpdatePerf?: boolean;
   screenAreaPosSizeAccesses?: boolean;
   buttonEvents?: boolean;
+  /** Draws the safe triangle a menu holds open toward its submenu. */
+  drawMenuTri?: boolean;
   [key: string]: boolean | undefined;
 }
 
@@ -164,6 +166,11 @@ export interface IPathUXConstants {
   /** Can menus pop above dropboxes */
   menusCanPopupAbove?: boolean;
   menu_close_time?: number;
+  /**
+   * How long, in milliseconds, the pointer must rest on a row inside a submenu's safe triangle
+   * before that row takes the hover from the open submenu.
+   */
+  menu_aim_delay?: number;
   doubleClickTime?: number;
   doubleClickHoldTime?: number;
   autoLoadSplineTemplates?: boolean;
@@ -242,6 +249,7 @@ const cconst: PathUXConfigProvider = {
 
   menusCanPopupAbove : false,
   menu_close_time    : 100,
+  menu_aim_delay     : 300,
   doubleClickTime    : 500,
   doubleClickHoldTime: 750,
 
@@ -260,6 +268,7 @@ const cconst: PathUXConfigProvider = {
     debugUIUpdatePerf        : false,
     screenAreaPosSizeAccesses: false,
     buttonEvents             : false,
+    drawMenuTri              : false,
   },
 
   autoLoadSplineTemplates: true,

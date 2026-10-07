@@ -9,6 +9,8 @@ import { SEP, type MenuItem } from "./menu_types";
 import type { Refusal } from "../path-controller/toolsys/toolop";
 import { menuWrangler } from "./wrangler";
 import type { DropBox } from "./dropbox";
+import { aimTriangle, drawAimTriangle, insideAimTriangle, type AimPoint } from "./menu_aim";
+import cconst from "../config/const";
 
 /** Widens the terse string form callers pass to `setItemDisabled`. */
 function asRefusal(reason: string | Refusal | undefined): Refusal | undefined {
@@ -94,6 +96,14 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
   _ownSelect?: ((id: string | number) => void) | null;
 
   on_select?: (id: number | string) => void;
+
+  /** Where the pointer last stood on the open submenu's row: the apex of the safe triangle. */
+  _aimApex: AimPoint | undefined;
+  /** The row a hover inside the safe triangle is waiting to activate. */
+  _aimPending: MenuItem | undefined;
+  _aimTimer: number | undefined;
+  /** The `DEBUG.drawMenuTri` overlay. */
+  _aimDebugSvg: SVGSVGElement | undefined;
 
   constructor() {
     super();
@@ -221,6 +231,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
     }
 
     this.closed = true;
+    this._resetAim();
 
     if (this.started) {
       menuWrangler.popMenu(this);
@@ -239,6 +250,66 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
     if (this._onclose) {
       this._onclose(this);
     }
+  }
+
+  /** Drops the safe triangle, any hover waiting on it, and its debug overlay. */
+  _resetAim() {
+    this._cancelAimHover();
+    this._aimApex = undefined;
+    this._aimDebugSvg?.remove();
+    this._aimDebugSvg = undefined;
+  }
+
+  _cancelAimHover() {
+    window.clearTimeout(this._aimTimer);
+    this._aimTimer = undefined;
+    this._aimPending = undefined;
+  }
+
+  /** Moves the safe triangle's apex to the pointer, if `li` is the open submenu's row. */
+  _aimFrom(li: MenuItem, e: Event) {
+    const sub = this._submenu;
+    if (!sub || sub.closed || li._menu !== sub || !(e instanceof MouseEvent)) {
+      return;
+    }
+
+    this._aimApex = { x: e.clientX, y: e.clientY };
+
+    if (window.DEBUG?.drawMenuTri) {
+      const tri = aimTriangle(this._aimApex, sub.dom.getBoundingClientRect());
+      this._aimDebugSvg = drawAimTriangle(tri, this._aimDebugSvg);
+    }
+  }
+
+  /**
+   * Whether a hover on `li` is held back because the pointer is inside the safe triangle,
+   * crossing `li` on its way to the open submenu. A held hover still runs `activate` once the
+   * pointer rests on `li` for `cconst.menu_aim_delay` milliseconds.
+   */
+  _aimHolds(li: MenuItem, e: Event, activate: () => void): boolean {
+    const sub = this._submenu;
+    const apex = this._aimApex;
+
+    if (!sub || sub.closed || !apex || li === this.activeItem || !(e instanceof MouseEvent)) {
+      this._cancelAimHover();
+      return false;
+    }
+
+    const tri = aimTriangle(apex, sub.dom.getBoundingClientRect());
+    if (!insideAimTriangle({ x: e.clientX, y: e.clientY }, tri)) {
+      this._cancelAimHover();
+      return false;
+    }
+
+    window.clearTimeout(this._aimTimer);
+    this._aimPending = li;
+    this._aimTimer = window.setTimeout(() => {
+      this._aimTimer = undefined;
+      this._aimPending = undefined;
+      activate();
+    }, cconst.menu_aim_delay ?? 300);
+
+    return true;
   }
 
   /** Whether keyboard selection may land on `item`. */
@@ -678,6 +749,7 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
         if (this._submenu) {
           this._submenu.close();
           this._submenu = undefined;
+          this._resetAim();
         }
 
         if (li._isMenu && !li._disabled) {
@@ -745,13 +817,28 @@ export class Menu<CTX extends IContextBase = IContextBase> extends UIBase<CTX, u
 
       li.addEventListener("focus", onfocus);
 
-      const hoverFocus = (e: Event) => {
+      const activate = (e: Event) => {
         onfocus(e);
         li.focus();
+      };
+      const hoverFocus = (e: Event) => {
+        if (this._aimHolds(li, e, () => activate(e))) {
+          return;
+        }
+
+        activate(e);
+        this._aimFrom(li, e);
       };
       for (const type of ["pointermove", "mouseover", "mouseenter", "pointerover"]) {
         li.addEventListener(type, hoverFocus);
       }
+
+      // A held hover is only for the row the pointer is resting on
+      li.addEventListener("pointerleave", () => {
+        if (this._aimPending === li) {
+          this._cancelAimHover();
+        }
+      });
 
       this.dom.appendChild(li);
     }
