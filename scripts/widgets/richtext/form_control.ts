@@ -128,7 +128,7 @@ export class FormControl<Output = unknown> implements WidgetView {
     readonly binding: FormBinding,
     context: IContextBase,
     presentation: FormPresentation = {},
-    options: { commit?: boolean; discard?: boolean } = {}
+    options: { commit?: boolean; discard?: boolean; commitTitle?: string } = {}
   ) {
     const initial = binding.read();
     if (!initial || !formObject(initial.values)) throw new Error("Form requires an object input");
@@ -203,7 +203,8 @@ export class FormControl<Output = unknown> implements WidgetView {
     if (options.commit !== false)
       this.button(
         "Apply answers",
-        "Write the answers typed here into the document, as one undoable edit",
+        options.commitTitle ??
+          "Write the answers typed here into the document, as one undoable edit",
         () => void this.commit(),
         actions
       );
