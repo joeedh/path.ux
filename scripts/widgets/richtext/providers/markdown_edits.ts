@@ -10,7 +10,7 @@ import type {
 import { clipMarks, cutMark, hasMark, marksAfterDelete, marksAfterTyping } from "./marks";
 import { normalizeMdMarks } from "./markdown_inline";
 import { mdBlock } from "./markdown_model";
-import type { MdBlock, MdDoc, MdKind, MdMarkName } from "./markdown_model";
+import type { MdBlock, MdDoc, MdKind, MdMark, MdMarkName } from "./markdown_model";
 import { parseEntry } from "./markdown_clipboard";
 import {
   atomsAfterDelete,
@@ -164,6 +164,23 @@ function shortcutAt(b: MdBlock, caret: number): MdKind | undefined {
 }
 
 /**
+ * Shifts the marks over `inserted` typed at `pos`. Text that starts with whitespace leaves a
+ * link ending at `pos` where it was, so a space typed after a link falls outside it; any other
+ * character extends the link, as it extends any mark the caret is at the end of.
+ */
+function typedMarks(marks: readonly MdMark[], pos: number, inserted: string): MdMark[] {
+  const exits = /^\s/.test(inserted);
+  const stays = (m: MdMark) => exits && m.name === "link" && m.from < pos && m.to === pos;
+  const moved = marksAfterTyping(
+    marks.filter((m) => !stays(m)),
+    pos,
+    inserted.length,
+    normalizeMdMarks
+  );
+  return normalizeMdMarks([...moved, ...marks.filter(stays)]);
+}
+
+/**
  * Typing, or a hard break when `hardBreak` is set and the text is one newline. With
  * `shortcuts`, a single character completing a marker at the start of a paragraph changes
  * its kind.
@@ -191,7 +208,7 @@ export function insertText(
   b.text = b.text.slice(0, pos) + inserted + b.text.slice(pos);
   b.atoms = atomsAfterInsert(b.atoms, pos, inserted.length);
   if (b.kind !== "code") {
-    b.marks = marksAfterTyping(b.marks, pos, inserted.length, normalizeMdMarks);
+    b.marks = typedMarks(b.marks, pos, inserted);
     if (hardBreak && inserted === "\n") {
       b.marks.push({ from: pos, to: pos + 1, name: "break" });
     }

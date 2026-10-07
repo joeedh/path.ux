@@ -235,6 +235,30 @@ describe("insertText and deleteRange", () => {
     ]);
   });
 
+  test("a space typed at the end of a link goes after it, and a letter extends it", () => {
+    const doc = parse("see [docs](http://d) now\n");
+    const b = doc.blocks[0];
+    const link = () => b.marks.map((m) => [m.name, m.from, m.to, m.target]);
+    expect(link()).toEqual([["link", 4, 8, "http://d"]]);
+
+    provider.applyEdit(doc, { type: "insertText", at: caret(b.id, 8), text: "s" });
+    expect(link()).toEqual([["link", 4, 9, "http://d"]]);
+
+    const result = applyAndUndo(doc, { type: "insertText", at: caret(b.id, 9), text: " " });
+    expect(b.text).toBe("see docss  now");
+    expect(link()).toEqual([["link", 4, 9, "http://d"]]);
+    expect(result.selection).toEqual(caret(b.id, 10));
+    expect(markdownText(doc)).toBe("see [docss](http://d)  now\n");
+  });
+
+  test("a hard break and a wiki link both stop at the link's end", () => {
+    const doc = parse("[[Page]]\n");
+    const b = doc.blocks[0];
+    provider.applyEdit(doc, { type: "insertText", at: caret(b.id, 4), text: "\t" });
+    provider.applyEdit(doc, markdownOps.insertBreak(caret(b.id, 4)));
+    expect(b.marks.find((m) => m.name === "link")).toMatchObject({ from: 0, to: 4, kind: "wiki" });
+  });
+
   test("typing onto an opaque block changes nothing", () => {
     const doc = parse();
     const result = provider.applyEdit(doc, { type: "insertText", at: caret("b9", 1), text: "x" });
