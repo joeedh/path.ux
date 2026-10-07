@@ -581,7 +581,9 @@ export function checkForTextBox<CTX extends IContextBase = IContextBase>(
     let ok = p instanceof TextBoxBase;
     ok = ok || p.constructor.define?.().modalKeyEvents;
 
-    if (ok) {
+    // A text widget under the pointer blocks the keymaps only while it holds the focus, since it
+    // hears no keys otherwise
+    if (ok && p.matches?.(":focus-within")) {
       return true;
     }
 
