@@ -36573,6 +36573,10 @@ var init_menu = __esm({
       menustyle;
       hasSearchBox;
       textbox;
+      /** The box `startSearch` builds around the search textbox and `dom`, removed by `close`. */
+      _searchBox;
+      /** `dom`'s children as the menu was built, before a search filtered them. */
+      _unfiltered;
       _popup;
       /**
        * Settles once every row whose `canRun` answered asynchronously has been enabled or refused.
@@ -36700,6 +36704,8 @@ var init_menu = __esm({
         }
         this.remove();
         this.dom.remove();
+        this._searchBox?.remove();
+        this._searchBox = void 0;
         if (this._onclose) {
           this._onclose(this);
         }
@@ -36816,7 +36822,14 @@ var init_menu = __esm({
         this.hasSearchBox = true;
         this.started = true;
         menuWrangler.pushMenu(this);
-        const dom2 = document.createElement("div");
+        this._searchBox?.remove();
+        if (this._unfiltered) {
+          for (const item of this.items) item.hidden = false;
+          this.dom.replaceChildren(...this._unfiltered);
+        } else {
+          this._unfiltered = [...this.dom.childNodes];
+        }
+        const dom2 = this._searchBox = document.createElement("div");
         this.dom.setAttribute("class", "menu");
         dom2.setAttribute("class", "menu");
         const sbox = this.textbox = UIBase.createElement("textbox-x");
@@ -38867,7 +38880,7 @@ function checkForTextBox(screen, x, y) {
     }
     let ok3 = p instanceof TextBoxBase;
     ok3 = ok3 || p.constructor.define?.().modalKeyEvents;
-    if (ok3) {
+    if (ok3 && p.matches?.(":focus-within")) {
       return true;
     }
     p = p.parentWidget ? p.parentWidget : p.parentNode;
@@ -88753,7 +88766,8 @@ function markdownText(doc) {
     const front = doc.blocks[0]?.kind === "frontmatter" ? doc.blocks[0] : void 0;
     const blocks = front ? doc.blocks.slice(1) : doc.blocks;
     const body = markdownBodyKey(blocks) === retained.bodyKey ? retained.body : canonicalMarkdownText({ blocks }).replace(/\r?\n/g, retained.eol);
-    return retained.prefix + (front ? front.source + retained.separator : "") + body;
+    const separator = body !== "" && retained.separator === "" ? retained.eol : retained.separator;
+    return retained.prefix + (front ? front.source + separator : "") + body;
   }
   return canonicalMarkdownText(doc);
 }
@@ -90154,6 +90168,17 @@ function shortcutAt(b, caret) {
   }
   return void 0;
 }
+function typedMarks(marks, pos, inserted) {
+  const exits = /^\s/.test(inserted);
+  const stays = (m) => exits && m.name === "link" && m.from < pos && m.to === pos;
+  const moved = marksAfterTyping(
+    marks.filter((m) => !stays(m)),
+    pos,
+    inserted.length,
+    normalizeMdMarks
+  );
+  return normalizeMdMarks([...moved, ...marks.filter(stays)]);
+}
 function insertText(doc, at, text6, hardBreak2, shortcuts) {
   const cut = deleteRange(doc, at);
   const b = blockOf(doc, cut.start.block);
@@ -90169,7 +90194,7 @@ function insertText(doc, at, text6, hardBreak2, shortcuts) {
   b.text = b.text.slice(0, pos) + inserted + b.text.slice(pos);
   b.atoms = atomsAfterInsert(b.atoms, pos, inserted.length);
   if (b.kind !== "code") {
-    b.marks = marksAfterTyping(b.marks, pos, inserted.length, normalizeMdMarks);
+    b.marks = typedMarks(b.marks, pos, inserted);
     if (hardBreak2 && inserted === "\n") {
       b.marks.push({ from: pos, to: pos + 1, name: "break" });
     }
@@ -92289,7 +92314,7 @@ var FormControl = class {
     if (options.commit !== false)
       this.button(
         "Apply answers",
-        "Write the answers typed here into the document, as one undoable edit",
+        options.commitTitle ?? "Write the answers typed here into the document, as one undoable edit",
         () => void this.commit(),
         actions
       );
@@ -93715,6 +93740,8 @@ function markdownSourceDoc(source, options = {}) {
     split.separator = "";
   }
   if (front) front.source = split.frontmatter;
+  if (front && doc.blocks.length === 1)
+    doc.blocks.push(mdBlock(newBlockId(), { kind: "paragraph" }));
   const body = front ? doc.blocks.slice(1) : doc.blocks;
   if (unmappedRepair) split.body = markdownText({ blocks: body });
   const retained = {

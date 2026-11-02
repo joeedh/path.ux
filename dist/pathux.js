@@ -36546,6 +36546,10 @@ var init_menu = __esm({
       menustyle;
       hasSearchBox;
       textbox;
+      /** The box `startSearch` builds around the search textbox and `dom`, removed by `close`. */
+      _searchBox;
+      /** `dom`'s children as the menu was built, before a search filtered them. */
+      _unfiltered;
       _popup;
       /**
        * Settles once every row whose `canRun` answered asynchronously has been enabled or refused.
@@ -36673,6 +36677,8 @@ var init_menu = __esm({
         }
         this.remove();
         this.dom.remove();
+        this._searchBox?.remove();
+        this._searchBox = void 0;
         if (this._onclose) {
           this._onclose(this);
         }
@@ -36789,7 +36795,14 @@ var init_menu = __esm({
         this.hasSearchBox = true;
         this.started = true;
         menuWrangler.pushMenu(this);
-        const dom2 = document.createElement("div");
+        this._searchBox?.remove();
+        if (this._unfiltered) {
+          for (const item of this.items) item.hidden = false;
+          this.dom.replaceChildren(...this._unfiltered);
+        } else {
+          this._unfiltered = [...this.dom.childNodes];
+        }
+        const dom2 = this._searchBox = document.createElement("div");
         this.dom.setAttribute("class", "menu");
         dom2.setAttribute("class", "menu");
         const sbox = this.textbox = UIBase.createElement("textbox-x");
@@ -38741,7 +38754,7 @@ function checkForTextBox(screen, x, y) {
     }
     let ok = p instanceof TextBoxBase;
     ok = ok || p.constructor.define?.().modalKeyEvents;
-    if (ok) {
+    if (ok && p.matches?.(":focus-within")) {
       return true;
     }
     p = p.parentWidget ? p.parentWidget : p.parentNode;
