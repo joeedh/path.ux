@@ -324,8 +324,6 @@ export class Check<CTX extends IContextBase = IContextBase> extends UIBase<CTX, 
     this._label.style.font = defaultText.genCSS();
     this._label.style.color = defaultText.color;
 
-    this._label.style.font = "normal 14px poppins"; // TODO - Jordan - add to settings
-
     super.setCSS();
 
     //force clear background
