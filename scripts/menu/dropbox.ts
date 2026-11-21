@@ -618,8 +618,7 @@ export class DropBox<CTX extends IContextBase = IContextBase> extends OldButton<
       g.fill();
     }
 
-    g.fillStyle = "rgba(50, 50, 50, 0.2)";
-    g.strokeStyle = "rgba(50, 50, 50, 0.8)";
+    g.strokeStyle = this.getDefault("GlyphColor") as string;
     g.beginPath();
 
     const sz = 0.3;

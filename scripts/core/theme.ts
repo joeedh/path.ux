@@ -167,6 +167,8 @@ const theme = {
 
   dropbox: {
     dropTextBG: "rgba(233,233,233, 1)",
+    // the three-line menu glyph drawn at the right end of the box
+    GlyphColor: "rgba(50, 50, 50, 0.8)",
     height    : 25,
     width     : 32,
   },
