@@ -183,6 +183,7 @@ export const theme = {
 
   dropbox: {
     dropTextBG: "rgba(233,233,233, 1)",
+    GlyphColor: "rgba(50, 50, 50, 0.8)",
     height    : 25,
     width     : 32,
   },
