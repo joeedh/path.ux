@@ -86,6 +86,7 @@ simple_docsys did for locally served, Electron and NW.js apps. Unrelated to
 the rich text work; noted here so it is not lost when simple_docsys goes.
 [ ]: property and tool system rewrite, five plans in order; see
 documentation/plans/property-system-tasks.md.
-[ ]: add a Playwright regression test for VectorPanel's first datapath
+[x]: add a Playwright regression test for VectorPanel's first datapath
 delivery: bind a vec3 with decimalPlaces(3) and assert the slider text
-without editing it (see PR #16).
+without editing it (see PR #16). Landed as a happy-dom vitest test,
+tests/vectorpanel_first_delivery.test.ts, since no browser was needed.
