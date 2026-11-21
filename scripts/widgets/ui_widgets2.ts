@@ -427,10 +427,11 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
 
     const name = this.getAttribute("name") ?? meta?.uiname ?? meta?.apiname;
 
+    // keep going after the rebuild: the value and unit params below arrive in this same
+    // delivery, and the watcher won't redeliver an unchanged value
     if (name !== undefined && name !== this.name) {
       this.name = name;
       this.rebuild();
-      return;
     }
 
     const loadNumParam = (k: string, do_rebuild = false) => {
