@@ -63,7 +63,6 @@ function loadNumConstraints(self: any, defaults: any = SliderDefaults, skip = ne
   }
 }
 
-//use .setAttribute("linear") to disable nonlinear sliding
 // Drawing on a canvas that has never been styled forces a style update, and sliders are
 // redrawn many times while they are built, so a connected slider defers its draws until a
 // ResizeObserver reports its canvas laid out. The callback runs after layout, before paint.
@@ -103,21 +102,41 @@ function watchSliderCanvas(slider: NumSlider): void {
   sliderCanvasObserver.observe(slider.dom);
 }
 
-//DOM implementations without layout (happy-dom, jsdom) never call a ResizeObserver back
-function environmentHasLayout(): boolean {
-  return (
-    typeof ResizeObserver !== "undefined" &&
-    !(typeof navigator !== "undefined" && /HappyDOM|jsdom/.test(navigator.userAgent))
-  );
+function unwatchSliderCanvas(slider: NumSlider): void {
+  sliderCanvasObserver?.unobserve(slider.dom);
+  sliderByCanvas.delete(slider.dom);
 }
 
+let layoutProven = false;
+let layoutProbe: ResizeObserver | undefined;
+
+/**
+ * Whether a ResizeObserver here has reported a laid-out element. The first call starts the
+ * probe; DOM implementations without layout never call it back, so it stays false there.
+ */
+function hasProvenLayout(): boolean {
+  if (!layoutProven && layoutProbe === undefined && typeof ResizeObserver !== "undefined") {
+    layoutProbe = new ResizeObserver((entries) => {
+      //the root of an empty page has no height, so the width alone is the proof
+      if (entries.some((entry) => entry.contentRect.width > 0)) {
+        layoutProven = true;
+        layoutProbe?.disconnect();
+      }
+    });
+    layoutProbe.observe(document.documentElement);
+  }
+
+  return layoutProven;
+}
+
+//use .setAttribute("linear") to disable nonlinear sliding
 export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueButtonBase<
   CTX,
   "NumSlider"
 > {
   /**
    * Whether connected sliders defer drawing until their canvas has been laid out.
-   * `undefined` detects it: on, except in DOM implementations without layout.
+   * `undefined` detects it: off until a ResizeObserver has reported a laid-out page.
    */
   static deferDrawsToLayout: boolean | undefined = undefined;
 
@@ -886,6 +905,31 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
     return text;
   }
 
+  _watchLayout(): void {
+    if (!this._watchingLayout) {
+      this._watchingLayout = true;
+      watchSliderCanvas(this as unknown as NumSlider);
+    }
+  }
+
+  connectedCallback(): void {
+    super.connectedCallback();
+
+    //a draw deferred before the slider was removed
+    if (this._drawPending) {
+      this._watchLayout();
+    }
+  }
+
+  disconnectedCallback(): void {
+    this._laidOut = false;
+
+    if (this._watchingLayout) {
+      this._watchingLayout = false;
+      unwatchSliderCanvas(this as unknown as NumSlider);
+    }
+  }
+
   _redraw(fromCSS?: boolean) {
     if (!fromCSS) {
       this.setCSS(undefined, true);
@@ -893,10 +937,7 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
 
     if (!this._laidOut && this.dom.isConnected && this._defersDraws()) {
       this._drawPending = true;
-      if (!this._watchingLayout) {
-        this._watchingLayout = true;
-        watchSliderCanvas(this as unknown as NumSlider);
-      }
+      this._watchLayout();
       return;
     }
     this._drawPending = false;
@@ -1116,7 +1157,7 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
   }
 
   _defersDraws(): boolean {
-    return NumSlider.deferDrawsToLayout ?? environmentHasLayout();
+    return NumSlider.deferDrawsToLayout ?? hasProvenLayout();
   }
 }
 UIBase.internalRegister(NumSlider);
