@@ -120,6 +120,8 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
   declare name: string;
   axes: string;
   sliders: AnySlider[];
+  /** Whether rebuild() has run; a datapath-bound panel waits for its first value. */
+  _built = false;
   hasUniformSlider: boolean;
   __range: [number, number];
   _range: [number, number];
@@ -189,7 +191,11 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
 
   init() {
     super.init();
-    this.rebuild();
+    //a bound panel is rebuilt as soon as its path delivers a name and value, so building
+    //here would be thrown away; updateFromPath builds it instead
+    if (!this.hasAttribute("datapath")) {
+      this.rebuild();
+    }
     this.setCSS();
 
     this.background = this.getDefault("InnerPanelBG");
@@ -216,6 +222,7 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
   }
 
   rebuild() {
+    this._built = true;
     this.clear();
 
     if (this.name) {
@@ -417,11 +424,18 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
     const val = value as (Vector2 & Vector3 & Vector4 & Quat) | undefined;
     if (!info.resolved || val === undefined) {
       this.internalDisabled = true;
+      //show the default sliders, disabled, as an unbound panel would
+      if (!this._built) {
+        this.rebuild();
+      }
       return;
     }
 
     const meta = this.getPathMeta(this.ctx, path);
     if (!isVecProperty(meta)) {
+      if (!this._built) {
+        this.rebuild();
+      }
       return;
     }
 
@@ -431,6 +445,8 @@ export class VectorPanel<CTX extends IContextBase = IContextBase> extends Column
     // delivery, and the watcher won't redeliver an unchanged value
     if (name !== undefined && name !== this.name) {
       this.name = name;
+      this.rebuild();
+    } else if (!this._built) {
       this.rebuild();
     }
 

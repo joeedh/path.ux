@@ -70,3 +70,52 @@ test("the first delivery loads the value and unit params, not just the name", ()
     expect(s.displayUnit).toBe("none");
   }
 });
+
+/** A panel bound before init, as Container.prop builds one. Counts its rebuilds. */
+function makeBoundPanel(ctx: VectorPanel["ctx"]) {
+  const panel = UIBase.createElement("vector-panel-x") as VectorPanel;
+  if (!(panel instanceof VectorPanel)) {
+    throw new Error("vector-panel-x failed to register");
+  }
+  let rebuilds = 0;
+  const rebuild = panel.rebuild.bind(panel);
+  panel.rebuild = () => {
+    rebuilds++;
+    rebuild();
+  };
+  panel.ctx = ctx;
+  panel.setAttribute("datapath", "light.dir");
+  panel.checkInit();
+  return { panel, rebuilds: () => rebuilds };
+}
+
+test("a bound panel builds its sliders once, on the first delivery", () => {
+  const { api, ctx } = buildFixture();
+  const { panel, rebuilds } = makeBoundPanel(ctx);
+  expect(rebuilds()).toBe(0);
+  expect(panel.sliders.length).toBe(0);
+
+  const path = "light.dir";
+  const value = api.getValue(ctx, path) as Vector3;
+  panel.updateFromPath(value, { resolved: true, path, prop: undefined, source: "push" });
+
+  expect(rebuilds()).toBe(1);
+  expect(panel.name).toBe("Direction");
+  expect(panel.sliders.length).toBe(3);
+});
+
+test("a bound panel whose path doesn't resolve shows its default sliders, disabled", () => {
+  const { ctx } = buildFixture();
+  const { panel, rebuilds } = makeBoundPanel(ctx);
+
+  panel.updateFromPath(undefined, {
+    resolved: false,
+    path    : "light.dir",
+    prop    : undefined,
+    source  : "push",
+  });
+
+  expect(rebuilds()).toBe(1);
+  expect(panel.sliders.length).toBe(3);
+  expect(panel.internalDisabled).toBe(true);
+});
