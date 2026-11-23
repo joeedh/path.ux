@@ -90,3 +90,10 @@ documentation/plans/property-system-tasks.md.
 delivery: bind a vec3 with decimalPlaces(3) and assert the slider text
 without editing it (see PR #16). Landed as a happy-dom vitest test,
 tests/vectorpanel_first_delivery.test.ts, since no browser was needed.
+[ ]: handle widgets that replace a hooked method after construction
+(`this.update = ...`, `this.setCSS = ...`, or a class field). It replaces the
+aspect wrapper, so hooks added earlier stop firing and clearAspectCallbacks
+throws on the plain function. At least have clearAspectCallbacks skip methods
+without `__aspect`, and add a class-field test to tests/aspect.test.ts (see the
+review of PR #21). Nothing in path.ux is known to do this or to call
+clearAspectCallbacks.
