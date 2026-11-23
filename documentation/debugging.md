@@ -179,6 +179,11 @@ layout shows up as `getBoundingClientRect` or `offsetHeight` self time under a w
 style writes in between invalidate it each time.
 
 `NumSlider._redraw` used to call `overArrow` on every redraw, and `overArrow` reads the
-slider's bounding rect. It now does so only while the slider is pressed, the only time the
-result is used. A slider is also redrawn about 15 times while its container builds, so a
-read that looks cheap in one redraw is multiplied by that.
+slider's bounding rect. `_redraw` needs that result to pick the arrow colors on hover and
+the pressed state, but every pointer event already passes through `setMpos`, which caches
+it in `_last_overarrow`. `_redraw` now reads that cache. A slider is also redrawn about 15
+times while its container builds, so a read that looks cheap in one redraw is multiplied
+by that.
+
+`tests/numslider_arrows.test.ts` covers both halves: the arrow hover highlight, and that
+`_redraw` doesn't call `getBoundingClientRect`.
