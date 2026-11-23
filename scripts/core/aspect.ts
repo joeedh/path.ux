@@ -13,7 +13,8 @@ export function _setUIBase(uibase: Function): void {
 /**
  * The methods every widget can hook as `widget.method.after(cb)`, the form apps use. Other
  * methods are hooked with `AfterAspect.get(widget, key)`, which installs their wrapper on
- * that widget alone.
+ * that widget alone. They used to have `.after` as well; calling it on them now throws.
+ * `AfterAspect` isn't in the `pathux` barrel, so apps import it from this module.
  */
 export const EagerAspectKeys: readonly string[] = ["update", "setCSS"];
 
