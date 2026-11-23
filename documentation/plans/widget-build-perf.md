@@ -13,7 +13,7 @@ largest measured costs, one stage at a time.
 | 1     | Shared stylesheets instead of per-widget `<style>` | shelved (see below)      |
 | 2     | Draw a widget's canvas only once it is styled      | done: −32%               |
 | 3     | Small fixes, each kept only if it helps            | done: −9% more           |
-| 4     | Sliders built and thrown away by `VectorPanel`     | not started              |
+| 4     | Sliders built and thrown away by `VectorPanel`     | done: −17% more          |
 
 ## Benchmark (stage 0)
 
@@ -34,6 +34,10 @@ the others.
 | master (`770c72fe`)      | 3.49 s  | 3.38 s  |
 | stage 2                  | 2.40 s  | 2.33 s  |
 | stages 2 and 3           | 2.15 s  | 2.10 s  |
+| stages 2, 3 and 4        | 1.80 s  | 1.80 s  |
+
+The last row comes from a later session, measured against a stages 2 and 3 build at 2.25 s
+and 2.13 s. Overall, about 3.4 s to 1.8 s (−47%).
 
 Stage 3 broken down, each on top of stage 2 (a separate session, so the baseline differs
 slightly):
@@ -174,7 +178,28 @@ Each change is kept only if a wall-clock A/B shows it helps.
 
 - During a sync, 210 of the 469 sliders built are never connected. All come from
   `VectorPanel.init` → `rebuild`, inside `numslider-textbox-x` in `widget-with-label-x`.
-- Find out why the first build is discarded, and build once.
+- Cause: `init` builds the panel from its default value, then the first path delivery
+  rebuilds it when the name arrives. Every bound panel was built twice; in the benchmark the
+  70 panels' builds took 915 ms of a 2.2 s sync.
+- Fix: a panel with a `datapath` skips the build in `init`, and `updateFromPath` builds it
+  on the first delivery. A delivery that doesn't resolve still builds the default sliders,
+  disabled, as before.
+- Result, on top of stages 2 and 3 (median of 4 runs, two rounds): 2.25 s and 2.13 s
+  before, 1.80 s and 1.80 s after.
+
+## What's left after stage 4
+
+A timeline trace of one sync after stage 4 (1.9 s wall clock, including the trace's own
+overhead):
+
+- **Style and layout are now small:** 188 style updates took 132 ms (1,270 ms before), of
+  which `updateActiveStyle` was 55 ms (1,020 ms before). Forced style and layout came to
+  133 ms.
+- **The rest is JavaScript:** the synchronous sync itself is about 1.2 s of script, mostly
+  constructing and initializing widgets, with no single dominant cost.
+- Candidates for a later pass: the aspect system's per-widget binding (after its correctness
+  fix), `innerHTML` parsing during widget construction (about 70 ms of parser work), and the
+  dead `<style>` tags (with a saved-UI-state migration).
 
 ## Not in this plan: the aspect system
 
