@@ -462,10 +462,11 @@ pathux.GraphNode {
       // a socket returns undefined, and restoring that through setValue below would corrupt the
       // placeholder's own value, so it is left alone entirely.
       if (defSock.mergeDefaultProp && sock.useDefaultValue) {
-        const value = sock.getValue();
+        // a copy, because copyTo writes into the object a vector or matrix getValue returns
+        const saved = sock.defaultProp.copy();
         const wasSet = sock.defaultProp.wasSet;
         defSock.defaultProp.copyTo(sock.defaultProp);
-        sock.defaultProp.setValue(value);
+        sock.defaultProp.setValue(saved.getValue());
         // setValue above exists only to restore the value copyTo just overwrote with the
         // definition's own default; it must not make an untouched load look user-edited.
         sock.defaultProp.wasSet = wasSet;

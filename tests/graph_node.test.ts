@@ -1,9 +1,21 @@
 import { test, expect, vi } from "vitest";
 import { readJSON, writeJSON } from "../scripts/path-controller/util/nstructjs";
 import type { StructReader } from "../scripts/path-controller/util/nstructjs";
-import { IntProperty, FloatProperty } from "../scripts/path-controller/toolsys/toolprop";
+import {
+  FloatProperty,
+  IntProperty,
+  Mat4Property,
+  QuatProperty,
+  ToolProperty,
+  Vec2Property,
+  Vec3Property,
+  Vec4Property,
+} from "../scripts/path-controller/toolsys/toolprop";
+import { Matrix4 } from "../scripts/path-controller/util/vectormath";
 import { Node, registerNodeType, getNodeClass } from "../scripts/graph/node";
 import type { NodeDef } from "../scripts/graph/node";
+import { NodeSocketBase, registerSocketType } from "../scripts/graph/socket";
+import type { SocketTypeDef } from "../scripts/graph/socket";
 import { FloatSocket, Vec3Socket } from "../scripts/graph/sockets_std";
 
 class MathNode extends Node {
@@ -123,6 +135,70 @@ test("getNodeClass resolves a registered typeName", () => {
   expect(getNodeClass("MathNode")).toBe(MathNode);
   expect(getNodeClass("NotRegistered")).toBeUndefined();
 });
+
+class PropSocket extends NodeSocketBase<"prop"> {
+  static override socketDef(): SocketTypeDef {
+    return { typeName: "PropSocket", type: "prop", uiName: "Prop" };
+  }
+
+  constructor(dir: "in" | "out" = "in", prop: ToolProperty = new Vec3Property()) {
+    super(dir);
+    this.defaultProp = prop;
+  }
+}
+registerSocketType(PropSocket);
+
+class PropNode extends Node {
+  static override graphDef(): NodeDef {
+    const tip = "From the definition";
+    return {
+      typeName: "PropNode",
+      uiName  : "Prop",
+      inputs: {
+        vec2: new PropSocket("in", new Vec2Property([1, 1]).setDescription(tip)),
+        vec3: new PropSocket("in", new Vec3Property([1, 1, 1]).setDescription(tip)),
+        vec4: new PropSocket("in", new Vec4Property([1, 1, 1, 1]).setDescription(tip)),
+        quat: new PropSocket("in", new QuatProperty([0, 0, 0, 1]).setDescription(tip)),
+        mat4: new PropSocket("in", new Mat4Property(new Matrix4()).setDescription(tip)),
+      },
+    };
+  }
+}
+registerNodeType(PropNode);
+
+/** The numbers of a vector, quaternion or matrix. */
+function numbers(value: unknown): number[] {
+  return value instanceof Matrix4 ? value.getAsArray() : [...(value as Iterable<number>)];
+}
+
+const matrix = new Matrix4();
+matrix.translate(2, 3, 4);
+
+test.each<[string, number[] | Matrix4]>([
+  ["vec2", [2, 3]],
+  ["vec3", [2, 3, 4]],
+  ["vec4", [2, 3, 4, 5]],
+  ["quat", [0.5, 0.5, 0.5, 0.5]],
+  ["mat4", matrix],
+])(
+  "a %s input keeps its value on load, and takes its tooltip from the definition",
+  (key, value) => {
+    const n = new PropNode();
+    const untouched = numbers(n.inputs[key].defaultProp.getValue());
+    n.inputs[key].defaultProp.setValue(value);
+    n.inputs[key].defaultProp.description = "From the file";
+    expect(numbers(n.inputs[key].defaultProp.getValue())).not.toEqual(untouched);
+
+    const loaded = readJSON(writeJSON(n), PropNode);
+
+    expect(numbers(loaded.inputs[key].defaultProp.getValue())).toEqual(numbers(value));
+    expect(loaded.inputs[key].defaultProp.wasSet).toBe(true);
+    expect(loaded.inputs[key].defaultProp.description).toBe("From the definition");
+
+    // the definition's own property must not end up holding the loaded value
+    expect(numbers(new PropNode().inputs[key].defaultProp.getValue())).toEqual(untouched);
+  }
+);
 
 test("a node JSON round-trips its props, label, pos and sockets", () => {
   const n = new MathNode();

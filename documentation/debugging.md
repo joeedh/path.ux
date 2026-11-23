@@ -187,3 +187,17 @@ by that.
 
 `tests/numslider_arrows.test.ts` covers both halves: the arrow hover highlight, and that
 `_redraw` doesn't call `getBoundingClientRect`.
+
+## Vector inputs of a node are back at their defaults after a load
+
+- **Symptom.** A node's vec2, vec3, vec4, quat or matrix inputs hold the definition's defaults
+  after a file load, an undo that restores a snapshot, or `copyGraph`. Float inputs and the
+  node's `props` keep their values, and the saved bytes are correct.
+- **Cause.** `Node._loadSockets` read the value, let the definition's `defaultProp` overwrite
+  the property with `copyTo`, and wrote the value back. `getValue` on these properties returns
+  the property's own object, and their `copyTo` loads into that object, so the value written
+  back was already the default.
+- **Fix.** The value is read from a copy of the property.
+- **How to tell.** `prop.getValue() === prop.data` is true for every such property. Code that
+  keeps a value across `copyTo` has to copy the value first. The `keeps its value on load`
+  tests in `tests/graph_node.test.ts` cover each type.
