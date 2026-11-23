@@ -29,12 +29,12 @@ largest measured costs, one stage at a time.
 Each row is the median of 4 runs; each build was measured in two rounds, alternating with
 the others.
 
-| Build                    | Round 1 | Round 2 |
-| ------------------------ | ------- | ------- |
-| master (`770c72fe`)      | 3.49 s  | 3.38 s  |
-| stage 2                  | 2.40 s  | 2.33 s  |
-| stages 2 and 3           | 2.15 s  | 2.10 s  |
-| stages 2, 3 and 4        | 1.80 s  | 1.80 s  |
+| Build               | Round 1 | Round 2 |
+| ------------------- | ------- | ------- |
+| master (`770c72fe`) | 3.49 s  | 3.38 s  |
+| stage 2             | 2.40 s  | 2.33 s  |
+| stages 2 and 3      | 2.15 s  | 2.10 s  |
+| stages 2, 3 and 4   | 1.80 s  | 1.80 s  |
 
 The last row comes from a later session, measured against a stages 2 and 3 build at 2.25 s
 and 2.13 s. Overall, about 3.4 s to 1.8 s (−47%).
@@ -201,23 +201,32 @@ overhead):
   fix), `innerHTML` parsing during widget construction (about 70 ms of parser work), and the
   dead `<style>` tags (with a saved-UI-state migration).
 
-## Not in this plan: the aspect system
+## The aspect system (fixed separately, same branch)
 
-The first pressure test confirmed a correctness bug in `scripts/core/aspect.ts`. Fixing it
-doesn't make builds faster (about 70 ms per sync at most), and every fix changes public API
-behavior, so it needs its own change and the owner's decision.
+The first pressure test confirmed a correctness bug in `scripts/core/aspect.ts`. It was left
+out of the staged plan because it barely affects speed and changes API behavior; the owner
+then asked for it on the same branch.
 
-- `AfterAspect`'s constructor writes `after`, `once` and `remove` onto the shared prototype
-  function, bound to the instance being constructed. Nothing else installs the per-instance
-  wrapper, so `widget.update.after(cb)`, `updateAfter` and `setCSSAfter` attach `cb` to the
-  last-constructed widget of the same class. Confirmed with two isolated `button-x` widgets.
-  Affected callers include `container_prop.ts:346`, `ScreenArea.ts:495`, `ui.ts:608` and
-  `xmlpage.ts:431`.
-- Related: `clearAspectCallbacks` would throw (`.clear` is never assigned), `_method_bound`
-  is never set, and `cls[AspectKeys]` is inherited through static inheritance, so subclasses
-  reuse their base class's key list.
-- A fix must choose between eager per-instance wrappers (a cost on every method call) and
-  supporting only the `updateAfter`/`setCSSAfter`/`setCSSOnce` helpers.
+- **Bug:** `AfterAspect`'s constructor wrote `after`, `once` and `remove` onto the shared
+  prototype function, bound to the instance being constructed. So `widget.update.after(cb)`,
+  `updateAfter` and `setCSSAfter` attached `cb` to the last-constructed widget of the same
+  class. Affected callers included `container_prop.ts:346`, `ScreenArea.ts:495`, `ui.ts:608`
+  and `xmlpage.ts:431`.
+- **Related:** `clearAspectCallbacks` would throw (`.clear` was never assigned),
+  `_method_bound` was never set, and `cls[AspectKeys]` was inherited through static
+  inheritance, so subclasses reused their base class's key list.
+- **Which form callers use:** path.ux itself only calls the `updateAfter`, `setCSSAfter` and
+  `setCSSOnce` helpers. Some apps built on path.ux (pigment-painter, string-art and
+  webgl-app-framework's image editor) also use the raw `widget.update.after(cb)` form, but
+  only on `update` and `setCSS`.
+- **Fix:** every widget gets its own wrappers for `update` and `setCSS` at construction, as
+  own properties, so the raw form keeps working. Any other method is hooked per widget with
+  `AfterAspect.get(widget, key)`. An unhooked wrapper calls the method straight through.
+- **Behavior change:** `widget.someOtherMethod.after(cb)` no longer exists. It used to exist
+  for every public method, but attached to the wrong widget.
+- **Speed:** wrapping two methods per widget instead of every public method per class also
+  helped: 1.57 s and 1.72 s before, 1.47 s and 1.57 s after (median of 4 runs, two rounds;
+  the machine ran faster than in the stage 4 rounds).
 
 ## Pressure tests
 

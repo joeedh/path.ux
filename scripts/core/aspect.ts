@@ -1,14 +1,7 @@
-const exclude = new Set<string | symbol>([
-  "toString",
-  "constructor",
-  "prototype",
-  "__proto__",
-  "toLocaleString",
-  "hasOwnProperty",
-  "shadow",
-]);
-
-type AspectOwner = any & { __aspect_methods?: Set<string>; constructor: Function };
+type AspectOwner = { __aspect_methods?: Set<string>; constructor: Function } & Record<
+  string,
+  unknown
+>;
 
 let UIBase: Function | undefined = undefined;
 
@@ -17,92 +10,38 @@ export function _setUIBase(uibase: Function): void {
   UIBase = uibase;
 }
 
-const AspectKeys = Symbol("aspect-keys");
+/**
+ * The methods every widget can hook as `widget.method.after(cb)`, the form apps use. Other
+ * methods are hooked with `AfterAspect.get(widget, key)`, which installs their wrapper on
+ * that widget alone.
+ */
+export const EagerAspectKeys: readonly string[] = ["update", "setCSS"];
 
-export function initAspectClass(objectIn: any, blacklist = new Set<string | symbol>()): void {
+/**
+ * Installs per-instance hook wrappers for the given methods (by default
+ * {@link EagerAspectKeys}). Each wrapper is an own property of `objectIn`, so
+ * `objectIn.update.after(cb)` attaches `cb` to this object and no other.
+ */
+export function initAspectClass(
+  objectIn: object,
+  blacklist = new Set<string | symbol>(),
+  keys: readonly string[] = EagerAspectKeys
+): void {
   const object = objectIn as AspectOwner;
-  const cls = object.constructor as Function & { [k: symbol]: (string | symbol)[] };
+  object.__aspect_methods ??= new Set<string>();
 
-  if (!cls[AspectKeys]) {
-    cls[AspectKeys] = [];
-    let keys: (string | symbol)[] = [];
-
-    let p = Object.getPrototypeOf(object);
-    while (p) {
-      keys = keys.concat(Reflect.ownKeys(p));
-      p = Object.getPrototypeOf(p);
+  for (const k of keys) {
+    if (!blacklist.has(k) && typeof object[k] === "function") {
+      AfterAspect.get(object, k);
     }
-    const keySet = new Set(keys);
-
-    function validProperty(obj: AspectOwner, key: string | symbol): boolean {
-      const descr = Object.getOwnPropertyDescriptor(obj, key);
-
-      if (descr && (descr.get || descr.set)) {
-        return false;
-      }
-
-      let p: Function | null = obj.constructor;
-      do {
-        if ((p as Function & { prototype?: object }).prototype) {
-          const descr = Object.getOwnPropertyDescriptor(
-            (p as Function & { prototype: object }).prototype,
-            key
-          );
-
-          if (descr && (descr.set || descr.get)) {
-            return false;
-          }
-        }
-
-        p = Object.getPrototypeOf(p);
-      } while (p && p !== Object.getPrototypeOf(p));
-
-      return true;
-    }
-
-    for (const k of keySet) {
-      let v: unknown;
-
-      if (typeof k === "string" && k.startsWith("_")) {
-        continue;
-      }
-
-      if (k === "constructor") {
-        continue;
-      }
-
-      if (blacklist.has(k) || exclude.has(k)) {
-        continue;
-      }
-
-      if (!validProperty(object, k)) {
-        continue;
-      }
-
-      try {
-        v = object[k as string];
-      } catch (error) {
-        continue;
-      }
-
-      if (typeof v !== "function") {
-        continue;
-      }
-
-      cls[AspectKeys].push(k);
-    }
-  }
-
-  object.__aspect_methods = new Set<string>();
-
-  for (const k of cls[AspectKeys]) {
-    AfterAspect.bind(object, k as string);
   }
 }
 
-export function clearAspectCallbacks(obj: AspectOwner): void {
-  for (const key of obj.__aspect_methods!) {
-    (obj[key] as AspectMethod).clear();
+/** Removes every callback hooked on `obj`'s methods, keeping the methods themselves. */
+export function clearAspectCallbacks(obj: object): void {
+  const owner = obj as AspectOwner;
+  for (const key of owner.__aspect_methods ?? []) {
+    (owner[key] as AspectMethod).clear();
   }
 }
 
@@ -115,9 +54,11 @@ interface AspectMethod {
   once: (cb: Function, node?: Node) => unknown;
   remove: (cb: Function) => boolean;
   clear: () => AfterAspect;
+  __aspect: AfterAspect;
 }
 
 /**
+ * A method of one object that runs callbacks after itself.
  *
  * example:
  *
@@ -134,7 +75,6 @@ export class AfterAspect {
   chain2: ChainEntry[];
   root: ChainEntry[];
   _method: AspectMethod;
-  _method_bound: boolean;
 
   constructor(owner: AspectOwner, key: string) {
     this.owner = owner;
@@ -149,16 +89,22 @@ export class AfterAspect {
 
     const method: AspectMethod = (this._method = function (this: unknown, ...args: unknown[]) {
       const chain = this2.chain;
+
+      //nothing hooked: just the method itself
+      if (chain.length === 1) {
+        return chain[0]![0]!.apply(this, args);
+      }
+
       const chain2 = this2.chain2;
 
       chain2.length = chain.length;
 
       for (let i = 0; i < chain.length; i++) {
-        chain2[i] = chain[i];
+        chain2[i] = chain[i]!;
       }
 
       for (let i = 0; i < chain2.length; i++) {
-        const [cb, node, once] = chain2[i];
+        const [cb, node, once] = chain2[i]!;
 
         if (node) {
           let isDead = !node.isConnected;
@@ -169,19 +115,17 @@ export class AfterAspect {
 
           if (isDead) {
             //console.warn("pruning dead AfterAspect callback", node);
-            chain.remove(chain2[i]);
+            chain.remove(chain2[i]!);
             continue;
           }
         }
 
-        if (once && chain.includes(chain2[i])) {
-          chain.remove(chain2[i]);
+        if (once && chain.includes(chain2[i]!)) {
+          chain.remove(chain2[i]!);
         }
 
         if (cb?.apply) {
           method.value = cb.apply(this, args);
-          //method.value = Reflect.apply(cb, this, arguments);
-          //cb.apply(this, args);
         }
       }
 
@@ -191,21 +135,32 @@ export class AfterAspect {
       return ret;
     } as AspectMethod);
 
-    this._method_bound = false;
-
     method.after = this.after.bind(this);
     method.once = this.once.bind(this);
     method.remove = this.remove.bind(this);
+    method.clear = this.clear.bind(this);
+    method.__aspect = this;
 
-    (owner[key] as AspectMethod).after = this.after.bind(this);
-    (owner[key] as AspectMethod).once = this.once.bind(this);
-    (owner[key] as AspectMethod).remove = this.remove.bind(this);
+    //an own property, so hooks on this object never reach another one
+    owner[key] = method;
+    owner.__aspect_methods ??= new Set<string>();
+    owner.__aspect_methods.add(key);
   }
 
-  static bind(owner: AspectOwner, key: string): AfterAspect {
-    owner.__aspect_methods!.add(key);
+  /** The hook wrapper of `owner[key]`, installed on `owner` if it doesn't have one yet. */
+  static get(owner: object, key: string): AfterAspect {
+    const o = owner as AspectOwner;
+    const existing = (o[key] as Partial<AspectMethod> | undefined)?.__aspect;
+    if (existing !== undefined && existing.owner === o) {
+      return existing;
+    }
 
-    return new AfterAspect(owner, key);
+    return new AfterAspect(o, key);
+  }
+
+  /** @deprecated Use {@link AfterAspect.get}, which doesn't wrap a method twice. */
+  static bind(owner: AspectOwner, key: string): AfterAspect {
+    return AfterAspect.get(owner, key);
   }
 
   remove(cb: Function): boolean {
@@ -223,23 +178,14 @@ export class AfterAspect {
     return this.after(cb, node, true);
   }
 
-  _checkbind(): void {
-    if (!this._method_bound) {
-      this.owner[this.key] = this._method;
-    }
-  }
-
   clear(): this {
-    this._checkbind();
-    this.chain = [[this.root[0][0], this.root[0][1]]];
-    this.chain2 = [[this.root[0][0], this.root[0][1]]];
+    this.chain = [[this.root[0]![0], this.root[0]![1]]];
+    this.chain2 = [[this.root[0]![0], this.root[0]![1]]];
 
     return this;
   }
 
   before(cb: Function | undefined, node?: Node, once?: boolean): unknown {
-    this._checkbind();
-
     if (cb === undefined) {
       console.warn("invalid call to .after(); cb was undefined");
       return this.owner;
@@ -249,8 +195,6 @@ export class AfterAspect {
   }
 
   after(cb: Function | undefined, node?: Node, once?: boolean): unknown {
-    this._checkbind();
-
     if (cb === undefined) {
       console.warn("invalid call to .after(); cb was undefined");
       return this.owner;
