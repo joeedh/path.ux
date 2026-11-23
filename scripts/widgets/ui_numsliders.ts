@@ -64,10 +64,68 @@ function loadNumConstraints(self: any, defaults: any = SliderDefaults, skip = ne
 }
 
 //use .setAttribute("linear") to disable nonlinear sliding
+// Drawing on a canvas that has never been styled forces a style update, and sliders are
+// redrawn many times while they are built, so a connected slider defers its draws until a
+// ResizeObserver reports its canvas laid out. The callback runs after layout, before paint.
+const sliderByCanvas = new WeakMap<Element, NumSlider>();
+let sliderCanvasObserver: ResizeObserver | undefined;
+
+function onSliderCanvasResize(entries: ResizeObserverEntry[]): void {
+  for (const entry of entries) {
+    const slider = sliderByCanvas.get(entry.target);
+    if (slider === undefined) {
+      continue;
+    }
+
+    const r = entry.contentRect;
+    if (r.width === 0 || r.height === 0) {
+      //hidden or detached: defer again until it is shown
+      slider._laidOut = false;
+      continue;
+    }
+
+    slider._laidOut = true;
+    if (slider._drawPending) {
+      slider._drawPending = false;
+      try {
+        //setCSS already ran when the draw was deferred; resizing here would loop
+        slider._redraw(true);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  }
+}
+
+function watchSliderCanvas(slider: NumSlider): void {
+  sliderCanvasObserver ??= new ResizeObserver(onSliderCanvasResize);
+  sliderByCanvas.set(slider.dom, slider);
+  sliderCanvasObserver.observe(slider.dom);
+}
+
+//DOM implementations without layout (happy-dom, jsdom) never call a ResizeObserver back
+function environmentHasLayout(): boolean {
+  return (
+    typeof ResizeObserver !== "undefined" &&
+    !(typeof navigator !== "undefined" && /HappyDOM|jsdom/.test(navigator.userAgent))
+  );
+}
+
 export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueButtonBase<
   CTX,
   "NumSlider"
 > {
+  /**
+   * Whether connected sliders defer drawing until their canvas has been laid out.
+   * `undefined` detects it: on, except in DOM implementations without layout.
+   */
+  static deferDrawsToLayout: boolean | undefined = undefined;
+
+  /** The canvas has had a non-zero layout since it was last hidden. */
+  _laidOut = false;
+  /** A redraw was deferred until the canvas is laid out. */
+  _drawPending = false;
+  _watchingLayout = false;
   _last_label: string | undefined;
   mdown: boolean;
   ma: InstanceType<typeof util.MovingAvg> | undefined;
@@ -833,6 +891,16 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
       this.setCSS(undefined, true);
     }
 
+    if (!this._laidOut && this.dom.isConnected && this._defersDraws()) {
+      this._drawPending = true;
+      if (!this._watchingLayout) {
+        this._watchingLayout = true;
+        watchSliderCanvas(this as unknown as NumSlider);
+      }
+      return;
+    }
+    this._drawPending = false;
+
     const g = this.g;
     const canvas = this.dom;
     const disabled = this.disabled;
@@ -1045,6 +1113,10 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
 
   _getArrowSize() {
     return UIBase.getDPI() * 10;
+  }
+
+  _defersDraws(): boolean {
+    return NumSlider.deferDrawsToLayout ?? environmentHasLayout();
   }
 }
 UIBase.internalRegister(NumSlider);
