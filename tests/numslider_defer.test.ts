@@ -27,9 +27,14 @@ class FakeResizeObserver {
   }
 }
 
+/** The fake observer watching `target`, if any. */
+function observerOf(target: Element) {
+  return FakeResizeObserver.instances.find((ro) => ro.observed.has(target));
+}
+
 /** Delivers one resize callback for the given canvases at the given size. */
 function resize(targets: Element[], width: number, height: number) {
-  const ro = FakeResizeObserver.instances[0];
+  const ro = observerOf(targets[0]!);
   expect(ro).toBeDefined();
   const entries = targets.map(
     (target) => ({ target, contentRect: { width, height } }) as unknown as ResizeObserverEntry
@@ -155,12 +160,73 @@ test("one failing deferred draw doesn't stop the others", () => {
   expect(fills).toBeGreaterThan(0);
 });
 
-test("without an override, deferral is off under happy-dom", () => {
+test("a slider removed with a draw pending draws once it is reconnected", () => {
+  const slider = makeSlider();
+  slider._redraw();
+  expect(observerOf(slider.dom)).toBeDefined();
+
+  slider.remove();
+  expect(observerOf(slider.dom)).toBeUndefined();
+  expect(slider._drawPending).toBe(true);
+  expect(fills).toBe(0);
+
+  document.body.appendChild(slider);
+  resize([slider.dom], 200, 20);
+  expect(fills).toBeGreaterThan(0);
+  expect(slider._drawPending).toBe(false);
+});
+
+test("a laid out slider that is removed is unobserved and defers again when reconnected", () => {
+  const slider = makeSlider();
+  slider._redraw();
+  resize([slider.dom], 200, 20);
+
+  slider.remove();
+  expect(observerOf(slider.dom)).toBeUndefined();
+
+  //nothing is pending, so there is nothing to watch for
+  document.body.appendChild(slider);
+  expect(observerOf(slider.dom)).toBeUndefined();
+
+  fills = 0;
+  slider._redraw();
+  expect(fills).toBe(0);
+  resize([slider.dom], 200, 20);
+  expect(fills).toBeGreaterThan(0);
+});
+
+test("a draw while removed clears the pending one", () => {
+  const slider = makeSlider();
+  slider._redraw();
+  slider.remove();
+
+  slider._redraw();
+  expect(fills).toBeGreaterThan(0);
+  expect(slider._drawPending).toBe(false);
+
+  document.body.appendChild(slider);
+  expect(observerOf(slider.dom)).toBeUndefined();
+});
+
+test("without an override, deferral is off until an observer has reported layout", () => {
   NumSlider.deferDrawsToLayout = undefined;
   try {
-    const slider = makeSlider();
-    slider._redraw();
-    expect(fills).toBeGreaterThan(0);
+    const drawsAtOnce = () => {
+      const slider = makeSlider();
+      slider._redraw();
+      return fills > 0;
+    };
+
+    //an environment whose observer never calls back, or reports no layout
+    expect(drawsAtOnce()).toBe(true);
+    expect(drawsAtOnce()).toBe(true);
+    resize([document.documentElement], 0, 0);
+    expect(drawsAtOnce()).toBe(true);
+
+    //an empty page has no height
+    resize([document.documentElement], 1024, 0);
+    expect(drawsAtOnce()).toBe(false);
+    expect(observerOf(document.documentElement)).toBeUndefined();
   } finally {
     NumSlider.deferDrawsToLayout = true;
   }
