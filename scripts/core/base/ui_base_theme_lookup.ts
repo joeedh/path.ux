@@ -237,6 +237,21 @@ export function getStyleClass(elem: AnyUIBase, ignoreOverride = false): string {
   return walkStyleChain(elem.constructor) ?? "base";
 }
 
+//module scope rather than nested in getStyleRecord: with keepNames, a nested function
+//costs a __name call on every getStyleRecord call
+function styleRecordHasKey(obj: unknown, chunks: string[], key: string | undefined): boolean {
+  if (key === undefined || obj === undefined) {
+    return true;
+  }
+  for (let i = 1; i < chunks.length; i++) {
+    obj = (obj as Record<string, unknown>)[chunks[i]!];
+    if (typeof obj !== "object") {
+      return false;
+    }
+  }
+  return key in (obj as object);
+}
+
 /**
  * returns theme record data (including class overrides) associated with
  * styleClass.  If key is not undefined it will be used to only
@@ -256,23 +271,10 @@ export function getStyleRecord(
 
   const chunk1 = chunks[0]!;
 
-  function testKey(obj: any) {
-    if (key === undefined || obj === undefined) {
-      return true;
-    }
-    for (let i = 1; i < chunks.length; i++) {
-      obj = obj[chunks[i]];
-      if (typeof obj !== "object") {
-        return false;
-      }
-    }
-    return key in obj;
-  }
-
   let p: AnyUIBase | undefined = elem;
   while (p) {
     const def1 = p.class_default_overrides[chunk1];
-    if (def1 && testKey(def1)) {
+    if (def1 && styleRecordHasKey(def1, chunks, key)) {
       result = def1 as any;
     }
 
@@ -307,10 +309,10 @@ export function getStyleRecord(
   // check theme override
   if (result === undefined) {
     const th = elem._themeOverride;
-    if (th && typeof th[chunk1] === "object" && testKey(th[chunk1])) {
+    if (th && typeof th[chunk1] === "object" && styleRecordHasKey(th[chunk1], chunks, key)) {
       result = th[chunk1] as any;
     }
-    if (typeof theme[chunk1] === "object" && testKey(theme[chunk1])) {
+    if (typeof theme[chunk1] === "object" && styleRecordHasKey(theme[chunk1], chunks, key)) {
       result = theme[chunk1] as any;
     }
   }

@@ -282,14 +282,9 @@ export function measureText<CTX extends IContextBase = IContextBase>(
     _ensureFont(elem, canvas as HTMLCanvasElement & { font?: string }, g, size);
   }
 
-  const ret = g.measureText(text);
-
-  if (size !== undefined) {
-    //clear custom font for next time
-    g.font = "";
-  }
-
-  return ret;
+  //no "clear" afterward: "" is an invalid font the canvas ignores, yet setting it still
+  //forces a style recalc
+  return g.measureText(text);
 }
 
 export function drawText(
@@ -345,9 +340,4 @@ export function drawText(
 
   g!.fillStyle = color as string;
   g!.fillText(text, x + 0.5, y + 0.5);
-
-  if (size !== undefined) {
-    //clear custom font for next time
-    g!.font = "";
-  }
 }
