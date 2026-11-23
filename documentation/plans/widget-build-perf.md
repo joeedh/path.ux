@@ -168,10 +168,15 @@ root adopts, so Blink parses each distinct sheet once and shares it.
   the frame it first appears in, with clean styles.
 - A canvas that isn't connected draws immediately (cheap).
 - **No layout engine:** happy-dom's `ResizeObserver` exists but never calls back. Deferral is
-  off when the user agent names happy-dom or jsdom. `NumSlider.deferDrawsToLayout` overrides
-  the detection, so tests can turn it on with a fake observer.
-- Known gap: a ready slider moved within one task draws on an unstyled canvas again until
-  the next callback. That is today's cost, not a regression.
+  off until a probe observer on the document element has reported a non-zero width. The first
+  slider draw starts the probe, so sliders drawn before its first callback (at startup) draw
+  immediately. `NumSlider.deferDrawsToLayout` overrides the detection, so tests can turn it on
+  with a fake observer. The first version checked the user agent; changed in review, because
+  an unrecognized headless DOM would never have drawn its sliders.
+- **Removal:** a disconnected slider is unobserved and not considered laid out. A draw still
+  pending then is watched for again when the slider is reconnected.
+- The review changes cost no speed: 1.47, 1.57 and 1.43 s before, 1.54, 1.40 and 1.50 s after
+  (median of 4 runs, three alternating rounds).
 - Start with `NumSlider`. Other canvas widgets follow only if they show up in a trace.
 
 ## Stage 3: small fixes
@@ -241,7 +246,8 @@ then asked for it on the same branch.
   own properties, so the raw form keeps working. Any other method is hooked per widget with
   `AfterAspect.get(widget, key)`. An unhooked wrapper calls the method straight through.
 - **Behavior change:** `widget.someOtherMethod.after(cb)` no longer exists. It used to exist
-  for every public method, but attached to the wrong widget.
+  for every public method, but attached to the wrong widget. `AfterAspect` isn't exported from
+  the `pathux` barrel, so an app imports it from `scripts/core/aspect`.
 - **Speed:** wrapping two methods per widget instead of every public method per class also
   helped: 1.57 s and 1.72 s before, 1.47 s and 1.57 s after (median of 4 runs, two rounds;
   the machine ran faster than in the stage 4 rounds).
