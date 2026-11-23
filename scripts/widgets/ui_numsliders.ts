@@ -839,7 +839,9 @@ export class NumSlider<CTX extends IContextBase = IContextBase> extends ValueBut
 
     /* Fallback on BoxHighlight for backwards compatibility with
      * old themes. */
-    const over = !this._modaldata ? this.overArrow(this.mpos[0], this.mpos[1]) : 0;
+    //over only matters while pressed; overArrow reads layout, so calling it on
+    //every redraw forces a synchronous layout per slider when many are built at once
+    const over = this._pressed && !this._modaldata ? this.overArrow(this.mpos[0], this.mpos[1]) : 0;
 
     let subkey = undefined;
     const pressed = this._pressed && !over;

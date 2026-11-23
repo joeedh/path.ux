@@ -170,3 +170,15 @@ triangle toward the submenu (`scripts/menu/menu_aim.ts`). Set
 `window.DEBUG.drawMenuTri = true` to draw it. A triangle hidden behind the menu means the
 overlay's z-index was lowered: menus float inside popups at `ZIndexes.popup`, not
 `ZIndexes.menu`.
+
+## Building many sliders at once is slow
+
+Profile the build with the DevTools Performance panel or a CDP `Profiler` session. Forced
+layout shows up as `getBoundingClientRect` or `offsetHeight` self time under a widget's
+`_redraw`. A redraw that reads layout costs one synchronous layout per widget, because the
+style writes in between invalidate it each time.
+
+`NumSlider._redraw` used to call `overArrow` on every redraw, and `overArrow` reads the
+slider's bounding rect. It now does so only while the slider is pressed, the only time the
+result is used. A slider is also redrawn about 15 times while its container builds, so a
+read that looks cheap in one redraw is multiplied by that.
