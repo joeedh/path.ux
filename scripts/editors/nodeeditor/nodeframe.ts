@@ -405,12 +405,13 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
       return;
     }
 
-    const m = this.metrics();
+    // metrics() would measure every row's offsetHeight, forcing a layout, just for this
+    const headerHeight = this.getDefault("HeaderHeight") as number;
     const font = this.getDefault("DefaultText") as CSSFont;
     this._header.style.font = font.genCSS();
     this._header.style.color = font.color;
     // The font shorthand resets line-height, so the row centering is re-applied after it.
-    this._header.style.lineHeight = m.headerHeight + "px";
+    this._header.style.lineHeight = headerHeight + "px";
     this._header.style.background = this.getDefault(this._headerKey()) as string;
     this._header.style.borderRadius = `${radius}px ${radius}px 0 0`;
 

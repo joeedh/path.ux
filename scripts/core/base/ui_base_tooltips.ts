@@ -137,14 +137,17 @@ export function updateToolTips(elem: AnyUIBase): void {
   const x = screen.mpos[0];
   const y = screen.mpos[1];
 
-  const rects = elem.getClientRects();
-  const r: DOMRect | undefined = rects ? rects[0] : undefined;
+  //the rect only narrows ok, and reading it forces a layout, so skip it while the timer runs
+  if (ok) {
+    const rects = elem.getClientRects();
+    const r: DOMRect | undefined = rects ? rects[0] : undefined;
 
-  if (!r) {
-    ok = false;
-  } else {
-    ok = ok && x >= r.x && x < r.x + r.width;
-    ok = ok && y >= r.y && y < r.y + r.height;
+    if (!r) {
+      ok = false;
+    } else {
+      ok = ok && x >= r.x && x < r.x + r.width;
+      ok = ok && y >= r.y && y < r.y + r.height;
+    }
   }
 
   ok = ok && !haveModal();
