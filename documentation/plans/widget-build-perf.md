@@ -25,6 +25,9 @@ largest measured costs, one stage at a time.
 - Early runs with a first version of the harness saw some page loads take about 8 s instead
   of 3.4 s, for both builds. This couldn't be reproduced later (five loads in a row all took
   3.2–4.4 s, with identical page state) and may have been load from other processes.
+- The machine's speed differs between sessions, and sometimes doubles the time of every build
+  for a few minutes (1.4 s became 2.9 s, with and without the `isMobile` cache). Only compare
+  builds alternated in one session.
 
 Each row is the median of 4 runs; each build was measured in two rounds, alternating with
 the others.
@@ -37,7 +40,19 @@ the others.
 | stages 2, 3 and 4   | 1.80 s  | 1.80 s  |
 
 The last row comes from a later session, measured against a stages 2 and 3 build at 2.25 s
-and 2.13 s. Overall, about 3.4 s to 1.8 s (−47%).
+and 2.13 s, so it can't be compared with the rows above it.
+
+The whole branch against master, alternated in one session (median of 5 runs per round). "With
+cache" adds the `isMobile` cache, which was later dropped (see stage 3). These builds were
+measured before the branch was rebased; the rebase only moved the submodule pointer.
+
+| Build                          | Round 1 | Round 2 | Round 3 | Round 4 |
+| ------------------------------ | ------- | ------- | ------- | ------- |
+| master (`770c72fe`)            | 3.37 s  | 3.52 s  | 3.17 s  | 3.52 s  |
+| branch, with cache             | 1.45 s  | 1.40 s  | 1.38 s  | 1.42 s  |
+| branch, without cache (merged) | 1.47 s  | 1.50 s  | 1.43 s  | 1.47 s  |
+
+Without the cache, about 3.4 s to 1.5 s (−57%).
 
 Stage 3 broken down, each on top of stage 2 (a separate session, so the baseline differs
 slightly):
@@ -163,8 +178,11 @@ root adopts, so Blink parses each distinct sheet once and shares it.
 
 Each change is kept only if a wall-clock A/B shows it helps.
 
-- **`isMobile`** (in the `path-controller` submodule, which needs its own commit): cache the
-  result and clear the cache on `resize`.
+- **`isMobile`** (in the `path-controller` submodule): tried and dropped in review. Caching
+  the user-agent check and clearing it on `resize` saved 17, 99, 49 and 51 ms in four rounds
+  (about 3.5%). A count of the reads agrees: 120,726 per sync at about 0.26 µs, or 32 ms. But
+  a user agent that changes without a resize then goes unnoticed. The stage 3 figures above
+  include it.
 - **`getStyleRecord`:** hoist `testKey` to module scope, so esbuild's `keepNames` stops
   running `__name` on every call.
 - **`NodeFrame.setCSS`:** read `HeaderHeight` from the theme instead of calling `metrics()`,
@@ -216,9 +234,9 @@ then asked for it on the same branch.
   `_method_bound` was never set, and `cls[AspectKeys]` was inherited through static
   inheritance, so subclasses reused their base class's key list.
 - **Which form callers use:** path.ux itself only calls the `updateAfter`, `setCSSAfter` and
-  `setCSSOnce` helpers. Some apps built on path.ux (pigment-painter, string-art and
-  webgl-app-framework's image editor) also use the raw `widget.update.after(cb)` form, but
-  only on `update` and `setCSS`.
+  `setCSSOnce` helpers. A search of every project in the owner's development folder for
+  `<expr>.<method>.after(`, `.once(` and `.before(` found raw path.ux hooks only on `update`
+  and `setCSS`. Bracket access (`widget["foo"].after`) and built bundles weren't searched.
 - **Fix:** every widget gets its own wrappers for `update` and `setCSS` at construction, as
   own properties, so the raw form keeps working. Any other method is hooked per widget with
   `AfterAspect.get(widget, key)`. An unhooked wrapper calls the method straight through.
