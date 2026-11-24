@@ -25,6 +25,18 @@ export interface FrameMetrics {
   rowHeights?: readonly number[];
 }
 
+/** One socket's row in a frame. */
+interface SocketRow<CTX extends IContextBase> {
+  key: NodePropName;
+
+  /** What the row was built to show. */
+  sig: string;
+  el: HTMLDivElement;
+
+  /** The inline default editor, kept so a rebuild can tear it down. */
+  editor: Container<CTX> | undefined;
+}
+
 /** One frame's destination in a completed move gesture. */
 export interface FrameMove<CTX extends IContextBase = IContextBase> {
   frame: NodeFrame<CTX>;
@@ -276,20 +288,15 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
 
   private _nodePath = "";
   private _header!: HTMLDivElement;
-  private _rows: HTMLDivElement[] = [];
+  /** The socket rows, in socketRow's order. */
+  private _rows: SocketRow<CTX>[] = [];
   private _socketsRoot: HTMLDivElement | undefined;
   private _body: Container<CTX> | undefined;
   private _propsRoot: HTMLDivElement | undefined;
   private _terminalDotMap = new Map<string, TerminalDot<CTX>>();
 
-  /** Which sockets the built rows cover, and which carry an inline editor. */
-  private _rowSig = "";
-
   /** Which props the built body rows cover, and the path they bind under. */
   private _propSig = "";
-
-  /** The inline default editors, kept so a rebuild can tear each one down. */
-  private _editors: Container<CTX>[] = [];
 
   /** What buildExtraUI added to the body, so rebuildExtraUI can take it out again. */
   private _extraNodes: ChildNode[] = [];
@@ -351,7 +358,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
 
     // An inline default editor makes its row taller than the themed height, so
     // the anchors follow what the rows actually measure. happy-dom reports 0.
-    const rowHeights = this._rows.map((row) => row.offsetHeight || uniform);
+    const rowHeights = this._rows.map((row) => row.el.offsetHeight || uniform);
 
     return {
       x              : pos[0],
@@ -453,11 +460,13 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
 
   /** Syncs the header and rebuilds the socket and prop rows whose structure
    *  changed; a value edit reaches its widget through its own path watch, so
-   *  only a rename, a type swap, or a link change costs a rebuild here. */
-  syncContents() {
+   *  only a rename, a type swap, or a link change costs a rebuild here.
+   *  Reports whether any row was rebuilt. */
+  syncContents(): boolean {
     this._syncHeader();
-    this._rebuildSocketRows();
-    this._rebuildPropRows();
+    const sockets = this._rebuildSocketRows();
+    const props = this._rebuildPropRows();
+    return sockets || props;
   }
 
   private _syncHeader() {
@@ -472,25 +481,18 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     const font = this.getDefault("SocketText") as CSSFont;
     const height = this.getDefault("SocketRowHeight") as number;
 
-    for (const row of this._rows) {
-      row.style.font = font.genCSS();
-      row.style.color = font.color;
-      row.style.lineHeight = height + "px";
+    for (const { el } of this._rows) {
+      el.style.font = font.genCSS();
+      el.style.color = font.color;
+      el.style.lineHeight = height + "px";
     }
   }
 
-  /** The sockets the rows cover, and which of them carry an inline editor. */
-  private _rowSignature(inline: ReadonlySet<NodePropName>): string {
-    const parts = [] as string[];
-    for (const key of Object.keys(this.node.outputs)) {
-      const sock = this.node.outputs[key];
-      parts.push(`in:${key}${inline.has(sock.nodePropName) ? "=" : ""}`);
-    }
-    for (const key of Object.keys(this.node.inputs)) {
-      const sock = this.node.inputs[key];
-      parts.push(`out:${key}${inline.has(sock.nodePropName) ? "=" : ""}`);
-    }
-    return parts.join(",");
+  /** What a socket's row shows; a row whose signature changes is built again. */
+  private _rowSignature(key: NodePropName, inline: boolean): string {
+    const sock = nodePropSocket(this.node, key);
+    const name = nodePropTarget(this.node, key)?.uiname;
+    return JSON.stringify([inline, sock?.type, sock?.color, name]);
   }
 
   /** The inputs whose default is editable inline: unshadowed, and unconnected. */
@@ -517,44 +519,49 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     return keys;
   }
 
-  /** Rebuilds the socket rows when the sockets or their inline editors change. */
-  private _rebuildSocketRows() {
+  /** Rebuilds the socket rows that changed, and reports whether any did. */
+  private _rebuildSocketRows(): boolean {
     const root = this._socketsRoot;
     if (root === undefined) {
-      return;
+      return false;
     }
 
     const inline = this._inlineKeys();
-    const sig = this._rowSignature(inline);
-    if (sig === this._rowSig) {
-      return;
-    }
-    this._rowSig = sig;
+    const old = new Map(this._rows.map((row) => [row.key, row]));
+    const rows: SocketRow<CTX>[] = [];
+    let rebuilt = false;
 
-    // Each editor is removed through its own widget, so it tears down its path
-    // watches; dropping the row div around it would not.
-    for (const editor of this._editors) {
-      editor.remove();
-    }
-    this._editors = [];
-    for (const row of this._rows) {
-      row.remove();
-    }
-    this._rows = [];
-
-    for (const key of Object.keys(this.node.outputs)) {
-      const sock = this.node.outputs[key];
-      this._rows.push(this._socketRow(sock.nodePropName, inline.has(sock.nodePropName)));
-    }
-    for (const key of Object.keys(this.node.inputs)) {
-      const sock = this.node.inputs[key];
-      this._rows.push(this._socketRow(sock.nodePropName, inline.has(sock.nodePropName)));
+    for (const socks of [this.node.outputs, this.node.inputs]) {
+      for (const name in socks) {
+        const key = socks[name].nodePropName;
+        const sig = this._rowSignature(key, inline.has(key));
+        const row = old.get(key);
+        if (row?.sig === sig) {
+          old.delete(key);
+          rows.push(row);
+        } else {
+          rows.push({ ...this._socketRow(key, inline.has(key)), key, sig });
+          rebuilt = true;
+        }
+      }
     }
 
-    for (const row of this._rows) {
-      root.appendChild(row);
+    for (const row of old.values()) {
+      row.editor?.remove();
+      row.el.remove();
+      rebuilt = true;
     }
-    this._styleRows();
+
+    this._rows = rows;
+    rows.forEach(({ el }, i) => {
+      if (root.children[i] !== el) {
+        root.insertBefore(el, root.children[i] ?? null);
+      }
+    });
+    if (rebuilt) {
+      this._styleRows();
+    }
+    return rebuilt;
   }
 
   /** The props the body rows cover, and the path they bind under. */
@@ -565,16 +572,17 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     return `${this.nodePath}|${Object.keys(this.node.props).join(",")}`;
   }
 
-  /** Rebuilds the body's prop rows; an input's default belongs to its socket row. */
-  private _rebuildPropRows() {
+  /** Rebuilds the body's prop rows if the props changed, and reports whether it did.
+   *  An input's default belongs to its socket row. */
+  private _rebuildPropRows(): boolean {
     const root = this._propsRoot;
     if (root === undefined) {
-      return;
+      return false;
     }
 
     const sig = this._propSignature();
     if (sig === this._propSig) {
-      return;
+      return false;
     }
     this._propSig = sig;
 
@@ -583,7 +591,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
       (root.firstChild as ChildNode).remove();
     }
     if (this.nodePath === "") {
-      return;
+      return true;
     }
 
     for (const key of Object.keys(this.node.props)) {
@@ -599,6 +607,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
       row.dataset.propKey = key;
       root.appendChild(row);
     }
+    return true;
   }
 
   private _buildUI() {
@@ -669,7 +678,10 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
 
   /** One socket's row: its terminal dot, plus an inline default editor where
    *  the socket has one and its name where it does not. */
-  private _socketRow(socketPropName: NodePropName, inline: boolean): HTMLDivElement {
+  private _socketRow(
+    socketPropName: NodePropName,
+    inline: boolean
+  ): { el: HTMLDivElement; editor: Container<CTX> | undefined } {
     const height = this.getDefault("SocketRowHeight") as number;
     const { type: dir } = GraphNode.decomposePropName(socketPropName);
     if (dir === "prop") {
@@ -684,16 +696,16 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
       "gap: 4px; padding: 0 4px; box-sizing: border-box;";
 
     const dot = this._terminalDot(socketPropName);
-    const label = inline ? this._inlineEditor(socketPropName) : undefined;
+    const editor = inline ? this._inlineEditor(socketPropName) : undefined;
 
     if (dir === "in") {
       row.appendChild(dot.dom);
-      row.appendChild(label ?? this._terminalName(socketPropName, this.node));
+      row.appendChild(editor ?? this._terminalName(socketPropName, this.node));
     } else {
-      row.appendChild(label ?? this._terminalName(socketPropName, this.node));
+      row.appendChild(editor ?? this._terminalName(socketPropName, this.node));
       row.appendChild(dot.dom);
     }
-    return row;
+    return { el: row, editor };
   }
 
   private _terminalName(key: NodePropName, node: GraphNode): HTMLSpanElement {
@@ -713,7 +725,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
   }
 
   /** The editor for a sockets default value, bound through the props datapath. */
-  private _inlineEditor(socketPropName: NodePropName): HTMLElement {
+  private _inlineEditor(socketPropName: NodePropName): Container<CTX> {
     const { name: socketName } = GraphNode.decomposePropName(socketPropName);
 
     const path = `${this.nodePath}.props['${socketPropName}'].value`;
@@ -730,7 +742,6 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     row.style.minWidth = "0";
     row.packflag |= this.inherit_packflag;
     row.dataset.propKey = socketPropName as unknown as string;
-    this._editors.push(row);
     return row;
   }
 

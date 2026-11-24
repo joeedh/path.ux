@@ -283,6 +283,9 @@ built-in. Any other object must implement the `CreateSnapshot` symbol method
 not deep-copy arbitrary objects. Without it, a once-per-path console warning is logged and
 change detection degrades: in-place mutations are invisible to the poll fallback, though
 explicit push notifications (`api.setValue` / `notifyChange`) still fire.
+A new snapshot is compared with the last one, so it must hold everything a watcher of the
+object should react to. An object that was replaced counts as changed even if its snapshot is
+equal.
 
 **Notifying.** `api.setValue` notifies at the choke point, so tool ops, mass-set, and
 undo/redo are covered automatically. For raw model mutation:

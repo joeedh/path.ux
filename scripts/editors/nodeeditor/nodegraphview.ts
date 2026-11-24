@@ -23,7 +23,7 @@ import type { GraphId, SocketDir } from "../../graph/graph_types";
 import { HotKey } from "../../path-controller/util/simple_events";
 import type { CSSFont } from "../../core/cssfont";
 import { NodeFrame, socketAnchor, socketRow } from "./nodeframe";
-import type { FrameMove } from "./nodeframe";
+import type { FrameMetrics, FrameMove } from "./nodeframe";
 import { linkDistance } from "./linkcanvas";
 import type { LinkCanvas, LinkSegment } from "./linkcanvas";
 import { AsyncGateOp, ToolOpDelegate } from "./delegate";
@@ -178,6 +178,8 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
   /** The links on screen, kept for picking; rebuilt with every repaint. */
   private _linkRefs: { ref: LinkRef; seg: LinkSegment }[] = [];
 
+  private _linksPending = false;
+
   /** A selection change a press on an already-selected node put off, in case
    *  the press turns into a drag; a click without a drag applies it. */
   private _pendingSelect: { id: GraphId; shift: boolean } | undefined = undefined;
@@ -313,7 +315,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     this.panzoom.addUnderlay(this.links);
     this.links.checkInit();
 
-    this.panzoom.addEventListener("transform", () => this._redrawLinks());
+    this.panzoom.addEventListener("transform", () => this._redrawLinksSoon());
 
     this.panzoom.addEventListener("pointerdown", (e: PointerEvent) => this._boxDown(e));
 
@@ -775,6 +777,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     }
 
     const level = this.currentLevel();
+    const changed = new Set<NodeFrame<CTX>>();
     for (const node of graph.nodes) {
       const existing = this.frames.get(node.id);
       if (existing !== undefined) {
@@ -785,6 +788,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
           if (this._forwardedSigs.get(existing) !== sig) {
             this._forwardedSigs.set(existing, sig);
             existing.rebuildExtraUI();
+            changed.add(existing);
           }
         }
         continue;
@@ -846,6 +850,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
       frame.inherit_packflag |= this.inherit_packflag;
       frame.checkInit();
       this.frames.set(node.id, frame);
+      changed.add(frame);
     }
 
     for (const nid of [...this.selection]) {
@@ -856,9 +861,12 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
 
     for (const [nid, frame] of this.frames) {
       frame.syncPosition();
-      frame.syncContents();
+      const rebuilt = frame.syncContents();
       frame.setSelected(this.selection.has(nid));
-      frame.flushUpdate();
+      // the screen's own update visits the frames that stayed as they were
+      if (rebuilt || changed.has(frame)) {
+        frame.flushUpdate();
+      }
     }
 
     this._redrawLinks();
@@ -1445,10 +1453,35 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     this._startMenu(menu, local);
   }
 
+  /** Redraws the links in the next animation frame, once for any number of calls. */
+  private _redrawLinksSoon() {
+    if (this._linksPending) {
+      return;
+    }
+    this._linksPending = true;
+    requestAnimationFrame(() => {
+      if (this._linksPending) {
+        this._redrawLinks();
+      }
+    });
+  }
+
   private _redrawLinks() {
+    this._linksPending = false;
     if (this.links === undefined) {
       return;
     }
+
+    // metrics() measures every row, so each frame is asked once
+    const measured = new Map<NodeFrame<CTX>, FrameMetrics>();
+    const metricsOf = (frame: NodeFrame<CTX>) => {
+      let m = measured.get(frame);
+      if (m === undefined) {
+        m = frame.metrics();
+        measured.set(frame, m);
+      }
+      return m;
+    };
 
     const graph = this.currentGraph;
     const links: { ref: LinkRef; seg: LinkSegment }[] = [];
@@ -1482,8 +1515,8 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
               dstNode  : node.id,
               dstSocket: key,
             };
-            const a = tf.project(socketAnchor(srcFrame.metrics(), "out", srcRow));
-            const b = tf.project(socketAnchor(dstFrame.metrics(), "in", dstRow));
+            const a = tf.project(socketAnchor(metricsOf(srcFrame), "out", srcRow));
+            const b = tf.project(socketAnchor(metricsOf(dstFrame), "in", dstRow));
             links.push({
               ref,
               seg: {

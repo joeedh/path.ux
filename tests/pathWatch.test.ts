@@ -25,12 +25,22 @@ class Snapshottable {
   }
 }
 
+/** Its snapshot is an array, which is never equal to the object it describes. */
+class ArraySnapshot {
+  names = ["a"];
+
+  [CreateSnapshot]() {
+    return [...this.names];
+  }
+}
+
 class Brush {
   size = 1.0;
   color = new Vector3([1, 0, 0]);
   name = "default";
   matrix = new Matrix4();
   custom = new Snapshottable(1);
+  list = new ArraySnapshot();
 }
 
 class Root {
@@ -50,6 +60,7 @@ function makeAPI() {
   brushDef.string("name", "name");
   brushDef.struct("matrix", "matrix", "Matrix4", matDef);
   brushDef.struct("custom", "custom", "Snapshottable", customDef);
+  brushDef.struct("list", "list", "ArraySnapshot", api.mapStruct(ArraySnapshot));
 
   const rootDef = api.mapStruct(Root);
   rootDef.struct("brush", "brush", "Brush", brushDef);
@@ -314,6 +325,30 @@ test("snapshot: [CreateSnapshot] objects support in-place mutation detection", (
 
   expect(warn).not.toHaveBeenCalled();
   warn.mockRestore();
+});
+
+test("snapshot: an array snapshot is compared with a new snapshot", () => {
+  const { api, root } = makeAPI();
+  const calls: Call[] = [];
+
+  const w = api.watch(root as any, "brush.list", record(calls));
+  flushPathNotifications();
+  calls.length = 0;
+
+  expect(w.poll()).toBe(false);
+  api.notifyChange("brush.list");
+  flushPathNotifications();
+  expect(calls.length).toBe(0);
+
+  root.brush.list.names.push("b");
+  expect(w.poll()).toBe(true);
+  expect(w.poll()).toBe(false);
+
+  /* an equal object in its place is still a change */
+  root.brush.list = new ArraySnapshot();
+  root.brush.list.names.push("b");
+  expect(w.poll()).toBe(true);
+  expect(w.poll()).toBe(false);
 });
 
 test("snapshot: Matrix4 in-place mutation is detected without a warning", () => {

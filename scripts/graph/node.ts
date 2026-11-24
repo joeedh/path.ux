@@ -115,6 +115,19 @@ function resolveDefValue<T>(v: NodeDefValue<T> | undefined, node: Node): T | und
   return typeof v === "function" ? (v as (node: Node) => T)(node) : v;
 }
 
+/** Ids that tell node objects apart without retaining them. */
+const nodeIdentities = new WeakMap<Node, number>();
+let nextNodeIdentity = 1;
+
+function nodeIdentity(node: Node): number {
+  let id = nodeIdentities.get(node);
+  if (id === undefined) {
+    id = nextNodeIdentity++;
+    nodeIdentities.set(node, id);
+  }
+  return id;
+}
+
 const DEFAULT_NODE_SIZE: [number, number] = [140, 80];
 
 /**
@@ -355,6 +368,24 @@ pathux.GraphNode {
    */
   [CreateSnapshot](): unknown[] {
     return [this.getUIName(), this.getDescription()];
+  }
+
+  /**
+   * What the graph's structural snapshot holds of this node beyond its label, position and
+   * links. The node editor only resyncs when a snapshot changes, so anything a frame's layout
+   * depends on belongs here; prop values don't.
+   */
+  structureSnapshot(): unknown[] {
+    const out: unknown[] = [nodeIdentity(this), this.getUIName()];
+    for (const socks of [this.inputs, this.outputs]) {
+      for (const key in socks) {
+        const sock = socks[key];
+        out.push(key, sock.type, sock.useDefaultValue, sock.defaultIsEditable);
+      }
+      out.push("|");
+    }
+    out.push(...Object.keys(this.props));
+    return out;
   }
 
   /** UI for editing this node's properties. Inert until stage 7 supplies the datapaths. */
