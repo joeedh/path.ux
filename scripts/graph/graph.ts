@@ -122,14 +122,14 @@ pathux.Graph {
   private sortCache: GraphSortResult | undefined = undefined;
 
   /**
-   * Structural snapshot for path watchers: node identity, label, position and edges.
+   * Structural snapshot for path watchers: node identity, label, position, sockets and edges.
    * Prop values are deliberately absent — a prop widget watches its own descendant
    * path, which the same notification wakes.
    */
   [CreateSnapshot](): unknown[] {
     const out: unknown[] = [];
     for (const n of this.nodes) {
-      out.push(n.id, n.def.typeName, n.label ?? "", n.pos[0], n.pos[1]);
+      out.push(n.id, n.def.typeName, n.label ?? "", n.pos[0], n.pos[1], ...n.structureSnapshot());
       for (const key in n.inputs) {
         for (const e of n.inputs[key].edges) {
           out.push(`${String(e.owningNode?.id)}:${e.name}>${String(n.id)}:${key}`);

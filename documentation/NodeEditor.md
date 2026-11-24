@@ -389,6 +389,9 @@ def.subgraph.connect(someNode.outputs.out, innerOut);
 - A definition's subgraph folds the boundary keys and the exposed entries into its
   structural snapshot (`Graph.snapshotExtra`), so an exposure edit wakes a watcher on the
   definition's path the way a node edit does.
+- The view resyncs when the graph's structural snapshot changes. `Node.structureSnapshot()` is a
+  node's part of it: its sockets, their types and whether they can be edited, and for a group
+  what it forwards. A node class whose frame shows something else that can change extends it.
 
 ## The graph DSL
 

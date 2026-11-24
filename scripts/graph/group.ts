@@ -412,6 +412,19 @@ graph.GroupNode {
     this._def = def;
   }
 
+  /** Adds whether the definition resolved, and what the instance forwards. */
+  override structureSnapshot(): unknown[] {
+    const out = [...super.structureSnapshot(), this._def !== undefined];
+    for (const e of this._def?.exposed ?? []) {
+      const target = this.subgraph.nodeIdMap.get(e.nodeId);
+      out.push(e.kind, e.nodeId, e.propKey, e.label, target !== undefined);
+      if (target !== undefined) {
+        out.push(...target.structureSnapshot());
+      }
+    }
+    return out;
+  }
+
   /** The inner client nodes, recursively flattened; the proxy nodes are excluded. */
   override expandNode(): Node[] {
     const out: Node[] = [];

@@ -105,6 +105,11 @@ function makeCtx(graph: Graph) {
   return ctx;
 }
 
+function addTo<T extends Node>(graph: Graph, node: T): T {
+  graph.add(node);
+  return node;
+}
+
 function makeView(ctx: unknown): NodeGraphView {
   const view = UIBase.createElement("nodegraphview-x") as NodeGraphView;
   view.ctx = ctx as IContextBase;
@@ -961,4 +966,75 @@ test("view state round-trips with mixed entries", async () => {
   expect(view.getViewState()).toEqual(nested);
   expect(view.currentLevel().kind).toBe("instance");
   await view.pendingResolve;
+});
+
+test("a view resyncs when the graph's structure changed, and not on every poll", () => {
+  const graph = new Graph();
+  const src = addTo(graph, new ViewSrc());
+  const math = addTo(graph, new ViewMath());
+  const view = makeView(makeCtx(graph));
+  view.setGraph(graph, "graph");
+  view.update();
+  flushPathNotifications();
+
+  const sync = vi.spyOn(view, "syncGraph");
+  const syncs = () => {
+    sync.mockClear();
+    view.update();
+    flushPathNotifications();
+    const n = sync.mock.calls.length;
+    sync.mockClear();
+    view.update();
+    flushPathNotifications();
+    expect(sync).not.toHaveBeenCalled();
+    return n;
+  };
+  expect(syncs()).toBe(0);
+
+  graph.connect(src.outputs.value, math.inputs.a);
+  expect(syncs()).toBe(1);
+
+  math.pos[0] += 10;
+  expect(syncs()).toBe(1);
+
+  math.inputs.a.defaultProp.setValue(3);
+  expect(syncs()).toBe(0);
+
+  math.inputs.b.useDefaultValue = false;
+  expect(syncs()).toBe(1);
+
+  // an undo can put an equal node in the place of the old one
+  graph.remove(src);
+  const again = new ViewSrc();
+  again.id = src.id;
+  graph.add(again);
+  graph.remove(math);
+  expect(syncs()).toBe(1);
+  graph.remove(again);
+  const third = new ViewSrc();
+  third.id = src.id;
+  graph.add(third);
+  expect(syncs()).toBe(1);
+  expect(view.frames.get(third.id)!.node).toBe(third);
+});
+
+test("a link change keeps the rows it doesn't affect", () => {
+  const graph = new Graph();
+  const src = addTo(graph, new ViewSrc());
+  const math = addTo(graph, new ViewMath());
+  const view = makeView(makeCtx(graph));
+  view.setGraph(graph, "graph");
+
+  const frame = view.frames.get(math.id)!;
+  const rows = () =>
+    [...frame.shadow.querySelector(".nodeframe-sockets")!.children] as HTMLElement[];
+  const [out, a, b] = rows();
+  graph.connect(src.outputs.value, math.inputs.a);
+  view.syncGraph();
+  expect(rows()[0]).toBe(out);
+  expect(rows()[1]).not.toBe(a);
+  expect(rows()[2]).toBe(b);
+  expect(rows().length).toBe(3);
+  expect(rows()[1].querySelector(".nodeeditor-prop-row")).toBeNull();
+  expect(rows()[2].querySelector(".nodeeditor-prop-row")).not.toBeNull();
 });
