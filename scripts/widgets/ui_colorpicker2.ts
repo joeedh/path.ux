@@ -18,6 +18,7 @@ import {
   css2color,
   validateCSSColor,
 } from "../core/ui_base";
+import { widgetContext2D } from "../core/base/ui_canvas";
 import { IContextBase } from "../core/context_base";
 
 export { rgb_to_hsv, hsv_to_rgb } from "../path-controller/util/colorutils";
@@ -1419,7 +1420,7 @@ export class ColorPickerButton<CTX extends IContextBase = IContextBase> extends 
     this.labelDom = document.createElement("span");
     this.labelDom.textContent = this._label;
     this.dom = document.createElement("canvas");
-    this.g = this.dom.getContext("2d");
+    this.g = widgetContext2D(this.dom);
 
     this.shadow.appendChild(this.labelDom);
     this.shadow.appendChild(this.dom);
