@@ -97,3 +97,8 @@ throws on the plain function. At least have clearAspectCallbacks skip methods
 without `__aspect`, and add a class-field test to tests/aspect.test.ts (see the
 review of PR #21). Nothing in path.ux is known to do this or to call
 clearAspectCallbacks.
+[ ]: removing a widget only clears its own path watches. The watches of widgets
+inside it stay live until they're collected (`dom.remove` clears one element,
+and `init.ondestroy` doesn't touch watches), so the comments in nodeframe.ts
+that say removing a row's widget tears its watches down are wrong. Found by the
+pressure test in documentation/plans/node-editor-large-graphs.md.

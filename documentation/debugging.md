@@ -201,3 +201,29 @@ by that.
 - **How to tell.** `prop.getValue() === prop.data` is true for every such property. Code that
   keeps a value across `copyTo` has to copy the value first. The `keeps its value on load`
   tests in `tests/graph_node.test.ts` cover each type.
+
+## An idle node editor keeps syncing its graph
+
+- **Symptom.** A node editor with many nodes uses a lot of CPU while nothing happens, and panning
+  and slider drags stutter. `syncGraph` shows up in an idle CPU profile.
+- **Cause.** `DataPathWatcher.check` compared the stored snapshot with the live value. A graph's
+  `[CreateSnapshot]` returns an array, which is never equal to the graph, so every poll called
+  back.
+- **Fix.** A new snapshot is compared with the stored one. An object that was replaced counts as a
+  change too.
+- **How to tell.** Wrap the watcher's callback and count calls while idle. The test "a view resyncs
+  when the graph's structure changed" in `tests/nodeeditor_view.test.ts` does that. A snapshot now
+  has to hold everything its watchers react to. If a view stops following a change, look in
+  `Node.structureSnapshot` first.
+
+## Panning a page with many canvases is slow
+
+- **Symptom.** A trace shows nearly the whole frame in `Layerize`, under
+  `PaintArtifactCompositor::Update`, with little script time.
+- **Cause.** Chromium gives each accelerated 2D canvas a compositor layer, and what overlaps one
+  gets a layer too. 1,000 sliders made 1,890 layers.
+- **Fix.** Small widgets get their context from `widgetContext2D`, which asks for a software
+  canvas.
+- **How to tell.** Count the layers of `LayerTree.layerTreeDidChange`, and ask
+  `LayerTree.compositingReasons` about one of them. Reload the page before each variant: after a
+  while the page can become fast by itself, which makes every variant look like a fix.

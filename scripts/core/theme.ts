@@ -337,6 +337,7 @@ const theme = {
     SocketHitExpand     : 5,
     SocketHighlightColor: "rgba(200, 200, 255, 0.25)",
     SocketErrorColor    : "rgba(255, 75, 0, 1.0)",
+    EditorPlaceholder   : "rgba(127, 127, 127, 0.15)",
   },
 
   nodegraphview: {

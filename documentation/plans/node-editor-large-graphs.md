@@ -1,6 +1,6 @@
 # Node editor: large graphs
 
-Status: revised after the pressure test. Stages 0 and 1 are done.
+Status: done. Stages 0 to 2 are done, and the rest was dropped.
 
 ## Problem
 
@@ -59,23 +59,7 @@ device pixel ratio of 2:
 - The link canvas stays accelerated: there's one of it, and it's redrawn while panning.
 - Check that dragging a slider costs the same as before.
 
-## Results of stages 0 and 1
-
-226 nodes, every editor loaded, a 1279×778 view, two rounds in reversed order. Pan times are
-median / 95th percentile of 80 frames, in ms.
-
-|                         | Before           | After        |
-| ----------------------- | ---------------- | ------------ |
-| Pan at 1                | 127/251, 130/151 | 22/44, 21/44 |
-| Pan at 0.5              | 103/297, 104/124 | 21/48, 21/47 |
-| Pan at 0.35             | 93/292, 99/321   | 20/48, 21/44 |
-| Pan at 0.1              | 66/98, 67/97     | 18/37, 20/40 |
-| `syncGraph` again       | 225, 230         | 14, 14       |
-| after a link change     | 228, 225         | 15, 17       |
-| syncs in 4 idle seconds | 2 (about 480 ms) | 0            |
-| building everything     | 5.9, 5.9 s       | 6.2, 4.2 s   |
-
-## Stage 2: value editors on demand (not started)
+## Stage 2: value editors on demand (done)
 
 A frame is built whole, except that each value editor starts as a placeholder of the same height.
 The view fills the placeholders in, nearest to its center first. A loaded editor stays.
@@ -153,3 +137,40 @@ A fresh agent tried to falsify the first draft, in the code and in the running a
   - 1,000 bare frames take 0.5 s, not 1 s.
   - The height table was keyed too narrowly: every vec3 row has the same height.
 - **Recommended and adopted:** stage 0, opt in, no unloading, no stage 3.
+
+## Results
+
+226 nodes, NW.js, two rounds in reversed order, all in one session. Pan times are median / 95th
+percentile of 80 frames, in ms. The graph's area was enlarged to 1029×719.
+
+|                                         | Before           | Stages 0 and 1 | Stage 2      |
+| --------------------------------------- | ---------------- | -------------- | ------------ |
+| `syncGraph` building the graph          | 5.1, 4.2 s       | 6.1, 5.1 s     | 0.29, 0.17 s |
+| until the first frame is shown          | 5.6, 4.5 s       | 6.5, 5.5 s     | 0.38, 0.24 s |
+| until the editors in the view are there | 5.1, 4.2 s       | 6.1, 5.1 s     | 1.5, 1.4 s   |
+| Pan at 1                                | 141/206, 105/153 | 21/47, 21/43   | 17/31, 17/24 |
+| Pan at 0.5                              | 118/224, 111/201 | 20/51, 22/46   | 18/42, 17/46 |
+| Pan at 0.35                             | 110/135, 93/109  | 17/41, 19/41   | 17/44, 20/45 |
+| Pan at 0.1                              | 72/93, 60/81     | 17/42, 18/40   | 17/38, 17/35 |
+| Pan at 1 with every editor built        | 139/283, 125/157 | 17/38, 20/41   | 23/50, 23/51 |
+| `syncGraph` again                       | about 240        | about 9        | about 10     |
+| after a link change                     | 218, 265         | 9, 15          | 12, 9        |
+| syncs in 4 idle seconds                 | 3, 3             | 0, 0           | 0, 0         |
+
+- **View size:** the draft's 1279×778 view was laid out at that size but clipped by its area, so its
+  numbers are for a smaller visible part. They agree with these.
+- **Missed targets:** the editors in a full-window view of a dense graph take 1.4 s, not 0.5 s (0.8
+  to 0.9 s in a later, faster session). Frames while they load take 30 to 120 ms. With every editor
+  built, panning takes 23 ms in some runs.
+- **Changed while building it:** a pass may take 16 ms instead of 8, because the fixed cost per
+  frame (style, paint) is about 25 ms. The links are only redrawn when a height changed or at the
+  end. Together these halved the loading time.
+- **Added:** frames far outside the view get `visibility: hidden`. Chromium paints them otherwise.
+  It made little difference at 226 nodes. At 1,000 nodes, in separate sessions, panning went from
+  50 to 26 ms at 1, 98 to 37 at 0.5 and 149 to 49 at 0.35.
+- **1,000 nodes:** the first frame takes 0.8 to 1.6 s depending on the session, not the 0.5 s that
+  the pressure test measured for frames without placeholders. Panning fully zoomed out takes 160 to
+  220 ms, because there is nothing to hide. Building frames in batches would help the first, and
+  drawing nodes on a canvas the second. Both are left out until such graphs turn up.
+- Estimated placeholder heights are exact for every implicit node type of the app and for
+  the six shader nodes tried, so nothing moves when their editors arrive.

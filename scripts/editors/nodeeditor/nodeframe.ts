@@ -5,10 +5,14 @@ import { IContextBase } from "../../core/context_base";
 import { t } from "../../core/theme_schema";
 import { CSSFont } from "../../core/cssfont";
 import { Vector2 } from "../../path-controller/util/vectormath";
+import { PropTypes, ToolProperty } from "../../path-controller/toolsys/toolprop";
 import { Node as GraphNode, NodePropName, nodePropSocket, nodePropTarget } from "../../graph/node";
 import { GroupInputNode, GroupNode, GroupOutputNode } from "../../graph/group";
+import { NodeSocketBase } from "../../graph/socket";
 import type { SocketDir } from "../../graph/graph_types";
 import { propEditRow } from "./groupui";
+import { PLACEHOLDER_CLASS } from "./editorloader";
+import type { EditorLoader } from "./editorloader";
 import { getStyleRecord } from "../../core/base/ui_base_theme_lookup";
 
 /** Graph-space geometry a frame's socket anchors derive from. */
@@ -35,6 +39,19 @@ interface SocketRow<CTX extends IContextBase> {
 
   /** The inline default editor, kept so a rebuild can tear it down. */
   editor: Container<CTX> | undefined;
+
+  /** The inline editor that hasn't been built yet. */
+  pending: PendingEditor | undefined;
+}
+
+/** A value editor that hasn't been built yet, and the placeholder that stands for it. */
+interface PendingEditor {
+  /** The kind of editor, for its height. */
+  heightKey: string;
+  placeholder: HTMLDivElement;
+
+  /** Puts the editor in the placeholder's place, and answers the widgets it consists of. */
+  build: () => { el: HTMLElement; widgets: UIBase[] };
 }
 
 /** One frame's destination in a completed move gesture. */
@@ -271,6 +288,12 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
   /** Extra rows the owning view appends beneath the node's own createUI. */
   buildExtraUI?: (frame: NodeFrame<CTX>, body: Container<CTX>) => void;
 
+  /** Set for extra rows that are value editors, which `loader` builds like the others. */
+  extraUI: { heightKey: string; rows: number } | undefined = undefined;
+
+  /** Builds the value editors later, if set before init; otherwise they're built at once. */
+  loader: EditorLoader<CTX> | undefined = undefined;
+
   /** The node's datapath. When set, an unconnected input's socket row carries an
    *  editor for its default and the body renders a row per node prop. */
   get nodePath(): string {
@@ -297,6 +320,15 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
 
   /** Which props the built body rows cover, and the path they bind under. */
   private _propSig = "";
+  private _propsPending: PendingEditor[] = [];
+
+  /** The editors that haven't been built yet, in the order they'll be built. */
+  private _pending: PendingEditor[] = [];
+
+  /** Whether the frame's editors have all been built once; later ones are built at once. */
+  private _loaded = false;
+
+  private _extraPending: PendingEditor | undefined;
 
   /** What buildExtraUI added to the body, so rebuildExtraUI can take it out again. */
   private _extraNodes: ChildNode[] = [];
@@ -322,6 +354,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
         SocketHitExpand     : t.number, // in pixels
         SocketHighlightColor: t.color,
         SocketErrorColor    : t.color,
+        EditorPlaceholder   : t.color,
       },
     };
   }
@@ -540,13 +573,14 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
           old.delete(key);
           rows.push(row);
         } else {
-          rows.push({ ...this._socketRow(key, inline.has(key)), key, sig });
+          rows.push(this._socketRow(key, sig, inline.has(key)));
           rebuilt = true;
         }
       }
     }
 
     for (const row of old.values()) {
+      this._dropPending(row.pending);
       row.editor?.remove();
       row.el.remove();
       rebuilt = true;
@@ -586,6 +620,10 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     }
     this._propSig = sig;
 
+    for (const pending of this._propsPending) {
+      this._dropPending(pending);
+    }
+    this._propsPending = [];
     // Removed one widget at a time so each row tears down its path watches.
     while (root.firstChild !== null) {
       (root.firstChild as ChildNode).remove();
@@ -595,19 +633,158 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     }
 
     for (const key of Object.keys(this.node.props)) {
-      const row = propEditRow(
-        this.ctx,
-        key,
-        `${this.nodePath}.props['${key}'].value`,
-        this.inherit_packflag,
-        this.node.customPropUX.get(key)
+      const build = () => {
+        const row = this._propRow(key);
+        return { el: row, widgets: [row] };
+      };
+      if (this._buildNow()) {
+        root.appendChild(build().el);
+        continue;
+      }
+      const pending = this._addPending(
+        key as unknown as NodePropName,
+        this.node.customPropUX.has(key),
+        build
       );
-      row.parentWidget = this._body!;
-      row.packflag |= this.inherit_packflag;
-      row.dataset.propKey = key;
-      root.appendChild(row);
+      this._propsPending.push(pending);
+      root.appendChild(pending.placeholder);
     }
     return true;
+  }
+
+  /** The editor row for one of the node's props. */
+  private _propRow(key: string): Container<CTX> {
+    const row = propEditRow(
+      this.ctx,
+      key,
+      `${this.nodePath}.props['${key}'].value`,
+      this.inherit_packflag,
+      this.node.customPropUX.get(key)
+    );
+    row.parentWidget = this._body!;
+    row.packflag |= this.inherit_packflag;
+    row.dataset.propKey = key;
+    return row;
+  }
+
+  /** Whether an editor is built right away rather than left to the loader. */
+  private _buildNow(): boolean {
+    return this.loader === undefined || this._loaded;
+  }
+
+  /** Makes the placeholder of a value's editor; the caller puts it in the DOM. */
+  private _addPending(
+    key: NodePropName,
+    custom: boolean,
+    build: PendingEditor["build"]
+  ): PendingEditor {
+    const target = nodePropTarget(this.node, key);
+    const value = target?.getValue() as unknown;
+    const isList = Array.isArray(value) || ArrayBuffer.isView(value);
+    const parts = isList ? (value as ArrayLike<unknown>).length : 1;
+    const heightKey = custom
+      ? `${this.node.def.typeName}|${String(key)}`
+      : `${String(target?.type)}|${String(target?.subtype)}|${parts}`;
+
+    const uniform = this.getDefault("SocketRowHeight") as number;
+    // a checkbox, a label over one slider, or a label over a column of labeled sliders
+    const lines = target?.type === PropTypes.BOOL ? 1.1 : parts === 1 ? 2 : 2 + parts * 1.6;
+
+    const { name } = GraphNode.decomposePropName(key);
+    const label = ToolProperty.makeUIName(name);
+    const pending: PendingEditor = {
+      heightKey,
+      placeholder: this._placeholder(
+        label,
+        parts,
+        this.loader?.height(heightKey) ?? uniform * lines
+      ),
+      build,
+    };
+    pending.placeholder.dataset.propKey = key as unknown as string;
+    this._pending.push(pending);
+    return pending;
+  }
+
+  private _placeholder(label: string, bars: number, height: number): HTMLDivElement {
+    const el = document.createElement("div");
+    const font = getStyleRecord(this, "propLabels", "font", true)?.font as CSSFont | undefined;
+    const fallback = "rgba(127, 127, 127, 0.15)";
+    const bar = this.getDefault("EditorPlaceholder", undefined, fallback) as string;
+    const line = this.getDefault("SocketRowHeight") as number;
+
+    el.className = PLACEHOLDER_CLASS;
+    el.textContent = label;
+    // the bars stand for sliders, which have labels of their own if there are several
+    const first = bars > 1 ? 1.9 : 1;
+    const layers = [...Array(bars).keys()].map(
+      (i) =>
+        `linear-gradient(${bar}, ${bar}) no-repeat 0 ${(first + i * 2) * line}px / 100% ${line * 0.9}px`
+    );
+    el.style.cssText =
+      `flex: 1 1 auto; min-width: 0; box-sizing: border-box; height: ${height}px; ` +
+      `line-height: ${line}px; overflow: hidden; white-space: nowrap; cursor: move; ` +
+      `background: ${layers.join(", ")};`;
+    if (font !== undefined) {
+      el.style.font = font.genCSS();
+      el.style.lineHeight = line + "px";
+      el.style.color = font.color;
+    }
+    return el;
+  }
+
+  private _dropPending(pending: PendingEditor | undefined) {
+    const i = pending !== undefined ? this._pending.indexOf(pending) : -1;
+    if (i >= 0) {
+      this._pending.splice(i, 1);
+    }
+  }
+
+  /** How many value editors haven't been built yet. */
+  get pendingEditors(): number {
+    return this._pending.length;
+  }
+
+  /**
+   * Builds the next editor. Its first update runs too: a bound panel only builds its sliders
+   * then, so neither its cost nor its height is known before.
+   */
+  loadEditor() {
+    const pending = this._pending.shift();
+    if (pending === undefined) {
+      return;
+    }
+    const { el, widgets } = pending.build();
+    if (el !== pending.placeholder) {
+      pending.placeholder.replaceWith(el);
+    }
+    for (const widget of widgets) {
+      widget.flushUpdate();
+    }
+    if (this.loader !== undefined && this.loader.height(pending.heightKey) === undefined) {
+      this.loader.learnHeight(pending.heightKey, el.offsetHeight);
+    }
+    if (this._pending.length === 0) {
+      this._loaded = true;
+    }
+  }
+
+  /** Gives the placeholders of one kind of editor the height it turned out to have. */
+  resizePlaceholders(heightKey: string, height: number) {
+    for (const pending of this._pending) {
+      if (pending.heightKey === heightKey) {
+        pending.placeholder.style.height = height + "px";
+      }
+    }
+  }
+
+  /** The frame's graph-space size, body included. */
+  outerSize(): [number, number] {
+    if (this.offsetHeight > 0) {
+      return [this.offsetWidth, this.offsetHeight];
+    }
+    const r = this.rect();
+    return [r.width, r.height];
   }
 
   private _buildUI() {
@@ -653,9 +830,41 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     if (body === undefined || this.buildExtraUI === undefined) {
       return;
     }
+    const extra = this.extraUI;
+    if (extra === undefined || extra.rows === 0 || this._buildNow()) {
+      this._buildExtraUI();
+      return;
+    }
+
+    const height = extra.rows * 2 * (this.getDefault("SocketRowHeight") as number);
+    const pending: PendingEditor = {
+      heightKey  : extra.heightKey,
+      placeholder: this._placeholder(
+        "",
+        extra.rows,
+        this.loader?.height(extra.heightKey) ?? height
+      ),
+      build: () => {
+        pending.placeholder.remove();
+        this._extraPending = undefined;
+        const nodes = this._buildExtraUI();
+        const widgets = nodes.flatMap((n) => [n, ...n.childNodes]);
+        const el = nodes.find((n) => n instanceof HTMLElement) ?? pending.placeholder;
+        return { el, widgets: widgets.filter((n) => n instanceof UIBase) };
+      },
+    };
+    this._pending.push(pending);
+    this._extraPending = pending;
+    this._extraNodes = [pending.placeholder];
+    body.shadow.appendChild(pending.placeholder);
+  }
+
+  private _buildExtraUI(): ChildNode[] {
+    const body = this._body!;
     const before = new Set(body.shadow.childNodes);
-    this.buildExtraUI(this, body);
+    this.buildExtraUI?.(this, body);
     this._extraNodes = [...body.shadow.childNodes].filter((n) => !before.has(n));
+    return this._extraNodes;
   }
 
   /**
@@ -663,6 +872,8 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
    * when a group instance's forwarded rows change under a frame that stays.
    */
   rebuildExtraUI() {
+    this._dropPending(this._extraPending);
+    this._extraPending = undefined;
     // Removed one at a time so each widget tears down its path watches.
     for (const n of this._extraNodes) {
       n.remove();
@@ -678,34 +889,43 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
 
   /** One socket's row: its terminal dot, plus an inline default editor where
    *  the socket has one and its name where it does not. */
-  private _socketRow(
-    socketPropName: NodePropName,
-    inline: boolean
-  ): { el: HTMLDivElement; editor: Container<CTX> | undefined } {
+  private _socketRow(key: NodePropName, sig: string, inline: boolean): SocketRow<CTX> {
     const height = this.getDefault("SocketRowHeight") as number;
-    const { type: dir } = GraphNode.decomposePropName(socketPropName);
+    const { type: dir } = GraphNode.decomposePropName(key);
     if (dir === "prop") {
       throw new Error("_socketRow called with socket name not nodePropName");
     }
 
-    const row = document.createElement("div");
+    const el = document.createElement("div");
     // Positioned so the terminal dot can anchor to the frame's outer edge.
-    row.style.cssText =
+    el.style.cssText =
       `min-height: ${height}px; display: flex; align-items: center; position: relative; ` +
       `justify-content: ${dir === "in" ? "flex-start" : "flex-end"}; ` +
       "gap: 4px; padding: 0 4px; box-sizing: border-box;";
 
-    const dot = this._terminalDot(socketPropName);
-    const editor = inline ? this._inlineEditor(socketPropName) : undefined;
-
-    if (dir === "in") {
-      row.appendChild(dot.dom);
-      row.appendChild(editor ?? this._terminalName(socketPropName, this.node));
-    } else {
-      row.appendChild(editor ?? this._terminalName(socketPropName, this.node));
-      row.appendChild(dot.dom);
+    const row: SocketRow<CTX> = { key, sig, el, editor: undefined, pending: undefined };
+    if (inline && this._buildNow()) {
+      row.editor = this._inlineEditor(key);
+    } else if (inline) {
+      row.pending = this._addPending(
+        key,
+        nodePropSocket(this.node, key)?.createUI !== NodeSocketBase.prototype.createUI,
+        () => {
+          row.pending = undefined;
+          row.editor = this._inlineEditor(key);
+          return { el: row.editor, widgets: [row.editor] };
+        }
+      );
     }
-    return { el: row, editor };
+
+    const dot = this._terminalDot(key);
+    const label = row.editor ?? row.pending?.placeholder ?? this._terminalName(key, this.node);
+    if (dir === "in") {
+      el.append(dot.dom, label);
+    } else {
+      el.append(label, dot.dom);
+    }
+    return row;
   }
 
   private _terminalName(key: NodePropName, node: GraphNode): HTMLSpanElement {
@@ -768,6 +988,9 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
   /** Whether a press landed on one of the node's own widgets rather than the frame. */
   private _onNodeWidget(e: PointerEvent): boolean {
     for (const node of e.composedPath()) {
+      if (node instanceof HTMLElement && node.classList.contains(PLACEHOLDER_CLASS)) {
+        return false;
+      }
       if (node === this._body) {
         return true;
       }

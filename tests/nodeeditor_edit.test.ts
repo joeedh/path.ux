@@ -10,9 +10,10 @@ import type { MenuTemplate } from "../scripts/menu/menu_types";
 import { createMenu } from "../scripts/menu/menu_ops";
 import type { ExposeRequest } from "../scripts/graph/grouping";
 import { DataAPI, DataStruct } from "../scripts/path-controller/controller/controller";
+import { flushPathNotifications } from "../scripts/path-controller/controller/pathwatch";
 import { ToolStack } from "../scripts/path-controller/toolsys/toolstack";
 import { FloatProperty, StringProperty } from "../scripts/path-controller/toolsys/toolprop";
-import { Node, registerNodeType } from "../scripts/graph/node";
+import { Node, nodePropKeys, registerNodeType } from "../scripts/graph/node";
 import type { NodeDef } from "../scripts/graph/node";
 import { Graph } from "../scripts/graph/graph";
 import { NodeSocketBase, registerSocketType } from "../scripts/graph/socket";
@@ -803,4 +804,63 @@ test("the proxy frames carry the add-socket row inside a definition and nowhere 
   // The frames belong to the level: leaving it rebuilds them without the row.
   await view.exitLevel();
   expect(deepAll(view, ".nodeeditor-add-socket").length).toBe(0);
+});
+
+test("a second view follows the first through the graph's path alone", async () => {
+  const def = new GroupDef();
+  const inner = new EditBias();
+  def.subgraph.add(inner);
+  const host = new Graph();
+  const grp = new GroupNode();
+  grp.ref = "grp";
+  const src = new EditSrc();
+  const math = new EditMath();
+  for (const node of [grp, src, math]) {
+    host.add(node);
+  }
+  host.groupLoader = async (ref) => (ref === "grp" ? def : undefined);
+  await host.resolveGroups();
+
+  const ctx = makeCtx(host);
+  const first = makeView(ctx);
+  const second = makeView(ctx);
+  for (const view of [first, second]) {
+    view.setGraph(host, "graph");
+    view.update();
+  }
+  flushPathNotifications();
+  await settle(ctx);
+  const follow = async () => {
+    await settle(ctx);
+    second.update();
+    flushPathNotifications();
+    await settle(ctx);
+  };
+  const links = () => (second as unknown as { _linkRefs: unknown[] })._linkRefs.length;
+
+  first.linkDrag.begin(first.frames.get(src.id)!, "value", "out");
+  await first.linkDrag.drop(anchorOf(first, first.frames.get(math.id)!, "in", "a"));
+  await follow();
+  expect(links()).toBe(1);
+
+  await ctx.toolstack.undo();
+  await follow();
+  expect(links()).toBe(0);
+
+  await first.addNodeAt("EditSrc", [5, 5]);
+  await follow();
+  expect(second.frames.size).toBe(4);
+
+  // exposing a property inside the definition adds a row to the instance in the other view
+  const rows = () => deepAll(second.frames.get(grp.id)!, ".nodeeditor-prop-row").length;
+  expect(rows()).toBe(0);
+  await first.enterDefinition(grp);
+  await first.exposeProp(inner.id, nodePropKeys(inner)[0]);
+  await first.exitLevel();
+  await follow();
+  expect(rows()).toBe(1);
+
+  for (const [id, frame] of second.frames) {
+    expect(frame.node).toBe(host.nodeIdMap.get(id));
+  }
 });
