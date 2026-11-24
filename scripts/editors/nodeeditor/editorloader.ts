@@ -1,0 +1,207 @@
+import { IContextBase } from "../../core/context_base";
+import { haveModal } from "../../path-controller/util/simple_events";
+import { _themeUpdateKey } from "../../core/base/ui_theme_key";
+import type { NodeFrame } from "./nodeframe";
+import type { NodeGraphView } from "./nodegraphview";
+
+/** The class of the element that stands for a value editor until it's built. */
+export const PLACEHOLDER_CLASS = "nodeeditor-placeholder";
+
+/** Editors aren't built for frames shown smaller than this; nobody could read them. */
+export const EDITOR_MIN_SCALE = 0.35;
+
+/** A frame is near the view if growing the view this many times would touch it. */
+const NEAR = 1.5;
+
+/** The same for hiding a frame, and for showing it again. */
+const HIDE = 2.5;
+const SHOW = 2;
+
+/** How long a pass may go on starting new editors, in milliseconds. */
+const PASS_MS = 16;
+
+/** How long the transform has to stay unchanged before a pass runs, in milliseconds. */
+const SETTLE_MS = 100;
+
+/** A sync that adds or changes at most this many frames builds their editors at once. */
+export const BUILD_NOW_FRAMES = 4;
+
+/**
+ * Builds the value editors of a view's frames a few at a time, in animation frames, for the
+ * frames in and near the view. Until then a frame shows placeholders of the same height. Nothing
+ * is built while a modal tool runs or the view is moving. An editor that was built stays.
+ */
+export class EditorLoader<CTX extends IContextBase = IContextBase> {
+  private view: NodeGraphView<CTX>;
+  private scheduled = false;
+  private lastTransform = -Infinity;
+  private heights = new Map<string, number>();
+  private themeKey = _themeUpdateKey;
+
+  /** Whether placeholders were resized since the links were drawn. */
+  private moved = false;
+
+  /** Whether editors were built since the last "editorsloaded" event. */
+  private built = false;
+
+  constructor(view: NodeGraphView<CTX>) {
+    this.view = view;
+  }
+
+  /** The height an editor of this kind has, if one has been built. */
+  height(key: string): number | undefined {
+    if (this.themeKey !== _themeUpdateKey) {
+      this.themeKey = _themeUpdateKey;
+      this.heights.clear();
+    }
+    return this.heights.get(key);
+  }
+
+  /** Records a built editor's height, and gives it to the placeholders of its kind. */
+  learnHeight(key: string, height: number) {
+    if (height <= 0 || this.height(key) === height) {
+      return;
+    }
+    this.heights.set(key, height);
+    this.moved = true;
+    for (const frame of this.view.frames.values()) {
+      frame.resizePlaceholders(key, height);
+    }
+  }
+
+  /** Asks for a pass once the view has been still for a moment. */
+  transformChanged() {
+    this.lastTransform = performance.now();
+    this.request();
+  }
+
+  /** Asks for a pass in the next animation frame. */
+  request() {
+    if (this.scheduled) {
+      return;
+    }
+    this.scheduled = true;
+    requestAnimationFrame(() => {
+      this.scheduled = false;
+      this.pass();
+    });
+  }
+
+  /** How many of the editors that should be built now are still missing. */
+  pending(): number {
+    return this.wanted().reduce((n, frame) => n + frame.pendingEditors, 0);
+  }
+
+  /**
+   * How far a frame is from the view: its distance from the center in graph units, and how many
+   * times larger the view would have to be to touch it. Undefined if the view has no size.
+   */
+  private distances(): ((frame: NodeFrame<CTX>) => { dist: number; grow: number }) | undefined {
+    const { panzoom } = this.view;
+    const r = panzoom?.getBoundingClientRect();
+    if (r === undefined || r.width === 0 || r.height === 0) {
+      return undefined;
+    }
+    const tf = panzoom.transform;
+    const w = (r.width * 0.5) / tf.scale;
+    const h = (r.height * 0.5) / tf.scale;
+    const center = tf.unproject([r.width * 0.5, r.height * 0.5]);
+    return (frame) => {
+      const pos = frame.previewPos ?? frame.node.pos;
+      const size = frame.outerSize();
+      const dx = Math.max(Math.abs(pos[0] + size[0] * 0.5 - center[0]) - size[0] * 0.5, 0);
+      const dy = Math.max(Math.abs(pos[1] + size[1] * 0.5 - center[1]) - size[1] * 0.5, 0);
+      return { dist: Math.hypot(dx, dy), grow: Math.max(dx / w, dy / h) };
+    };
+  }
+
+  /** The frames in and near the view that lack editors, nearest to its center first. */
+  private wanted(): NodeFrame<CTX>[] {
+    const scale = this.view.panzoom?.transform.scale ?? 0;
+    if (scale < EDITOR_MIN_SCALE) {
+      return [];
+    }
+    const lacking = [...this.view.frames.values()].filter((f) => f.pendingEditors > 0);
+    const distance = lacking.length > 0 ? this.distances() : undefined;
+    if (distance === undefined) {
+      return [];
+    }
+    return lacking
+      .map((frame) => ({ frame, ...distance(frame) }))
+      .filter((f) => f.grow <= NEAR)
+      .sort((a, b) => a.dist - b.dist)
+      .map((f) => f.frame);
+  }
+
+  /**
+   * Hides the frames well outside the view, since Chromium paints them otherwise. They keep their
+   * DOM, layout and state. A frame with the focus or a live drag stays visible.
+   */
+  cull() {
+    const distance = this.distances();
+    if (distance === undefined) {
+      return;
+    }
+    for (const frame of this.view.frames.values()) {
+      const hidden = frame.style.visibility === "hidden";
+      const keep = frame.previewPos !== undefined || frame.shadow.activeElement !== null;
+      const far = !keep && distance(frame).grow > (hidden ? SHOW : HIDE);
+      if (far !== hidden) {
+        frame.style.visibility = far ? "hidden" : "";
+      }
+    }
+  }
+
+  /** Builds wanted editors until the time is up; the tests call it directly. */
+  pass(now = performance.now()) {
+    if (!this.view.isConnected) {
+      return;
+    }
+    const wanted = this.wanted();
+    if (wanted.length > 0 && (haveModal() || now - this.lastTransform < SETTLE_MS)) {
+      this.request();
+      return;
+    }
+
+    const end = performance.now() + PASS_MS;
+    let left = false;
+    let built = false;
+    for (const frame of wanted) {
+      while (frame.pendingEditors > 0) {
+        if (built && performance.now() >= end) {
+          left = true;
+          break;
+        }
+        frame.loadEditor();
+        built = true;
+      }
+      if (left) {
+        break;
+      }
+    }
+
+    this.built ||= built;
+    const done = this.built && !left;
+    // measuring every row for the links forces a layout, so only do it when they could move
+    if (this.moved || done) {
+      this.moved = false;
+      this.view.editorsChanged();
+    }
+    if (left) {
+      this.request();
+    }
+    if (done) {
+      this.built = false;
+      this.view.dispatchEvent(new CustomEvent("editorsloaded"));
+    }
+  }
+
+  /** Builds every editor the frames lack, wherever they are. */
+  loadNow(frames: Iterable<NodeFrame<CTX>>) {
+    for (const frame of frames) {
+      while (frame.pendingEditors > 0) {
+        frame.loadEditor();
+      }
+    }
+  }
+}

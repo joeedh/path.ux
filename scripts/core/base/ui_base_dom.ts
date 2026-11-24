@@ -365,6 +365,7 @@ export function regenTabOrder(elem: AnyUIBase): void {
   const screen = elem.getScreen();
   if (screen !== undefined) {
     screen.needsTabRecalc = true;
+    screen.tabRecalcTime = performance.now() + 200;
   }
 }
 

@@ -23,6 +23,7 @@ import type { GraphId, SocketDir } from "../../graph/graph_types";
 import { HotKey } from "../../path-controller/util/simple_events";
 import type { CSSFont } from "../../core/cssfont";
 import { NodeFrame, socketAnchor, socketRow } from "./nodeframe";
+import { BUILD_NOW_FRAMES, EditorLoader, PLACEHOLDER_CLASS } from "./editorloader";
 import type { FrameMetrics, FrameMove } from "./nodeframe";
 import { linkDistance } from "./linkcanvas";
 import type { LinkCanvas, LinkSegment } from "./linkcanvas";
@@ -113,7 +114,10 @@ export const LINK_PICK_PX = 18;
 /** The prop key of the frame's prop row under a pointer event, if it sits on one. */
 function propRowKey(e: Event): NodePropName | undefined {
   for (const el of e.composedPath()) {
-    if (el instanceof HTMLElement && el.classList.contains("nodeeditor-prop-row")) {
+    if (
+      el instanceof HTMLElement &&
+      (el.classList.contains("nodeeditor-prop-row") || el.classList.contains(PLACEHOLDER_CLASS))
+    ) {
       const key = el.dataset.propKey;
       return key === undefined ? undefined : (key as unknown as NodePropName);
     }
@@ -171,6 +175,17 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
   panzoom!: PanZoomContainer<CTX>;
   links!: LinkCanvas<CTX>;
   linkDrag!: LinkDrag<CTX>;
+
+  /**
+   * Builds the value editors in frames over time, for the nodes in and near the view, rather
+   * than all of them in syncGraph. Until then a frame shows placeholders of the same height.
+   * Set it before adding nodes. `createUI` and `customPropUX` callbacks then run later, or never
+   * for a node the user doesn't look at. Frames far outside the view aren't painted. Fires "editorsloaded" when nothing near the view is
+   * missing anymore.
+   */
+  lazyEditors = false;
+
+  private _loader = new EditorLoader<CTX>(this);
 
   private _crumbs!: HTMLDivElement;
   private _pendingView: NodeGraphViewState | undefined = undefined;
@@ -315,7 +330,12 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     this.panzoom.addUnderlay(this.links);
     this.links.checkInit();
 
-    this.panzoom.addEventListener("transform", () => this._redrawLinksSoon());
+    this.panzoom.addEventListener("transform", () => {
+      this._redrawLinksSoon();
+      if (this.lazyEditors) {
+        this._loader.transformChanged();
+      }
+    });
 
     this.panzoom.addEventListener("pointerdown", (e: PointerEvent) => this._boxDown(e));
 
@@ -787,6 +807,10 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
           const sig = forwardedSignature(node);
           if (this._forwardedSigs.get(existing) !== sig) {
             this._forwardedSigs.set(existing, sig);
+            existing.extraUI = {
+              heightKey: `forwarded|${sig}`,
+              rows     : node.definition?.exposed.length ?? 0,
+            };
             existing.rebuildExtraUI();
             changed.add(existing);
           }
@@ -828,6 +852,10 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
           buildForwardedUI(root, this.ctx, f.node as GroupNode, nodePath, body.inherit_packflag);
         };
         this._forwardedSigs.set(frame, forwardedSignature(node));
+        frame.extraUI = {
+          heightKey: `forwarded|${forwardedSignature(node)}`,
+          rows     : node.definition?.exposed.length ?? 0,
+        };
       } else {
         // A group instance's editable values are its forwarded rows above.
         frame.nodePath = nodePath;
@@ -844,6 +872,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
           });
       }
 
+      frame.loader = this.lazyEditors ? this._loader : undefined;
       frame.parentWidget = this.panzoom;
       this.panzoom.appendChild(frame);
       frame.ctx = this.ctx;
@@ -865,11 +894,42 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
       frame.setSelected(this.selection.has(nid));
       // the screen's own update visits the frames that stayed as they were
       if (rebuilt || changed.has(frame)) {
+        changed.add(frame);
         frame.flushUpdate();
       }
     }
 
+    if (this.lazyEditors) {
+      if (changed.size <= BUILD_NOW_FRAMES) {
+        this._loader.loadNow(changed);
+      }
+      this._loader.request();
+    }
     this._redrawLinks();
+  }
+
+  /** Builds every value editor that's still a placeholder. */
+  flushEditors() {
+    this._loader.loadNow(this.frames.values());
+    this._redrawLinks();
+  }
+
+  /** How many value editors near the view are still placeholders. */
+  editorsPending(): number {
+    return this._loader.pending();
+  }
+
+  /** Called when editors took the place of placeholders, which may have moved the sockets. */
+  editorsChanged() {
+    this._redrawLinks();
+  }
+
+  update() {
+    super.update();
+    // catches a view that became visible or changed size
+    if (this.lazyEditors && this.panzoom !== undefined && this._loader.pending() > 0) {
+      this._loader.request();
+    }
   }
 
   /**
@@ -1470,6 +1530,9 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     this._linksPending = false;
     if (this.links === undefined) {
       return;
+    }
+    if (this.lazyEditors) {
+      this._loader.cull();
     }
 
     // metrics() measures every row, so each frame is asked once

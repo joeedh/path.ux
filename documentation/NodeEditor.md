@@ -544,6 +544,20 @@ view.setGraph(myGraph, "nodegraph");
   carries the measured `rowHeights` and `socketAnchor` accumulates them; a row the array
   does not cover falls back to the uniform height.
 
+For large graphs, set `view.lazyEditors = true` before the view has nodes:
+
+- `syncGraph()` builds every frame, but puts a placeholder of the same height in the place of
+  each value editor. The editors in and near the view are then built a few per animation frame,
+  nearest to the center first. An editor that was built stays.
+- Nothing is built below a scale of 0.35, while the view moves, or while a modal tool runs. A
+  change to at most four frames builds their editors at once.
+- `createUI` and `customPropUX` callbacks run when an editor is built, so a callback for a node
+  nobody looks at never runs. `Node.createUI` isn't affected.
+- The `editorsloaded` event fires when nothing near the view is missing anymore.
+  `flushEditors()` builds everything, and `editorsPending()` counts what's missing near the view.
+- Frames far outside the view get `visibility: hidden`. They keep their layout, so `metrics()`
+  and `getBoundingClientRect()` work.
+
 ### Theming
 
 - The editor reads its colors, fonts and geometry from the theme through `getDefault`, so an
@@ -1074,6 +1088,9 @@ class NodeGraphView<CTX> extends Container<CTX> {
   popTo(depth: number): Promise<void>;
   enterOrExit(): Promise<void>; // Tab
   syncGraph(): void; // reconcile frames after external changes
+  lazyEditors: boolean; // builds value editors over time, near the view; off by default
+  flushEditors(): void; // builds every value editor that's missing
+  editorsPending(): number; // how many are missing near the view
   addNodeAt(typeName: string, at?: readonly [number, number] | Vector2): void; // graph-space; defaults to the view's center
   addGroupAt(ref: string, at?: readonly [number, number] | Vector2): void; // an instance of an existing definition
   groupSelected(): boolean; // Ctrl+G; false when refused

@@ -125,6 +125,10 @@ export class Screen<
   _popup_safe: number;
   testAllKeyMaps: boolean;
   needsTabRecalc: boolean;
+
+  /** When the tab order may be recalculated. Every change puts it off, since it measures every
+   * widget on the screen. */
+  tabRecalcTime = 0;
   _screen_id: number;
   // _popups is not worth typing with <CTX>
   _popups: UIBase[];
@@ -1129,7 +1133,7 @@ export class Screen<
       this.updateSize();
     }
 
-    if (this.needsTabRecalc) {
+    if (this.needsTabRecalc && performance.now() >= this.tabRecalcTime) {
       this.needsTabRecalc = false;
       this.calcTabOrder();
     }
