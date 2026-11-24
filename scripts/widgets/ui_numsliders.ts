@@ -2,6 +2,7 @@ import { UIBase } from "../core/ui_base";
 import { ValueButtonBase } from "./ui_widgets";
 import cconst from "../config/const";
 import * as ui_base from "../core/ui_base";
+import { widgetContext2D } from "../core/base/ui_canvas";
 import * as units from "../core/units";
 import { Vector2, Vector4 } from "../path-controller/util/vectormath";
 import { Container, Label } from "../core/ui";
@@ -1186,7 +1187,7 @@ export class NumSliderSimpleBase<CTX extends IContextBase> extends UIBase<
     this.sliderDisplayExp = undefined;
 
     this.canvas = document.createElement("canvas");
-    this.g = this.canvas.getContext("2d");
+    this.g = widgetContext2D(this.canvas);
 
     this.canvas.style["pointerEvents"] = "none";
 

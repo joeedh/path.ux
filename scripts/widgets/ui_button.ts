@@ -5,6 +5,7 @@ import { keymap } from "../path-controller/util/events";
 import { IContextBase } from "../core/context_base";
 import cconst from "../config/const";
 import { _themeUpdateKey } from "../core/ui_base";
+import { widgetContext2D } from "../core/base/ui_canvas";
 import { t } from "../core/theme_schema";
 import type { CSSFont } from "../core/cssfont";
 
@@ -375,7 +376,7 @@ export class OldButton<
     this._lasth = undefined;
 
     this.dom = document.createElement("canvas");
-    this.g = this.dom.getContext("2d")!;
+    this.g = widgetContext2D(this.dom)!;
 
     this.dom.setAttribute("class", "canvas1");
     this.dom.tabIndex = 0;

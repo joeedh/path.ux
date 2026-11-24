@@ -1,6 +1,7 @@
 "use strict";
 
 import * as ui_base from "../core/ui_base";
+import { widgetContext2D } from "../core/base/ui_canvas";
 import * as events from "../path-controller/util/events";
 import * as toolprop from "../path-controller/toolsys/toolprop";
 import { DataPathError } from "../path-controller/controller/controller";
@@ -153,7 +154,7 @@ export class Check<CTX extends IContextBase = IContextBase> extends UIBase<CTX, 
     span.style.margin = span.style.padding = "0px";
 
     const check = (this.canvas = document.createElement("canvas"));
-    this.g = check.getContext("2d")!;
+    this.g = widgetContext2D(check)!;
 
     check.setAttribute("id", String(check.id));
     check.setAttribute("name", String(check.id));
