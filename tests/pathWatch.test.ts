@@ -349,6 +349,12 @@ test("snapshot: an array snapshot is compared with a new snapshot", () => {
   root.brush.list.names.push("b");
   expect(w.poll()).toBe(true);
   expect(w.poll()).toBe(false);
+
+  /* and so is one that took the place of an object that's been collected */
+  const source = { deref: () => undefined };
+  (w as unknown as { snapshotSource: typeof source }).snapshotSource = source;
+  expect(w.poll()).toBe(true);
+  expect(w.poll()).toBe(false);
 });
 
 test("snapshot: Matrix4 in-place mutation is detected without a warning", () => {

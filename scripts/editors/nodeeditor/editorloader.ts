@@ -41,6 +41,9 @@ export class EditorLoader<CTX extends IContextBase = IContextBase> {
   /** Whether placeholders were resized since the links were drawn. */
   private moved = false;
 
+  /** The view's size when its frames were last looked at. */
+  private viewSize = [0, 0];
+
   /** Whether editors were built since the last "editorsloaded" event. */
   private built = false;
 
@@ -75,6 +78,14 @@ export class EditorLoader<CTX extends IContextBase = IContextBase> {
     this.request();
   }
 
+  /** Asks for a pass if the view's size changed since the last one, as when it's shown. */
+  sizeChanged() {
+    const r = this.view.panzoom.getBoundingClientRect();
+    if (r.width !== this.viewSize[0] || r.height !== this.viewSize[1]) {
+      this.request();
+    }
+  }
+
   /** Asks for a pass in the next animation frame. */
   request() {
     if (this.scheduled) {
@@ -85,6 +96,16 @@ export class EditorLoader<CTX extends IContextBase = IContextBase> {
       this.scheduled = false;
       this.pass();
     });
+  }
+
+  /** Whether any frame lacks editors, near the view or not; cheap, unlike wanted(). */
+  private anyPending(): boolean {
+    for (const frame of this.view.frames.values()) {
+      if (frame.pendingEditors > 0) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /** How many of the editors that should be built now are still missing. */
@@ -157,12 +178,14 @@ export class EditorLoader<CTX extends IContextBase = IContextBase> {
     if (!this.view.isConnected) {
       return;
     }
-    const wanted = this.wanted();
-    if (wanted.length > 0 && (haveModal() || now - this.lastTransform < SETTLE_MS)) {
+    const { width, height } = this.view.panzoom.getBoundingClientRect();
+    this.viewSize = [width, height];
+    if (this.anyPending() && (haveModal() || now - this.lastTransform < SETTLE_MS)) {
       this.request();
       return;
     }
 
+    const wanted = this.wanted();
     const end = performance.now() + PASS_MS;
     let left = false;
     let built = false;
