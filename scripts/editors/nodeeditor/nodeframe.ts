@@ -54,6 +54,11 @@ interface PendingEditor {
   build: () => { el: HTMLElement; widgets: UIBase[] };
 }
 
+/** The widgets among these nodes and below them that aren't inside another widget. */
+function topWidgets(nodes: Iterable<ChildNode>): UIBase[] {
+  return [...nodes].flatMap((n) => (n instanceof UIBase ? [n] : topWidgets(n.childNodes)));
+}
+
 /** One frame's destination in a completed move gesture. */
 export interface FrameMove<CTX extends IContextBase = IContextBase> {
   frame: NodeFrame<CTX>;
@@ -703,6 +708,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     };
     pending.placeholder.dataset.propKey = key as unknown as string;
     this._pending.push(pending);
+    this.loader?.request();
     return pending;
   }
 
@@ -848,12 +854,12 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
         pending.placeholder.remove();
         this._extraPending = undefined;
         const nodes = this._buildExtraUI();
-        const widgets = nodes.flatMap((n) => [n, ...n.childNodes]);
         const el = nodes.find((n) => n instanceof HTMLElement) ?? pending.placeholder;
-        return { el, widgets: widgets.filter((n) => n instanceof UIBase) };
+        return { el, widgets: topWidgets(nodes) };
       },
     };
     this._pending.push(pending);
+    this.loader?.request();
     this._extraPending = pending;
     this._extraNodes = [pending.placeholder];
     body.shadow.appendChild(pending.placeholder);

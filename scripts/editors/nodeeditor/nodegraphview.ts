@@ -180,8 +180,8 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
    * Builds the value editors in frames over time, for the nodes in and near the view, rather
    * than all of them in syncGraph. Until then a frame shows placeholders of the same height.
    * Set it before adding nodes. `createUI` and `customPropUX` callbacks then run later, or never
-   * for a node the user doesn't look at. Frames far outside the view aren't painted. Fires "editorsloaded" when nothing near the view is
-   * missing anymore.
+   * for a node the user doesn't look at. Frames far outside the view aren't painted. The
+   * "editorsloaded" event fires when nothing near the view is missing anymore.
    */
   lazyEditors = false;
 
@@ -926,9 +926,8 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
 
   update() {
     super.update();
-    // catches a view that became visible or changed size
-    if (this.lazyEditors && this.panzoom !== undefined && this._loader.pending() > 0) {
-      this._loader.request();
+    if (this.lazyEditors && this.panzoom !== undefined) {
+      this._loader.sizeChanged();
     }
   }
 

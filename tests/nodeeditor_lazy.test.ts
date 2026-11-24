@@ -342,6 +342,58 @@ test("right-click on a placeholder inside a definition offers the same menu as o
   view.remove();
 });
 
+test("extra UI built late is updated at any depth", () => {
+  const { nodes, view } = makeView(6);
+  const frame = view.frames.get(nodes[0].id)!;
+  const widget = UIBase.createElement("container-x") as Container;
+  const flushed = vi.spyOn(widget, "flushUpdate");
+  frame.buildExtraUI = (_f, body) => {
+    let el: HTMLElement = document.createElement("div");
+    body.shadow.appendChild(el);
+    for (let i = 0; i < 3; i++) {
+      el = el.appendChild(document.createElement("div"));
+    }
+    el.appendChild(widget);
+  };
+  frame.extraUI = { heightKey: "extra", rows: 1 };
+  frame.rebuildExtraUI();
+  expect(widget.isConnected).toBe(false);
+
+  view.flushEditors();
+  expect(widget.isConnected).toBe(true);
+  expect(flushed).toHaveBeenCalledTimes(1);
+  view.remove();
+});
+
+test("an update and a pass on a moving view don't measure the frames", () => {
+  const { nodes, view, loader } = makeView(6);
+  view.panzoom.setTransform(1, [0, 0]);
+  const request = vi.fn();
+  loader.request = request;
+  loader.transformChanged();
+  loader.pass();
+  expect(view.editorsPending()).toBe(ALL);
+
+  const measured = vi.spyOn(view.frames.get(nodes[0].id)!, "outerSize");
+  // the first update polls the view's watches for the first time
+  view.update();
+  request.mockClear();
+  measured.mockClear();
+  view.update();
+  expect(request).not.toHaveBeenCalled();
+  loader.transformChanged();
+  loader.pass();
+  expect(request).toHaveBeenCalled();
+  expect(measured).not.toHaveBeenCalled();
+
+  // a view that's shown or resized is looked at again
+  request.mockClear();
+  view.panzoom.getBoundingClientRect = () => new DOMRect(0, 0, 900, 600);
+  view.update();
+  expect(request).toHaveBeenCalledTimes(1);
+  view.remove();
+});
+
 test("without lazyEditors every editor is built by syncGraph", () => {
   const { graph, view, ctx } = makeView(6);
   view.remove();
