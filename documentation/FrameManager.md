@@ -425,7 +425,8 @@ is a thin delegate into that module.
 - `screen.pickElement(x, y, args)` — hit-test the widget tree, popups
   first; used throughout for event routing.
 - `screen.calcTabOrder()` — recompute keyboard tab order (queued via
-  `screen.needsTabRecalc`).
+  `screen.needsTabRecalc`). `regenTabOrder()` puts it off until 200 ms after the last change, and
+  1 s after the first at most. Call `calcTabOrder()` yourself to have it at once.
 
 ## Debugging aids
 

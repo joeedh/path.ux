@@ -23,6 +23,9 @@ const PASS_MS = 16;
 /** A pass runs once the transform has been unchanged for this many milliseconds. */
 const SETTLE_MS = 100;
 
+/** A pass that has to wait for that, or for a modal tool, is tried again after this long. */
+const RETRY_MS = 100;
+
 /** A sync that adds or changes at most this many frames builds their editors at once. */
 export const BUILD_NOW_FRAMES = 4;
 
@@ -34,17 +37,15 @@ export const BUILD_NOW_FRAMES = 4;
 export class EditorLoader<CTX extends IContextBase = IContextBase> {
   private view: NodeGraphView<CTX>;
   private scheduled = false;
+  private retryTimer: ReturnType<typeof setTimeout> | undefined;
   private lastTransform = -Infinity;
   private heights = new Map<string, number>();
   private themeKey = _themeUpdateKey;
 
-  /** Set if placeholders were resized since the links were drawn. */
+  /** Records whether placeholders were resized since the links were drawn. */
   private moved = false;
 
-  /** The view had this size when its frames were last looked at. */
-  private viewSize = [0, 0];
-
-  /** Set if editors were built since the last "editorsloaded" event. */
+  /** Records whether editors were built since the last "editorsloaded" event. */
   private built = false;
 
   constructor(view: NodeGraphView<CTX>) {
@@ -78,11 +79,15 @@ export class EditorLoader<CTX extends IContextBase = IContextBase> {
     this.request();
   }
 
-  /** Asks for a pass if the view's size changed since the last one, as when it's shown. */
-  sizeChanged() {
-    const r = this.view.panzoom.getBoundingClientRect();
-    if (r.width !== this.viewSize[0] || r.height !== this.viewSize[1]) {
-      this.request();
+  /** Asks for a pass after a while. A timer, not an animation frame, waits out a modal tool. */
+  private retryLater() {
+    if (this.retryTimer === undefined) {
+      this.retryTimer = setTimeout(() => {
+        this.retryTimer = undefined;
+        if (this.view.isConnected) {
+          this.request();
+        }
+      }, RETRY_MS);
     }
   }
 
@@ -177,14 +182,14 @@ export class EditorLoader<CTX extends IContextBase = IContextBase> {
   /** Builds wanted editors until the time is up; the tests call it directly. */
   pass(now = performance.now()) {
     if (!this.view.isConnected) {
-      // so that it's looked at again when it's back, even at the same size
-      this.viewSize = [0, 0];
       return;
     }
-    const { width, height } = this.view.panzoom.getBoundingClientRect();
-    this.viewSize = [width, height];
+    if (this.view.panzoom.transform.scale < EDITOR_MIN_SCALE) {
+      // a change of the transform asks for a pass
+      return;
+    }
     if (this.anyPending() && (haveModal() || now - this.lastTransform < SETTLE_MS)) {
-      this.request();
+      this.retryLater();
       return;
     }
 

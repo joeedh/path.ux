@@ -1,6 +1,9 @@
 import { test, expect, beforeAll, vi } from "vitest";
 import { UIBase, iconmanager } from "../scripts/core/ui_base";
 import { regenTabOrder } from "../scripts/core/base/ui_base_dom";
+import { widgetContext2D } from "../scripts/core/base/ui_canvas";
+import cconst from "../scripts/config/const";
+import { Screen } from "../scripts/screen/FrameManager";
 import type { Container } from "../scripts/core/ui";
 import type { IContextBase } from "../scripts/core/context_base";
 import { DataAPI, DataStruct } from "../scripts/path-controller/controller/controller";
@@ -384,70 +387,147 @@ test("extra UI built late takes its placeholder's place", () => {
 });
 
 test("changes put the tab order off, but not forever", () => {
-  const screen = { needsTabRecalc: false, tabRecalcTime: 0, tabRecalcLimit: 0 };
+  const calcTabOrder = vi.fn();
+  const screen = {
+    needsTabRecalc: false,
+    tabRecalcTime : 0,
+    tabRecalcLimit: 0,
+    childNodes    : [],
+    sareas        : [],
+    _do_updateSize: false,
+    update_intern : () => [][Symbol.iterator](),
+    calcTabOrder,
+  };
+  const update = () => Screen.prototype.update.call(screen as unknown as Screen);
   const elem = { getScreen: () => screen } as unknown as Parameters<typeof regenTabOrder>[0];
   const now = vi.spyOn(performance, "now");
+
   for (let t = 5000; t < 5900; t += 100) {
     now.mockReturnValue(t);
     regenTabOrder(elem);
     expect(screen.tabRecalcTime).toBe(Math.min(t + 200, 6000));
+    update();
   }
+  expect(calcTabOrder).not.toHaveBeenCalled();
+  now.mockReturnValue(6000);
+  update();
+  update();
+  expect(calcTabOrder).toHaveBeenCalledTimes(1);
 
-  screen.needsTabRecalc = false;
   now.mockReturnValue(7000);
   regenTabOrder(elem);
   expect(screen.tabRecalcTime).toBe(7200);
+  now.mockReturnValue(7200);
+  update();
+  expect(calcTabOrder).toHaveBeenCalledTimes(2);
+
+  // a direct request isn't put off, and leaves no limit behind for later ones
+  screen.needsTabRecalc = true;
+  update();
+  expect(calcTabOrder).toHaveBeenCalledTimes(3);
+  now.mockReturnValue(9000);
+  regenTabOrder(elem);
+  expect(screen.tabRecalcTime).toBe(9200);
   now.mockRestore();
+});
+
+test("small widgets draw on software canvases unless the app turns that off", () => {
+  const getContext = vi.fn();
+  const canvas = { getContext } as unknown as HTMLCanvasElement;
+  for (const on of [true, false]) {
+    cconst.softwareCanvases = on;
+    widgetContext2D(canvas);
+    expect(getContext).toHaveBeenLastCalledWith("2d", { willReadFrequently: on });
+  }
+  cconst.softwareCanvases = true;
 });
 
 test("an update and a pass on a moving view don't measure the frames", () => {
   const { nodes, view, loader } = makeView(6);
   view.panzoom.setTransform(1, [0, 0]);
-  const request = vi.fn();
-  loader.request = request;
-  loader.transformChanged();
-  loader.pass();
+  // the first update polls the view's watches for the first time
+  view.update();
   expect(view.editorsPending()).toBe(ALL);
 
   const measured = vi.spyOn(view.frames.get(nodes[0].id)!, "outerSize");
-  // the first update polls the view's watches for the first time
-  view.update();
-  request.mockClear();
-  measured.mockClear();
-  view.update();
-  expect(request).not.toHaveBeenCalled();
-  loader.transformChanged();
-  loader.pass();
-  expect(request).toHaveBeenCalled();
-  expect(measured).not.toHaveBeenCalled();
-
-  // a view that's shown or resized is looked at again
-  request.mockClear();
-  view.panzoom.getBoundingClientRect = () => new DOMRect(0, 0, 900, 600);
-  view.update();
-  expect(request).toHaveBeenCalledTimes(1);
-  view.remove();
-});
-
-test("a view that was away is looked at again when it's back", () => {
-  const { view, loader } = makeView(6);
-  view.panzoom.setTransform(1, [0, 0]);
-  loader.transformChanged();
-  loader.pass();
-  view.update();
   const request = vi.fn();
   loader.request = request;
   view.update();
   expect(request).not.toHaveBeenCalled();
-
-  // without UIBase.remove, which makes the view sync again
-  HTMLElement.prototype.remove.call(view);
-  loader.pass();
-  document.body.appendChild(view);
+  loader.transformChanged();
   request.mockClear();
-  view.update();
-  expect(request).toHaveBeenCalled();
+  loader.pass();
+  expect(measured).not.toHaveBeenCalled();
   view.remove();
+});
+
+test("a pass that has to wait is tried again by a timer, and only if it's of use", () => {
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+  try {
+    const { view, loader } = makeView(6);
+    view.panzoom.setTransform(1, [0, 0]);
+    const request = vi.fn();
+    loader.request = request;
+
+    const keys = pushModalLight({});
+    for (let i = 0; i < 10; i++) {
+      loader.pass(performance.now() + 1000);
+    }
+    expect(request).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(150);
+    expect(request).toHaveBeenCalledTimes(1);
+
+    // not while zoomed out, where nothing is built
+    request.mockClear();
+    view.panzoom.setTransform(0.2, [0, 0]);
+    request.mockClear();
+    loader.pass(performance.now() + 1000);
+    vi.advanceTimersByTime(1000);
+    expect(request).not.toHaveBeenCalled();
+
+    // and not for a view that's gone
+    view.panzoom.setTransform(1, [0, 0]);
+    loader.pass();
+    view.remove();
+    request.mockClear();
+    vi.advanceTimersByTime(1000);
+    expect(request).not.toHaveBeenCalled();
+    popModalLight(keys);
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test("a view that's shown or resized is looked at again", () => {
+  const observers: { target: Element | undefined; report: () => void }[] = [];
+  class FakeObserver {
+    private entry: (typeof observers)[number];
+    constructor(report: () => void) {
+      this.entry = { target: undefined, report };
+      observers.push(this.entry);
+    }
+    observe(target: Element) {
+      this.entry.target = target;
+    }
+    unobserve() {}
+    disconnect() {}
+  }
+  vi.stubGlobal("ResizeObserver", FakeObserver);
+  try {
+    const { view, loader } = makeView(2);
+    const request = vi.fn();
+    loader.request = request;
+    const observer = observers.find((o) => o.target === view.panzoom);
+    expect(observer).toBeDefined();
+    observer!.report();
+    expect(request).toHaveBeenCalledTimes(1);
+    view.lazyEditors = false;
+    observer!.report();
+    expect(request).toHaveBeenCalledTimes(1);
+    view.remove();
+  } finally {
+    vi.unstubAllGlobals();
+  }
 });
 
 test("without lazyEditors every editor is built by syncGraph", () => {
