@@ -94,6 +94,9 @@ export class NodeEditor<CTX extends IContextBase = IContextBase> extends Area<CT
 
     this.view.checkInit();
     this.view.style.flexGrow = "1";
+
+    // a copied editor has a level already, and the panel was built before the view had a context
+    this._renderDesigner();
   }
 
   definePanels(panels: PanelManager<CTX>) {
@@ -118,7 +121,7 @@ export class NodeEditor<CTX extends IContextBase = IContextBase> extends Area<CT
   /** The designer follows the view's level: it edits the definition on screen, and shows a hint elsewhere. */
   private _renderDesigner() {
     const root = this._designerRoot;
-    if (root === undefined) {
+    if (root === undefined || this.view.graphContext === undefined) {
       return;
     }
     const level = this.view.currentLevel();
