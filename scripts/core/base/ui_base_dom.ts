@@ -364,8 +364,12 @@ export function removeChild<T extends Node>(
 export function regenTabOrder(elem: AnyUIBase): void {
   const screen = elem.getScreen();
   if (screen !== undefined) {
+    const now = performance.now();
+    if (!screen.needsTabRecalc) {
+      screen.tabRecalcLimit = now + 1000;
+    }
     screen.needsTabRecalc = true;
-    screen.tabRecalcTime = performance.now() + 200;
+    screen.tabRecalcTime = Math.min(now + 200, screen.tabRecalcLimit);
   }
 }
 

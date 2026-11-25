@@ -914,7 +914,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     this._redrawLinks();
   }
 
-  /** How many value editors near the view are still placeholders. */
+  /** Counts the value editors near the view that are still placeholders. */
   editorsPending(): number {
     return this._loader.pending();
   }

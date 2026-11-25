@@ -115,7 +115,7 @@ function resolveDefValue<T>(v: NodeDefValue<T> | undefined, node: Node): T | und
   return typeof v === "function" ? (v as (node: Node) => T)(node) : v;
 }
 
-/** Ids that tell node objects apart without retaining them. */
+/** These ids tell node objects apart without retaining them. */
 const nodeIdentities = new WeakMap<Node, number>();
 let nextNodeIdentity = 1;
 
