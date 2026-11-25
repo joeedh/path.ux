@@ -488,6 +488,9 @@ cstruct.struct("nodegraph", "nodegraph", "Node Graph", graphst);
 - The structural ops share a `canRun` that consults `structuralEditsRefused()`, so they
   refuse inside a group instance's subgraph. The definition ops refuse on any graph that is
   not a definition's subgraph, with the `NOT_A_DEFINITION` sentence.
+- A definition keeps the first `GroupInputNode` and the first `GroupOutputNode` of its subgraph:
+  `graph.delete_node`, `graph.replace_node` and `graph.duplicate_node` refuse them. A further proxy
+  node, from an old file, can be deleted or replaced, but not duplicated.
 - `graph.add_node` takes an optional `ref`, honoured when the type is `GroupNode`: the
   instance is added unresolved and the view's root-level watch resolves it.
 - `graph.set_node_prop` is deliberately not structural: it runs on instance subgraphs,
@@ -645,6 +648,7 @@ For large graphs, set `view.lazyEditors = true` before the view has nodes:
   Replace opens the same searchable type picker as Add. A group frame adds Edit Group, Show
   Instance and Ungroup, and any frame adds Group Selected while something is selected.
   Inside a definition, right-clicking a prop row offers Expose on group instead.
+  A definition's own input and output nodes have no Delete, Duplicate or Replace.
 - **Group** — `groupSelected()` moves the selection into a new group (Ctrl+G) and
   `ungroupSelected()` replaces every selected group with its contents (Ctrl+Alt+G), as
   one undo step; `ungroupNode(id)` does one.
@@ -737,7 +741,8 @@ interface NodeGraphDelegate {
   itself.
 - A `check` verdict must match what `perform` would decide, which is what lets a refusal
   show mid-gesture rather than on drop. The default delegate judges `createGroup` by
-  `groupPlan`'s refusal, every definition kind by `definitionOfSubgraph`, and the boundary
+  `groupPlan`'s refusal, a delete, replace or duplicate of a definition's input and output nodes
+  as the ops do, every definition kind by `definitionOfSubgraph`, and the boundary
   kinds by the socket registry too; a `createGroup` with no `ref` takes one from the
   `storePath` graph's `newGroupRef` seam and is refused when there is none.
 - `GraphContext` is the view's own context, not the host's raw one: `view.ctx` plus a fixed
