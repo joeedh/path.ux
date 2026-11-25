@@ -1071,6 +1071,9 @@ export class Screen<
   }
 
   calcTabOrder() {
+    this.needsTabRecalc = false;
+    this.tabRecalcTime = this.tabRecalcLimit = 0;
+
     const nodes: any[] = [];
     const visit: Record<string, number> = {};
 
@@ -1138,8 +1141,6 @@ export class Screen<
     }
 
     if (this.needsTabRecalc && performance.now() >= this.tabRecalcTime) {
-      this.needsTabRecalc = false;
-      this.tabRecalcTime = this.tabRecalcLimit = 0;
       this.calcTabOrder();
     }
 

@@ -759,6 +759,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     if (pending === undefined) {
       return;
     }
+    this._propsPending = this._propsPending.filter((p) => p !== pending);
     const { el, widgets } = pending.build();
     if (el !== pending.placeholder) {
       pending.placeholder.replaceWith(el);

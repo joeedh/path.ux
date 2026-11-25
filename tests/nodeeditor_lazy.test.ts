@@ -387,12 +387,16 @@ test("extra UI built late takes its placeholder's place", () => {
 });
 
 test("changes put the tab order off, but not forever", () => {
-  const calcTabOrder = vi.fn();
+  // the real one with nothing to visit
+  const calcTabOrder = vi.fn(() => {
+    Screen.prototype.calcTabOrder.call(screen as unknown as Screen);
+  });
   const screen = {
     needsTabRecalc: false,
     tabRecalcTime : 0,
     tabRecalcLimit: 0,
     childNodes    : [],
+    _popups       : [],
     sareas        : [],
     _do_updateSize: false,
     update_intern : () => [][Symbol.iterator](),
@@ -421,10 +425,16 @@ test("changes put the tab order off, but not forever", () => {
   update();
   expect(calcTabOrder).toHaveBeenCalledTimes(2);
 
+  // a caller that recalculates by itself leaves nothing behind
+  regenTabOrder(elem);
+  screen.calcTabOrder();
+  expect(screen).toMatchObject({ needsTabRecalc: false, tabRecalcTime: 0, tabRecalcLimit: 0 });
+  calcTabOrder.mockClear();
+
   // a direct request isn't put off, and leaves no limit behind for later ones
   screen.needsTabRecalc = true;
   update();
-  expect(calcTabOrder).toHaveBeenCalledTimes(3);
+  expect(calcTabOrder).toHaveBeenCalledTimes(1);
   now.mockReturnValue(9000);
   regenTabOrder(elem);
   expect(screen.tabRecalcTime).toBe(9200);
@@ -510,11 +520,15 @@ test("a view that's shown or resized is looked at again", () => {
       this.entry.target = target;
     }
     unobserve() {}
-    disconnect() {}
+    disconnect() {
+      this.entry.target = undefined;
+    }
   }
   vi.stubGlobal("ResizeObserver", FakeObserver);
   try {
     const { view, loader } = makeView(2);
+    const cancel = vi.spyOn(loader, "cancel");
+    const observing = () => observers.filter((o) => o.target === view.panzoom).length;
     const request = vi.fn();
     loader.request = request;
     const observer = observers.find((o) => o.target === view.panzoom);
@@ -524,7 +538,14 @@ test("a view that's shown or resized is looked at again", () => {
     view.lazyEditors = false;
     observer!.report();
     expect(request).toHaveBeenCalledTimes(1);
+
+    HTMLElement.prototype.remove.call(view);
+    expect(observing()).toBe(0);
+    expect(cancel).toHaveBeenCalledTimes(1);
+    document.body.appendChild(view);
+    expect(observing()).toBe(1);
     view.remove();
+    expect(observing()).toBe(0);
   } finally {
     vi.unstubAllGlobals();
   }

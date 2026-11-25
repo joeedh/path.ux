@@ -338,15 +338,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
       }
     });
 
-    // reports a view that's shown, resized or put back into the document
-    if (typeof ResizeObserver !== "undefined") {
-      this._sizeObserver = new ResizeObserver(() => {
-        if (this.lazyEditors) {
-          this._loader.request();
-        }
-      });
-      this._sizeObserver.observe(this.panzoom);
-    }
+    this._observeSize();
 
     this.panzoom.addEventListener("pointerdown", (e: PointerEvent) => this._boxDown(e));
 
@@ -917,6 +909,35 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
       this._loader.request();
     }
     this._redrawLinks();
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    this._observeSize();
+    if (this.lazyEditors) {
+      this._loader.request();
+    }
+  }
+
+  disconnectedCallback() {
+    this._sizeObserver?.disconnect();
+    this._sizeObserver = undefined;
+    this._loader.cancel();
+  }
+
+  /** Reports a view that's shown, resized or put back into the document to the loader. */
+  private _observeSize() {
+    // false until init
+    const ready = this.isConnected && this.panzoom !== undefined;
+    if (!ready || this._sizeObserver !== undefined || typeof ResizeObserver === "undefined") {
+      return;
+    }
+    this._sizeObserver = new ResizeObserver(() => {
+      if (this.lazyEditors) {
+        this._loader.request();
+      }
+    });
+    this._sizeObserver.observe(this.panzoom);
   }
 
   /** Builds every value editor that's still a placeholder. */

@@ -36,7 +36,7 @@ export const BUILD_NOW_FRAMES = 4;
  */
 export class EditorLoader<CTX extends IContextBase = IContextBase> {
   private view: NodeGraphView<CTX>;
-  private scheduled = false;
+  private frameRequest: number | undefined;
   private retryTimer: ReturnType<typeof setTimeout> | undefined;
   private lastTransform = -Infinity;
   private heights = new Map<string, number>();
@@ -84,23 +84,29 @@ export class EditorLoader<CTX extends IContextBase = IContextBase> {
     if (this.retryTimer === undefined) {
       this.retryTimer = setTimeout(() => {
         this.retryTimer = undefined;
-        if (this.view.isConnected) {
-          this.request();
-        }
+        this.request();
       }, RETRY_MS);
     }
   }
 
+  /** Drops the passes that were asked for. The view calls it when it leaves the document. */
+  cancel() {
+    if (this.frameRequest !== undefined) {
+      cancelAnimationFrame(this.frameRequest);
+      this.frameRequest = undefined;
+    }
+    clearTimeout(this.retryTimer);
+    this.retryTimer = undefined;
+  }
+
   /** Asks for a pass in the next animation frame. */
   request() {
-    if (this.scheduled) {
-      return;
+    if (this.frameRequest === undefined && this.view.isConnected) {
+      this.frameRequest = requestAnimationFrame(() => {
+        this.frameRequest = undefined;
+        this.pass();
+      });
     }
-    this.scheduled = true;
-    requestAnimationFrame(() => {
-      this.scheduled = false;
-      this.pass();
-    });
   }
 
   /** Says whether any frame lacks editors, near the view or not. It's cheap, unlike wanted(). */

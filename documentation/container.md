@@ -157,6 +157,10 @@ framework carries them on the `StartArgs` record it hands to `AppState.start()`
 slider looks like across the app; changing it later means writing to `cconst` directly,
 since `start()` copies once rather than binding.
 
+`cconst.softwareCanvases` (on by default) is set the same way. Sliders, checkboxes, buttons and color
+buttons draw on software canvases then. Before that setting existed they drew on accelerated ones, so
+an app that relies on those has to turn it off before it builds its widgets.
+
 Both methods take either positional arguments or a `SliderArgs` object, and the object form
 is preferred:
 
