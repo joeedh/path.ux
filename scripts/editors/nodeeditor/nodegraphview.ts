@@ -31,7 +31,8 @@ import { AsyncGateOp, ToolOpDelegate } from "./delegate";
 import type { GraphContext, GraphEdit, NodeGraphDelegate, NodeMove } from "./delegate";
 import { LinkDrag } from "./linkdrag";
 import { BoxSelectModalOp, LinkDragModalOp, NodeMoveModalOp } from "./gesture_ops";
-import { buildAddNodeMenu } from "./addmenu";
+import { addMenuItems, buildAddNodeMenu } from "./addmenu";
+import type { AddMenuItem } from "./addmenu";
 import { Menu } from "../../menu/menu";
 import type { MenuTemplate } from "../../menu/menu_types";
 import { createMenu, startMenu } from "../../menu/menu_ops";
@@ -184,6 +185,16 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
    * "editorsloaded" event fires when nothing near the view is missing anymore.
    */
   lazyEditors = false;
+
+  /** Answers the node types that Replace… and openAddMenu offer. It's called for each menu. */
+  nodeItems: () => AddMenuItem[] = addMenuItems;
+
+  /**
+   * The socket types a definition's add-socket rows offer, as registered type names. Undefined
+   * offers every type. Set it before the view is initialized, which for a `NodeEditor` subclass
+   * means before `super.init()`. A copied editor builds its rows there.
+   */
+  socketTypes: readonly string[] | undefined = undefined;
 
   private _loader = new EditorLoader<CTX>(this);
   private _sizeObserver: ResizeObserver | undefined;
@@ -872,6 +883,8 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
             graphPath: this.currentGraphPath,
             delegate : this.delegate,
             onChanged: () => this.syncGraph(),
+
+            socketTypes: this.socketTypes,
           });
       }
 
@@ -1240,9 +1253,10 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
 
   /** Opens the add-node menu at a widget-local point; a pick adds there. */
   openAddMenu(local: readonly [number, number]): Menu<CTX> {
-    const menu = buildAddNodeMenu(this.ctx, (typeName: string) => {
+    const onPick = (typeName: string) => {
       void this.addNodeAt(typeName, this.panzoom.transform.unproject(local));
-    });
+    };
+    const menu = buildAddNodeMenu(this.ctx, onPick, this.nodeItems());
     this._startMenu(menu, local, true);
     return menu;
   }
@@ -1530,11 +1544,13 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
       },
       {
         name    : "Replace…",
+        id      : "replace",
         tooltip : "Swap this node's type, keeping links where sockets match",
         callback: () => {
-          const picker = buildAddNodeMenu(this.ctx, (typeName: string) => {
+          const onPick = (typeName: string) => {
             void this.replaceNode(nid, typeName);
-          });
+          };
+          const picker = buildAddNodeMenu(this.ctx, onPick, this.nodeItems());
           this._startMenu(picker, local, true);
         },
       }
