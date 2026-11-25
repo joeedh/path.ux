@@ -40,7 +40,7 @@ interface SocketRow<CTX extends IContextBase> {
   /** The inline default editor is kept so a rebuild can tear it down. */
   editor: Container<CTX> | undefined;
 
-  /** Set while the inline editor hasn't been built yet. */
+  /** This holds the inline editor while it hasn't been built yet. */
   pending: PendingEditor | undefined;
 }
 
@@ -293,7 +293,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
   /** Extra rows the owning view appends beneath the node's own createUI. */
   buildExtraUI?: (frame: NodeFrame<CTX>, body: Container<CTX>) => void;
 
-  /** Set for extra rows that are value editors, which `loader` builds like the others. */
+  /** A host sets this if the extra rows are value editors, so that `loader` builds them too. */
   extraUI: { heightKey: string; rows: number } | undefined = undefined;
 
   /** Builds the value editors later, if set before init; otherwise they're built at once. */
@@ -330,7 +330,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
   /** Holds the editors that haven't been built yet, in the order they'll be built. */
   private _pending: PendingEditor[] = [];
 
-  /** Set once the frame's editors have all been built; later ones are built at once. */
+  /** Records that all of the frame's editors have been built. Later ones are built at once. */
   private _loaded = false;
 
   private _extraPending: PendingEditor | undefined;

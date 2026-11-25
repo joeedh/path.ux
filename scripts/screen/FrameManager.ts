@@ -130,7 +130,8 @@ export class Screen<
    * measures every widget on the screen. */
   tabRecalcTime = 0;
 
-  /** No change puts the tab order off past this time, so a steady stream of them can't starve it. */
+  /** No change puts the tab order off past this time, so a steady stream of them can't starve it.
+   * It's 0 if nothing was put off since the last recalculation. */
   tabRecalcLimit = 0;
   _screen_id: number;
   // _popups is not worth typing with <CTX>
@@ -1138,6 +1139,7 @@ export class Screen<
 
     if (this.needsTabRecalc && performance.now() >= this.tabRecalcTime) {
       this.needsTabRecalc = false;
+      this.tabRecalcTime = this.tabRecalcLimit = 0;
       this.calcTabOrder();
     }
 

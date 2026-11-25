@@ -163,6 +163,11 @@ export interface IPathUXConstants {
   useNumSliderTextboxes?: boolean;
   numSliderArrowLimit?: number;
   simpleNumSliders?: boolean;
+  /**
+   * Draws sliders, checkboxes, buttons and color buttons on software canvases. Chromium gives each
+   * accelerated canvas a compositor layer, which makes a page with hundreds of them slow to pan.
+   */
+  softwareCanvases?: boolean;
   /** Can menus pop above dropboxes */
   menusCanPopupAbove?: boolean;
   menu_close_time?: number;
@@ -246,6 +251,7 @@ const cconst: PathUXConfigProvider = {
   useNumSliderTextboxes: true,
   numSliderArrowLimit  : 15,
   simpleNumSliders     : false,
+  softwareCanvases     : true,
 
   menusCanPopupAbove : false,
   menu_close_time    : 100,

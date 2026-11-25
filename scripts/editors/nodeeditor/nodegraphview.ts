@@ -186,6 +186,7 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
   lazyEditors = false;
 
   private _loader = new EditorLoader<CTX>(this);
+  private _sizeObserver: ResizeObserver | undefined;
 
   private _crumbs!: HTMLDivElement;
   private _pendingView: NodeGraphViewState | undefined = undefined;
@@ -336,6 +337,16 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
         this._loader.transformChanged();
       }
     });
+
+    // reports a view that's shown, resized or put back into the document
+    if (typeof ResizeObserver !== "undefined") {
+      this._sizeObserver = new ResizeObserver(() => {
+        if (this.lazyEditors) {
+          this._loader.request();
+        }
+      });
+      this._sizeObserver.observe(this.panzoom);
+    }
 
     this.panzoom.addEventListener("pointerdown", (e: PointerEvent) => this._boxDown(e));
 
@@ -919,16 +930,9 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
     return this._loader.pending();
   }
 
-  /** Called when editors took the place of placeholders, which may have moved the sockets. */
+  /** Redraws the links after editors took the place of placeholders and may have moved sockets. */
   editorsChanged() {
     this._redrawLinks();
-  }
-
-  update() {
-    super.update();
-    if (this.lazyEditors && this.panzoom !== undefined) {
-      this._loader.sizeChanged();
-    }
   }
 
   /**
