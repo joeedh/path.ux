@@ -715,8 +715,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
   private _placeholder(label: string, bars: number, height: number): HTMLDivElement {
     const el = document.createElement("div");
     const font = getStyleRecord(this, "propLabels", "font", true)?.font as CSSFont | undefined;
-    const fallback = "rgba(127, 127, 127, 0.15)";
-    const bar = this.getDefault("EditorPlaceholder", undefined, fallback) as string;
+    const bar = this.getDefault("EditorPlaceholder") as string;
     const line = this.getDefault("SocketRowHeight") as number;
 
     el.className = PLACEHOLDER_CLASS;
