@@ -23,7 +23,7 @@ const PASS_MS = 16;
 /** A pass runs once the transform has been unchanged for this many milliseconds. */
 const SETTLE_MS = 100;
 
-/** A pass that has to wait for that, or for a modal tool, is tried again after this long. */
+/** A pass that has to wait (for that or for a modal tool) is tried again after this long. */
 const RETRY_MS = 100;
 
 /** A sync that adds or changes at most this many frames builds their editors at once. */
@@ -79,7 +79,7 @@ export class EditorLoader<CTX extends IContextBase = IContextBase> {
     this.request();
   }
 
-  /** Asks for a pass after a while. A timer, not an animation frame, waits out a modal tool. */
+  /** Asks for a pass after a while. A timer waits out a modal tool without running each frame. */
   private retryLater() {
     if (this.retryTimer === undefined) {
       this.retryTimer = setTimeout(() => {
