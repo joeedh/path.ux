@@ -130,12 +130,13 @@ export class NodeEditor<CTX extends IContextBase = IContextBase> extends Area<CT
       return;
     }
     buildGroupDesigner(root, {
-      ctx       : this.view.graphContext,
-      def       : level.def,
-      graphPath : this.view.currentGraphPath,
-      delegate  : this.view.delegate,
-      onChanged : () => this.view.syncGraph(),
-      errorColor: this.view.getDefault("ErrorColor") as string,
+      ctx        : this.view.graphContext,
+      def        : level.def,
+      graphPath  : this.view.currentGraphPath,
+      delegate   : this.view.delegate,
+      onChanged  : () => this.view.syncGraph(),
+      socketTypes: this.view.socketTypes,
+      errorColor : this.view.getDefault("ErrorColor") as string,
     });
   }
 

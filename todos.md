@@ -102,3 +102,7 @@ inside it stay live until they're collected (`dom.remove` clears one element,
 and `init.ondestroy` doesn't touch watches). The rows of a node frame are such
 widgets. Found by the pressure test in
 documentation/plans/node-editor-large-graphs.md.
+[ ]: the node menu of a definition's Input and Output nodes offers Replace and
+Delete, and `ToolOpDelegate.check` accepts both. Replace was tried: it removes
+the proxy from the definition. Found by the pressure test in
+documentation/plans/node-menu-hooks.md.

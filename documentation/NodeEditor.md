@@ -637,6 +637,9 @@ For large graphs, set `view.lazyEditors = true` before the view has nodes:
   the picker for instances of existing definitions; the host supplies the refs, since only
   it can list its store, and `view.addGroupAt(ref, at?)` adds one. The example app puts an
   Add dropdown in its editor header, with a Group ▸ submenu built on every open.
+  - A host that only allows some node types sets `view.nodeItems`, which `openAddMenu` and the
+    node menu's Replace call each time they open. It can look at `view.currentLevel()`. The
+    default lists every type, and the delegate's check still decides.
 - **Node menu** — right-click a frame (without dragging) for a path.ux `Menu` with Delete,
   Duplicate (keeps overridden values) and Replace (keeps links where sockets still coerce);
   Replace opens the same searchable type picker as Add. A group frame adds Edit Group, Show
@@ -798,8 +801,15 @@ interface NodeGraphDelegate {
   panel re-renders from the definition path's watch and on `levelchange`. Off a definition
   it shows a hint.
 - `buildGroupDesigner(root, opts)`, `buildAddSocketRow(container, dir, opts)`,
-  `exposeMenuTemplate(ctx, def, onPick, kind?)` and `socketTypeMenuTemplate(onPick)` are
+  `exposeMenuTemplate(ctx, def, onPick, kind?)` and `socketTypeMenuTemplate(onPick, types?)` are
   exported for a host that builds its own panel.
+- `view.socketTypes` limits the socket types that the panel and the add rows on a definition's
+  Input and Output nodes offer. It holds registered type names, in menu order; unknown names are
+  left out, and an empty list offers none. A host with its own panel passes it as
+  `opts.socketTypes`.
+- A subclass sets `view.delegate`, `view.nodeItems`, `view.socketTypes` and `view.lazyEditors`
+  before it calls `super.init()`. `copy()` doesn't carry them, but it gives the new editor its
+  graph and level before `init()`, which then builds the panel and the frames.
 - STRUCT persistence carries the camera and the descent trail (each entry JSON-encoded; a
   file from before definition levels holds a bare instance id), so the editor restores its
   level on load.
@@ -1088,6 +1098,8 @@ class NodeGraphView<CTX> extends Container<CTX> {
   popTo(depth: number): Promise<void>;
   enterOrExit(): Promise<void>; // Tab
   syncGraph(): void; // reconcile frames after external changes
+  nodeItems: () => AddMenuItem[]; // what Replace and openAddMenu offer; default: addMenuItems
+  socketTypes: readonly string[] | undefined; // what the add-socket rows offer; undefined: every type
   lazyEditors: boolean; // builds value editors over time, near the view; off by default
   flushEditors(): void; // builds every value editor that's missing
   editorsPending(): number; // how many are missing near the view
@@ -1170,6 +1182,7 @@ interface DefinitionEditOpts {
   graphPath: string;
   delegate: NodeGraphDelegate;
   onChanged?: () => void;
+  socketTypes?: readonly string[]; // registered type names to offer; undefined: every type
 }
 function buildGroupDesigner(
   root: HTMLElement,
@@ -1186,7 +1199,10 @@ function exposeMenuTemplate(
   onPick: (req: ExposeRequest) => void,
   kind?: "prop" | "nodeUI"
 ): MenuTemplate;
-function socketTypeMenuTemplate(onPick: (typeName: string) => void): MenuTemplate;
+function socketTypeMenuTemplate(
+  onPick: (typeName: string) => void,
+  types?: Iterable<string>
+): MenuTemplate;
 function buildForwardedUI(
   root: HTMLElement,
   ctx,

@@ -269,6 +269,8 @@ export interface DefinitionEditOpts {
   graphPath: string;
   delegate: NodeGraphDelegate;
   onChanged?: () => void;
+  /** The socket types to offer, as registered type names; undefined offers every type. */
+  socketTypes?: readonly string[];
 }
 
 export interface GroupDesignerOpts extends DefinitionEditOpts {
@@ -302,10 +304,20 @@ function mark<T extends UIBase>(el: T, cls: string): T {
   return el;
 }
 
-/** The socket types a boundary socket can take, each entry reporting its registered type name. */
-export function socketTypeMenuTemplate(onPick: (typeName: string) => void): MenuTemplate {
+/**
+ * The socket types a boundary socket can take, each entry reporting its registered type name.
+ * With `types` it lists those in that order, and leaves out names that aren't registered.
+ */
+export function socketTypeMenuTemplate(
+  onPick: (typeName: string) => void,
+  types: Iterable<string> = SocketClasses.keys()
+): MenuTemplate {
   const items: MenuTemplate = [];
-  for (const [typeName, cls] of SocketClasses) {
+  for (const typeName of new Set(types)) {
+    const cls = SocketClasses.get(typeName);
+    if (cls === undefined) {
+      continue;
+    }
     const sdef = cls.socketDef();
     items.push({
       name    : sdef.uiName || typeName,
@@ -446,7 +458,7 @@ export function buildAddSocketRow<CTX extends IContextBase>(
     socketTypeMenuTemplate((typeName) => {
       pending = typeName;
       showName();
-    })
+    }, opts.socketTypes)
   );
   pick.description = `Add an ${word} socket to the group; every instance gains it`;
 
