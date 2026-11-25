@@ -914,12 +914,18 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
   connectedCallback() {
     super.connectedCallback();
     this._observeSize();
+    if (this.links !== undefined) {
+      // disconnecting dropped a redraw that was pending
+      this._redrawLinksSoon();
+    }
     if (this.lazyEditors) {
       this._loader.request();
     }
   }
 
   disconnectedCallback() {
+    super.disconnectedCallback();
+    this._linksPending = false;
     this._sizeObserver?.disconnect();
     this._sizeObserver = undefined;
     this._loader.cancel();

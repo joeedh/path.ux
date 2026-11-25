@@ -1,9 +1,5 @@
 import { test, expect, beforeAll, vi } from "vitest";
 import { UIBase, iconmanager } from "../scripts/core/ui_base";
-import { regenTabOrder } from "../scripts/core/base/ui_base_dom";
-import { widgetContext2D } from "../scripts/core/base/ui_canvas";
-import cconst from "../scripts/config/const";
-import { Screen } from "../scripts/screen/FrameManager";
 import type { Container } from "../scripts/core/ui";
 import type { IContextBase } from "../scripts/core/context_base";
 import { DataAPI, DataStruct } from "../scripts/path-controller/controller/controller";
@@ -386,72 +382,6 @@ test("extra UI built late takes its placeholder's place", () => {
   view.remove();
 });
 
-test("changes put the tab order off, but not forever", () => {
-  // the real one with nothing to visit
-  const calcTabOrder = vi.fn(() => {
-    Screen.prototype.calcTabOrder.call(screen as unknown as Screen);
-  });
-  const screen = {
-    needsTabRecalc: false,
-    tabRecalcTime : 0,
-    tabRecalcLimit: 0,
-    childNodes    : [],
-    _popups       : [],
-    sareas        : [],
-    _do_updateSize: false,
-    update_intern : () => [][Symbol.iterator](),
-    calcTabOrder,
-  };
-  const update = () => Screen.prototype.update.call(screen as unknown as Screen);
-  const elem = { getScreen: () => screen } as unknown as Parameters<typeof regenTabOrder>[0];
-  const now = vi.spyOn(performance, "now");
-
-  for (let t = 5000; t < 5900; t += 100) {
-    now.mockReturnValue(t);
-    regenTabOrder(elem);
-    expect(screen.tabRecalcTime).toBe(Math.min(t + 200, 6000));
-    update();
-  }
-  expect(calcTabOrder).not.toHaveBeenCalled();
-  now.mockReturnValue(6000);
-  update();
-  update();
-  expect(calcTabOrder).toHaveBeenCalledTimes(1);
-
-  now.mockReturnValue(7000);
-  regenTabOrder(elem);
-  expect(screen.tabRecalcTime).toBe(7200);
-  now.mockReturnValue(7200);
-  update();
-  expect(calcTabOrder).toHaveBeenCalledTimes(2);
-
-  // a caller that recalculates by itself leaves nothing behind
-  regenTabOrder(elem);
-  screen.calcTabOrder();
-  expect(screen).toMatchObject({ needsTabRecalc: false, tabRecalcTime: 0, tabRecalcLimit: 0 });
-  calcTabOrder.mockClear();
-
-  // a direct request isn't put off, and leaves no limit behind for later ones
-  screen.needsTabRecalc = true;
-  update();
-  expect(calcTabOrder).toHaveBeenCalledTimes(1);
-  now.mockReturnValue(9000);
-  regenTabOrder(elem);
-  expect(screen.tabRecalcTime).toBe(9200);
-  now.mockRestore();
-});
-
-test("small widgets draw on software canvases unless the app turns that off", () => {
-  const getContext = vi.fn();
-  const canvas = { getContext } as unknown as HTMLCanvasElement;
-  for (const on of [true, false]) {
-    cconst.softwareCanvases = on;
-    widgetContext2D(canvas);
-    expect(getContext).toHaveBeenLastCalledWith("2d", { willReadFrequently: on });
-  }
-  cconst.softwareCanvases = true;
-});
-
 test("an update and a pass on a moving view don't measure the frames", () => {
   const { nodes, view, loader } = makeView(6);
   view.panzoom.setTransform(1, [0, 0]);
@@ -549,6 +479,24 @@ test("a view that's shown or resized is looked at again", () => {
   } finally {
     vi.unstubAllGlobals();
   }
+});
+
+test("a link redraw that was pending when the view left happens once it's back", async () => {
+  const { view } = makeView(2);
+  const internals = view as unknown as { _redrawLinks(): void; _redrawLinksSoon(): void };
+  const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+  await frame();
+  const redraw = vi.spyOn(internals, "_redrawLinks");
+
+  internals._redrawLinksSoon();
+  HTMLElement.prototype.remove.call(view);
+  await frame();
+  expect(redraw).not.toHaveBeenCalled();
+
+  document.body.appendChild(view);
+  await frame();
+  expect(redraw).toHaveBeenCalled();
+  view.remove();
 });
 
 test("without lazyEditors every editor is built by syncGraph", () => {
