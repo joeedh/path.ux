@@ -4,7 +4,7 @@ import { _themeUpdateKey } from "../../core/base/ui_theme_key";
 import type { NodeFrame } from "./nodeframe";
 import type { NodeGraphView } from "./nodegraphview";
 
-/** The class of the element that stands for a value editor until it's built. */
+/** An element of this class stands for a value editor until it's built. */
 export const PLACEHOLDER_CLASS = "nodeeditor-placeholder";
 
 /** Editors aren't built for frames shown smaller than this; nobody could read them. */
@@ -13,14 +13,14 @@ export const EDITOR_MIN_SCALE = 0.35;
 /** A frame is near the view if growing the view this many times would touch it. */
 const NEAR = 1.5;
 
-/** The same for hiding a frame, and for showing it again. */
+/** A frame is hidden, and shown again, when the view would have to grow this many times. */
 const HIDE = 2.5;
 const SHOW = 2;
 
-/** How long a pass may go on starting new editors, in milliseconds. */
+/** A pass may go on starting new editors for this many milliseconds. */
 const PASS_MS = 16;
 
-/** How long the transform has to stay unchanged before a pass runs, in milliseconds. */
+/** A pass runs once the transform has been unchanged for this many milliseconds. */
 const SETTLE_MS = 100;
 
 /** A sync that adds or changes at most this many frames builds their editors at once. */
@@ -38,20 +38,20 @@ export class EditorLoader<CTX extends IContextBase = IContextBase> {
   private heights = new Map<string, number>();
   private themeKey = _themeUpdateKey;
 
-  /** Whether placeholders were resized since the links were drawn. */
+  /** Set if placeholders were resized since the links were drawn. */
   private moved = false;
 
-  /** The view's size when its frames were last looked at. */
+  /** The view had this size when its frames were last looked at. */
   private viewSize = [0, 0];
 
-  /** Whether editors were built since the last "editorsloaded" event. */
+  /** Set if editors were built since the last "editorsloaded" event. */
   private built = false;
 
   constructor(view: NodeGraphView<CTX>) {
     this.view = view;
   }
 
-  /** The height an editor of this kind has, if one has been built. */
+  /** Answers the height of this kind of editor, if one has been built. */
   height(key: string): number | undefined {
     if (this.themeKey !== _themeUpdateKey) {
       this.themeKey = _themeUpdateKey;
@@ -98,7 +98,7 @@ export class EditorLoader<CTX extends IContextBase = IContextBase> {
     });
   }
 
-  /** Whether any frame lacks editors, near the view or not; cheap, unlike wanted(). */
+  /** Says whether any frame lacks editors, near the view or not. It's cheap, unlike wanted(). */
   private anyPending(): boolean {
     for (const frame of this.view.frames.values()) {
       if (frame.pendingEditors > 0) {
@@ -108,14 +108,15 @@ export class EditorLoader<CTX extends IContextBase = IContextBase> {
     return false;
   }
 
-  /** How many of the editors that should be built now are still missing. */
+  /** Counts the editors that should be built now and are still missing. */
   pending(): number {
     return this.wanted().reduce((n, frame) => n + frame.pendingEditors, 0);
   }
 
   /**
-   * How far a frame is from the view: its distance from the center in graph units, and how many
-   * times larger the view would have to be to touch it. Undefined if the view has no size.
+   * Answers a function that measures how far a frame is from the view. It gives the distance from
+   * the center in graph units, and how many times larger the view would have to be to touch the
+   * frame. The answer is undefined if the view has no size.
    */
   private distances(): ((frame: NodeFrame<CTX>) => { dist: number; grow: number }) | undefined {
     const { panzoom } = this.view;
@@ -136,7 +137,7 @@ export class EditorLoader<CTX extends IContextBase = IContextBase> {
     };
   }
 
-  /** The frames in and near the view that lack editors, nearest to its center first. */
+  /** Finds the frames in and near the view that lack editors, nearest to its center first. */
   private wanted(): NodeFrame<CTX>[] {
     const scale = this.view.panzoom?.transform.scale ?? 0;
     if (scale < EDITOR_MIN_SCALE) {

@@ -126,9 +126,12 @@ export class Screen<
   testAllKeyMaps: boolean;
   needsTabRecalc: boolean;
 
-  /** When the tab order may be recalculated. Every change puts it off, since it measures every
-   * widget on the screen. */
+  /** The tab order is recalculated at this time. Every change puts it off, since recalculating
+   * measures every widget on the screen. */
   tabRecalcTime = 0;
+
+  /** No change puts the tab order off past this time, so a steady stream of them can't starve it. */
+  tabRecalcLimit = 0;
   _screen_id: number;
   // _popups is not worth typing with <CTX>
   _popups: UIBase[];

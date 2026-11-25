@@ -29,24 +29,24 @@ export interface FrameMetrics {
   rowHeights?: readonly number[];
 }
 
-/** One socket's row in a frame. */
+/** Describes one socket's row in a frame. */
 interface SocketRow<CTX extends IContextBase> {
   key: NodePropName;
 
-  /** What the row was built to show. */
+  /** This says what the row was built to show. */
   sig: string;
   el: HTMLDivElement;
 
-  /** The inline default editor, kept so a rebuild can tear it down. */
+  /** The inline default editor is kept so a rebuild can tear it down. */
   editor: Container<CTX> | undefined;
 
-  /** The inline editor that hasn't been built yet. */
+  /** Set while the inline editor hasn't been built yet. */
   pending: PendingEditor | undefined;
 }
 
-/** A value editor that hasn't been built yet, and the placeholder that stands for it. */
+/** Describes a value editor that hasn't been built yet, and the placeholder that stands for it. */
 interface PendingEditor {
-  /** The kind of editor, for its height. */
+  /** Editors with the same key have the same height. */
   heightKey: string;
   placeholder: HTMLDivElement;
 
@@ -54,7 +54,7 @@ interface PendingEditor {
   build: () => { el: HTMLElement; widgets: UIBase[] };
 }
 
-/** The widgets among these nodes and below them that aren't inside another widget. */
+/** Collects the widgets among these nodes and below them that aren't inside another widget. */
 function topWidgets(nodes: Iterable<ChildNode>): UIBase[] {
   return [...nodes].flatMap((n) => (n instanceof UIBase ? [n] : topWidgets(n.childNodes)));
 }
@@ -316,7 +316,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
 
   private _nodePath = "";
   private _header!: HTMLDivElement;
-  /** The socket rows, in socketRow's order. */
+  /** Holds the socket rows in socketRow's order. */
   private _rows: SocketRow<CTX>[] = [];
   private _socketsRoot: HTMLDivElement | undefined;
   private _body: Container<CTX> | undefined;
@@ -327,10 +327,10 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
   private _propSig = "";
   private _propsPending: PendingEditor[] = [];
 
-  /** The editors that haven't been built yet, in the order they'll be built. */
+  /** Holds the editors that haven't been built yet, in the order they'll be built. */
   private _pending: PendingEditor[] = [];
 
-  /** Whether the frame's editors have all been built once; later ones are built at once. */
+  /** Set once the frame's editors have all been built; later ones are built at once. */
   private _loaded = false;
 
   private _extraPending: PendingEditor | undefined;
@@ -526,7 +526,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     }
   }
 
-  /** What a socket's row shows; a row whose signature changes is built again. */
+  /** Says what a socket's row shows. A row whose signature changes is built again. */
   private _rowSignature(key: NodePropName, inline: boolean): string {
     const sock = nodePropSocket(this.node, key);
     const name = nodePropTarget(this.node, key)?.uiname;
@@ -657,7 +657,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     return true;
   }
 
-  /** The editor row for one of the node's props. */
+  /** Builds the editor row for one of the node's props. */
   private _propRow(key: string): Container<CTX> {
     const row = propEditRow(
       this.ctx,
@@ -672,7 +672,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     return row;
   }
 
-  /** Whether an editor is built right away rather than left to the loader. */
+  /** Says whether an editor is built right away rather than left to the loader. */
   private _buildNow(): boolean {
     return this.loader === undefined || this._loaded;
   }
@@ -746,7 +746,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     }
   }
 
-  /** How many value editors haven't been built yet. */
+  /** Counts the value editors that haven't been built yet. */
   get pendingEditors(): number {
     return this._pending.length;
   }
@@ -784,7 +784,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
     }
   }
 
-  /** The frame's graph-space size, body included. */
+  /** Measures the frame in graph space, body included. */
   outerSize(): [number, number] {
     if (this.offsetHeight > 0) {
       return [this.offsetWidth, this.offsetHeight];
@@ -851,9 +851,14 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
         this.loader?.height(extra.heightKey) ?? height
       ),
       build: () => {
-        pending.placeholder.remove();
         this._extraPending = undefined;
         const nodes = this._buildExtraUI();
+        // it appends at the end, so what followed the placeholder is put behind it again
+        const next = pending.placeholder.nextSibling;
+        if (next !== null && next !== nodes[0]) {
+          pending.placeholder.before(...nodes);
+        }
+        pending.placeholder.remove();
         const el = nodes.find((n) => n instanceof HTMLElement) ?? pending.placeholder;
         return { el, widgets: topWidgets(nodes) };
       },

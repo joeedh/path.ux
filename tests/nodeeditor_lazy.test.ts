@@ -1,5 +1,6 @@
 import { test, expect, beforeAll, vi } from "vitest";
 import { UIBase, iconmanager } from "../scripts/core/ui_base";
+import { regenTabOrder } from "../scripts/core/base/ui_base_dom";
 import type { Container } from "../scripts/core/ui";
 import type { IContextBase } from "../scripts/core/context_base";
 import { DataAPI, DataStruct } from "../scripts/path-controller/controller/controller";
@@ -363,6 +364,40 @@ test("extra UI built late is updated at any depth", () => {
   expect(widget.isConnected).toBe(true);
   expect(flushed).toHaveBeenCalledTimes(1);
   view.remove();
+});
+
+test("extra UI built late takes its placeholder's place", () => {
+  const { nodes, view } = makeView(6);
+  const frame = view.frames.get(nodes[0].id)!;
+  const body = (frame as unknown as { _body: Container })._body;
+  const extra = [document.createElement("div"), document.createElement("div")];
+  frame.buildExtraUI = (_f, body) => body.shadow.append(...extra);
+  frame.extraUI = { heightKey: "extra", rows: 1 };
+  frame.rebuildExtraUI();
+  const last = document.createElement("div");
+  body.shadow.append(last);
+
+  view.flushEditors();
+  const after = [...body.shadow.children];
+  expect(after.slice(after.indexOf(extra[0]))).toEqual([...extra, last]);
+  view.remove();
+});
+
+test("changes put the tab order off, but not forever", () => {
+  const screen = { needsTabRecalc: false, tabRecalcTime: 0, tabRecalcLimit: 0 };
+  const elem = { getScreen: () => screen } as unknown as Parameters<typeof regenTabOrder>[0];
+  const now = vi.spyOn(performance, "now");
+  for (let t = 5000; t < 5900; t += 100) {
+    now.mockReturnValue(t);
+    regenTabOrder(elem);
+    expect(screen.tabRecalcTime).toBe(Math.min(t + 200, 6000));
+  }
+
+  screen.needsTabRecalc = false;
+  now.mockReturnValue(7000);
+  regenTabOrder(elem);
+  expect(screen.tabRecalcTime).toBe(7200);
+  now.mockRestore();
 });
 
 test("an update and a pass on a moving view don't measure the frames", () => {
