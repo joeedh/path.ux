@@ -22,6 +22,7 @@ import {
 import { getNodeClass, nodePropTarget } from "../../graph/node";
 import type { NodePropName } from "../../graph/node";
 import { definitionOfSubgraph, GroupNode } from "../../graph/group";
+import { proxyEditRefused } from "../../graph/proxies";
 import { groupPlan, isRefusal } from "../../graph/grouping";
 import type { ExposeRequest } from "../../graph/grouping";
 import { getSocketClass } from "../../graph/socket";
@@ -206,11 +207,21 @@ export class AsyncGateOp<CTX extends GraphContext = GraphContext> extends ToolOp
       await this.stepDelegate.undoStepBegin(ctx, this.shortLabel, this.message);
       this.result = await this.cb();
     } catch (err) {
+      this.fail(err);
+    }
+    try {
+      await this.stepDelegate.undoStepEnd(ctx);
+    } catch (err) {
+      this.fail(err);
+    }
+    this.modalEnd();
+  }
+
+  /** Keeps the first error, for modalStart to throw once the lock is released. */
+  private fail(err: unknown): void {
+    if (!this.failed) {
       this.failed = true;
       this.caughtError = err;
-    } finally {
-      await this.stepDelegate.undoStepEnd(ctx);
-      this.modalEnd();
     }
   }
 }
@@ -241,7 +252,10 @@ export class ToolOpDelegate implements NodeGraphDelegate {
     if (this.undoStepLvl === 0 && this.pendingMacro) {
       const macro = this.pendingMacro;
       this.pendingMacro = undefined;
-      await ctx.toolstack.execTool(ctx, macro);
+      // an empty macro would still add an undo entry and drop the redo ones
+      if (macro.tools.length > 0) {
+        await ctx.toolstack.execTool(ctx, macro);
+      }
     }
   }
 
@@ -264,6 +278,17 @@ export class ToolOpDelegate implements NodeGraphDelegate {
     const refusal = graph.structuralEditsRefused();
     if (refusal !== undefined) {
       return { ok: false, reason: refusal };
+    }
+
+    if (
+      edit.kind === "deleteNode" ||
+      edit.kind === "replaceNode" ||
+      edit.kind === "duplicateNode"
+    ) {
+      const proxyRefusal = proxyEditRefused(graph, edit.nodeId, edit.kind);
+      if (proxyRefusal !== undefined) {
+        return { ok: false, reason: proxyRefusal };
+      }
     }
 
     switch (edit.kind) {

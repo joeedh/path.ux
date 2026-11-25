@@ -27,6 +27,8 @@ import {
   ungroup,
 } from "./grouping";
 import type { CreatedGroup, Dissolved, Ungrouped } from "./grouping";
+import { proxyEditRefused } from "./proxies";
+import type { ProxyEditKind } from "./proxies";
 import type { GraphContext } from "../editors/nodeeditor/delegate";
 
 /** Resolves a graphPath input to its Graph, throwing when the path lands elsewhere. */
@@ -114,6 +116,28 @@ function structuralOkay(
   }
 
   const refusal = graph.structuralEditsRefused();
+  return refusal === undefined ? true : { reason: refusal };
+}
+
+/** Shared canRun for the ops on one node, which also keeps a definition's proxy nodes. */
+function nodeOkay(
+  ctx: ContextLike,
+  toolop: { inputs: { graphPath: StringProperty; nodeId: StringProperty } } | undefined,
+  kind: ProxyEditKind
+): CanRunResult {
+  const okay = structuralOkay(ctx, toolop);
+  if (okay !== true || toolop === undefined) {
+    return okay;
+  }
+
+  let id: GraphId;
+  try {
+    id = JSON.parse(toolop.inputs.nodeId.getValue()) as GraphId;
+  } catch {
+    // exec reports an id that doesn't parse
+    return true;
+  }
+  const refusal = proxyEditRefused(graphAt(ctx, toolop.inputs.graphPath.getValue()), id, kind);
   return refusal === undefined ? true : { reason: refusal };
 }
 
@@ -296,7 +320,7 @@ export class DeleteNodeOp extends ToolOp<{
   }
 
   static override canRun(ctx: ContextLike, toolop?: ToolOp): CanRunResult {
-    return structuralOkay(ctx, toolop as DeleteNodeOp | undefined);
+    return nodeOkay(ctx, toolop as DeleteNodeOp | undefined, "deleteNode");
   }
 
   override undoPre(ctx: ContextLike): void {
@@ -531,7 +555,7 @@ export class ReplaceNodeOp extends ToolOp<{
   }
 
   static override canRun(ctx: ContextLike, toolop?: ToolOp): CanRunResult {
-    return structuralOkay(ctx, toolop as ReplaceNodeOp | undefined);
+    return nodeOkay(ctx, toolop as ReplaceNodeOp | undefined, "replaceNode");
   }
 
   override undoPre(ctx: ContextLike): void {
@@ -717,7 +741,7 @@ export class DuplicateNodeOp extends ToolOp<
   }
 
   static override canRun(ctx: ContextLike, toolop?: ToolOp): CanRunResult {
-    return structuralOkay(ctx, toolop as DuplicateNodeOp | undefined);
+    return nodeOkay(ctx, toolop as DuplicateNodeOp | undefined, "duplicateNode");
   }
 
   override undoPre(_ctx: ContextLike): void {}

@@ -16,6 +16,8 @@ import {
 } from "../../path-controller/util/graphpack";
 import { Graph } from "../../graph/graph";
 import { GroupInputNode, GroupNode, GroupOutputNode } from "../../graph/group";
+import { proxyEditRefused } from "../../graph/proxies";
+import type { ProxyEditKind } from "../../graph/proxies";
 import type { GroupDef } from "../../graph/group";
 import { Node as GraphNode } from "../../graph/node";
 import type { NodePropName } from "../../graph/node";
@@ -1531,18 +1533,25 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
       });
     }
 
-    template.push(
-      {
+    const graph = this.currentGraph;
+    const allowed = (kind: ProxyEditKind) =>
+      graph === undefined || proxyEditRefused(graph, nid, kind) === undefined;
+    if (allowed("deleteNode")) {
+      template.push({
         name    : "Delete",
         tooltip : "Delete this node",
         callback: () => void this._deleteNode(nid),
-      },
-      {
+      });
+    }
+    if (allowed("duplicateNode")) {
+      template.push({
         name    : "Duplicate",
         tooltip : "Duplicate this node, keeping its overridden values",
         callback: () => void this._duplicateNode(nid, frame),
-      },
-      {
+      });
+    }
+    if (allowed("replaceNode")) {
+      template.push({
         name    : "Replace…",
         id      : "replace",
         tooltip : "Swap this node's type, keeping links where sockets match",
@@ -1553,8 +1562,11 @@ export class NodeGraphView<CTX extends IContextBase = IContextBase> extends Cont
           const picker = buildAddNodeMenu(this.ctx, onPick, this.nodeItems());
           this._startMenu(picker, local, true);
         },
-      }
-    );
+      });
+    }
+    if (template.length === 0) {
+      return;
+    }
     const menu = createMenu(this.ctx, "", template);
     this._startMenu(menu, local);
   }
