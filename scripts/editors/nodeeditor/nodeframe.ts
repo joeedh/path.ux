@@ -629,7 +629,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
       this._dropPending(pending);
     }
     this._propsPending = [];
-    // Removed one widget at a time so each row tears down its path watches.
+    // UIBase.remove clears a widget's own path watches; those of widgets in it wait for GC
     while (root.firstChild !== null) {
       (root.firstChild as ChildNode).remove();
     }
@@ -885,7 +885,7 @@ export class NodeFrame<CTX extends IContextBase = IContextBase> extends Containe
   rebuildExtraUI() {
     this._dropPending(this._extraPending);
     this._extraPending = undefined;
-    // Removed one at a time so each widget tears down its path watches.
+    // UIBase.remove clears a widget's own path watches; those of widgets in it wait for GC
     for (const n of this._extraNodes) {
       n.remove();
     }

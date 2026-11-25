@@ -638,6 +638,8 @@ export class UIBase<
 
   connectedCallback(): void {}
 
+  disconnectedCallback(): void {}
+
   noMarginsOrPadding(): this {
     return css.noMarginsOrPadding(this);
   }

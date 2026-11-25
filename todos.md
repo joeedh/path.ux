@@ -99,6 +99,6 @@ review of PR #21). Nothing in path.ux is known to do this or to call
 clearAspectCallbacks.
 [ ]: removing a widget only clears its own path watches. The watches of widgets
 inside it stay live until they're collected (`dom.remove` clears one element,
-and `init.ondestroy` doesn't touch watches), so the comments in nodeframe.ts
-that say removing a row's widget tears its watches down are wrong. Found by the
-pressure test in documentation/plans/node-editor-large-graphs.md.
+and `init.ondestroy` doesn't touch watches). The rows of a node frame are such
+widgets. Found by the pressure test in
+documentation/plans/node-editor-large-graphs.md.
