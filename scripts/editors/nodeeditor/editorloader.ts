@@ -177,6 +177,8 @@ export class EditorLoader<CTX extends IContextBase = IContextBase> {
   /** Builds wanted editors until the time is up; the tests call it directly. */
   pass(now = performance.now()) {
     if (!this.view.isConnected) {
+      // so that it's looked at again when it's back, even at the same size
+      this.viewSize = [0, 0];
       return;
     }
     const { width, height } = this.view.panzoom.getBoundingClientRect();

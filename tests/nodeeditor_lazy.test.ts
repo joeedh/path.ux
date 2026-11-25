@@ -429,6 +429,27 @@ test("an update and a pass on a moving view don't measure the frames", () => {
   view.remove();
 });
 
+test("a view that was away is looked at again when it's back", () => {
+  const { view, loader } = makeView(6);
+  view.panzoom.setTransform(1, [0, 0]);
+  loader.transformChanged();
+  loader.pass();
+  view.update();
+  const request = vi.fn();
+  loader.request = request;
+  view.update();
+  expect(request).not.toHaveBeenCalled();
+
+  // without UIBase.remove, which makes the view sync again
+  HTMLElement.prototype.remove.call(view);
+  loader.pass();
+  document.body.appendChild(view);
+  request.mockClear();
+  view.update();
+  expect(request).toHaveBeenCalled();
+  view.remove();
+});
+
 test("without lazyEditors every editor is built by syncGraph", () => {
   const { graph, view, ctx } = makeView(6);
   view.remove();
