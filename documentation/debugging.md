@@ -227,3 +227,37 @@ by that.
 - **How to tell.** Count the layers of `LayerTree.layerTreeDidChange`, and ask
   `LayerTree.compositingReasons` about one of them. Reload the page before each variant: after a
   while the page can become fast by itself, which makes every variant look like a fix.
+
+## A copied node editor's group designer refuses every edit
+
+- **Symptom.** After an area with a `NodeEditor` is split while a definition is open, the copy's
+  designer adds and removes no sockets. The original works.
+- **Cause.** `copy()` gives the new editor its graph and level before `init`. `init` built the
+  designer before the view was initialized, so the designer held no context, and nothing built it
+  again.
+- **Fix.** `init` builds the designer after `view.checkInit()` (PR #24).
+- **How to tell.** Use the copy, not the original. A host's fields on the view (`delegate`,
+  `nodeItems`, `socketTypes`, `lazyEditors`) have to be set before `super.init()` for the same
+  reason, since `copy()` doesn't carry them. The last test in `tests/nodeeditor_menu_hooks.test.ts`
+  covers both.
+
+## A refused Delete drops the redo steps
+
+- **Symptom.** After an undo, pressing Delete or Shift+D on nodes that are all refused leaves the
+  graph as it was, but redo does nothing.
+- **Cause.** `ToolOpDelegate.undoStepEnd` ran the gesture's macro even when it held no tools. An
+  empty macro is still an undo entry, and adding one drops the redo entries.
+- **Fix.** `undoStepEnd` skips an empty macro (PR #24).
+- **How to tell.** Compare `toolstack.length` and `toolstack.cur` before and after the gesture.
+  `tests/nodeeditor_proxies.test.ts` does that.
+
+## The node editor stops taking input after a failed delete
+
+- **Symptom.** After a Delete, the editor ignores every key and click.
+- **Cause.** `AsyncGateOp` holds a modal lock during a gesture's undo step. When `undoStepEnd`
+  threw, the `finally` block stopped before `modalEnd`. A delegate whose check accepts an edit that
+  the op's `canRun` refuses makes `undoStepEnd` throw, since the macro's `canRun` refuses it whole.
+- **Fix.** `AsyncGateOp` catches that error, always ends, and rejects the gesture's promise with it
+  (PR #24).
+- **How to tell.** `ctx.toolstack.modalRunning` stays above 0 after the gesture. The last test in
+  `tests/nodeeditor_proxies.test.ts` covers it.
