@@ -54,6 +54,12 @@ test("EnumProperty and FlagProperty take a numeric enum as it is", () => {
 
   const bits = new FlagProperty(Bits.A, Bits);
   expect(bits.values).toEqual({ A: 1, B: 2 });
+
+  // a definition given later is stripped the same way
+  const later = new EnumProperty(0, { X: 0 });
+  later.updateDefinition(Mode);
+  expect(later.values).toEqual({ PREVIEW: 0, PATH_TRACE: 1 });
+  expect(Object.keys(later.ui_value_names)).toEqual(["PREVIEW", "PATH_TRACE"]);
 });
 
 beforeAll(() => {
