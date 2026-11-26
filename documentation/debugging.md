@@ -261,3 +261,14 @@ by that.
   (PR #24).
 - **How to tell.** `ctx.toolstack.modalRunning` stays above 0 after the gesture. The last test in
   `tests/nodeeditor_proxies.test.ts` covers it.
+
+## An enum dropdown lists numbers, and picking an entry stores its name
+
+- **Symptom.** A dropdown for a numeric TypeScript `enum` lists "0" and "1" next to the real
+  names. Picking an entry can store the member's name, a string, in place of its number.
+- **Cause.** `enum Mode { A = 0 }` compiles to `{ A: 0, "0": "A" }`. `EnumPropertyBase` took every
+  entry as a value, so `"0"` became one whose value is `"A"`.
+- **Fix.** `stripEnumReverseMapping` (path-controller) leaves the reverse entries out, and the enum
+  and flag properties apply it to what they are given.
+- **How to tell.** Look at `prop.values` of the path: a key that is a number with a string value
+  is a reverse entry. `tests/toolprop_enum_reverse.test.ts` covers the property and the dropdown.
