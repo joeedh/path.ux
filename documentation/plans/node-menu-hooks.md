@@ -1,6 +1,7 @@
 # Node editor: menu hooks for hosts that limit types
 
-Status: implemented, not merged. Pressure-tested and revised before that (see the last section).
+Status: done, merged in PR #24 on 2026-11-25. Pressure-tested and revised before that (see the last
+section).
 
 | Stage                                            | Status |
 | ------------------------------------------------ | ------ |
