@@ -580,6 +580,7 @@
     "startMenu",
     "startMenuEventWrangling",
     "stopEvents",
+    "stripEnumReverseMapping",
     "styleScrollBars",
     "suggestPropertyKeys",
     "tab_idgen",

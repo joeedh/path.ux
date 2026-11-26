@@ -83,6 +83,9 @@ The core types live in `scripts/path-controller/controller/controller.ts`, re-ex
 - Scalars: `string`, `int`, `float`, `bool`
 - Vectors: `vec2`, `vec3`, `vec4`, `color3`, `color4`
 - Choice: `enum`, `flags` (both take an `enumdef` object)
+  - An `enumdef` can be a numeric TypeScript `enum`. The reverse entries it compiles to (`"0": "A"`)
+    are left out, by `stripEnumReverseMapping`, which `EnumProperty` and `FlagProperty` apply to
+    what they are given.
 - Nested: `struct` (a fixed sub-struct), `dynamicStruct` (sub-struct resolved at runtime),
   `list` / `arrayList` (collections)
 
